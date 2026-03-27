@@ -1,5 +1,14 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
+type Notification = {
+    _id: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    readAt?: string | null;
+    createdAt: string;
+};
+
 type AdminState = {
     _id: string;
     userId: string;
@@ -11,6 +20,7 @@ type AdminState = {
     createdAt: string;
     roleId: string;
     roleName: string;
+    notifications: Notification[];
 };
 
 const initialState: AdminState = {
@@ -23,7 +33,8 @@ const initialState: AdminState = {
     permissions: [],
     createdAt: "",
     roleId: "",
-    roleName: ""
+    roleName: "",
+    notifications: []
 };
 
 const adminSlice = createSlice({

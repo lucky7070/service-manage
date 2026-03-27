@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAdminAuth } from "../middlewares/adminAuth.js";
 import { validator } from "../libraries/validator.js";
-import { adminLogout, adminProfile, updateAdminProfile, updateAdminProfileImage } from "../controller/admin/auth.controller.js";
+import { adminLogout, adminProfile, markAllAdminNotificationsRead, updateAdminProfile, updateAdminProfileImage } from "../controller/admin/auth.controller.js";
 import { getRole, createRole, updateRole, deleteRole, getSingleRole, addPermission } from "../controller/admin/role.controller.js";
 import { listAdmins, createAdmin, updateAdmin, deleteAdmin, getSingleAdmin, addAdminPermission } from "../controller/admin/subAdmin.controller.js";
 import { getSettings, updateSettingsByType } from "../controller/admin/setting.controller.js";
@@ -22,6 +22,7 @@ router.get("/dashboard-stats", getDashboardStats);
 
 // Profile
 router.get("/profile", adminProfile);
+router.put("/notifications/read-all", markAllAdminNotificationsRead);
 router.put("/profile", validator("admin-profile"), updateAdminProfile);
 router.put("/profile/image", adminStorage.single("image"), validator("admin-profile-image"), updateAdminProfileImage);
 router.post("/logout", adminLogout);

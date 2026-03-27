@@ -1,9 +1,9 @@
 "use client";
 
-import AdminSidebar from "../../components/admin/AdminSidebar";
-import AdminTopbar from "../../components/admin/AdminTopbar";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminTopbar from "@/components/admin/AdminTopbar";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -14,6 +14,7 @@ import Link from "next/link";
 import { Home, ShieldAlert, UserCircle2 } from "lucide-react";
 import { ADMIN_ROUTE_PERMISSIONS } from "@/config";
 import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
+import { setLoading, setMobileSidebarOpen } from "@/store/slices/appSlice";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
 
@@ -22,17 +23,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const dispatch = useAppDispatch();
     const settings = useAppSelector((state) => state.settings);
     const admin = useAppSelector((state) => state.admin);
+    const { sidebarCollapsed, loading, mobileSidebarOpen } = useAppSelector((state) => state.app);
 
-    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-    const [isBootstrapping, setIsBootstrapping] = useState(true);
     const footerText = settings.copyright?.trim() || `Copyright © ${new Date().getFullYear()}. All rights reserved.`;
 
     const isLoginPage = useMemo(() => ["/admin/login"].includes(pathname), [pathname]);
+    
     const requiredPermission = useMemo(() => {
-        const matchedRule = [...ADMIN_ROUTE_PERMISSIONS]
-            .sort((a, b) => b.path.length - a.path.length)
-            .find((rule) => pathname.startsWith(rule.path));
-
+        const matchedRule = [...ADMIN_ROUTE_PERMISSIONS].sort((a, b) => b.path.length - a.path.length).find((rule) => pathname.startsWith(rule.path));
         return matchedRule?.permission_id ?? true;
     }, [pathname]);
 
@@ -51,20 +49,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     useEffect(() => {
         (async () => {
-            setIsBootstrapping(true);
+            dispatch(setLoading(true));
             const { data } = await AxiosHelperAdmin.getData("/profile");
             if (data.status) {
                 dispatch(updateAdmin(data.data));
-                setIsBootstrapping(false);
+                dispatch(setLoading(false));
             } else {
                 if (!isLoginPage) router.push("/admin/login");
-                // setIsBootstrapping(false);
+                // dispatch(setLoading(false));
             }
         })();
     }, [dispatch, isLoginPage, router]);
 
+    if (loading) return <PageLoader />;
     if (isLoginPage) return children;
-    if (!isBootstrapping && !hasRouteAccess) {
+    if (!loading && !hasRouteAccess) {
         return (
             <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-[#f3f7ff] via-white to-[#e8efff] p-3 dark:from-[#0b1020] dark:via-[#111a2f] dark:to-[#172443]">
                 <div className="pointer-events-none absolute inset-0">
@@ -95,15 +94,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         );
     }
 
+
+
     return (
-        <section className="relative min-h-[calc(100vh-3.5rem)] bg-linear-to-br from-[#f3f7ff] via-white to-[#e8efff] p-3 dark:from-[#0b1020] dark:via-[#111a2f] dark:to-[#172443] md:grid md:grid-cols-[260px_1fr] md:gap-4">
-            {isBootstrapping ? <PageLoader /> : null}
-            {mobileSidebarOpen ? <button className="fixed inset-0 z-30 bg-slate-900/40 md:hidden" onClick={() => setMobileSidebarOpen(false)} aria-label="Close sidebar overlay" /> : null}
+        <section className={`relative min-h-[calc(100vh-3.5rem)] bg-linear-to-br from-[#f3f7ff] via-white to-[#e8efff] p-3 dark:from-[#0b1020] dark:via-[#111a2f] dark:to-[#172443] md:grid md:gap-4 ${sidebarCollapsed ? "md:grid-cols-[88px_1fr]" : "md:grid-cols-[260px_1fr]"}`}>
+            {mobileSidebarOpen ? <button className="fixed inset-0 z-30 bg-slate-900/40 md:hidden-" onClick={() => dispatch(setMobileSidebarOpen(false))} aria-label="Close sidebar overlay" /> : null}
             <div className={`fixed inset-y-0 left-0 z-40 w-[260px] p-3 transition-transform md:static md:z-auto md:w-auto md:p-0 ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
                 <AdminSidebar />
             </div>
             <div className="flex min-h-[calc(100vh-2rem)] flex-col gap-4 md:ml-0">
-                <AdminTopbar onMenuClick={() => setMobileSidebarOpen(true)} />
+                <AdminTopbar />
                 <AdminBreadcrumb />
                 <div className="flex-1 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/95">{children}</div>
                 <footer className="rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-center text-xs text-slate-500 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-400">

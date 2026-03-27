@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { config } from "../../config/index.js";
-import { Admin, Role } from "../../models/index.js";
+import { Admin, Role, Notification } from "../../models/index.js";
 
 const cookieOptions = {
     httpOnly: true,
@@ -47,7 +47,27 @@ export const adminProfile = async (req, res) => {
 
         if (admins.length === 0) return res.noRecords(false, "Admin not found");
 
-        return res.success(admins[0]);
+        const notifications = await Notification.find({ userType: "admin" }, '_id title message isRead readAt createdAt').sort({ createdAt: -1 }).limit(10);
+        return res.success({ ...admins[0], notifications });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const markAllAdminNotificationsRead = async (req, res) => {
+    try {
+        const now = new Date();
+        await Notification.updateMany(
+            { userType: "admin", isRead: false },
+            { $set: { isRead: true, readAt: now } }
+        );
+
+        const notifications = await Notification.find(
+            { userType: "admin" },
+            "_id title message isRead readAt createdAt"
+        ).sort({ createdAt: -1 }).limit(10);
+
+        return res.success({ notifications }, "All notifications marked as read.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
