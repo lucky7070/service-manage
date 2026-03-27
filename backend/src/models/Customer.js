@@ -1,0 +1,34 @@
+import mongoose from "mongoose";
+import { orderId } from "../helpers/utils.js";
+import { Counter } from "./Counter.js";
+
+const Schema = new mongoose.Schema(
+    {
+        userId: { type: String, unique: true, index: true, default: null },
+        name: { type: String, required: true, default: null },
+        mobile: { type: String, required: true, unique: true, index: true, default: null },
+        email: { type: String, unique: true, sparse: true, index: true, default: null },
+        image: { type: String, default: null },
+        dateOfBirth: { type: Date, default: null },
+        preferredLanguage: { type: String, default: null },
+        defaultLocationId: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null },
+        totalBookings: { type: Number, default: 0 },
+        averageRating: { type: Number, default: 0 },
+        isActive: { type: Boolean, default: true },
+        lastLogin: { type: Date, default: null },
+        deletedAt: { type: Date, default: null }
+    },
+    { timestamps: true }
+);
+
+Schema.pre("save", async function onSave(next) {
+    if (this.isNew && !this.userId) {
+        const options = this.$session() ? { session: this.$session() } : {};
+        const counter = await Counter.findByIdAndUpdate({ _id: "Customer" }, { $inc: { seq: 1 } }, { upsert: true, new: true, ...options });
+        this.userId = orderId(counter.seq, "C", 6);
+    }
+
+    next();
+});
+
+export const Customer = mongoose.model("Customer", Schema);
