@@ -13,6 +13,7 @@ import PageLoader from "@/components/admin/PageLoader";
 import Link from "next/link";
 import { Home, ShieldAlert, UserCircle2 } from "lucide-react";
 import { ADMIN_ROUTE_PERMISSIONS } from "@/config";
+import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
 
@@ -34,6 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         return matchedRule?.permission_id ?? true;
     }, [pathname]);
+
     const hasRouteAccess = useMemo(() => {
         if (requiredPermission === true) return true;
         if (requiredPermission === false) return false;
@@ -61,10 +63,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         })();
     }, [dispatch, isLoginPage, router]);
 
-    if (isLoginPage) return <>{children}</>;
+    if (isLoginPage) return children;
     if (!isBootstrapping && !hasRouteAccess) {
         return (
-            <section className="relative flex min-h-[calc(100vh-3.5rem)] items-center justify-center overflow-hidden bg-linear-to-br from-[#f3f7ff] via-white to-[#e8efff] p-3 dark:from-[#0b1020] dark:via-[#111a2f] dark:to-[#172443]">
+            <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-[#f3f7ff] via-white to-[#e8efff] p-3 dark:from-[#0b1020] dark:via-[#111a2f] dark:to-[#172443]">
                 <div className="pointer-events-none absolute inset-0">
                     <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-danger-300/20 blur-3xl dark:bg-danger-500/10" />
                     <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-warning-300/20 blur-3xl dark:bg-warning-500/10" />
@@ -102,6 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="flex min-h-[calc(100vh-2rem)] flex-col gap-4 md:ml-0">
                 <AdminTopbar onMenuClick={() => setMobileSidebarOpen(true)} />
+                <AdminBreadcrumb />
                 <div className="flex-1 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/95">{children}</div>
                 <footer className="rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-center text-xs text-slate-500 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-400">
                     {footerText}

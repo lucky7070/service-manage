@@ -3,56 +3,42 @@
 import { Bell, CheckCheck, ChevronDown, LogOut, Menu, Search, User } from "lucide-react";
 import { Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import { Button } from "@/components/ui";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resolveFileUrl } from "@/helpers/utils";
 import Image from "@/components/ui/Image";
 import Link from "next/link";
+import { toggleTheme as toggleThemeAction } from "@/store/slices/appSlice";
 
 export default function AdminTopbar({ onMenuClick }: { onMenuClick?: () => void }) {
     const [open, setOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
-    const [isDark, setIsDark] = useState(false);
     const router = useRouter();
+    const dispatch = useAppDispatch();
     const admin = useAppSelector((state) => state.admin);
+    const isDark = useAppSelector((state) => state.app.theme === "dark");
     const profileName = admin.name || "Admin";
     const profileSubText = admin.email || admin.mobile || "Signed in";
     const profileImage = resolveFileUrl(admin.image) || "";
     const notifications: { title: string; time: string; unread: boolean; }[] = [];
 
     const handleLogout = async () => {
-        const res = await AxiosHelper.postData("/admin/logout", {});
-        if (res?.data?.status) {
+        const { data } = await AxiosHelper.postData("/admin/logout", {});
+        if (data.status) {
             toast.success("Logged out successfully");
             router.push("/admin/login");
             router.refresh();
             return;
         }
-        toast.error(res?.data?.message || "Logout failed");
+
+        toast.error(data.message || "Logout failed");
     };
 
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            const stored = window.localStorage.getItem("theme");
-            const dark = stored === "dark";
-            if (!cancelled) setIsDark(dark);
-            document.documentElement.classList.toggle("dark", dark);
-        })();
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
     const toggleTheme = () => {
-        const next = !isDark;
-        setIsDark(next);
-        localStorage.setItem("theme", next ? "dark" : "light");
-        document.documentElement.classList.toggle("dark", next);
+        dispatch(toggleThemeAction());
     };
 
     return (

@@ -10,6 +10,7 @@ type AdminState = {
     permissions: number[];
     createdAt: string;
     roleId: string;
+    roleName: string;
 };
 
 const initialState: AdminState = {
@@ -21,7 +22,8 @@ const initialState: AdminState = {
     image: "",
     permissions: [],
     createdAt: "",
-    roleId: ""
+    roleId: "",
+    roleName: ""
 };
 
 const adminSlice = createSlice({

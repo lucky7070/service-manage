@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { config } from "../../config/index.js";
 import { Admin, Role } from "../../models/index.js";
 
@@ -36,17 +37,15 @@ export const adminLogin = async (req, res) => {
 
 export const adminProfile = async (req, res) => {
     try {
-        // const admin = await Admin.findById(req.admin.id, 'userId name mobile email image permissions roleId createdAt');
-        // if (!admin) return res.noRecords(false, "Admin not found");
 
         const admins = await Admin.aggregate([
-            { $match: { _id: req.admin.id } },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, roleId: 1, isActive: 1, createdAt: 1 } },
+            { $match: { _id: new mongoose.Types.ObjectId(String(req.admin.id)) } },
+            { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, roleId: 1, permissions: 1, createdAt: 1 } },
             { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleName" } },
             { $addFields: { roleName: { $ifNull: [{ $first: "$roleName.name" }, '--'] } } },
         ]);
 
-        if (!admins.length) return res.noRecords(false, "Admin not found");
+        if (admins.length === 0) return res.noRecords(false, "Admin not found");
 
         return res.success(admins[0]);
     } catch (error) {

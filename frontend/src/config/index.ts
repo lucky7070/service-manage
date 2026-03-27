@@ -18,6 +18,17 @@ export type RoutePermissionRule = {
     permission_id: number | boolean;
 };
 
+export type AdminBreadcrumbItem = {
+    label: string;
+    href?: string;
+};
+
+type AdminBreadcrumbRule = {
+    path: string;
+    startsWith?: boolean;
+    items: AdminBreadcrumbItem[];
+};
+
 export const PERMISSIONS = [
     {
         name: "General Settings",
@@ -107,3 +118,48 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
     { path: "/admin/states", permission_id: 314 },
     { path: "/admin/cities", permission_id: 324 },
 ];
+
+export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
+    { path: "/admin/dashboard", items: [{ label: "Dashboard" }] },
+    { path: "/admin/roles", items: [{ label: "Roles" }] },
+    { path: "/admin/admins", items: [{ label: "Sub Admins" }] },
+    { path: "/admin/settings", items: [{ label: "Settings" }] },
+    { path: "/admin/countries", items: [{ label: "Countries" }] },
+    { path: "/admin/states", items: [{ label: "States" }] },
+    { path: "/admin/cities", items: [{ label: "Cities" }] },
+    {
+        path: "/admin/roles/permissions/",
+        startsWith: true,
+        items: [{ label: "Roles", href: "/admin/roles" }, { label: "Role Permissions" }]
+    },
+    {
+        path: "/admin/admins/permissions/",
+        startsWith: true,
+        items: [{ label: "Sub Admins", href: "/admin/admins" }, { label: "Admin Permissions" }]
+    }
+];
+
+const titleCaseSegment = (value: string) =>
+    value.replace(/[-_]/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+export const getAdminBreadcrumbItems = (pathname: string): AdminBreadcrumbItem[] => {
+    const matched = ADMIN_BREADCRUMB_ROUTES.find((rule) => rule.startsWith ? pathname.startsWith(rule.path) : pathname === rule.path);
+
+    if (matched) return matched.items;
+    if (!pathname.startsWith("/admin")) return [];
+
+    const segments = pathname.split("/").filter(Boolean);
+    const adminIndex = segments.indexOf("admin");
+    const routeSegments = adminIndex >= 0 ? segments.slice(adminIndex + 1) : segments;
+
+    let cumulative = "/admin";
+    return routeSegments.map((segment, idx) => {
+        cumulative += `/${segment}`;
+        const isLast = idx === routeSegments.length - 1;
+        const isIdLike = /^[a-f0-9]{24}$/i.test(segment);
+        return {
+            label: isIdLike ? "Details" : titleCaseSegment(segment),
+            href: isLast ? undefined : cumulative
+        };
+    });
+};

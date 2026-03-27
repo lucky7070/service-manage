@@ -1,49 +1,50 @@
-# Service Provider System (Node + Next + MongoDB)
+# Service Manage (Admin Panel + API)
 
-Starter project for a 3-role service booking platform:
+Production-style admin management project using Next.js (frontend) and Express + MongoDB (backend).
 
-- Admin
-- Service Provider
-- Customer
+Current scope is focused on admin operations, permissions, settings, and location master data.
 
 ## Tech Stack
 
-- Frontend: Next.js (App Router) + Tailwind CSS
-- Frontend libs: Redux Toolkit, Formik, Yup, React Toastify, SweetAlert2, Socket.IO client, Moment
-- Backend: Node.js + Express + Mongoose
-- Backend libs: Socket.IO, Moment
+- Frontend: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4
+- Frontend libs: Redux Toolkit, Axios, Formik, Yup, React Select, SweetAlert2, React Toastify, Moment
+- Backend: Node.js, Express, Mongoose, Express Validator, Multer
 - Database: MongoDB
-- Auth: OTP + JWT
+- Auth: JWT + cookie-based admin auth
 
-## Folder Structure
+## Project Structure
 
 ```text
-frontend/
 backend/
   src/
-    config/
     controller/
+    config/
     helpers/
     libraries/
     middlewares/
     models/
     routes/
+frontend/
+  src/
+    app/
+    components/
+    helpers/
+    store/
 ```
 
-## Quick Start
+## Run Locally
 
-### 1) Backend
+### Backend
 
 ```bash
 cd backend
-cp .env.example .env
 npm install
 npm run dev
 ```
 
-Backend runs on `http://localhost:5000`.
+Backend default: `http://localhost:5000`
 
-### 2) Frontend
+### Frontend
 
 ```bash
 cd frontend
@@ -51,40 +52,119 @@ npm install
 npm run dev
 ```
 
-Frontend runs on `http://localhost:3000`.
+Frontend default: `http://localhost:3000`
 
-## Main API Groups
+## Current Implemented Modules
 
-- `POST /api/auth/send-otp`
-- `POST /api/auth/verify-otp`
-- `GET /api/catalog/categories`
-- `GET /api/catalog/service-types`
-- `GET /api/catalog/providers`
-- `POST /api/bookings`
-- `PATCH /api/bookings/:id/provider-quote`
-- `PATCH /api/bookings/:id/customer-confirm-price`
-- `POST /api/bookings/:id/request-completion-otp`
-- `POST /api/bookings/:id/complete`
-- `POST /api/chat`
-- `GET /api/chat/:bookingId`
-- `GET /api/admin/providers/pending`
-- `PATCH /api/admin/providers/:id/approve`
-- `PATCH /api/admin/providers/:id/reject`
+### Admin Access and Profile
 
-## Important Note
+- Admin login flow and protected admin routes
+- Admin profile fetch and update
+- Admin profile image upload
+- Admin-specific permissions support
 
-This is a clean starter foundation. For production use, add:
+### Role and Sub Admin Management
 
-- Real SMS provider integration
-- Payment gateway integration
-- Socket-based real-time chat
-- Rate limiting + security hardening
-- Media storage (S3/Cloudinary)
-- Comprehensive test coverage
+- Role CRUD
+- Role permission assignment
+- Sub Admin CRUD
+- Sub Admin permission assignment
+- Permission-based UI rendering (`PermissionBlock`)
 
-## Conventions Applied
+### App Settings
 
-- Date/time calculations and formatting are handled with `moment`.
-- All backend models are in separate files under `backend/src/models/`.
-- `backend/src/models/index.js` is the single import/export entry point used across the app.
-- All frontend forms use `Formik + Yup` validation.
+- Settings model and APIs
+- Settings update from admin panel (Formik + Yup on frontend, Express Validator on backend)
+- Dynamic branding usage in admin UI and login UI (logo, app name, footer text)
+
+### Location Management
+
+- Country CRUD
+- State CRUD (country linked)
+- City CRUD (country + state linked)
+- Async searchable selects for relational fields using `react-select/async`
+
+### Dashboard
+
+- Dedicated dashboard stats API (single call)
+- Count cards for:
+  - Roles
+  - Sub Admins
+  - Countries
+  - States
+  - Cities
+- Clickable cards with permission-based visibility
+
+### Route Guarding
+
+- Admin route auth checks using Next.js `proxy` convention
+- Centralized route permission map for direct URL access control
+- Unauthorized state UI for blocked routes
+
+## Key Admin API Endpoints
+
+### Profile
+
+- `GET /api/admin/profile`
+- `PUT /api/admin/profile`
+- `PUT /api/admin/profile/image`
+- `POST /api/admin/logout`
+
+### Dashboard
+
+- `GET /api/admin/dashboard-stats`
+
+### Roles
+
+- `GET /api/admin/roles`
+- `GET /api/admin/roles/:id`
+- `POST /api/admin/roles`
+- `PUT /api/admin/roles/:id`
+- `DELETE /api/admin/roles/:id`
+- `PUT /api/admin/roles/:id/permissions`
+
+### Sub Admins
+
+- `GET /api/admin/admins`
+- `GET /api/admin/admins/:id`
+- `POST /api/admin/admins`
+- `PUT /api/admin/admins/:id`
+- `DELETE /api/admin/admins/:id`
+- `PUT /api/admin/admins/:id/permissions`
+
+### Settings
+
+- `GET /api/admin/settings`
+- `GET /api/admin/settings/:type`
+- `PUT /api/admin/settings/:type`
+- `GET /api/general-settings` (public/general use)
+
+### Location
+
+- Countries:
+  - `GET /api/admin/countries`
+  - `GET /api/admin/countries/:id`
+  - `POST /api/admin/countries`
+  - `PUT /api/admin/countries/:id`
+  - `DELETE /api/admin/countries/:id`
+- States:
+  - `GET /api/admin/states`
+  - `GET /api/admin/states/:id`
+  - `POST /api/admin/states`
+  - `PUT /api/admin/states/:id`
+  - `DELETE /api/admin/states/:id`
+- Cities:
+  - `GET /api/admin/cities`
+  - `GET /api/admin/cities/:id`
+  - `POST /api/admin/cities`
+  - `PUT /api/admin/cities/:id`
+  - `DELETE /api/admin/cities/:id`
+
+## Development Conventions
+
+- Forms: Formik + Yup
+- Backend request validation: Express Validator
+- Soft-delete pattern with `deletedAt`
+- Date formatting uses `moment`
+- Central model exports from `backend/src/models/index.js`
+- Permission-aware UI and route-level protection in admin module
