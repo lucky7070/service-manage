@@ -1,4 +1,4 @@
-import { Building2, Globe, LayoutDashboard, Map, MapPinned, Settings, Shield, UserCog, Users } from "lucide-react";
+import { Building2, Globe, LayoutDashboard, Map, MapPinned, Settings, Shield, UserCog, UserCircle, Users } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -28,6 +28,10 @@ type AdminBreadcrumbRule = {
     startsWith?: boolean;
     items: AdminBreadcrumbItem[];
 };
+
+/** Indian mobile: optional +91 / leading 0, then 10-digit starting with 6–9. */
+export const PHONE_REGEXP = /^(?:(?:\+|0{0,2})91(\s*|[-])?|[0]?)?([6789]\d{2}([ -]?)\d{3}([ -]?)\d{4})$/;
+export const PHONE_ERROR_MESSAGE = "Enter a valid Indian mobile number.";
 
 export const PERMISSIONS = [
     {
@@ -83,6 +87,15 @@ export const PERMISSIONS = [
             { id: 324, label: "View City" },
         ]
     },
+    {
+        name: "Customer Management",
+        permissions: [
+            { id: 331, label: "Create Customer" },
+            { id: 332, label: "Update Customer" },
+            { id: 333, label: "Delete Customer" },
+            { id: 334, label: "View Customer" },
+        ]
+    },
 
 ];
 
@@ -94,6 +107,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
         children: [
             { href: "/admin/roles", label: "Roles", icon: UserCog, permission_id: 104 },
             { href: "/admin/admins", label: "Sub Admins", icon: Users, permission_id: 204 },
+            { href: "/admin/customers", label: "Customers", icon: UserCircle, permission_id: 334 },
         ]
     },
     {
@@ -117,6 +131,7 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
     { path: "/admin/countries", permission_id: 304 },
     { path: "/admin/states", permission_id: 314 },
     { path: "/admin/cities", permission_id: 324 },
+    { path: "/admin/customers", permission_id: 334 },
 ];
 
 export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
@@ -127,6 +142,7 @@ export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
     { path: "/admin/countries", items: [{ label: "Countries" }] },
     { path: "/admin/states", items: [{ label: "States" }] },
     { path: "/admin/cities", items: [{ label: "Cities" }] },
+    { path: "/admin/customers", items: [{ label: "Customers" }] },
     {
         path: "/admin/roles/permissions/",
         startsWith: true,
@@ -138,28 +154,3 @@ export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
         items: [{ label: "Sub Admins", href: "/admin/admins" }, { label: "Admin Permissions" }]
     }
 ];
-
-const titleCaseSegment = (value: string) =>
-    value.replace(/[-_]/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
-
-export const getAdminBreadcrumbItems = (pathname: string): AdminBreadcrumbItem[] => {
-    const matched = ADMIN_BREADCRUMB_ROUTES.find((rule) => rule.startsWith ? pathname.startsWith(rule.path) : pathname === rule.path);
-
-    if (matched) return matched.items;
-    if (!pathname.startsWith("/admin")) return [];
-
-    const segments = pathname.split("/").filter(Boolean);
-    const adminIndex = segments.indexOf("admin");
-    const routeSegments = adminIndex >= 0 ? segments.slice(adminIndex + 1) : segments;
-
-    let cumulative = "/admin";
-    return routeSegments.map((segment, idx) => {
-        cumulative += `/${segment}`;
-        const isLast = idx === routeSegments.length - 1;
-        const isIdLike = /^[a-f0-9]{24}$/i.test(segment);
-        return {
-            label: isIdLike ? "Details" : titleCaseSegment(segment),
-            href: isLast ? undefined : cumulative
-        };
-    });
-};

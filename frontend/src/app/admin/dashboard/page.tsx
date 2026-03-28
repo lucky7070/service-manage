@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, Globe, Map, Shield, UserCog } from "lucide-react";
+import { Building2, Globe, Map, Shield, UserCog, UserCircle } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import PermissionBlock from "@/components/admin/PermissionBlock";
@@ -13,6 +13,7 @@ type DashboardCountState = {
     countries: number;
     states: number;
     cities: number;
+    customers: number;
 };
 
 type DashboardCard = {
@@ -28,11 +29,12 @@ const DASHBOARD_CARDS: DashboardCard[] = [
     { key: "admins", title: "Sub Admins", href: "/admin/admins", permissionId: 204, icon: Shield },
     { key: "countries", title: "Countries", href: "/admin/countries", permissionId: 304, icon: Globe },
     { key: "states", title: "States", href: "/admin/states", permissionId: 314, icon: Map },
-    { key: "cities", title: "Cities", href: "/admin/cities", permissionId: 324, icon: Building2 }
+    { key: "cities", title: "Cities", href: "/admin/cities", permissionId: 324, icon: Building2 },
+    { key: "customers", title: "Customers", href: "/admin/customers", permissionId: 334, icon: UserCircle }
 ];
 
 export default function AdminDashboardPage() {
-    const [counts, setCounts] = useState<DashboardCountState>({ roles: 0, admins: 0, countries: 0, states: 0, cities: 0 });
+    const [counts, setCounts] = useState<DashboardCountState>({ roles: 0, admins: 0, countries: 0, states: 0, cities: 0, customers: 0 });
 
     useEffect(() => {
         (async () => {
@@ -43,7 +45,8 @@ export default function AdminDashboardPage() {
                     admins: Number(data.data.admins || 0),
                     countries: Number(data.data.countries || 0),
                     states: Number(data.data.states || 0),
-                    cities: Number(data.data.cities || 0)
+                    cities: Number(data.data.cities || 0),
+                    customers: Number(data.data.customers || 0)
                 });
             }
         })();
@@ -56,7 +59,7 @@ export default function AdminDashboardPage() {
                 subtitle="Quick overview of access-controlled master data."
             />
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
                 {DASHBOARD_CARDS.map((card) => {
                     const Icon = card.icon;
                     return (

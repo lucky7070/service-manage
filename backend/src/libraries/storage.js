@@ -1,7 +1,7 @@
 import multer from "multer";
 import fs from "fs";
 import path from "path";
-import { SUPPORTED_FORMATS_IMAGE, SUPPORTED_FORMATS_DOC } from '../config/files.js';
+import { SUPPORTED_FORMATS_IMAGE, SUPPORTED_FORMATS_DOC } from '../config/constants.js';
 
 export const Storage = class {
 

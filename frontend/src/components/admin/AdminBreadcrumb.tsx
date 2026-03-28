@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ChevronRight, House } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
-import { getAdminBreadcrumbItems } from "@/config";
+import { getAdminBreadcrumbItems } from "@/helpers/utils";
 
 export type BreadcrumbItem = {
     label: string;

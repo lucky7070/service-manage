@@ -8,7 +8,8 @@ const language = {
     UNAUTHORIZED: "Unauthorized",
     FORBIDDEN: "Forbidden",
     INVALID_TOKEN: "Invalid token",
-    REQUIRED_PARAMETER_MISSING: "Required parameter missing"
+    REQUIRED_PARAMETER_MISSING: "Required parameter missing",
+    MISSING_REQUIRED_FIELDS: "Please fill all required fields."
 };
 
 export default language;

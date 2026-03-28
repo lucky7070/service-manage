@@ -8,12 +8,14 @@ import { getSettings, updateSettingsByType } from "../controller/admin/setting.c
 import { getCountry, createCountry, updateCountry, deleteCountry, getSingleCountry } from "../controller/admin/country.controller.js";
 import { getState, createState, updateState, deleteState, getSingleState } from "../controller/admin/state.controller.js";
 import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../controller/admin/city.controller.js";
+import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
 import { Storage } from "../libraries/storage.js";
 
 const router = Router();
 const adminStorage = new Storage({ dir: "admins", isImage: true, isDoc: false, fileSize: 2 });
 const appSettingStorage = new Storage({ dir: "application", isImage: true, isDoc: false, fileSize: 5 });
+const customerStorage = new Storage({ dir: "customers", isImage: true, isDoc: false, fileSize: 2 });
 
 router.use(requireAdminAuth);
 
@@ -68,6 +70,13 @@ router.put("/cities/:id", validator("city"), updateCity);
 router.delete("/cities/:id", deleteCity);
 router.get("/cities/:id", getSingleCity);
 router.get("/cities", getCity);
+
+// Customers
+router.post("/customers", customerStorage.single("image"), validator("customer"), createCustomer);
+router.put("/customers/:id", customerStorage.single("image"), validator("customer"), updateCustomer);
+router.delete("/customers/:id", deleteCustomer);
+router.get("/customers/:id", getSingleCustomer);
+router.get("/customers", getCustomer);
 
 
 export default router;

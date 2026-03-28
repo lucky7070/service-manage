@@ -8,6 +8,7 @@ import { Button } from "@/components/ui";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
+import { PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
 import { resolveFileUrl } from "@/helpers/utils";
 import Image from "@/components/ui/Image";
 import { Edit2Icon } from "lucide-react";
@@ -22,7 +23,7 @@ type AdminProfile = {
 
 const profileValidationSchema = Yup.object().shape({
     name: Yup.string().min(2, "Too Short!").max(100, "Too Long!").required("Name Required.").trim(),
-    mobile: Yup.string().matches(/^\d{7,15}$/, "Mobile must be digits (7-15 chars)").required("Mobile Required."),
+    mobile: Yup.string().matches(PHONE_REGEXP, PHONE_ERROR_MESSAGE).required("Mobile Required."),
     email: Yup.string().email("Invalid email").required("Email Required.")
 });
 

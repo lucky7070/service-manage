@@ -1,4 +1,4 @@
-import moment from "moment";
+import { ADMIN_BREADCRUMB_ROUTES, AdminBreadcrumbItem } from "@/config";
 import { SweetAlertOptions } from "sweetalert2";
 
 export function cn(...parts: Array<string | undefined | false | null>): string {
@@ -49,37 +49,27 @@ export function getSweetAlertConfig({
     }
 }
 
-export const momentHumanize = (eventDuration: number, unit: moment.DurationInputArg2 = "seconds") => {
-    const eventMDuration = moment.duration(eventDuration, unit);
-    const eventDurationArray = [];
-    if (eventMDuration.years() > 0) {
-        eventDurationArray.push(eventMDuration.years() + ' years');
-        eventMDuration.subtract(eventMDuration.years(), 'years')
-    }
+export const titleCaseSegment = (value: string) =>
+    value.replace(/[-_]/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 
-    if (eventMDuration.months() > 0) {
-        eventDurationArray.push(eventMDuration.months() + ' months');
-        eventMDuration.subtract(eventMDuration.months(), 'months')
-    }
+export const getAdminBreadcrumbItems = (pathname: string): AdminBreadcrumbItem[] => {
+    const matched = ADMIN_BREADCRUMB_ROUTES.find((rule) => rule.startsWith ? pathname.startsWith(rule.path) : pathname === rule.path);
 
-    if (eventMDuration.weeks() > 0) {
-        eventDurationArray.push(eventMDuration.weeks() + ' weeks');
-        eventMDuration.subtract(eventMDuration.weeks(), 'weeks')
-    }
+    if (matched) return matched.items;
+    if (!pathname.startsWith("/admin")) return [];
 
-    if (eventMDuration.days() > 0) {
-        eventDurationArray.push(eventMDuration.days() + ' days');
-        eventMDuration.subtract(eventMDuration.days(), 'days')
-    }
+    const segments = pathname.split("/").filter(Boolean);
+    const adminIndex = segments.indexOf("admin");
+    const routeSegments = adminIndex >= 0 ? segments.slice(adminIndex + 1) : segments;
 
-    if (eventMDuration.hours() > 0) {
-        eventDurationArray.push(eventMDuration.hours() + ' hours');
-        eventMDuration.subtract(eventMDuration.hours(), 'hours')
-    }
-
-    if (eventMDuration.minutes() > 0) {
-        eventDurationArray.push(eventMDuration.minutes() + ' minutes');
-    }
-
-    return eventDurationArray.length === 1 ? eventDurationArray[0] : eventDurationArray.join(' and ')
-}
+    let cumulative = "/admin";
+    return routeSegments.map((segment, idx) => {
+        cumulative += `/${segment}`;
+        const isLast = idx === routeSegments.length - 1;
+        const isIdLike = /^[a-f0-9]{24}$/i.test(segment);
+        return {
+            label: isIdLike ? "Details" : titleCaseSegment(segment),
+            href: isLast ? undefined : cumulative
+        };
+    });
+};
