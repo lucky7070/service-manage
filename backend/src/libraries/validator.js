@@ -6,7 +6,7 @@ const email = check("email", "Valid email is required.").exists().not().isEmpty(
 const password = check("password", "Password must be greater then 5 digit.!!").exists().not().isEmpty().isLength({ min: 5, max: 50 });
 const name = check("name", "Name is required.").exists().not().isEmpty().isLength({ min: 2, max: 100 });
 const status = check("status", "Status is required.").exists().not().isEmpty().isIn([0, 1]);
-const mobile = check("mobile", "Enter a valid Indian mobile number.").trim().notEmpty().matches(PHONE_REGEXP);
+const mobile = check("mobile", "Enter a valid Indian mobile number.").trim().notEmpty().matches(PHONE_REGEXP).withMessage("Enter a valid Indian mobile number.").isInt().customSanitizer(value => String(value)).isLength({ min: 10, max: 10 }).withMessage('mobile must be exactly 10 digits');
 const roleId = check("roleId", "Role ID is required.").exists().not().isEmpty().isMongoId();
 const countryId = check("countryId", "Country ID is required.").exists().not().isEmpty().isMongoId();
 const stateId = check("stateId", "State ID is required.").exists().not().isEmpty().isMongoId();
@@ -59,7 +59,7 @@ export const validator = (method) => {
             output = [imageRequired];
             break;
         case "setting-update":
-            output = [];
+            output = [settingType];
             break;
         default:
             output = [];

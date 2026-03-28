@@ -43,7 +43,7 @@ type SortOrder = "asc" | "desc";
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().min(2, "Too Short!").max(100, "Too Long!").required("Name is required.").trim(),
-    mobile: Yup.string().matches(PHONE_REGEXP, PHONE_ERROR_MESSAGE).required("Mobile is required."),
+    mobile: Yup.string().matches(PHONE_REGEXP, PHONE_ERROR_MESSAGE).length(10, 'Mobile number must be exactly 10 digits.').required("Mobile is required."),
     email: Yup.string().email("Invalid email.").required("Email is required."),
     dateOfBirth: Yup.string().required("Date of birth is required."),
     status: Yup.number().required("Status is required.")
