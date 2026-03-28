@@ -120,7 +120,7 @@ export default function AdminPredefinedRatingTagsPage() {
     return (
         <section className="space-y-4">
             <AdminPageHeader
-                title="Rating tags"
+                title="Rating Tags"
                 subtitle="Quick labels for customer and provider ratings (positive, negative, or neutral)."
                 action={
                     <PermissionBlock permission_id={341}>

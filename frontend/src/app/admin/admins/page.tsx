@@ -8,17 +8,18 @@ import moment from "moment";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import Link from "next/link";
-import { Fingerprint, Pencil, Plus, Trash2 } from "lucide-react";
+import { Fingerprint, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { Role } from "../roles/page";
-import { getSweetAlertConfig } from "@/helpers/utils";
+import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
+import Image from "@/components/ui/Image";
 
 type AdminRecord = {
     _id: string;
@@ -28,6 +29,7 @@ type AdminRecord = {
     email?: string | null;
     roleId: string;
     roleName?: string | null;
+    image?: string | null;
     permissionsCount?: number;
     status: number;
     createdAt?: string;
@@ -177,6 +179,7 @@ export default function AdminUsersPage() {
                     <table className="min-w-full text-sm">
                         <thead className="bg-[#edf3ff] text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             <tr>
+                                <th className="px-3 py-2 w-14"> </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("userId")} name="User ID" active={param.sortBy === "userId"} sortOrder={param.sortOrder} />
                                 </th>
@@ -202,8 +205,20 @@ export default function AdminUsersPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {data.record.map((row) => (
-                                <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
+                            {data.record.map((row) => {
+                                const thumb = resolveFileUrl(row.image);
+                                return <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
+                                    <td className="px-3 py-2 align-middle">
+                                        <div className="relative h-9 w-9 overflow-hidden rounded-full border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                            {thumb ? (
+                                                <Image src={thumb} alt="" className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                    <ImageIcon className="h-4 w-4" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.userId || "—"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.roleName || "-"}</td>
@@ -251,7 +266,7 @@ export default function AdminUsersPage() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            })}
 
                             {!data.record.length ? (
                                 <tr>
