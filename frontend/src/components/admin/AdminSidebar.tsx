@@ -27,7 +27,7 @@ export default function AdminSidebar() {
 
     return (
         <aside
-            className={cn("relative z-0 flex h-full min-h-[calc(100vh-3.5rem)] flex-col rounded-2xl border border-indigo-100 bg-linear-to-b from-white via-[#f6f9ff] to-[#ecf2ff] p-4 text-slate-700 shadow-sm transition-[width] duration-200 dark:border-slate-700 dark:from-[#0f172a] dark:via-[#15213f] dark:to-[#1c2f53] dark:text-slate-100", (isHoverExpanded || isSidebarCollapsed === false) ? "md:w-[260px] md:px-4" : "md:w-[88px] md:px-2")}
+            className={cn("relative z-0 flex h-full min-h-[calc(100vh-3.5rem)] flex-col rounded-2xl border border-indigo-100 bg-linear-to-b from-white via-[#f6f9ff] to-[#ecf2ff] p-4 text-slate-700 shadow-sm transition-[width] duration-200 dark:border-slate-700 dark:from-secondary-900 dark:via-[#15213f] dark:to-[#1c2f53] dark:text-slate-100", (isHoverExpanded || isSidebarCollapsed === false) ? "md:w-[260px] md:px-4" : "md:w-[88px] md:px-2")}
             onMouseEnter={() => {
                 if (isSidebarCollapsed) setIsHoveringCollapsed(true);
             }}
