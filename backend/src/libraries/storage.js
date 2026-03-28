@@ -73,9 +73,9 @@ export const deleteFile = (deleteFile) => {
         deleteFile = deleteFile.replace(`${process.env.BASEURL}uploads/`, '');
 
         if (![
-            'users/avatar.png',
-            'admins/avatar.png',
-            '404-file-not-found.jpg'
+            '/customers/default.png',
+            '/admins/default.png',
+            'img-not-found.jpg'
         ].includes(deleteFile)) {
             deleteFile = `public/uploads/` + deleteFile;
             if (fs.existsSync(deleteFile)) {

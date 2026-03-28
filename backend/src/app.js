@@ -4,11 +4,14 @@ import express from "express";
 import fs from "fs";
 import morgan from "morgan";
 import path from "path";
+import { fileURLToPath } from 'url';
 import { config } from "./config/index.js";
 import routes from "./routes/index.js";
 import { customMethods } from "./middlewares/customMethods.js";
 import { licenseCheck } from "./middlewares/licenseCheck.js";
 import { errorHandler, notFound } from "./middlewares/errorHandler.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(
@@ -28,11 +31,10 @@ app.use(licenseCheck);
 app.get("/health", (req, res) => res.success({ ok: true }, "Backend is healthy"));
 
 const uploadsDir = path.resolve("./public/uploads");
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 app.use("/uploads", express.static(uploadsDir));
+app.all('/uploads/*', (req, res) => res.sendFile(path.resolve(__dirname, '../public/uploads/img-not-found.jpg')));
 
 app.use("/api", routes);
 app.use(notFound);

@@ -40,7 +40,7 @@ type AdminRecordResponse = {
     pagination: number[];
 };
 
-type SortBy = "name" | "roleName" | "status" | "mobile" | "email" | "createdAt";
+type SortBy = "userId" | "name" | "roleName" | "status" | "mobile" | "email" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 const validationSchema = Yup.object().shape({
@@ -178,6 +178,9 @@ export default function AdminUsersPage() {
                         <thead className="bg-[#edf3ff] text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             <tr>
                                 <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("userId")} name="User ID" active={param.sortBy === "userId"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("name")} name="Name" active={param.sortBy === "name"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
@@ -201,6 +204,7 @@ export default function AdminUsersPage() {
                         <tbody>
                             {data.record.map((row) => (
                                 <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.userId || "—"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.roleName || "-"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.mobile}</td>

@@ -18,6 +18,7 @@ export const listAdmins = async (req, res) => {
         if (query) {
             const q = escapeRegex(String(query));
             filter.$or = [
+                { userId: { $regex: q, $options: "i" } },
                 { name: { $regex: q, $options: "i" } },
                 { mobile: { $regex: q, $options: "i" } },
                 { email: { $regex: q, $options: "i" } },

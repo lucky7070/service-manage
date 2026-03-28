@@ -9,7 +9,7 @@ const Schema = new mongoose.Schema(
         mobile: { type: String, required: true, unique: true, index: true, default: null },
         email: { type: String, unique: true, sparse: true, index: true, default: null },
         password: { type: String, required: true, default: null, select: false },
-        image: { type: String, default: null },
+        image: { type: String, default: '/admins/default.png' },
         permissions: { type: [Number], default: [] }, // 101, 102
         roleId: { type: mongoose.Schema.Types.ObjectId, ref: "Role", default: null },
         isActive: { type: Boolean, default: true },

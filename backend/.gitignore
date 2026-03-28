@@ -1,3 +1,11 @@
-public/uploads/
 node_modules/
 .env
+
+public/uploads/admins/*
+public/uploads/customers/*
+
+!public/uploads/admins/
+!public/uploads/customers/
+!public/uploads/img-not-found.jpg
+!public/uploads/admins/default.png
+!public/uploads/customers/default.png

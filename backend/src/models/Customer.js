@@ -8,7 +8,7 @@ const Schema = new mongoose.Schema(
         name: { type: String, required: true, default: null },
         mobile: { type: String, required: true, unique: true, index: true, default: null },
         email: { type: String, unique: true, sparse: true, index: true, default: null },
-        image: { type: String, default: null },
+        image: { type: String, default: '/customers/default.png' },
         dateOfBirth: { type: Date, default: null },
         preferredLanguage: { type: String, enum: ["en", "hi"], default: "en" },
         cityId: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null },
