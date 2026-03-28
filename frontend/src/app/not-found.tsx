@@ -20,7 +20,7 @@ export default function NotFoundPage() {
                     The page you are looking for does not exist, was moved, or the URL might be incorrect.
                 </p>
 
-                <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
                     <Link
                         href="/"
                         className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary-600 px-5 text-sm font-medium text-white transition hover:bg-primary-700"
@@ -29,14 +29,14 @@ export default function NotFoundPage() {
                         Go to Home
                     </Link>
                     <Link
-                        href="/admin/dashboard"
+                        href="/dashboard"
                         className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-secondary-300 px-5 text-sm font-medium text-secondary-700 transition hover:bg-secondary-50 dark:border-secondary-600 dark:text-secondary-200 dark:hover:bg-secondary-800"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Dashboard
                     </Link>
                     <Link
-                        href="/admin/profile"
+                        href="/profile"
                         className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-secondary-300 px-5 text-sm font-medium text-secondary-700 transition hover:bg-secondary-50 dark:border-secondary-600 dark:text-secondary-200 dark:hover:bg-secondary-800"
                     >
                         <UserCircle2 className="h-4 w-4" />

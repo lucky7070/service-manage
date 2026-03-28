@@ -54,7 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 dispatch(setLoading(false));
             } else {
                 if (!isLoginPage) router.push("/admin/login");
-                // dispatch(setLoading(false));
+                dispatch(setLoading(false));
             }
         })();
     }, [dispatch, isLoginPage, router]);
