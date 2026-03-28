@@ -6,6 +6,7 @@
     "scripts": {
         "dev": "nodemon server.js",
         "start": "node server.js",
+        "seed": "node scripts/seed.mjs",
         "lint": "node -e \"console.log('Add eslint config if needed')\""
     },
     "dependencies": {

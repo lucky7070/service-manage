@@ -15,6 +15,20 @@ const settingType = param("type", "Setting type is invalid.").exists().not().isE
 const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().not().isEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
 const customerStatus = check("status", "Status is required.").exists().not().isEmpty().isIn([0, 1, "0", "1"]);
 
+const tagFor = check("tagFor", "Tag for is required.").exists().not().isEmpty().isIn(["customer", "provider"]);
+const tagName = check("tagName", "Tag name is required.").exists().not().isEmpty().isLength({ min: 1, max: 150 });
+const tagType = check("tagType", "Tag type is required.").exists().not().isEmpty().isIn(["positive", "negative", "neutral"]);
+
+const categoryIdService = check("categoryId", "Category is required.").exists().not().isEmpty().isMongoId();
+
+const slugServiceCategory = check("slug", "Slug: use lowercase letters, numbers, and hyphens only.")
+    .optional({ values: "falsy" })
+    .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .isLength({ min: 2, max: 100 });
+const nameHiCategory = check("nameHi").optional({ values: "falsy" }).isLength({ max: 200 });
+const descriptionCategory = check("description").optional({ values: "falsy" }).isLength({ max: 5000 });
+const displayOrderCategory = check("displayOrder").optional({ values: "falsy" }).isInt({ min: 0, max: 999999 });
+
 const passwordOptional = check("password", "Password must be greater then 5 digit.!!").optional({ nullable: true }).isLength({ min: 5, max: 50 });
 const imageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
     if (!req.file) throw new Error("Profile image is required.");
@@ -45,6 +59,16 @@ export const validator = (method) => {
             break;
         case "customer":
             output = [name, mobile, email, dateOfBirth, customerStatus];
+            break;
+        case "rating-tag":
+        case "predefined-rating-tag":
+            output = [tagFor, tagName, tagType, customerStatus];
+            break;
+        case "service-type":
+            output = [categoryIdService, name, customerStatus];
+            break;
+        case "service-category":
+            output = [name, customerStatus, slugServiceCategory, nameHiCategory, descriptionCategory, displayOrderCategory];
             break;
         case "admin":
             output = [name, mobile, roleId, email, password, status];

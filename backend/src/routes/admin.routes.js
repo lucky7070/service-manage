@@ -9,6 +9,28 @@ import { getCountry, createCountry, updateCountry, deleteCountry, getSingleCount
 import { getState, createState, updateState, deleteState, getSingleState } from "../controller/admin/state.controller.js";
 import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../controller/admin/city.controller.js";
 import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
+import {
+    getPredefinedRatingTag,
+    createPredefinedRatingTag,
+    updatePredefinedRatingTag,
+    deletePredefinedRatingTag,
+    getSinglePredefinedRatingTag
+} from "../controller/admin/predefinedRatingTag.controller.js";
+import {
+    listServiceCategoriesForSelect,
+    createServiceCategory,
+    updateServiceCategory,
+    deleteServiceCategory,
+    getServiceCategory,
+    getSingleServiceCategory
+} from "../controller/admin/serviceCategory.controller.js";
+import {
+    getServiceType,
+    createServiceType,
+    updateServiceType,
+    deleteServiceType,
+    getSingleServiceType
+} from "../controller/admin/serviceType.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
 import { Storage } from "../libraries/storage.js";
 
@@ -16,6 +38,7 @@ const router = Router();
 const adminStorage = new Storage({ dir: "admins", isImage: true, isDoc: false, fileSize: 2 });
 const appSettingStorage = new Storage({ dir: "application", isImage: true, isDoc: false, fileSize: 5 });
 const customerStorage = new Storage({ dir: "customers", isImage: true, isDoc: false, fileSize: 2 });
+const serviceCategoryStorage = new Storage({ dir: "service-categories", isImage: true, isDoc: false, fileSize: 2 });
 
 router.use(requireAdminAuth);
 
@@ -77,6 +100,28 @@ router.put("/customers/:id", customerStorage.single("image"), validator("custome
 router.delete("/customers/:id", deleteCustomer);
 router.get("/customers/:id", getSingleCustomer);
 router.get("/customers", getCustomer);
+
+// Predefined rating tags
+router.post("/rating-tags", validator("predefined-rating-tag"), createPredefinedRatingTag);
+router.put("/rating-tags/:id", validator("predefined-rating-tag"), updatePredefinedRatingTag);
+router.delete("/rating-tags/:id", deletePredefinedRatingTag);
+router.get("/rating-tags/:id", getSinglePredefinedRatingTag);
+router.get("/rating-tags", getPredefinedRatingTag);
+
+// Service Categories
+router.get("/service-categories/options", listServiceCategoriesForSelect);
+router.post("/service-categories", serviceCategoryStorage.single("image"), validator("service-category"), createServiceCategory);
+router.put("/service-categories/:id", serviceCategoryStorage.single("image"), validator("service-category"), updateServiceCategory);
+router.delete("/service-categories/:id", deleteServiceCategory);
+router.get("/service-categories/:id", getSingleServiceCategory);
+router.get("/service-categories", getServiceCategory);
+
+// Service types (jobs under a category, e.g. Tap repair under Plumber)
+router.post("/service-types", validator("service-type"), createServiceType);
+router.put("/service-types/:id", validator("service-type"), updateServiceType);
+router.delete("/service-types/:id", deleteServiceType);
+router.get("/service-types/:id", getSingleServiceType);
+router.get("/service-types", getServiceType);
 
 
 export default router;

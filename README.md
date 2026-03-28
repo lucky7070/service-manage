@@ -16,6 +16,8 @@ Current scope is focused on admin operations, permissions, settings, and locatio
 
 ```text
 backend/
+  scripts/
+    seed.mjs          # CLI entry (npm run seed)
   src/
     controller/
     config/
@@ -24,6 +26,7 @@ backend/
     middlewares/
     models/
     routes/
+    seeders/          # Laravel-style seed modules + databaseSeeder registry
 frontend/
   src/
     app/
@@ -43,6 +46,27 @@ npm run dev
 ```
 
 Backend default: `http://localhost:5000`
+
+### Database seeders (CLI)
+
+Seed scripts live under `backend/src/seeders/` and are orchestrated by `backend/src/seeders/databaseSeeder.js` (same idea as Laravel’s `DatabaseSeeder`). **Run seeding only via the CLI** from a developer machine or deployment pipeline—there are no admin HTTP endpoints for seeding.
+
+From `backend/`:
+
+```bash
+npm run seed                                    # run all registered seeders in order
+npm run seed -- serviceCategories               # only service category seeder
+npm run seed -- serviceCategories serviceTypes  # multiple by name
+npm run seed -- --only=settings                 # comma-separated via --only=
+```
+
+Registered seeder names: `settings`, `serviceCategories`, `serviceTypes` (see `SEEDER_REGISTRY` in `databaseSeeder.js`).
+
+**Production:** the CLI refuses to run when `NODE_ENV=production` unless you set `ALLOW_DB_SEED=true` (intended for controlled one-off or staging deploys, not casual live DB writes).
+
+**Adding a new seeder:** create `backend/src/seeders/<name>.seeder.js` exporting an async `seed<Name>()` function, then append an entry to `SEEDER_REGISTRY` in `databaseSeeder.js` in the correct dependency order.
+
+Requirements: `.env` with a valid `MONGO_URI`, same as `npm run dev`.
 
 ### Frontend
 

@@ -78,9 +78,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         Your account does not have the required permission for this module. Please contact the super admin to grant access.
                     </p>
                     <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-                        <Link href="/" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 text-sm font-medium text-white transition hover:bg-indigo-700">
+                        <Link href="/admin/dashboard" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 text-sm font-medium text-white transition hover:bg-indigo-700">
                             <Home className="h-4 w-4" />
-                            Go to Home
+                            Go to Dashboard
                         </Link>
                         <Link href="/admin/profile" className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
                             <UserCircle2 className="h-4 w-4" />

@@ -97,7 +97,7 @@ export default function AdminSettingsPage() {
 
                 {!currentSettings.length ? (
                     <div className="rounded-lg border border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-300">
-                        {loading ? "Loading settings..." : "No settings found. Use 'Seed Default Settings' to initialize."}
+                        {loading ? "Loading settings..." : "No settings found. Defaults are loaded via the backend seed script (see project README)."}
                     </div>
                 ) : (
                     <Formik

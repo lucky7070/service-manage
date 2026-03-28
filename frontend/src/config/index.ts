@@ -1,4 +1,4 @@
-import { Building2, Globe, LayoutDashboard, Map, MapPinned, Settings, Shield, UserCog, UserCircle, Users } from "lucide-react";
+import { Building2, Globe, LayoutDashboard, Layers, Map, MapPinned, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -96,6 +96,33 @@ export const PERMISSIONS = [
             { id: 334, label: "View Customer" },
         ]
     },
+    {
+        name: "Rating tags",
+        permissions: [
+            { id: 341, label: "Create Rating tag" },
+            { id: 342, label: "Update Rating tag" },
+            { id: 343, label: "Delete Rating tag" },
+            { id: 344, label: "View Rating tags" },
+        ]
+    },
+    {
+        name: "Service Category",
+        permissions: [
+            { id: 351, label: "Create Service category" },
+            { id: 352, label: "Update Service category" },
+            { id: 353, label: "Delete Service category" },
+            { id: 354, label: "View Service Categories" },
+        ]
+    },
+    {
+        name: "Service Type",
+        permissions: [
+            { id: 361, label: "Create Service type" },
+            { id: 362, label: "Update Service type" },
+            { id: 363, label: "Delete Service type" },
+            { id: 364, label: "View Service types" },
+        ]
+    },
 
 ];
 
@@ -108,6 +135,15 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/roles", label: "Roles", icon: UserCog, permission_id: 104 },
             { href: "/admin/admins", label: "Sub Admins", icon: Users, permission_id: 204 },
             { href: "/admin/customers", label: "Customers", icon: UserCircle, permission_id: 334 },
+        ]
+    },
+    {
+        label: "Master",
+        icon: Tags,
+        children: [
+            { href: "/admin/rating-tags", label: "Rating tags", icon: Tags, permission_id: 344 },
+            { href: "/admin/service-categories", label: "Service Categories", icon: Layers, permission_id: 354 },
+            { href: "/admin/service-types", label: "Service types", icon: Wrench, permission_id: 364 },
         ]
     },
     {
@@ -132,6 +168,9 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
     { path: "/admin/states", permission_id: 314 },
     { path: "/admin/cities", permission_id: 324 },
     { path: "/admin/customers", permission_id: 334 },
+    { path: "/admin/rating-tags", permission_id: 344 },
+    { path: "/admin/service-categories", permission_id: 354 },
+    { path: "/admin/service-types", permission_id: 364 },
 ];
 
 export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
@@ -143,6 +182,9 @@ export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
     { path: "/admin/states", items: [{ label: "States" }] },
     { path: "/admin/cities", items: [{ label: "Cities" }] },
     { path: "/admin/customers", items: [{ label: "Customers" }] },
+    { path: "/admin/rating-tags", items: [{ label: "Rating tags" }] },
+    { path: "/admin/service-categories", items: [{ label: "Service Categories" }] },
+    { path: "/admin/service-types", items: [{ label: "Service types" }] },
     {
         path: "/admin/roles/permissions/",
         startsWith: true,
