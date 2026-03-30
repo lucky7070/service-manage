@@ -1,4 +1,4 @@
-import { Building2, Globe, LayoutDashboard, Layers, Map, MapPinned, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
+import { Building2, Globe, HardHat, LayoutDashboard, Layers, Map, MapPinned, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -123,6 +123,15 @@ export const PERMISSIONS = [
             { id: 364, label: "View Service types" },
         ]
     },
+    {
+        name: "Service Provider",
+        permissions: [
+            { id: 371, label: "Create Service provider" },
+            { id: 372, label: "Update Service provider" },
+            { id: 373, label: "Delete Service provider" },
+            { id: 374, label: "View Service providers" },
+        ]
+    },
 
 ];
 
@@ -135,6 +144,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/roles", label: "Roles", icon: UserCog, permission_id: 104 },
             { href: "/admin/admins", label: "Sub Admins", icon: Users, permission_id: 204 },
             { href: "/admin/customers", label: "Customers", icon: UserCircle, permission_id: 334 },
+            { href: "/admin/service-providers", label: "Service providers", icon: HardHat, permission_id: 374 },
         ]
     },
     {
@@ -168,6 +178,7 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
     { path: "/admin/states", permission_id: 314 },
     { path: "/admin/cities", permission_id: 324 },
     { path: "/admin/customers", permission_id: 334 },
+    { path: "/admin/service-providers", permission_id: 374 },
     { path: "/admin/rating-tags", permission_id: 344 },
     { path: "/admin/service-categories", permission_id: 354 },
     { path: "/admin/service-types", permission_id: 364 },
@@ -182,6 +193,7 @@ export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
     { path: "/admin/states", items: [{ label: "States" }] },
     { path: "/admin/cities", items: [{ label: "Cities" }] },
     { path: "/admin/customers", items: [{ label: "Customers" }] },
+    { path: "/admin/service-providers", items: [{ label: "Service providers" }] },
     { path: "/admin/rating-tags", items: [{ label: "Rating Tags" }] },
     { path: "/admin/service-categories", items: [{ label: "Service Categories" }] },
     { path: "/admin/service-types", items: [{ label: "Service types" }] },

@@ -12,7 +12,7 @@ import { Fingerprint, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { Role } from "../roles/page";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
@@ -149,11 +149,10 @@ export default function AdminUsersPage() {
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
                 <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <input
+                    <Input
                         value={param.query}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        data-slot="input"
-                        className="h-9 w-full max-w-xs min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+                        className="max-w-xs"
                         placeholder="Search Admin..."
                     />
 
@@ -164,7 +163,7 @@ export default function AdminUsersPage() {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="h-9 rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className={inputClassName}
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
@@ -329,15 +328,12 @@ export default function AdminUsersPage() {
                                 {({ isSubmitting }) => (
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
-                                            <label htmlFor="admin-role" data-slot="label" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Role
-                                            </label>
+                                            <Label htmlFor="admin-role">Role</Label>
                                             <Field
                                                 as="select"
                                                 id="admin-role"
                                                 name="roleId"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                                                className={inputClassName}
                                             >
                                                 <option value="">Select Role</option>
                                                 {roles.map((r) => (
@@ -349,82 +345,44 @@ export default function AdminUsersPage() {
                                             <ErrorMessage className="text-xs text-rose-600" name="roleId" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label
-                                                htmlFor="admin-name"
-                                                data-slot="label"
-                                                className="flex items-center gap-2 text-sm font-medium leading-none select-none"
-                                            >
-                                                Name
-                                            </label>
-                                            <Field
-                                                id="admin-name"
-                                                name="name"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
-                                                placeholder="e.g. Sub Admin"
-                                            />
+                                            <Label htmlFor="admin-name">Name</Label>
+                                            <Field as={Input} id="admin-name" name="name" placeholder="e.g. Sub Admin" />
                                             <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label
-                                                htmlFor="admin-mobile"
-                                                data-slot="label"
-                                                className="flex items-center gap-2 text-sm font-medium leading-none select-none"
-                                            >
-                                                Mobile
-                                            </label>
-                                            <Field
-                                                id="admin-mobile"
-                                                name="mobile"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
-                                                placeholder="e.g. 9876543210"
-                                            />
+                                            <Label htmlFor="admin-mobile">Mobile</Label>
+                                            <Field as={Input} id="admin-mobile" name="mobile" placeholder="e.g. 9876543210" />
                                             <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label htmlFor="admin-email" data-slot="label" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Email
-                                            </label>
+                                            <Label htmlFor="admin-email">Email</Label>
                                             <Field
+                                                as={Input}
                                                 id="admin-email"
                                                 name="email"
                                                 type="email"
-                                                autoFill="off"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+                                                autoComplete="off"
                                                 placeholder="e.g. subadmin@email.com"
                                             />
                                             <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="admin-password" data-slot="label" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Password
-                                            </label>
+                                            <Label htmlFor="admin-password">Password</Label>
                                             <Field
+                                                as={Input}
                                                 id="admin-password"
                                                 name="password"
                                                 type="password"
-                                                data-slot="input"
-                                                autoFill="off"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+                                                autoComplete="new-password"
                                                 placeholder="Create password"
                                             />
                                             <ErrorMessage className="text-xs text-rose-600" name="password" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="admin-status" data-slot="label" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Status
-                                            </label>
-                                            <Field
-                                                as="select"
-                                                id="admin-status"
-                                                name="status"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                            >
+                                            <Label htmlFor="admin-status">Status</Label>
+                                            <Field as="select" id="admin-status" name="status" className={inputClassName}>
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>

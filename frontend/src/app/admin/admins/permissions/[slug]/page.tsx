@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Button, ToggleSwitch } from "@/components/ui";
+import { Button, Label, ToggleSwitch } from "@/components/ui";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PERMISSIONS } from "@/config";
@@ -80,10 +80,10 @@ export default function SubAdminPermissionsPage({ params }: { params: Promise<{ 
                         <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{group.name}</h3>
                         <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {group.permissions.map((perm) => (
-                                <label key={perm.id} className="flex items-center gap-2 rounded-md border border-indigo-100 px-3 py-2 text-slate-700 dark:text-slate-200 dark:border-indigo-100">
+                                <Label key={perm.id} className="!mb-0 cursor-pointer rounded-md border border-indigo-100 px-3 py-2 text-slate-700 dark:border-indigo-100 dark:text-slate-200">
                                     <ToggleSwitch checked={selected.includes(perm.id)} onCheckedChange={() => togglePermission(perm.id)} />
                                     <span className="text-sm">{perm.label}</span>
-                                </label>
+                                </Label>
                             ))}
                         </div>
                     </div>

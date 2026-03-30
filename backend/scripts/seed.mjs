@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 /**
- * CLI database seeder (same logic as Laravel `php artisan db:seed`).
  *
  * Usage:
  *   npm run seed                    # all registered seeders
@@ -38,9 +37,7 @@ if (only?.length) {
 }
 
 if (process.env.NODE_ENV === "production" && process.env.ALLOW_DB_SEED !== "true") {
-    console.error(
-        "[seed] Refusing to run in NODE_ENV=production. Set ALLOW_DB_SEED=true to run (e.g. staging deploy or one-off migration)."
-    );
+    console.error("[seed] Refusing to run in NODE_ENV=production. Set ALLOW_DB_SEED=true to run (e.g. staging deploy or one-off migration).");
     process.exit(1);
 }
 

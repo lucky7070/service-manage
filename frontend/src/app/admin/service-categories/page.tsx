@@ -11,13 +11,12 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, inputClassName } from "@/components/ui";
 import Image from "@/components/ui/Image";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { buildServiceCategoryFormData, getSweetAlertConfig, resolveFileUrl, slugify, type ServiceCategoryFormValues } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
-
 type CategoryRow = {
     _id: string;
     slug: string;
@@ -144,10 +143,10 @@ export default function AdminServiceCategoriesPage() {
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
                 <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <input
+                    <Input
                         value={param.query}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        className="h-9 w-full max-w-xs min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                        className="max-w-xs"
                         placeholder="Search name or slug..."
                     />
                     <div className="flex items-center gap-2">
@@ -291,7 +290,7 @@ export default function AdminServiceCategoriesPage() {
                                 {({ isSubmitting, values }) => (
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium">Image <span className="font-normal text-slate-500">(optional)</span></label>
+                                            <Label>Image <span className="font-normal text-slate-500">(optional)</span></Label>
                                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
                                                     {(imagePreview || resolveFileUrl(values.image)) ? (
@@ -306,10 +305,7 @@ export default function AdminServiceCategoriesPage() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 dark:text-slate-300 dark:file:bg-indigo-500/15"
+                                                <InputFile accept="image/*"
                                                     onChange={(e) => {
                                                         const f = e.target.files?.[0] ?? null;
                                                         setImageFile(f);
@@ -322,13 +318,12 @@ export default function AdminServiceCategoriesPage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label htmlFor="sc-name" className="text-sm font-medium">Name (English)</label>
+                                            <Label htmlFor="sc-name">Name (English)</Label>
                                             <Field name="name">
                                                 {({ field, form }: FieldProps<string>) => (
-                                                    <input
+                                                    <Input
                                                         {...field}
                                                         id="sc-name"
-                                                        className="h-9 w-full rounded-md border border-indigo-100 bg-white px-3 text-sm dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
                                                         placeholder="e.g. Home services"
                                                         onBlur={(e) => {
                                                             field.onBlur(e);
@@ -343,37 +338,38 @@ export default function AdminServiceCategoriesPage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label htmlFor="sc-slug" className="text-sm font-medium">Slug</label>
+                                            <Label htmlFor="sc-slug">Slug</Label>
                                             <Field
+                                                as={Input}
                                                 id="sc-slug"
                                                 name="slug"
-                                                className="h-9 w-full rounded-md border border-indigo-100 bg-white px-3 font-mono text-sm dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                                                className="font-mono"
                                                 placeholder="Auto-filled from name"
                                             />
                                             <ErrorMessage className="text-xs text-rose-600" name="slug" component="small" />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label htmlFor="sc-nameHi" className="text-sm font-medium">Name (Hindi) <span className="font-normal text-slate-500">optional</span></label>
-                                            <Field id="sc-nameHi" name="nameHi" className="h-9 w-full rounded-md border border-indigo-100 bg-white px-3 text-sm dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100" />
+                                            <Label htmlFor="sc-nameHi">Name (Hindi) <span className="font-normal text-slate-500">optional</span></Label>
+                                            <Field as={Input} id="sc-nameHi" name="nameHi" />
                                             <ErrorMessage className="text-xs text-rose-600" name="nameHi" component="small" />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label htmlFor="sc-desc" className="text-sm font-medium">Description <span className="font-normal text-slate-500">optional</span></label>
+                                            <Label htmlFor="sc-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
                                             <Field as="textarea" id="sc-desc" name="description" rows={3} className="w-full rounded-md border border-indigo-100 bg-white px-3 py-2 text-sm dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100" />
                                             <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3">
                                             <div className="space-y-2">
-                                                <label htmlFor="sc-order" className="text-sm font-medium">Display order</label>
-                                                <Field id="sc-order" name="displayOrder" type="number" min={0} className="h-9 w-full rounded-md border border-indigo-100 bg-white px-3 text-sm dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100" />
+                                                <Label htmlFor="sc-order">Display order</Label>
+                                                <Field as={Input} id="sc-order" name="displayOrder" type="number" min={0} />
                                                 <ErrorMessage className="text-xs text-rose-600" name="displayOrder" component="small" />
                                             </div>
                                             <div className="space-y-2">
-                                                <label htmlFor="sc-status" className="text-sm font-medium">Status</label>
-                                                <Field as="select" id="sc-status" name="status" className="h-9 w-full rounded-md border border-indigo-100 bg-white px-3 text-sm dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100">
+                                                <Label htmlFor="sc-status">Status</Label>
+                                                <Field as="select" id="sc-status" name="status" className={inputClassName}>
                                                     <option value={1}>Active</option>
                                                     <option value={0}>Inactive</option>
                                                 </Field>

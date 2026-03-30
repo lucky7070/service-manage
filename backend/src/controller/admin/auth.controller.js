@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { config } from "../../config/index.js";
-import { Admin, Role, Notification } from "../../models/index.js";
+import { Admin, Notification } from "../../models/index.js";
 
 const cookieOptions = {
     httpOnly: true,
@@ -114,23 +114,4 @@ export const updateAdminProfileImage = async (req, res) => {
 export const adminLogout = async (req, res) => {
     res.clearCookie("admin_token");
     return res.success([], "Logged out");
-};
-
-export const createDefaultAdmin = async (req, res) => {
-    try {
-        const { name, email, mobile, password } = req.body;
-        if (!name || !password || (!email && !mobile)) {
-            return res.someThingWentWrong({ message: "Name, password and email/mobile are required" });
-        }
-
-        const existing = await Admin.findOne({ $or: [{ email: email || null }, { mobile: mobile || null }] });
-        if (existing) return res.someThingWentWrong({ message: "Admin already exists" });
-
-        const role = await Role.create({ name: "Super Admin", isActive: 1 });
-        const hashed = await bcrypt.hash(password, 10);
-        const admin = await Admin.create({ name, email: email || null, mobile: mobile || null, password: hashed, roleId: role._id });
-        return res.successInsert(admin, "Default admin created");
-    } catch (error) {
-        return res.someThingWentWrong(error);
-    }
 };

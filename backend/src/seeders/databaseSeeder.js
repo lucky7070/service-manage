@@ -1,12 +1,14 @@
 import { seedSettings } from "./settings.seeder.js";
 import { seedServiceCategories } from "./serviceCategory.seeder.js";
 import { seedServiceTypes } from "./serviceType.seeder.js";
+import { seedDefaultAdmin } from "./defaultAdmin.seeder.js";
 
 /**
  * Registered seeders in execution order (dependencies first).
  * Add new entries here — same pattern as Laravel's `DatabaseSeeder::call()`.
  */
 export const SEEDER_REGISTRY = [
+    { name: "defaultAdmin", description: "Default Super Admin account", run: seedDefaultAdmin },
     { name: "settings", description: "Application settings defaults", run: seedSettings },
     { name: "serviceCategories", description: "Service category trade groups", run: seedServiceCategories },
     { name: "serviceTypes", description: "Sample service types under categories", run: () => seedServiceTypes({ seedCategoriesFirst: true }) }

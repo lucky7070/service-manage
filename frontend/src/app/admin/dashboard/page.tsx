@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, Globe, Layers, Map, Shield, Tags, UserCog, UserCircle, Wrench } from "lucide-react";
+import { Building2, Globe, HardHat, Layers, Map, Shield, Tags, UserCog, UserCircle, Wrench } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import PermissionBlock from "@/components/admin/PermissionBlock";
@@ -17,6 +17,7 @@ type DashboardCountState = {
     predefinedRatingTags: number;
     serviceCategories: number;
     serviceTypes: number;
+    serviceProviders: number;
 };
 
 type DashboardCard = {
@@ -34,6 +35,7 @@ const DASHBOARD_CARDS: DashboardCard[] = [
     { key: "states", title: "States", href: "/admin/states", permissionId: 314, icon: Map },
     { key: "cities", title: "Cities", href: "/admin/cities", permissionId: 324, icon: Building2 },
     { key: "customers", title: "Customers", href: "/admin/customers", permissionId: 334, icon: UserCircle },
+    { key: "serviceProviders", title: "Service providers", href: "/admin/service-providers", permissionId: 374, icon: HardHat },
     { key: "predefinedRatingTags", title: "Rating Tags", href: "/admin/rating-tags", permissionId: 344, icon: Tags },
     { key: "serviceCategories", title: "Service Categories", href: "/admin/service-categories", permissionId: 354, icon: Layers },
     { key: "serviceTypes", title: "Service types", href: "/admin/service-types", permissionId: 364, icon: Wrench }
@@ -49,7 +51,8 @@ export default function AdminDashboardPage() {
         customers: 0,
         predefinedRatingTags: 0,
         serviceCategories: 0,
-        serviceTypes: 0
+        serviceTypes: 0,
+        serviceProviders: 0
     });
 
     useEffect(() => {
@@ -65,7 +68,8 @@ export default function AdminDashboardPage() {
                     customers: Number(data.data.customers || 0),
                     predefinedRatingTags: Number(data.data.predefinedRatingTags || 0),
                     serviceCategories: Number(data.data.serviceCategories || 0),
-                    serviceTypes: Number(data.data.serviceTypes || 0)
+                    serviceTypes: Number(data.data.serviceTypes || 0),
+                    serviceProviders: Number(data.data.serviceProviders || 0)
                 });
             }
         })();

@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -142,11 +142,10 @@ export default function AdminPredefinedRatingTagsPage() {
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
                 <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <input
+                    <Input
                         value={param.query}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        data-slot="input"
-                        className="h-9 w-full max-w-xs min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+                        className="max-w-xs"
                         placeholder="Search tag name..."
                     />
                     <div className="flex flex-wrap items-center gap-2">
@@ -160,7 +159,7 @@ export default function AdminPredefinedRatingTagsPage() {
                                     tagFor: v === "" ? "" : (v as "customer" | "provider")
                                 }));
                             }}
-                            className="h-9 rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className={inputClassName}
                         >
                             <option value="">All audiences</option>
                             <option value="customer">Customer</option>
@@ -172,7 +171,7 @@ export default function AdminPredefinedRatingTagsPage() {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="h-9 rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className={inputClassName}
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
@@ -307,36 +306,21 @@ export default function AdminPredefinedRatingTagsPage() {
                                 {({ isSubmitting }) => (
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
-                                            <label htmlFor="prt-tagFor" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Tag for</label>
-                                            <Field
-                                                as="select"
-                                                id="prt-tagFor"
-                                                name="tagFor"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                            >
+                                            <Label htmlFor="prt-tagFor">Tag for</Label>
+                                            <Field as="select" id="prt-tagFor" name="tagFor" className={inputClassName}>
                                                 <option value="customer">Customer</option>
                                                 <option value="provider">Provider</option>
                                             </Field>
                                             <ErrorMessage className="text-xs text-rose-600" name="tagFor" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="prt-tagName" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Tag name</label>
-                                            <Field
-                                                id="prt-tagName"
-                                                name="tagName"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                                placeholder="e.g. Punctual"
-                                            />
+                                            <Label htmlFor="prt-tagName">Tag name</Label>
+                                            <Field as={Input} id="prt-tagName" name="tagName" placeholder="e.g. Punctual" />
                                             <ErrorMessage className="text-xs text-rose-600" name="tagName" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="prt-tagType" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Type</label>
-                                            <Field
-                                                as="select"
-                                                id="prt-tagType"
-                                                name="tagType"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                            >
+                                            <Label htmlFor="prt-tagType">Type</Label>
+                                            <Field as="select" id="prt-tagType" name="tagType" className={inputClassName}>
                                                 <option value="positive">Positive</option>
                                                 <option value="negative">Negative</option>
                                                 <option value="neutral">Neutral</option>
@@ -344,13 +328,8 @@ export default function AdminPredefinedRatingTagsPage() {
                                             <ErrorMessage className="text-xs text-rose-600" name="tagType" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="prt-status" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Status</label>
-                                            <Field
-                                                as="select"
-                                                id="prt-status"
-                                                name="status"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                            >
+                                            <Label htmlFor="prt-status">Status</Label>
+                                            <Field as="select" id="prt-status" name="status" className={inputClassName}>
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>

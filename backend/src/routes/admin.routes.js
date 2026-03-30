@@ -9,28 +9,10 @@ import { getCountry, createCountry, updateCountry, deleteCountry, getSingleCount
 import { getState, createState, updateState, deleteState, getSingleState } from "../controller/admin/state.controller.js";
 import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../controller/admin/city.controller.js";
 import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
-import {
-    getPredefinedRatingTag,
-    createPredefinedRatingTag,
-    updatePredefinedRatingTag,
-    deletePredefinedRatingTag,
-    getSinglePredefinedRatingTag
-} from "../controller/admin/predefinedRatingTag.controller.js";
-import {
-    listServiceCategoriesForSelect,
-    createServiceCategory,
-    updateServiceCategory,
-    deleteServiceCategory,
-    getServiceCategory,
-    getSingleServiceCategory
-} from "../controller/admin/serviceCategory.controller.js";
-import {
-    getServiceType,
-    createServiceType,
-    updateServiceType,
-    deleteServiceType,
-    getSingleServiceType
-} from "../controller/admin/serviceType.controller.js";
+import { getServiceProvider, createServiceProvider, updateServiceProvider, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
+import { getPredefinedRatingTag, createPredefinedRatingTag, updatePredefinedRatingTag, deletePredefinedRatingTag, getSinglePredefinedRatingTag } from "../controller/admin/predefinedRatingTag.controller.js";
+import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../controller/admin/serviceCategory.controller.js";
+import { getServiceType, createServiceType, updateServiceType, deleteServiceType, getSingleServiceType } from "../controller/admin/serviceType.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
 import { Storage } from "../libraries/storage.js";
 
@@ -39,6 +21,7 @@ const adminStorage = new Storage({ dir: "admins", isImage: true, isDoc: false, f
 const appSettingStorage = new Storage({ dir: "application", isImage: true, isDoc: false, fileSize: 5 });
 const customerStorage = new Storage({ dir: "customers", isImage: true, isDoc: false, fileSize: 2 });
 const serviceCategoryStorage = new Storage({ dir: "service-categories", isImage: true, isDoc: false, fileSize: 2 });
+const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: true, isDoc: true, fileSize: 5 });
 
 router.use(requireAdminAuth);
 
@@ -101,9 +84,16 @@ router.delete("/customers/:id", deleteCustomer);
 router.get("/customers/:id", getSingleCustomer);
 router.get("/customers", getCustomer);
 
+// Service providers
+router.post("/service-providers", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider"), createServiceProvider);
+router.put("/service-providers/:id", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider-update"), updateServiceProvider);
+router.delete("/service-providers/:id", deleteServiceProvider);
+router.get("/service-providers/:id", getSingleServiceProvider);
+router.get("/service-providers", getServiceProvider);
+
 // Predefined rating tags
-router.post("/rating-tags", validator("predefined-rating-tag"), createPredefinedRatingTag);
-router.put("/rating-tags/:id", validator("predefined-rating-tag"), updatePredefinedRatingTag);
+router.post("/rating-tags", validator("rating-tag"), createPredefinedRatingTag);
+router.put("/rating-tags/:id", validator("rating-tag"), updatePredefinedRatingTag);
 router.delete("/rating-tags/:id", deletePredefinedRatingTag);
 router.get("/rating-tags/:id", getSinglePredefinedRatingTag);
 router.get("/rating-tags", getPredefinedRatingTag);
@@ -116,7 +106,7 @@ router.delete("/service-categories/:id", deleteServiceCategory);
 router.get("/service-categories/:id", getSingleServiceCategory);
 router.get("/service-categories", getServiceCategory);
 
-// Service types (jobs under a category, e.g. Tap repair under Plumber)
+// Service types
 router.post("/service-types", validator("service-type"), createServiceType);
 router.put("/service-types/:id", validator("service-type"), updateServiceType);
 router.delete("/service-types/:id", deleteServiceType);

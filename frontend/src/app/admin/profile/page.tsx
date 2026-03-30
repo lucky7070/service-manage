@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
-import { Button } from "@/components/ui";
+import { Button, Input, InputFile, Label } from "@/components/ui";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
@@ -95,10 +95,10 @@ export default function AdminProfilePage() {
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-4">
                 <div className="md:col-span-1">
                     <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700 dark:bg-slate-900">
-                        <input id="profile-image" type="file" accept="image/*" onChange={(e) => setSelectedImage(e.target.files?.[0] || null)} className="hidden" />
-                        <label
+                        <InputFile id="profile-image" accept="image/*" onChange={(e) => setSelectedImage(e.target.files?.[0] || null)} className="hidden" />
+                        <Label
                             htmlFor="profile-image"
-                            className="group relative flex h-24 w-24 cursor-pointer items-center justify-center rounded-full transition-all hover:scale-[1.02]"
+                            className="!mb-0 group relative flex h-24 w-24 cursor-pointer items-center justify-center rounded-full transition-all hover:scale-[1.02]"
                         >
                             <span className="absolute -right-1 -top-1 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:bg-indigo-50 dark:border-slate-600 dark:bg-slate-800 dark:group-hover:bg-slate-700">
                                 <Edit2Icon className="h-3.5 w-3.5 text-slate-700 dark:text-slate-100" />
@@ -110,7 +110,7 @@ export default function AdminProfilePage() {
                                     <span className="select-none">{avatarLetter}</span>
                                 )}
                             </div>
-                        </label>
+                        </Label>
                         <p className="text-center text-xs text-slate-500 dark:text-slate-300">Click avatar to choose image</p>
                         <div className="space-y-2 text-center">
                             <Button type="button" variant="secondary" size="sm" onClick={updateProfileImage}>
@@ -144,24 +144,23 @@ export default function AdminProfilePage() {
                             <Form className="space-y-4 rounded-2xl border border-slate-200 p-4 text-sm dark:border-slate-700 dark:bg-slate-900">
                                 <div className="grid gap-3 md:grid-cols-2">
                                     <div className="space-y-1">
-                                        <label className="flex items-center gap-2 text-sm font-medium leading-none select-none text-slate-500 dark:text-slate-200 mb-3" htmlFor="profile-name">Name</label>
-                                        <Field id="profile-name" name="name" className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" placeholder="Enter name" />
+                                        <Label htmlFor="profile-name">Name</Label>
+                                        <Field as={Input} id="profile-name" name="name" placeholder="Enter name" />
                                         <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="flex items-center gap-2 text-sm font-medium leading-none select-none text-slate-500 dark:text-slate-200 mb-3" htmlFor="profile-mobile">Mobile</label>
-                                        <Field id="profile-mobile" name="mobile" className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" placeholder="Enter mobile" />
+                                        <Label htmlFor="profile-mobile">Mobile</Label>
+                                        <Field as={Input} id="profile-mobile" name="mobile" placeholder="Enter mobile" />
                                         <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="flex items-center gap-2 text-sm font-medium leading-none select-none text-slate-500 dark:text-slate-200 mb-3" htmlFor="profile-email">Email</label>
-                                        <Field id="profile-email" name="email" type="email" className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" placeholder="Enter email" />
+                                        <Label htmlFor="profile-email">Email</Label>
+                                        <Field as={Input} id="profile-email" name="email" type="email" placeholder="Enter email" />
                                         <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
                                     </div>
                                 </div>
 
                                 <div className="flex items-center justify-between gap-3 pt-1">
-
                                     <Button type="submit" variant="primary" size="md" disabled={isSubmitting}>
                                         {isSubmitting ? "Updating..." : "Update Profile"}
                                     </Button>

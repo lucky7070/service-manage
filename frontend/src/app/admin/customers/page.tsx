@@ -12,7 +12,7 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, inputClassName } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -175,11 +175,10 @@ export default function AdminCustomersPage() {
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
                 <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <input
+                    <Input
                         value={param.query}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        data-slot="input"
-                        className="h-9 w-full max-w-xs min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+                        className="max-w-xs"
                         placeholder="Search name, mobile, email, user ID..."
                     />
                     <div className="flex items-center gap-2">
@@ -189,7 +188,7 @@ export default function AdminCustomersPage() {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="h-9 rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className={inputClassName}
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
@@ -335,9 +334,9 @@ export default function AdminCustomersPage() {
                                 {({ isSubmitting }) => (
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
-                                            <label htmlFor="customer-image" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
+                                            <Label htmlFor="customer-image">
                                                 Profile image <span className="font-normal text-slate-500">(optional)</span>
-                                            </label>
+                                            </Label>
                                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
                                                     {(imagePreview || resolveFileUrl(initialValues.image)) ? (
@@ -352,12 +351,10 @@ export default function AdminCustomersPage() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <input
+                                                <InputFile
                                                     id="customer-image"
                                                     name="image"
-                                                    type="file"
                                                     accept="image/*"
-                                                    className="text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 dark:text-slate-300 dark:file:bg-indigo-500/15 dark:file:text-indigo-200"
                                                     onChange={(e) => {
                                                         const f = e.target.files?.[0];
                                                         setImageFile(f ?? null);
@@ -370,58 +367,53 @@ export default function AdminCustomersPage() {
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label htmlFor="customer-name" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Name</label>
+                                            <Label htmlFor="customer-name">Name</Label>
                                             <Field
+                                                as={Input}
                                                 id="customer-name"
                                                 name="name"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
                                                 placeholder="Full name"
                                             />
                                             <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="customer-mobile" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Mobile</label>
+                                            <Label htmlFor="customer-mobile">Mobile</Label>
                                             <Field
+                                                as={Input}
                                                 id="customer-mobile"
                                                 name="mobile"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
                                                 placeholder="10–15 digits"
                                             />
                                             <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="customer-email" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Email</label>
+                                            <Label htmlFor="customer-email">Email</Label>
                                             <Field
+                                                as={Input}
                                                 id="customer-email"
                                                 name="email"
                                                 type="email"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
                                                 placeholder="email@example.com"
                                             />
                                             <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="customer-dob" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Date of birth</label>
+                                            <Label htmlFor="customer-dob">Date of birth</Label>
                                             <Field
+                                                as={Input}
                                                 id="customer-dob"
                                                 name="dateOfBirth"
                                                 type="date"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
                                             />
                                             <ErrorMessage className="text-xs text-rose-600" name="dateOfBirth" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="customer-status" className="flex items-center gap-2 text-sm font-medium leading-none select-none">Status</label>
+                                            <Label htmlFor="customer-status">Status</Label>
                                             <Field
                                                 as="select"
                                                 id="customer-status"
                                                 name="status"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                                                className={inputClassName}
                                             >
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>

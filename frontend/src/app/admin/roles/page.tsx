@@ -11,7 +11,7 @@ import { Fingerprint, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -113,11 +113,10 @@ export default function AdminRolesPage() {
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
                 <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <input
+                    <Input
                         value={param.query}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        data-slot="input"
-                        className="h-9 w-full max-w-xs min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+                        className="max-w-xs"
                         placeholder="Search Role..."
                     />
                     <div className="flex items-center gap-2">
@@ -127,7 +126,7 @@ export default function AdminRolesPage() {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="h-9 rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className={inputClassName}
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
@@ -247,36 +246,13 @@ export default function AdminRolesPage() {
                                 {({ isSubmitting }) => (
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
-                                            <label
-                                                htmlFor="role-name"
-                                                data-slot="label"
-                                                className="flex items-center gap-2 text-sm font-medium leading-none select-none"
-                                            >
-                                                Role Name
-                                            </label>
-                                            <Field
-                                                id="role-name"
-                                                name="name"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
-                                                placeholder="e.g. Support Manager"
-                                            />
+                                            <Label htmlFor="role-name">Role Name</Label>
+                                            <Field as={Input} id="role-name" name="name" placeholder="e.g. Support Manager" />
                                             <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label
-                                                htmlFor="role-status"
-                                                data-slot="label"
-                                                className="flex items-center gap-2 text-sm font-medium leading-none select-none"
-                                            >
-                                                Role Status
-                                            </label>
-                                            <Field as="select"
-                                                id="role-status"
-                                                name="status"
-                                                data-slot="input"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                            >
+                                            <Label htmlFor="role-status">Role Status</Label>
+                                            <Field as="select" id="role-status" name="status" className={inputClassName}>
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>

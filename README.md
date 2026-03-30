@@ -60,7 +60,27 @@ npm run seed -- serviceCategories serviceTypes  # multiple by name
 npm run seed -- --only=settings                 # comma-separated via --only=
 ```
 
-Registered seeder names: `settings`, `serviceCategories`, `serviceTypes` (see `SEEDER_REGISTRY` in `databaseSeeder.js`).
+Registered seeder names: `defaultAdmin`, `settings`, `serviceCategories`, `serviceTypes` (see `SEEDER_REGISTRY` in `databaseSeeder.js`).
+
+### Default admin seeder values
+
+`defaultAdmin` seeder creates a Super Admin account (if it doesn't already exist by email/mobile):
+
+```json
+{
+  "name": "Super Admin",
+  "email": "admin@admin.com",
+  "mobile": "9876543210",
+  "password": "123456789"
+}
+```
+
+Run only this seeder:
+
+```bash
+cd backend
+npm run seed -- defaultAdmin
+```
 
 **Production:** the CLI refuses to run when `NODE_ENV=production` unless you set `ALLOW_DB_SEED=true` (intended for controlled one-off or staging deploys, not casual live DB writes).
 

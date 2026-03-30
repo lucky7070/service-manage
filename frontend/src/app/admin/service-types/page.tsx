@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button } from "@/components/ui";
+import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, serviceTypeFormToPayload, type ServiceTypeFormValues } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -200,18 +200,17 @@ export default function AdminServiceTypesPage() {
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
                 <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <input
+                    <Input
                         value={param.query}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        data-slot="input"
-                        className="h-9 w-full max-w-xs min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-400"
+                        className="max-w-xs"
                         placeholder="Search by name..."
                     />
                     <div className="flex flex-wrap items-center gap-2">
                         <select
                             value={param.categoryId}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, categoryId: e.target.value }))}
-                            className="h-9 max-w-[200px] rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className={`${inputClassName} max-w-[200px]`}
                         >
                             <option value="">All categories</option>
                             {categories.map((c) => (
@@ -226,7 +225,7 @@ export default function AdminServiceTypesPage() {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="h-9 rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className={inputClassName}
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
@@ -349,14 +348,12 @@ export default function AdminServiceTypesPage() {
                                 {({ isSubmitting }) => (
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
-                                            <label htmlFor="st-category" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Category
-                                            </label>
+                                            <Label htmlFor="st-category">Category</Label>
                                             <Field
                                                 as="select"
                                                 id="st-category"
                                                 name="categoryId"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                                                className={inputClassName}
                                             >
                                                 <option value="">Select category</option>
                                                 {categories.map((c) => (
@@ -368,63 +365,44 @@ export default function AdminServiceTypesPage() {
                                             <ErrorMessage className="text-xs text-rose-600" name="categoryId" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="st-name" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Name (English)
-                                            </label>
-                                            <Field
-                                                id="st-name"
-                                                name="name"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                                placeholder="e.g. Tap Repair"
-                                            />
+                                            <Label htmlFor="st-name">Name (English)</Label>
+                                            <Field as={Input} id="st-name" name="name" placeholder="e.g. Tap Repair" />
                                             <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="st-nameHi" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Name (Hindi) <span className="font-normal text-slate-500">optional</span>
-                                            </label>
-                                            <Field
-                                                id="st-nameHi"
-                                                name="nameHi"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                            />
+                                            <Label htmlFor="st-nameHi">Name (Hindi) <span className="font-normal text-slate-500">optional</span></Label>
+                                            <Field as={Input} id="st-nameHi" name="nameHi" />
                                             <ErrorMessage className="text-xs text-rose-600" name="nameHi" component="small" />
                                         </div>
                                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                             <div className="space-y-2">
-                                                <label htmlFor="st-est" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                    Est. time (min)
-                                                </label>
+                                                <Label htmlFor="st-est">Est. time (min)</Label>
                                                 <Field
+                                                    as={Input}
                                                     id="st-est"
                                                     name="estimatedTimeMinutes"
                                                     type="number"
                                                     min={0}
-                                                    className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
                                                     placeholder="Optional"
                                                 />
                                                 <ErrorMessage className="text-xs text-rose-600" name="estimatedTimeMinutes" component="small" />
                                             </div>
                                             <div className="space-y-2">
-                                                <label htmlFor="st-price" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                    Base price
-                                                </label>
+                                                <Label htmlFor="st-price">Base price</Label>
                                                 <Field
+                                                    as={Input}
                                                     id="st-price"
                                                     name="basePrice"
                                                     type="number"
                                                     min={0}
                                                     step="0.01"
-                                                    className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
                                                     placeholder="Optional"
                                                 />
                                                 <ErrorMessage className="text-xs text-rose-600" name="basePrice" component="small" />
                                             </div>
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="st-desc" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Description <span className="font-normal text-slate-500">optional</span>
-                                            </label>
+                                            <Label htmlFor="st-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
                                             <Field
                                                 as="textarea"
                                                 id="st-desc"
@@ -435,14 +413,12 @@ export default function AdminServiceTypesPage() {
                                             <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label htmlFor="st-status" className="flex items-center gap-2 text-sm font-medium leading-none select-none">
-                                                Status
-                                            </label>
+                                            <Label htmlFor="st-status">Status</Label>
                                             <Field
                                                 as="select"
                                                 id="st-status"
                                                 name="status"
-                                                className="h-9 w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-1 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                                                className={inputClassName}
                                             >
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>

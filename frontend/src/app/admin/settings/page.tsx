@@ -6,7 +6,7 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Button } from "@/components/ui";
+import { Button, Input, InputFile, Label, inputClassName } from "@/components/ui";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 
 type SettingRow = {
@@ -131,35 +131,32 @@ export default function AdminSettingsPage() {
                                 <div className="grid gap-3 md:grid-cols-2">
                                     {currentSettings.map((row) => (
                                         <div key={row._id} className={row.filed_type === "textarea" ? "space-y-1 md:col-span-2" : "space-y-1"}>
-                                            <label className="flex items-center gap-2 text-sm font-medium leading-none select-none text-slate-500 dark:text-slate-200 mb-3" htmlFor={row.setting_name}>
-                                                {row.filed_label}
-                                            </label>
+                                            <Label htmlFor={row.setting_name}>{row.filed_label}</Label>
 
                                             {row.filed_type === "textarea" ? (
                                                 <Field
                                                     as="textarea"
                                                     id={row.setting_name}
                                                     name={row.setting_name}
-                                                    className="min-h-24 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                                                    className="min-h-24 w-full rounded-md border border-indigo-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
                                                 />
                                             ) : row.filed_type === "check" ? (
                                                 <Field
                                                     as="select"
                                                     id={row.setting_name}
                                                     name={row.setting_name}
-                                                    className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                                                    className={inputClassName}
                                                 >
                                                     <option value="1">Enabled</option>
                                                     <option value="0">Disabled</option>
                                                 </Field>
                                             ) : row.filed_type === "file" ? (
                                                 <div className="space-y-2">
-                                                    <input
+                                                    <InputFile
                                                         id={row.setting_name}
                                                         name={row.setting_name}
-                                                        type="file"
                                                         accept="image/*"
-                                                        className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 py-1.5"
+                                                        className="w-full"
                                                         onChange={(e) => {
                                                             const file = e.currentTarget.files?.[0];
                                                             if (file) setFieldValue(row.setting_name, file);
@@ -168,10 +165,10 @@ export default function AdminSettingsPage() {
                                                 </div>
                                             ) : (
                                                 <Field
+                                                    as={Input}
                                                     id={row.setting_name}
                                                     name={row.setting_name}
                                                     type={row.filed_type === "number" ? "number" : "text"}
-                                                    className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                                                 />
                                             )}
 
