@@ -123,7 +123,7 @@ export const updateAdmin = async (req, res) => {
 
 export const addAdminPermission = async (req, res) => {
     try {
-        const admin = await Admin.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const admin = await Admin.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!admin) return res.noRecords();
 
         if (req.body.permissions === undefined || !Array.isArray(req.body.permissions)) {

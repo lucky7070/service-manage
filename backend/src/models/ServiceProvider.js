@@ -42,7 +42,7 @@ Schema.pre("save", async function onSave(next) {
     if (this.isNew && !this.userId) {
         const options = this.$session() ? { session: this.$session() } : {};
         const counter = await Counter.findByIdAndUpdate({ _id: "ServiceProvider" }, { $inc: { seq: 1 } }, { upsert: true, new: true, ...options });
-        this.userId = orderId(counter.seq, "P", 6);
+        this.userId = orderId(counter.seq, "SP", 6);
     }
     
     next();

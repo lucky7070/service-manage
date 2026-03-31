@@ -43,7 +43,7 @@ export const createServiceType = async (req, res) => {
 
 export const updateServiceType = async (req, res) => {
     try {
-        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { categoryId, name, nameHi, estimatedTimeMinutes, basePrice, description, status = 1 } = req.body;
@@ -82,7 +82,7 @@ export const updateServiceType = async (req, res) => {
 
 export const deleteServiceType = async (req, res) => {
     try {
-        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString() });
@@ -148,7 +148,7 @@ export const getServiceType = async (req, res) => {
 
 export const getSingleServiceType = async (req, res) => {
     try {
-        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({

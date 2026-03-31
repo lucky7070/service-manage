@@ -11,7 +11,7 @@ import { Fingerprint, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
+import { Badge, Button, Input, Label, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -120,18 +120,18 @@ export default function AdminRolesPage() {
                         placeholder="Search Role..."
                     />
                     <div className="flex items-center gap-2">
-                        <select
+                        <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className={inputClassName}
+                            className="max-w-[180px]"
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>
-                        </select>
+                        </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
                 </div>
@@ -252,7 +252,7 @@ export default function AdminRolesPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="role-status">Role Status</Label>
-                                            <Field as="select" id="role-status" name="status" className={inputClassName}>
+                                            <Field as={Select} id="role-status" name="status">
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>

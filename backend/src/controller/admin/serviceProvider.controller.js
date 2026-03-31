@@ -12,7 +12,7 @@ export const createServiceProvider = async (req, res) => {
         if (checkExist) {
             if (checkExist.mobile === mobile) throw new Error("Service provider with this mobile already exists.");
             if (checkExist.email === email) throw new Error("Service provider with this email already exists.");
-            if (checkExist.panCardNumber === pan) throw new Error("This PAN is already registered.");
+            if (checkExist.panCardNumber === panCardNumber) throw new Error("This PAN is already registered.");
             throw new Error("This Aadhar number is already registered.");
         }
 
@@ -20,16 +20,18 @@ export const createServiceProvider = async (req, res) => {
         let image = null;
         let panCardDocument = null;
         let aadharDocument = null;
-        if (files?.image?.[0]?.filename) image = `/service-categories/${files?.image?.[0]?.filename}`;
-        if (files?.panCardDocument?.[0]?.filename) panCardDocument = `/service-categories/${files?.panCardDocument?.[0]?.filename}`;
-        if (files?.aadharDocument?.[0]?.filename) aadharDocument = `/service-categories/${files?.aadharDocument?.[0]?.filename}`;
+        if (files?.image?.[0]?.filename) image = `/service-provider/${files?.image?.[0]?.filename}`;
+        if (files?.panCardDocument?.[0]?.filename) panCardDocument = `/service-provider/${files?.panCardDocument?.[0]?.filename}`;
+        if (files?.aadharDocument?.[0]?.filename) aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
 
         const record = await ServiceProvider.create({
             name: name.trim(),
             mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument,
             experienceYears: experienceYears ?? 0,
             experienceDescription: experienceDescription?.trim() || null,
-            profileStatus: "pending"
+            profileStatus: "approved",
+            isActive: true,
+            isVerified: true,
         });
         return res.successInsert(record);
     } catch (error) {
@@ -42,24 +44,17 @@ export const createServiceProvider = async (req, res) => {
 
 export const updateServiceProvider = async (req, res) => {
     try {
-        const record = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const record = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!record) return res.noRecords();
 
-        const { name, mobile, email, panCardNumber, aadharNumber, experienceYears, experienceDescription, profileStatus } = req.body;
+        const { name, mobile, email, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
 
         const checkExist = await ServiceProvider.findOne({ _id: { $ne: record._id }, deletedAt: null, $or: [{ mobile }, { email }, { panCardNumber }, { aadharNumber }] });
         if (checkExist) {
             if (checkExist.mobile === mobile) throw new Error("Service provider with this mobile already exists.");
             if (checkExist.email === email) throw new Error("Service provider with this email already exists.");
-            if (checkExist.panCardNumber === pan) throw new Error("This PAN is already registered.");
+            if (checkExist.panCardNumber === panCardNumber) throw new Error("This PAN is already registered.");
             throw new Error("This Aadhar number is already registered.");
-        }
-
-        let nextProfile = record.profileStatus;
-        if (profileStatus !== undefined && profileStatus !== null && profileStatus !== "") {
-            const ps = String(profileStatus);
-            if (!SERVICE_PROVIDER_PROFILE_STATUSES.includes(ps)) return res.someThingWentWrong({ message: "Invalid profile status." });
-            nextProfile = ps;
         }
 
         const files = req.files || {};
@@ -84,7 +79,6 @@ export const updateServiceProvider = async (req, res) => {
                 aadharDocument,
                 experienceYears: experienceYears ?? 0,
                 experienceDescription: experienceDescription?.trim() || null,
-                profileStatus: nextProfile
             }
         );
         return res.successUpdate(record);
@@ -98,7 +92,7 @@ export const updateServiceProvider = async (req, res) => {
 
 export const deleteServiceProvider = async (req, res) => {
     try {
-        const doc = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const doc = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
         // if (doc.image) deleteFile(doc.image);
@@ -128,9 +122,11 @@ export const getServiceProvider = async (req, res) => {
                 { mobile: { $regex: q, $options: "i" } },
                 { email: { $regex: q, $options: "i" } },
                 { userId: { $regex: q, $options: "i" } },
+                { aadharNumber: { $regex: q, $options: "i" } },
                 { panCardNumber: { $regex: q, $options: "i" } }
             ];
         }
+
         if (profileStatus !== null && profileStatus !== undefined && profileStatus !== "") {
             if (SERVICE_PROVIDER_PROFILE_STATUSES.includes(String(profileStatus))) {
                 filter.profileStatus = String(profileStatus);
@@ -139,25 +135,7 @@ export const getServiceProvider = async (req, res) => {
 
         const pipeline = [
             { $match: filter },
-            {
-                $project: {
-                    userId: 1,
-                    name: 1,
-                    mobile: 1,
-                    email: 1,
-                    panCardNumber: 1,
-                    aadharNumber: 1,
-                    profileStatus: 1,
-                    isVerified: 1,
-                    isActive: 1,
-                    experienceYears: 1,
-                    image: 1,
-                    totalCompletedServices: 1,
-                    totalRating: 1,
-                    ratingCount: 1,
-                    createdAt: 1
-                }
-            }
+            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, profileStatus: 1, isVerified: 1, isActive: 1, experienceYears: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];
@@ -177,7 +155,7 @@ export const getServiceProvider = async (req, res) => {
 
 export const getSingleServiceProvider = async (req, res) => {
     try {
-        const doc = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null }).lean();
+        const doc = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null }).lean();
         if (!doc) return res.noRecords();
 
         return res.success({

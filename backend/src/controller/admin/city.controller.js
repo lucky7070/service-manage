@@ -34,7 +34,7 @@ export const createCity = async (req, res) => {
 
 export const updateCity = async (req, res) => {
     try {
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!city) return res.noRecords();
 
         const { countryId, stateId, name, status = 1 } = req.body;
@@ -67,7 +67,7 @@ export const updateCity = async (req, res) => {
 
 export const deleteCity = async (req, res) => {
     try {
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!city) return res.noRecords();
 
         await city.updateOne({ deletedAt: moment().toISOString() });
@@ -126,7 +126,7 @@ export const getCity = async (req, res) => {
 
 export const getSingleCity = async (req, res) => {
     try {
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!city) return res.noRecords();
 
         return res.success({

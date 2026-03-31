@@ -1,9 +1,12 @@
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "./Button";
 export { default as Input, inputClassName } from "./Input";
+export { default as Textarea, textareaClassName } from "./Textarea";
+export { default as Select, selectClassName } from "./Select";
 export { default as Label } from "./Label";
 export { default as InputFile } from "./InputFile";
 export { Badge, statusToBadgeVariant, type BadgeProps, type BadgeVariant, type BadgeSize } from "./Badge";
 export { ProgressBar, type ProgressBarProps, type ProgressTone } from "./ProgressBar";
 export { IconActionButton, type IconActionButtonProps, type IconActionTone } from "./IconActionButton";
 export { Checkbox, type CheckboxProps } from "./Checkbox";
+export { Radio, type RadioProps } from "./Radio";
 export { ToggleSwitch, type ToggleSwitchProps } from "./ToggleSwitch";

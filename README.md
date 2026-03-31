@@ -26,7 +26,7 @@ backend/
     middlewares/
     models/
     routes/
-    seeders/          # Laravel-style seed modules + databaseSeeder registry
+    seeders/
 frontend/
   src/
     app/

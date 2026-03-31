@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
+import { Badge, Button, Input, Label, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -149,7 +149,7 @@ export default function AdminPredefinedRatingTagsPage() {
                         placeholder="Search tag name..."
                     />
                     <div className="flex flex-wrap items-center gap-2">
-                        <select
+                        <Select
                             value={param.tagFor}
                             onChange={(e) => {
                                 const v = e.target.value;
@@ -159,24 +159,24 @@ export default function AdminPredefinedRatingTagsPage() {
                                     tagFor: v === "" ? "" : (v as "customer" | "provider")
                                 }));
                             }}
-                            className={inputClassName}
+                            className="max-w-[180px]"
                         >
                             <option value="">All audiences</option>
                             <option value="customer">Customer</option>
                             <option value="provider">Provider</option>
-                        </select>
-                        <select
+                        </Select>
+                        <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className={inputClassName}
+                            className="max-w-[180px]"
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>
-                        </select>
+                        </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
                 </div>
@@ -307,7 +307,7 @@ export default function AdminPredefinedRatingTagsPage() {
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
                                             <Label htmlFor="prt-tagFor">Tag for</Label>
-                                            <Field as="select" id="prt-tagFor" name="tagFor" className={inputClassName}>
+                                            <Field as={Select} id="prt-tagFor" name="tagFor">
                                                 <option value="customer">Customer</option>
                                                 <option value="provider">Provider</option>
                                             </Field>
@@ -320,7 +320,7 @@ export default function AdminPredefinedRatingTagsPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="prt-tagType">Type</Label>
-                                            <Field as="select" id="prt-tagType" name="tagType" className={inputClassName}>
+                                            <Field as={Select} id="prt-tagType" name="tagType">
                                                 <option value="positive">Positive</option>
                                                 <option value="negative">Negative</option>
                                                 <option value="neutral">Neutral</option>
@@ -329,7 +329,7 @@ export default function AdminPredefinedRatingTagsPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="prt-status">Status</Label>
-                                            <Field as="select" id="prt-status" name="status" className={inputClassName}>
+                                            <Field as={Select} id="prt-status" name="status">
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>

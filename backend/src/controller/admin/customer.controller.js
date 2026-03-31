@@ -46,7 +46,7 @@ export const createCustomer = async (req, res) => {
 
 export const updateCustomer = async (req, res) => {
     try {
-        const customer = await Customer.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const customer = await Customer.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!customer) return res.noRecords();
 
         const { name, mobile, email, dateOfBirth, status = 1 } = req.body;
@@ -96,7 +96,7 @@ export const updateCustomer = async (req, res) => {
 
 export const deleteCustomer = async (req, res) => {
     try {
-        const customer = await Customer.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const customer = await Customer.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!customer) return res.noRecords();
 
         if (customer.image) deleteFile(customer.image);
@@ -163,7 +163,7 @@ export const getCustomer = async (req, res) => {
 
 export const getSingleCustomer = async (req, res) => {
     try {
-        const customer = await Customer.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const customer = await Customer.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!customer) return res.noRecords();
 
         return res.success({

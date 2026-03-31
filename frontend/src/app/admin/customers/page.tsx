@@ -12,7 +12,7 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, inputClassName } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -182,18 +182,18 @@ export default function AdminCustomersPage() {
                         placeholder="Search name, mobile, email, user ID..."
                     />
                     <div className="flex items-center gap-2">
-                        <select
+                        <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className={inputClassName}
+                            className="max-w-[180px]"
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>
-                        </select>
+                        </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
                 </div>
@@ -339,17 +339,13 @@ export default function AdminCustomersPage() {
                                             </Label>
                                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
-                                                    {(imagePreview || resolveFileUrl(initialValues.image)) ? (
-                                                        <Image
-                                                            src={imagePreview || resolveFileUrl(initialValues.image) || ""}
-                                                            alt=""
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-full w-full items-center justify-center text-slate-400">
-                                                            <ImageIcon className="h-8 w-8" />
-                                                        </div>
-                                                    )}
+                                                    {(imagePreview || resolveFileUrl(initialValues.image)) ? <Image
+                                                        src={imagePreview || resolveFileUrl(initialValues.image) || ""}
+                                                        alt=""
+                                                        className="h-full w-full object-cover"
+                                                    /> : <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                        <ImageIcon className="h-8 w-8" />
+                                                    </div>}
                                                 </div>
                                                 <InputFile
                                                     id="customer-image"
@@ -368,69 +364,37 @@ export default function AdminCustomersPage() {
 
                                         <div className="space-y-2">
                                             <Label htmlFor="customer-name">Name</Label>
-                                            <Field
-                                                as={Input}
-                                                id="customer-name"
-                                                name="name"
-                                                placeholder="Full name"
-                                            />
+                                            <Field as={Input} id="customer-name" name="name" placeholder="Full name" />
                                             <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="customer-mobile">Mobile</Label>
-                                            <Field
-                                                as={Input}
-                                                id="customer-mobile"
-                                                name="mobile"
-                                                placeholder="10–15 digits"
-                                            />
+                                            <Field as={Input} id="customer-mobile" name="mobile" placeholder="10–15 digits" />
                                             <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="customer-email">Email</Label>
-                                            <Field
-                                                as={Input}
-                                                id="customer-email"
-                                                name="email"
-                                                type="email"
-                                                placeholder="email@example.com"
-                                            />
+                                            <Field as={Input} id="customer-email" name="email" type="email" placeholder="email@example.com" />
                                             <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="customer-dob">Date of birth</Label>
-                                            <Field
-                                                as={Input}
-                                                id="customer-dob"
-                                                name="dateOfBirth"
-                                                type="date"
-                                            />
+                                            <Field as={Input} id="customer-dob" name="dateOfBirth" type="date" />
                                             <ErrorMessage className="text-xs text-rose-600" name="dateOfBirth" component="small" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="customer-status">Status</Label>
-                                            <Field
-                                                as="select"
-                                                id="customer-status"
-                                                name="status"
-                                                className={inputClassName}
-                                            >
+                                            <Field as={Select} id="customer-status" name="status">
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>
                                             <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                         </div>
                                         <div className="flex justify-end gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="md"
-                                                className="border border-indigo-100 dark:border-indigo-100"
-                                                onClick={() => {
-                                                    setOpen(null);
-                                                    resetImageState();
-                                                }}
-                                            >
+                                            <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => {
+                                                setOpen(null);
+                                                resetImageState();
+                                            }}>
                                                 Cancel
                                             </Button>
                                             <Button disabled={isSubmitting} type="submit" variant="primary" size="md">

@@ -1,13 +1,13 @@
 "use client";
 
-import { Bell, CheckCheck, ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, User } from "lucide-react";
+import { Bell, CheckCheck, ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, User } from "lucide-react";
 import { Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Button } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resolveFileUrl } from "@/helpers/utils";
 import Image from "@/components/ui/Image";
@@ -77,13 +77,14 @@ export default function AdminTopbar() {
             >
                 {isSidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>
-            {/* <div className="relative hidden w-full max-w-md md:block">
+            <div className="relative hidden w-full max-w-md md:block">
                 <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                <input
+                <Input
+                    type="search"
                     className="w-full rounded-xl border border-indigo-100 bg-white py-2 pl-9 pr-3 text-sm outline-none ring-indigo-500/30 placeholder:text-slate-400 focus:ring dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                     placeholder="Search users, bookings, reports..."
                 />
-            </div> */}
+            </div>
 
             <div className="ml-auto flex items-center gap-3">
                 <Button

@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button, Select } from "@/components/ui";
 
 type PaginationData = {
     count: number;
@@ -23,7 +23,7 @@ export default function AdminPagination<T extends { limit: number; pageNo: numbe
                 <div className="flex items-center gap-2">
                     <span className="text-sm text-slate-500 dark:text-slate-400">Rows</span>
                     <div className="relative">
-                        <select
+                        <Select
                             value={param.limit}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, limit: Number(e.target.value) || prev.limit }))}
                             className="h-8 appearance-none rounded-lg border border-indigo-100 bg-white px-8 pl-3 text-xs text-slate-700 shadow-xs outline-none hover:bg-slate-50 focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -34,7 +34,7 @@ export default function AdminPagination<T extends { limit: number; pageNo: numbe
                                     {n}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                         <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 opacity-50" aria-hidden />
                     </div>
                 </div>

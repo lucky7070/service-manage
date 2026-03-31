@@ -11,7 +11,7 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, inputClassName } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Select, Textarea } from "@/components/ui";
 import Image from "@/components/ui/Image";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { buildServiceCategoryFormData, getSweetAlertConfig, resolveFileUrl, slugify, type ServiceCategoryFormValues } from "@/helpers/utils";
@@ -150,18 +150,18 @@ export default function AdminServiceCategoriesPage() {
                         placeholder="Search name or slug..."
                     />
                     <div className="flex items-center gap-2">
-                        <select
+                        <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="h-9 rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
+                            className="max-w-[180px]"
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>
-                        </select>
+                        </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
                 </div>
@@ -357,7 +357,7 @@ export default function AdminServiceCategoriesPage() {
 
                                         <div className="space-y-2">
                                             <Label htmlFor="sc-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
-                                            <Field as="textarea" id="sc-desc" name="description" rows={3} className="w-full rounded-md border border-indigo-100 bg-white px-3 py-2 text-sm dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100" />
+                                            <Field as={Textarea} id="sc-desc" name="description" rows={3} />
                                             <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
                                         </div>
 
@@ -369,7 +369,7 @@ export default function AdminServiceCategoriesPage() {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="sc-status">Status</Label>
-                                                <Field as="select" id="sc-status" name="status" className={inputClassName}>
+                                                <Field as={Select} id="sc-status" name="status">
                                                     <option value={1}>Active</option>
                                                     <option value={0}>Inactive</option>
                                                 </Field>

@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
+import { Badge, Button, Input, Label, Select, Textarea } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, serviceTypeFormToPayload, type ServiceTypeFormValues } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -207,10 +207,10 @@ export default function AdminServiceTypesPage() {
                         placeholder="Search by name..."
                     />
                     <div className="flex flex-wrap items-center gap-2">
-                        <select
+                        <Select
                             value={param.categoryId}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, categoryId: e.target.value }))}
-                            className={`${inputClassName} max-w-[200px]`}
+                            className="max-w-[200px]"
                         >
                             <option value="">All categories</option>
                             {categories.map((c) => (
@@ -218,19 +218,19 @@ export default function AdminServiceTypesPage() {
                                     {c.name}
                                 </option>
                             ))}
-                        </select>
-                        <select
+                        </Select>
+                        <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className={inputClassName}
+                            className="max-w-[180px]"
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>
-                        </select>
+                        </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
                 </div>
@@ -349,12 +349,7 @@ export default function AdminServiceTypesPage() {
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
                                             <Label htmlFor="st-category">Category</Label>
-                                            <Field
-                                                as="select"
-                                                id="st-category"
-                                                name="categoryId"
-                                                className={inputClassName}
-                                            >
+                                            <Field as={Select} id="st-category" name="categoryId">
                                                 <option value="">Select category</option>
                                                 {categories.map((c) => (
                                                     <option key={c._id} value={c._id}>
@@ -403,23 +398,12 @@ export default function AdminServiceTypesPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="st-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
-                                            <Field
-                                                as="textarea"
-                                                id="st-desc"
-                                                name="description"
-                                                rows={3}
-                                                className="w-full min-w-0 rounded-md border border-indigo-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                            />
+                                            <Field as={Textarea} id="st-desc" name="description" rows={3} />
                                             <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="st-status">Status</Label>
-                                            <Field
-                                                as="select"
-                                                id="st-status"
-                                                name="status"
-                                                className={inputClassName}
-                                            >
+                                            <Field as={Select} id="st-status" name="status">
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>

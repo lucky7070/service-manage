@@ -35,7 +35,7 @@ export const createPredefinedRatingTag = async (req, res) => {
 
 export const updatePredefinedRatingTag = async (req, res) => {
     try {
-        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { tagFor, tagName, tagType = "positive", status = 1 } = req.body;
@@ -64,7 +64,7 @@ export const updatePredefinedRatingTag = async (req, res) => {
 
 export const deletePredefinedRatingTag = async (req, res) => {
     try {
-        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString() });
@@ -126,7 +126,7 @@ export const getPredefinedRatingTag = async (req, res) => {
 
 export const getSinglePredefinedRatingTag = async (req, res) => {
     try {
-        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({

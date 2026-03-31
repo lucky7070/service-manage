@@ -79,9 +79,6 @@ export const validator = (method) => {
         case "service-provider":
             output = [name, mobile, email, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider];
             break;
-        case "service-provider-update":
-            output = [name, mobile, email, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, profileStatusProvider];
-            break;
         case "admin":
             output = [name, mobile, roleId, email, password, status];
             break;

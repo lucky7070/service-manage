@@ -20,7 +20,7 @@ export const createRole = async (req, res) => {
 
 export const updateRole = async (req, res) => {
     try {
-        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!role) return res.noRecords();
 
         const { name, status = 1 } = req.body;
@@ -38,7 +38,7 @@ export const updateRole = async (req, res) => {
 
 export const deleteRole = async (req, res) => {
     try {
-        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!role) return res.noRecords();
 
         await role.updateOne({ deletedAt: moment().toISOString() });
@@ -90,7 +90,7 @@ export const getRole = async (req, res) => {
 
 export const addPermission = async (req, res) => {
     try {
-        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!role) return res.noRecords();
 
         if (req.body.permissions === undefined || !Array.isArray(req.body.permissions)) {
@@ -106,7 +106,7 @@ export const addPermission = async (req, res) => {
 
 export const getSingleRole = async (req, res) => {
     try {
-        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(`${req.params.id}`), deletedAt: null });
+        const role = await Role.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!role) return res.noRecords();
 
         return res.success({ _id: role._id, name: role.name, status: role.isActive ? 1 : 0, permissions: role.permissions || [], createdAt: role.createdAt });

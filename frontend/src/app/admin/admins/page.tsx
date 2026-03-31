@@ -12,7 +12,7 @@ import { Fingerprint, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
+import { Badge, Button, Input, Label, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { Role } from "../roles/page";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
@@ -157,18 +157,18 @@ export default function AdminUsersPage() {
                     />
 
                     <div className="flex items-center gap-2">
-                        <select
+                        <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className={inputClassName}
+                            className="max-w-[180px]"
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>
-                        </select>
+                        </Select>
 
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -329,12 +329,7 @@ export default function AdminUsersPage() {
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
                                             <Label htmlFor="admin-role">Role</Label>
-                                            <Field
-                                                as="select"
-                                                id="admin-role"
-                                                name="roleId"
-                                                className={inputClassName}
-                                            >
+                                            <Field as={Select} id="admin-role" name="roleId">
                                                 <option value="">Select Role</option>
                                                 {roles.map((r) => (
                                                     <option key={r._id} value={r._id}>
@@ -382,7 +377,7 @@ export default function AdminUsersPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="admin-status">Status</Label>
-                                            <Field as="select" id="admin-status" name="status" className={inputClassName}>
+                                            <Field as={Select} id="admin-status" name="status">
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
                                             </Field>

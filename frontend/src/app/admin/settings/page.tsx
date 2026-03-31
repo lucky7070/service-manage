@@ -6,7 +6,7 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Button, Input, InputFile, Label, inputClassName } from "@/components/ui";
+import { Button, Input, InputFile, Label, Select, Textarea } from "@/components/ui";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 
 type SettingRow = {
@@ -134,19 +134,9 @@ export default function AdminSettingsPage() {
                                             <Label htmlFor={row.setting_name}>{row.filed_label}</Label>
 
                                             {row.filed_type === "textarea" ? (
-                                                <Field
-                                                    as="textarea"
-                                                    id={row.setting_name}
-                                                    name={row.setting_name}
-                                                    className="min-h-24 w-full rounded-md border border-indigo-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none transition-[color,box-shadow] placeholder:text-slate-400 focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100"
-                                                />
+                                                <Field as={Textarea} id={row.setting_name} name={row.setting_name} className="min-h-24" />
                                             ) : row.filed_type === "check" ? (
-                                                <Field
-                                                    as="select"
-                                                    id={row.setting_name}
-                                                    name={row.setting_name}
-                                                    className={inputClassName}
-                                                >
+                                                <Field as={Select} id={row.setting_name} name={row.setting_name}>
                                                     <option value="1">Enabled</option>
                                                     <option value="0">Disabled</option>
                                                 </Field>

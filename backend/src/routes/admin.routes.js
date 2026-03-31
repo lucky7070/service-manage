@@ -86,7 +86,7 @@ router.get("/customers", getCustomer);
 
 // Service providers
 router.post("/service-providers", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider"), createServiceProvider);
-router.put("/service-providers/:id", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider-update"), updateServiceProvider);
+router.put("/service-providers/:id", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider"), updateServiceProvider);
 router.delete("/service-providers/:id", deleteServiceProvider);
 router.get("/service-providers/:id", getSingleServiceProvider);
 router.get("/service-providers", getServiceProvider);

@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, inputClassName } from "@/components/ui";
+import { Badge, Button, Input, Label, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -169,18 +169,18 @@ export default function AdminCitiesPage() {
                         placeholder="Search City..."
                     />
                     <div className="flex items-center gap-2">
-                        <select
+                        <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className={inputClassName}
+                            className="max-w-[180px]"
                         >
                             <option value="">All</option>
                             <option value={1}>Active</option>
                             <option value={0}>Inactive</option>
-                        </select>
+                        </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
                 </div>
@@ -337,10 +337,9 @@ export default function AdminCitiesPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="city-status">Status</Label>
-                                            <Field as="select"
+                                            <Field as={Select}
                                                 id="city-status"
                                                 name="status"
-                                                className={inputClassName}
                                             >
                                                 <option value={1}>Active</option>
                                                 <option value={0}>Inactive</option>
