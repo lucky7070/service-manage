@@ -6,7 +6,7 @@ export const selectClassName = inputClassName;
 
 const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
     ({ className, children, ...props }, ref) => (
-        <select ref={ref} className={cn(selectClassName, className)} {...props}>
+        <select ref={ref} className={cn(selectClassName, 'capitalize', className)} {...props}>
             {children}
         </select>
     )

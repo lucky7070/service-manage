@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { orderId } from "../helpers/utils.js";
 import { Counter } from "./Counter.js";
+import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
 
 const Schema = new mongoose.Schema(
     {
@@ -8,7 +9,7 @@ const Schema = new mongoose.Schema(
         name: { type: String, required: true, default: null },
         mobile: { type: String, required: true, unique: true, index: true, default: null },
         email: { type: String, unique: true, sparse: true, index: true, default: null },
-        image: { type: String, default: null },
+        image: { type: String, default: "/service-provider/default.png" },
         panCardNumber: { type: String, unique: true, sparse: true, default: null },
         aadharNumber: { type: String, unique: true, sparse: true, default: null },
         panCardDocument: { type: String, default: null },
@@ -17,7 +18,7 @@ const Schema = new mongoose.Schema(
         experienceDescription: { type: String, default: null },
         profileStatus: {
             type: String,
-            enum: ["pending", "approved", "rejected", "suspended"],
+            enum: SERVICE_PROVIDER_PROFILE_STATUSES,
             default: "pending",
             index: true
         },

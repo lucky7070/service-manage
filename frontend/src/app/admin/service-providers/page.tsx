@@ -8,7 +8,7 @@ import * as Yup from "yup";
 import moment from "moment";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
-import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import { CircleCheckBig, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
@@ -31,8 +31,8 @@ type ServiceProvider = {
     aadharDocument: File | string | null;
     experienceYears: number | "";
     experienceDescription: string;
-    
-    profileStatus?: ProfileStatus;
+    profileStatus: ProfileStatus;
+
     userId?: string;
     isVerified?: boolean;
     isActive?: boolean;
@@ -49,7 +49,12 @@ type ServiceProviderRecord = {
 type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending" };
+
+const statusValidationSchema = Yup.object().shape({
+    profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
+    isVerified: Yup.boolean().required("Verification status is required.")
+});
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().min(2, "Too short.").max(100, "Too long.").required("Name is required.").trim(),
@@ -68,9 +73,19 @@ const validationSchema = Yup.object().shape({
 export default function AdminServiceProvidersPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit">(null);
+    const [statusOpen, setStatusOpen] = useState(false);
     const [data, setData] = useState<ServiceProviderRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "" });
     const [initialValues, setInitialValues] = useState<ServiceProvider>(INITIAL_VALUES);
+    const [statusValues, setStatusValues] = useState<{ _id: string; userId: string; name: string; mobile: string; email: string; profileStatus: ProfileStatus; isVerified: boolean }>({
+        _id: "",
+        userId: "",
+        name: "",
+        mobile: "",
+        email: "",
+        profileStatus: "pending",
+        isVerified: false
+    });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const fetchRows = useCallback(async () => {
@@ -123,12 +138,26 @@ export default function AdminServiceProvidersPage() {
             aadharNumber: String(data.aadharNumber ?? ""),
             experienceYears: data.experienceYears ?? 0,
             experienceDescription: String(data.experienceDescription ?? ""),
+            profileStatus: data.profileStatus || "pending",
             image: data.image || null,
             panCardDocument: data.panCardDocument || null,
             aadharDocument: data.aadharDocument || null,
         });
 
         if (typeof data.image === 'string') setImagePreview(resolveFileUrl(data.image));
+    };
+
+    const openStatusModal = (row: ServiceProvider) => {
+        setStatusValues({
+            _id: row._id,
+            userId: row.userId || "—",
+            name: row.name || "—",
+            mobile: row.mobile || "—",
+            email: row.email || "—",
+            profileStatus: row.profileStatus || "pending",
+            isVerified: Boolean(row.isVerified)
+        });
+        setStatusOpen(true);
     };
 
     return (
@@ -224,8 +253,9 @@ export default function AdminServiceProvidersPage() {
                                             variant={
                                                 row.profileStatus === "approved" ? "success"
                                                     : row.profileStatus === "pending" ? "secondary"
-                                                        : row.profileStatus === "rejected" ? "danger"
-                                                            : "secondary"
+                                                        : row.profileStatus === "suspended" ? "warning"
+                                                            : row.profileStatus === "rejected" ? "danger"
+                                                                : "secondary"
                                             }
                                             size="sm"
                                         >
@@ -233,7 +263,7 @@ export default function AdminServiceProvidersPage() {
                                         </Badge>
                                     </td>
                                     <td className="px-3 py-2">
-                                        <Badge variant={row.isVerified ? "success" : "secondary"} size="sm">
+                                        <Badge variant={row.isVerified ? "success" : "warning"} size="sm">
                                             {row.isVerified ? "Yes" : "No"}
                                         </Badge>
                                     </td>
@@ -243,6 +273,11 @@ export default function AdminServiceProvidersPage() {
                                             <PermissionBlock permission_id={372}>
                                                 <Button size="sm" variant="secondary" onClick={() => openEdit(row)} title="Edit" aria-label="Edit">
                                                     <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                </Button>
+                                            </PermissionBlock>
+                                            <PermissionBlock permission_id={372}>
+                                                <Button size="sm" variant="primary" onClick={() => openStatusModal(row)} title="Update status" aria-label="Update status">
+                                                    <CircleCheckBig className="h-4 w-4 shrink-0" strokeWidth={2} />
                                                 </Button>
                                             </PermissionBlock>
                                             <PermissionBlock permission_id={373}>
@@ -310,7 +345,7 @@ export default function AdminServiceProvidersPage() {
                                 {({ isSubmitting, values, setFieldValue }) => (
                                     <Form className="space-y-3">
                                         <div className="space-y-2">
-                                            <Label>Profile photo <span className="font-normal text-slate-500">(optional)</span></Label>
+                                            <Label>Profile Photo <span className="font-normal text-slate-500">(optional)</span></Label>
                                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
                                                     {imagePreview && typeof imagePreview === 'string' ? (
@@ -391,6 +426,83 @@ export default function AdminServiceProvidersPage() {
                                             </Button>
                                             <Button type="submit" variant="primary" disabled={isSubmitting}>
                                                 {open === "add" ? "Create" : "Save"}
+                                            </Button>
+                                        </div>
+                                    </Form>
+                                )}
+                            </Formik>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
+
+            {statusOpen ? (
+                <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
+                    <div className="w-full max-w-md rounded-xl border border-indigo-100 bg-white text-slate-900 shadow-xl dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100">
+                        <div className="flex flex-col space-y-1.5 p-6">
+                            <h3 className="font-semibold leading-none tracking-tight">Update provider status</h3>
+                            <p className="text-sm text-muted-foreground">Update profile and verification status.</p>
+                        </div>
+                        <div className="space-y-4 p-6 pt-0">
+                            <div className="grid grid-cols-1 gap-2 rounded-lg border border-indigo-100 p-3 text-sm dark:border-slate-700">
+                                <p><span className="font-medium">User ID:</span> {statusValues.userId}</p>
+                                <p><span className="font-medium">Name:</span> {statusValues.name}</p>
+                                <p><span className="font-medium">Mobile:</span> {statusValues.mobile}</p>
+                                <p><span className="font-medium">Email:</span> {statusValues.email}</p>
+                            </div>
+
+                            <Formik
+                                initialValues={statusValues}
+                                enableReinitialize
+                                validationSchema={statusValidationSchema}
+                                onSubmit={async (values, { setSubmitting }) => {
+                                    const payload = {
+                                        profileStatus: values.profileStatus,
+                                        isVerified: values.isVerified ? 1 : 0
+                                    };
+                                    const { data } = await AxiosHelperAdmin.putData(`/service-providers/${values._id}/status`, payload);
+                                    if (data?.status) {
+                                        toast.success(data.message || "Provider status updated.");
+                                        setStatusOpen(false);
+                                        fetchRows();
+                                    } else {
+                                        toast.error(data?.message || "Unable to update status.");
+                                    }
+                                    setSubmitting(false);
+                                }}
+                            >
+                                {({ isSubmitting, values, setFieldValue }) => (
+                                    <Form className="space-y-3">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="status-profileStatus">Profile status</Label>
+                                            <Field as={Select} id="status-profileStatus" name="profileStatus">
+                                                {SERVICE_PROVIDER_PROFILE_STATUSES.map((status) => (
+                                                    <option key={status} value={status} className="capitalize">
+                                                        {status}
+                                                    </option>
+                                                ))}
+                                            </Field>
+                                            <ErrorMessage className="text-xs text-rose-600" name="profileStatus" component="small" />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="status-isVerified">Verification</Label>
+                                            <Select
+                                                id="status-isVerified"
+                                                value={values.isVerified ? "1" : "0"}
+                                                onChange={(e) => setFieldValue("isVerified", e.target.value === "1")}
+                                            >
+                                                <option value="1">Verified</option>
+                                                <option value="0">Not Verified</option>
+                                            </Select>
+                                        </div>
+
+                                        <div className="flex justify-end gap-2 pt-1">
+                                            <Button type="button" variant="secondary" onClick={() => setStatusOpen(false)}>
+                                                Cancel
+                                            </Button>
+                                            <Button type="submit" variant="primary" disabled={isSubmitting}>
+                                                {isSubmitting ? "Saving..." : "Update"}
                                             </Button>
                                         </div>
                                     </Form>

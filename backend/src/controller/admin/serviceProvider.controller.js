@@ -17,7 +17,7 @@ export const createServiceProvider = async (req, res) => {
         }
 
         const files = req.files || {};
-        let image = null;
+        let image = "/service-provider/default.png";
         let panCardDocument = null;
         let aadharDocument = null;
         if (files?.image?.[0]?.filename) image = `/service-provider/${files?.image?.[0]?.filename}`;
@@ -86,6 +86,34 @@ export const updateServiceProvider = async (req, res) => {
         if (error.code === 11000) {
             return res.someThingWentWrong({ message: "Duplicate mobile, email, PAN, or Aadhar." });
         }
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const updateServiceProviderStatus = async (req, res) => {
+    try {
+        const record = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        if (!record) return res.noRecords();
+
+        const nextProfileStatus = String(req.body.profileStatus);
+        const nextIsVerified = [1, "1", true, "true"].includes(req.body.isVerified);
+
+        if (!SERVICE_PROVIDER_PROFILE_STATUSES.includes(nextProfileStatus))
+            return res.someThingWentWrong({ message: "Invalid profile status." });
+
+        const updateDoc = { profileStatus: nextProfileStatus, isVerified: nextIsVerified };
+        if (nextProfileStatus === "approved") {
+            updateDoc.approvedBy = req.admin?.id ?? null;
+            updateDoc.approvedAt = moment().toISOString();
+            updateDoc.rejectionReason = null;
+        } else if (nextProfileStatus === "rejected") {
+            updateDoc.approvedBy = null;
+            updateDoc.approvedAt = null;
+        }
+
+        await record.updateOne(updateDoc);
+        return res.successUpdate(undefined, "Provider status updated.");
+    } catch (error) {
         return res.someThingWentWrong(error);
     }
 };

@@ -9,7 +9,7 @@ import { getCountry, createCountry, updateCountry, deleteCountry, getSingleCount
 import { getState, createState, updateState, deleteState, getSingleState } from "../controller/admin/state.controller.js";
 import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../controller/admin/city.controller.js";
 import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
-import { getServiceProvider, createServiceProvider, updateServiceProvider, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
+import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
 import { getPredefinedRatingTag, createPredefinedRatingTag, updatePredefinedRatingTag, deletePredefinedRatingTag, getSinglePredefinedRatingTag } from "../controller/admin/predefinedRatingTag.controller.js";
 import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../controller/admin/serviceCategory.controller.js";
 import { getServiceType, createServiceType, updateServiceType, deleteServiceType, getSingleServiceType } from "../controller/admin/serviceType.controller.js";
@@ -87,6 +87,7 @@ router.get("/customers", getCustomer);
 // Service providers
 router.post("/service-providers", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider"), createServiceProvider);
 router.put("/service-providers/:id", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider"), updateServiceProvider);
+router.put("/service-providers/:id/status", validator("service-provider-status"), updateServiceProviderStatus);
 router.delete("/service-providers/:id", deleteServiceProvider);
 router.get("/service-providers/:id", getSingleServiceProvider);
 router.get("/service-providers", getServiceProvider);

@@ -36,6 +36,9 @@ const experienceYearsProvider = check("experienceYears").optional().custom((valu
 
 const experienceDescriptionProvider = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 });
 const profileStatusProvider = check("profileStatus").optional({ values: "falsy" }).isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
+const profileStatusProviderRequired = check("profileStatus", "Profile status is required.").exists().not().isEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
+const isVerifiedProvider = check("isVerified", "isVerified must be 0 or 1.").exists().not().isEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
+const objectIdParam = param("id", "Invalid ID.").exists().not().isEmpty().isMongoId();
 const passwordOptional = check("password", "Password must be greater then 5 digit.!!").optional({ nullable: true }).isLength({ min: 5, max: 50 });
 const imageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
     if (!req.file) throw new Error("Profile image is required.");
@@ -78,6 +81,9 @@ export const validator = (method) => {
             break;
         case "service-provider":
             output = [name, mobile, email, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider];
+            break;
+        case "service-provider-status":
+            output = [objectIdParam, profileStatusProviderRequired, isVerifiedProvider];
             break;
         case "admin":
             output = [name, mobile, roleId, email, password, status];
