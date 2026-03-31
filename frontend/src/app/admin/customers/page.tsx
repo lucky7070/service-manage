@@ -12,7 +12,7 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Select } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -289,14 +289,18 @@ export default function AdminCustomersPage() {
                 <AdminPagination data={data} param={param} setParam={setParam} />
             </div>
 
-            {open ? (
-                <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
-                    <div data-slot="card" className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-indigo-100 bg-white text-slate-900 shadow-xl transition-shadow duration-200 dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100">
-                        <div data-slot="card-header" className="flex flex-col space-y-1.5 p-6">
-                            <h3 className="font-semibold leading-none tracking-tight">{open === "add" ? "Create Customer" : "Update Customer"}</h3>
-                            <p className="text-sm text-muted-foreground">Name, mobile, email, and date of birth are required. Image is optional.</p>
-                        </div>
-                        <div data-slot="card-content" className="space-y-4 p-6 pt-0">
+            <Modal
+                show={!!open}
+                onClose={() => {
+                    setOpen(null);
+                    resetImageState();
+                }}
+                title={open === "add" ? "Create Customer" : "Update Customer"}
+                subTitle="Name, mobile, email, and date of birth are required. Image is optional."
+                size="lg"
+                scrollable
+            >
+                <div className="space-y-4">
                             <Formik
                                 initialValues={initialValues}
                                 enableReinitialize
@@ -404,10 +408,8 @@ export default function AdminCustomersPage() {
                                     </Form>
                                 )}
                             </Formik>
-                        </div>
-                    </div>
                 </div>
-            ) : null}
+            </Modal>
         </section>
     );
 }

@@ -12,7 +12,7 @@ import { CircleCheckBig, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -302,14 +302,15 @@ export default function AdminServiceProvidersPage() {
                 <AdminPagination data={data} param={param} setParam={setParam} />
             </div>
 
-            {open ? (
-                <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
-                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-indigo-100 bg-white text-slate-900 shadow-xl dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100">
-                        <div className="flex flex-col space-y-1.5 p-6">
-                            <h3 className="font-semibold leading-none tracking-tight">{open === "add" ? "Create service provider" : "Update service provider"}</h3>
-                            <p className="text-sm text-muted-foreground">Required: name, mobile, email, PAN, Aadhar. Optional: photo, document uploads, experience.</p>
-                        </div>
-                        <div className="space-y-4 p-6 pt-0">
+            <Modal
+                show={!!open}
+                onClose={() => setOpen(null)}
+                title={open === "add" ? "Create service provider" : "Update service provider"}
+                subTitle="Required: name, mobile, email, PAN, Aadhar. Optional: photo, document uploads, experience."
+                size="lg"
+                scrollable
+            >
+                <div className="space-y-4">
                             <Formik
                                 initialValues={initialValues}
                                 enableReinitialize
@@ -431,87 +432,83 @@ export default function AdminServiceProvidersPage() {
                                     </Form>
                                 )}
                             </Formik>
-                        </div>
-                    </div>
                 </div>
-            ) : null}
+            </Modal>
 
-            {statusOpen ? (
-                <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
-                    <div className="w-full max-w-md rounded-xl border border-indigo-100 bg-white text-slate-900 shadow-xl dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100">
-                        <div className="flex flex-col space-y-1.5 p-6">
-                            <h3 className="font-semibold leading-none tracking-tight">Update provider status</h3>
-                            <p className="text-sm text-muted-foreground">Update profile and verification status.</p>
-                        </div>
-                        <div className="space-y-4 p-6 pt-0">
-                            <div className="grid grid-cols-1 gap-2 rounded-lg border border-indigo-100 p-3 text-sm dark:border-slate-700">
-                                <p><span className="font-medium">User ID:</span> {statusValues.userId}</p>
-                                <p><span className="font-medium">Name:</span> {statusValues.name}</p>
-                                <p><span className="font-medium">Mobile:</span> {statusValues.mobile}</p>
-                                <p><span className="font-medium">Email:</span> {statusValues.email}</p>
-                            </div>
-
-                            <Formik
-                                initialValues={statusValues}
-                                enableReinitialize
-                                validationSchema={statusValidationSchema}
-                                onSubmit={async (values, { setSubmitting }) => {
-                                    const payload = {
-                                        profileStatus: values.profileStatus,
-                                        isVerified: values.isVerified ? 1 : 0
-                                    };
-                                    const { data } = await AxiosHelperAdmin.putData(`/service-providers/${values._id}/status`, payload);
-                                    if (data?.status) {
-                                        toast.success(data.message || "Provider status updated.");
-                                        setStatusOpen(false);
-                                        fetchRows();
-                                    } else {
-                                        toast.error(data?.message || "Unable to update status.");
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting, values, setFieldValue }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="status-profileStatus">Profile status</Label>
-                                            <Field as={Select} id="status-profileStatus" name="profileStatus">
-                                                {SERVICE_PROVIDER_PROFILE_STATUSES.map((status) => (
-                                                    <option key={status} value={status} className="capitalize">
-                                                        {status}
-                                                    </option>
-                                                ))}
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="profileStatus" component="small" />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="status-isVerified">Verification</Label>
-                                            <Select
-                                                id="status-isVerified"
-                                                value={values.isVerified ? "1" : "0"}
-                                                onChange={(e) => setFieldValue("isVerified", e.target.value === "1")}
-                                            >
-                                                <option value="1">Verified</option>
-                                                <option value="0">Not Verified</option>
-                                            </Select>
-                                        </div>
-
-                                        <div className="flex justify-end gap-2 pt-1">
-                                            <Button type="button" variant="secondary" onClick={() => setStatusOpen(false)}>
-                                                Cancel
-                                            </Button>
-                                            <Button type="submit" variant="primary" disabled={isSubmitting}>
-                                                {isSubmitting ? "Saving..." : "Update"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
-                        </div>
+            <Modal
+                show={statusOpen}
+                onClose={() => setStatusOpen(false)}
+                title="Update provider status"
+                subTitle="Update profile and verification status."
+                size="md"
+            >
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-2 rounded-lg border border-indigo-100 p-3 text-sm dark:border-slate-700">
+                        <p><span className="font-medium">User ID:</span> {statusValues.userId}</p>
+                        <p><span className="font-medium">Name:</span> {statusValues.name}</p>
+                        <p><span className="font-medium">Mobile:</span> {statusValues.mobile}</p>
+                        <p><span className="font-medium">Email:</span> {statusValues.email}</p>
                     </div>
+
+                    <Formik
+                        initialValues={statusValues}
+                        enableReinitialize
+                        validationSchema={statusValidationSchema}
+                        onSubmit={async (values, { setSubmitting }) => {
+                            const payload = {
+                                profileStatus: values.profileStatus,
+                                isVerified: values.isVerified ? 1 : 0
+                            };
+                            const { data } = await AxiosHelperAdmin.putData(`/service-providers/${values._id}/status`, payload);
+                            if (data?.status) {
+                                toast.success(data.message || "Provider status updated.");
+                                setStatusOpen(false);
+                                fetchRows();
+                            } else {
+                                toast.error(data?.message || "Unable to update status.");
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting, values, setFieldValue }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="status-profileStatus">Profile status</Label>
+                                    <Field as={Select} id="status-profileStatus" name="profileStatus">
+                                        {SERVICE_PROVIDER_PROFILE_STATUSES.map((status) => (
+                                            <option key={status} value={status} className="capitalize">
+                                                {status}
+                                            </option>
+                                        ))}
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="profileStatus" component="small" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="status-isVerified">Verification</Label>
+                                    <Select
+                                        id="status-isVerified"
+                                        value={values.isVerified ? "1" : "0"}
+                                        onChange={(e) => setFieldValue("isVerified", e.target.value === "1")}
+                                    >
+                                        <option value="1">Verified</option>
+                                        <option value="0">Not Verified</option>
+                                    </Select>
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-1">
+                                    <Button type="button" variant="secondary" onClick={() => setStatusOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit" variant="primary" disabled={isSubmitting}>
+                                        {isSubmitting ? "Saving..." : "Update"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
-            ) : null}
+            </Modal>
         </section>
     );
 }

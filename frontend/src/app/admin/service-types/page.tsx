@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, Label, Modal, Select, Textarea } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, serviceTypeFormToPayload, type ServiceTypeFormValues } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -305,14 +305,15 @@ export default function AdminServiceTypesPage() {
                 <AdminPagination data={data} param={param} setParam={setParam} />
             </div>
 
-            {open ? (
-                <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
-                    <div data-slot="card" className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-indigo-100 bg-white text-slate-900 shadow-xl dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100">
-                        <div data-slot="card-header" className="flex flex-col space-y-1.5 p-6">
-                            <h3 className="font-semibold leading-none tracking-tight">{open === "add" ? "Create service type" : "Update service type"}</h3>
-                            <p className="text-sm text-muted-foreground">Link to a category and set name, optional Hindi label, time and price hints.</p>
-                        </div>
-                        <div data-slot="card-content" className="space-y-4 p-6 pt-0">
+            <Modal
+                show={!!open}
+                onClose={() => setOpen(null)}
+                title={open === "add" ? "Create service type" : "Update service type"}
+                subTitle="Link to a category and set name, optional Hindi label, time and price hints."
+                size="lg"
+                scrollable
+            >
+                <div className="space-y-4">
                             <Formik
                                 initialValues={initialValues}
                                 enableReinitialize
@@ -420,10 +421,8 @@ export default function AdminServiceTypesPage() {
                                     </Form>
                                 )}
                             </Formik>
-                        </div>
-                    </div>
                 </div>
-            ) : null}
+            </Modal>
         </section>
     );
 }

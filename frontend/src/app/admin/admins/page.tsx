@@ -12,7 +12,7 @@ import { Fingerprint, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Select } from "@/components/ui";
+import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { Role } from "../roles/page";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
@@ -281,18 +281,14 @@ export default function AdminUsersPage() {
                 <AdminPagination data={data} param={param} setParam={setParam} />
             </div>
 
-            {open ? (
-                <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
-                    <div
-                        data-slot="card"
-                        className="w-full max-w-md rounded-xl border border-indigo-100 bg-white text-slate-900 shadow-xl transition-shadow duration-200 dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100"
-                    >
-                        <div data-slot="card-header" className="flex flex-col space-y-1.5 p-6">
-                            <h3 className="font-semibold leading-none tracking-tight">{open === "add" ? "Create Sub Admin" : "Update Sub Admin"}</h3>
-                            <p className="text-sm text-muted-foreground">Pick a role; permissions will be assigned automatically.</p>
-                        </div>
-
-                        <div data-slot="card-content" className="space-y-4 p-6 pt-0">
+            <Modal
+                show={!!open}
+                onClose={() => setOpen(null)}
+                title={open === "add" ? "Create Sub Admin" : "Update Sub Admin"}
+                subTitle="Pick a role; permissions will be assigned automatically."
+                size="md"
+            >
+                <div className="space-y-4">
                             <Formik
                                 initialValues={initialValues}
                                 enableReinitialize
@@ -401,10 +397,8 @@ export default function AdminUsersPage() {
                                     </Form>
                                 )}
                             </Formik>
-                        </div>
-                    </div>
                 </div>
-            ) : null}
+            </Modal>
         </section>
     );
 }

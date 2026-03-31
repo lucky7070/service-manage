@@ -11,7 +11,7 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
 import Image from "@/components/ui/Image";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { buildServiceCategoryFormData, getSweetAlertConfig, resolveFileUrl, slugify, type ServiceCategoryFormValues } from "@/helpers/utils";
@@ -245,14 +245,18 @@ export default function AdminServiceCategoriesPage() {
                 <AdminPagination data={data} param={param} setParam={setParam} />
             </div>
 
-            {open ? (
-                <div className="fixed inset-0 z-999 flex items-center justify-center bg-black/60 p-4 backdrop-blur-[2px]">
-                    <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-indigo-100 bg-white text-slate-900 shadow-xl dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100">
-                        <div className="flex flex-col space-y-1.5 p-6">
-                            <h3 className="font-semibold leading-none tracking-tight">{open === "add" ? "Create category" : "Update category"}</h3>
-                            <p className="text-sm text-muted-foreground">URL slug, labels, sort order, and optional image.</p>
-                        </div>
-                        <div className="space-y-4 p-6 pt-0">
+            <Modal
+                show={!!open}
+                onClose={() => {
+                    setOpen(null);
+                    resetImage();
+                }}
+                title={open === "add" ? "Create category" : "Update category"}
+                subTitle="URL slug, labels, sort order, and optional image."
+                size="lg"
+                scrollable
+            >
+                <div className="space-y-4">
                             <Formik
                                 initialValues={initialValues}
                                 enableReinitialize
@@ -388,10 +392,8 @@ export default function AdminServiceCategoriesPage() {
                                     </Form>
                                 )}
                             </Formik>
-                        </div>
-                    </div>
                 </div>
-            ) : null}
+            </Modal>
         </section>
     );
 }
