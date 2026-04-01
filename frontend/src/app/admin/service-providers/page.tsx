@@ -8,7 +8,8 @@ import * as Yup from "yup";
 import moment from "moment";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
-import { CircleCheckBig, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { CircleCheckBig, ImageIcon, Images, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
@@ -270,14 +271,24 @@ export default function AdminServiceProvidersPage() {
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "—"}</td>
                                     <td className="px-3 py-2">
                                         <div className="flex justify-end gap-1.5 sm:gap-2">
-                                            <PermissionBlock permission_id={372}>
-                                                <Button size="sm" variant="secondary" onClick={() => openEdit(row)} title="Edit" aria-label="Edit">
-                                                    <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
+                                            <PermissionBlock permission_id={378}>
+                                                <Link
+                                                    href={`/admin/service-providers/${row._id}/images`}
+                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-secondary-200 px-3 text-xs font-medium text-secondary-900 transition-all hover:bg-secondary-300 dark:bg-secondary-700 dark:text-white dark:hover:bg-secondary-600"
+                                                    title="Work Photos"
+                                                    aria-label="Work Photos"
+                                                >
+                                                    <Images className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                </Link>
                                             </PermissionBlock>
                                             <PermissionBlock permission_id={372}>
                                                 <Button size="sm" variant="primary" onClick={() => openStatusModal(row)} title="Update status" aria-label="Update status">
                                                     <CircleCheckBig className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                </Button>
+                                            </PermissionBlock>
+                                            <PermissionBlock permission_id={372}>
+                                                <Button size="sm" variant="secondary" onClick={() => openEdit(row)} title="Edit" aria-label="Edit">
+                                                    <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
                                                 </Button>
                                             </PermissionBlock>
                                             <PermissionBlock permission_id={373}>
@@ -311,127 +322,126 @@ export default function AdminServiceProvidersPage() {
                 scrollable
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                validationContext={{ mode: open === "edit" ? "edit" : "add" }}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/service-providers", values, true);
-                                        if (data.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchRows();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    } else {
-                                        const { data } = await AxiosHelperAdmin.putData(`/service-providers/${values._id}`, values, true);
-                                        if (data.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchRows();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting, values, setFieldValue }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label>Profile Photo <span className="font-normal text-slate-500">(optional)</span></Label>
-                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
-                                                    {imagePreview && typeof imagePreview === 'string' ? (
-                                                        <Image src={imagePreview || ""} alt={imagePreview} className="h-full w-full object-cover" />
-                                                    ) : (
-                                                        <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">No image</div>
-                                                    )}
-                                                </div>
-                                                <InputFile
-                                                    accept="image/jpeg,image/png,image/webp,image/gif"
-                                                    onChange={(e) => {
-                                                        const f = e.target.files?.[0];
-                                                        if (f) {
-                                                            setFieldValue('image', f);
-                                                            setImagePreview(URL.createObjectURL(f));
-                                                        }
-                                                    }}
-                                                />
-                                            </div>
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        validationContext={{ mode: open === "edit" ? "edit" : "add" }}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/service-providers", values, true);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchRows();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/service-providers/${values._id}`, values, true);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchRows();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting, values, setFieldValue }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label>Profile Photo <span className="font-normal text-slate-500">(optional)</span></Label>
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                            {imagePreview && typeof imagePreview === 'string' ? (
+                                                <Image src={imagePreview || ""} alt={imagePreview} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">No image</div>
+                                            )}
                                         </div>
-
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sp-name">Name <span className="text-red-500">*</span> </Label>
-                                                <Field as={Input} id="sp-name" name="name" />
-                                                <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sp-mobile">Mobile <span className="text-red-500">*</span> </Label>
-                                                <Field as={Input} id="sp-mobile" name="mobile" placeholder="10 digits" maxLength={10} />
-                                                <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sp-email">Email <span className="text-red-500">*</span> </Label>
-                                                <Field as={Input} id="sp-email" name="email" type="email" />
-                                                <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sp-exp-y">Experience (years) <span className="text-red-500">*</span></Label>
-                                                <Field as={Input} id="sp-exp-y" name="experienceYears" type="number" min={0} max={80} />
-                                                <ErrorMessage className="text-xs text-rose-600" name="experienceYears" component="small" />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sp-pan">PAN <span className="text-red-500">*</span> </Label>
-                                                <Field as={Input} id="sp-pan" name="panCardNumber" className="uppercase" placeholder="ABCDE1234F" maxLength={10} />
-                                                <ErrorMessage className="text-xs text-rose-600" name="panCardNumber" component="small" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sp-aadhar">Aadhar <span className="text-red-500">*</span> </Label>
-                                                <Field as={Input} id="sp-aadhar" name="aadharNumber" placeholder="12 digits" maxLength={12} />
-                                                <ErrorMessage className="text-xs text-rose-600" name="aadharNumber" component="small" />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-3 sm:grid-cols-2">
-                                            <div className="space-y-2">
-                                                <Label>PAN document</Label>
-                                                <InputFile accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" value={typeof values.panCardDocument === 'string' ? values.panCardDocument : undefined} onChange={(e) => setFieldValue('panCardDocument', e.target.files?.[0] ?? null)} />
-                                                <ErrorMessage className="text-xs text-rose-600" name="panCardDocument" component="small" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Aadhar document</Label>
-                                                <InputFile accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" value={typeof values.aadharDocument === 'string' ? values.aadharDocument : undefined} onChange={(e) => setFieldValue('aadharDocument', e.target.files?.[0] ?? null)} />
-                                                <ErrorMessage className="text-xs text-rose-600" name="aadharDocument" component="small" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="sp-exp-d">Experience description <span className="font-normal text-slate-500">(optional)</span></Label>
-                                            <Field as={Textarea} id="sp-exp-d" name="experienceDescription" rows={3} />
-                                            <ErrorMessage className="text-xs text-rose-600" name="experienceDescription" component="small" />
-                                        </div>
-                                        <div className="flex justify-end gap-2 pt-2">
-                                            <Button type="button" variant="secondary" onClick={() => { setOpen(null); }}>
-                                                Cancel
-                                            </Button>
-                                            <Button type="submit" variant="primary" disabled={isSubmitting}>
-                                                {open === "add" ? "Create" : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                                        <InputFile
+                                            accept="image/jpeg,image/png,image/webp,image/gif"
+                                            onChange={(e) => {
+                                                const f = e.target.files?.[0];
+                                                if (f) {
+                                                    setFieldValue('image', f);
+                                                    setImagePreview(URL.createObjectURL(f));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-name">Name <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-name" name="name" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-mobile">Mobile <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-mobile" name="mobile" placeholder="10 digits" maxLength={10} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
+                                    </div>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-email">Email <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-email" name="email" type="email" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-exp-y">Experience (years) <span className="text-red-500">*</span></Label>
+                                        <Field as={Input} id="sp-exp-y" name="experienceYears" type="number" min={0} max={80} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="experienceYears" component="small" />
+                                    </div>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-pan">PAN <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-pan" name="panCardNumber" className="uppercase" placeholder="ABCDE1234F" maxLength={10} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="panCardNumber" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-aadhar">Aadhar <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-aadhar" name="aadharNumber" placeholder="12 digits" maxLength={12} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="aadharNumber" component="small" />
+                                    </div>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label>PAN document</Label>
+                                        <InputFile accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" value={typeof values.panCardDocument === 'string' ? values.panCardDocument : undefined} onChange={(e) => setFieldValue('panCardDocument', e.target.files?.[0] ?? null)} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="panCardDocument" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Aadhar document</Label>
+                                        <InputFile accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" value={typeof values.aadharDocument === 'string' ? values.aadharDocument : undefined} onChange={(e) => setFieldValue('aadharDocument', e.target.files?.[0] ?? null)} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="aadharDocument" component="small" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="sp-exp-d">Experience description <span className="font-normal text-slate-500">(optional)</span></Label>
+                                    <Field as={Textarea} id="sp-exp-d" name="experienceDescription" rows={3} />
+                                    <ErrorMessage className="text-xs text-rose-600" name="experienceDescription" component="small" />
+                                </div>
+                                <div className="flex justify-end gap-2 pt-2">
+                                    <Button type="button" variant="secondary" onClick={() => { setOpen(null); }}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit" variant="primary" disabled={isSubmitting}>
+                                        {open === "add" ? "Create" : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
 

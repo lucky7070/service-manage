@@ -1,4 +1,4 @@
-import { ADMIN_BREADCRUMB_ROUTES, AdminBreadcrumbItem } from "@/config";
+import { ADMIN_ROUTE_PERMISSIONS, AdminBreadcrumbItem } from "@/config";
 import { SweetAlertOptions } from "sweetalert2";
 
 export function cn(...parts: Array<string | undefined | false | null>): string {
@@ -49,11 +49,18 @@ export function getSweetAlertConfig({
     }
 }
 
-export const titleCaseSegment = (value: string) =>
-    value.replace(/[-_]/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
+export const titleCaseSegment = (value: string) => value.replace(/[-_]/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
+
+export const compareRoute = (currentRoute: string, definedPattern: string): boolean => {
+    const normalizedCurrent = currentRoute.replace(/\/+$/, "") || "/";
+    const normalizedPattern = definedPattern.replace(/\/+$/, "") || "/";
+    const regexPattern = normalizedPattern.replace(/:[^/]+/g, "([^/]+)").replace(/\//g, "\\/");
+    const regex = new RegExp(`^${regexPattern}$`);
+    return regex.test(normalizedCurrent);
+};
 
 export const getAdminBreadcrumbItems = (pathname: string): AdminBreadcrumbItem[] => {
-    const matched = ADMIN_BREADCRUMB_ROUTES.find((rule) => rule.startsWith ? pathname.startsWith(rule.path) : pathname === rule.path);
+    const matched = ADMIN_ROUTE_PERMISSIONS.find((rule) => compareRoute(pathname, rule.path));
 
     if (matched) return matched.items;
     if (!pathname.startsWith("/admin")) return [];
@@ -76,58 +83,5 @@ export const getAdminBreadcrumbItems = (pathname: string): AdminBreadcrumbItem[]
 
 /** URL-safe slug from a label (matches backend slugify). */
 export function slugify(s: string): string {
-    return s
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 100);
-}
-
-export type ServiceCategoryFormValues = {
-    _id: string;
-    slug: string;
-    name: string;
-    nameHi: string;
-    description: string;
-    displayOrder: number | "";
-    status: number;
-    image: string | null;
-};
-
-export function buildServiceCategoryFormData(values: ServiceCategoryFormValues, imageFile: File | null): FormData {
-    const fd = new FormData();
-    fd.append("name", values.name.trim());
-    fd.append("slug", values.slug.trim() ? values.slug.trim() : slugify(values.name));
-    fd.append("nameHi", values.nameHi?.trim() || "");
-    fd.append("description", values.description?.trim() || "");
-    fd.append("displayOrder", String(values.displayOrder === "" ? 0 : values.displayOrder));
-    fd.append("status", String(values.status));
-    if (imageFile) fd.append("image", imageFile);
-    return fd;
-}
-
-export type ServiceTypeFormValues = {
-    _id: string;
-    categoryId: string;
-    name: string;
-    nameHi: string;
-    estimatedTimeMinutes: number | "";
-    basePrice: number | "";
-    description: string;
-    status: number;
-};
-
-export function serviceTypeFormToPayload(values: ServiceTypeFormValues) {
-    const est = values.estimatedTimeMinutes;
-    const price = values.basePrice;
-    return {
-        categoryId: values.categoryId,
-        name: values.name.trim(),
-        nameHi: values.nameHi?.trim() || "",
-        description: values.description?.trim() || "",
-        estimatedTimeMinutes: est === "" || est === undefined ? "" : Number(est),
-        basePrice: price === "" || price === undefined ? "" : Number(price),
-        status: values.status
-    };
+    return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
 }

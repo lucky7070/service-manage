@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import moment from "moment";
-import { ServiceProvider } from "../../models/index.js";
+import { ServiceProvider, ServiceProviderPhoto } from "../../models/index.js";
 import { escapeRegex } from "../../helpers/utils.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 
@@ -186,6 +186,7 @@ export const getSingleServiceProvider = async (req, res) => {
         const doc = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null }).lean();
         if (!doc) return res.noRecords();
 
+        doc.photos = await ServiceProviderPhoto.find({ providerId: doc._id }, '_id photoUrl displayOrder').sort({ displayOrder: 1 }).lean();
         return res.success({
             _id: doc._id,
             userId: doc.userId,
@@ -212,7 +213,8 @@ export const getSingleServiceProvider = async (req, res) => {
             isActive: doc.isActive,
             isVerified: doc.isVerified,
             lastLogin: doc.lastLogin,
-            createdAt: doc.createdAt
+            createdAt: doc.createdAt,
+            photos: doc.photos,
         });
     } catch (error) {
         return res.someThingWentWrong(error);

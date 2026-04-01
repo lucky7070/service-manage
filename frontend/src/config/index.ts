@@ -16,6 +16,7 @@ export type SidebarGroup = {
 export type RoutePermissionRule = {
     path: string;
     permission_id: number | boolean;
+    items: AdminBreadcrumbItem[];
 };
 
 export type AdminBreadcrumbItem = {
@@ -23,18 +24,12 @@ export type AdminBreadcrumbItem = {
     href?: string;
 };
 
-type AdminBreadcrumbRule = {
-    path: string;
-    startsWith?: boolean;
-    items: AdminBreadcrumbItem[];
-};
-
 export type ProfileStatus = "pending" | "approved" | "rejected" | "suspended";
 
 /** Indian mobile: optional +91 / leading 0, then 10-digit starting with 6–9. */
 export const PHONE_REGEXP = /^(?:(?:\+|0{0,2})91(\s*|[-])?|[0]?)?([6789]\d{2}([ -]?)\d{3}([ -]?)\d{4})$/;
 export const PHONE_ERROR_MESSAGE = "Enter a valid Indian mobile number.";
-export const SERVICE_PROVIDER_PROFILE_STATUSES : ProfileStatus[] = ["pending", "approved", "rejected", "suspended"];
+export const SERVICE_PROVIDER_PROFILE_STATUSES: ProfileStatus[] = ["pending", "approved", "rejected", "suspended"];
 
 export const PERMISSIONS = [
     {
@@ -129,10 +124,14 @@ export const PERMISSIONS = [
     {
         name: "Service Provider",
         permissions: [
-            { id: 371, label: "Create Service provider" },
-            { id: 372, label: "Update Service provider" },
-            { id: 373, label: "Delete Service provider" },
+            { id: 371, label: "Create Service Provider" },
+            { id: 372, label: "Update Service Provider" },
+            { id: 373, label: "Delete Service Provider" },
             { id: 374, label: "View Service providers" },
+            { id: 375, label: "Create Provider Work Photo" },
+            { id: 376, label: "Update Provider Work Photo" },
+            { id: 377, label: "Delete Provider Work Photo" },
+            { id: 378, label: "View Provider Work Photos" },
         ]
     },
 
@@ -172,42 +171,79 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
 ];
 
 export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
-    { path: "/admin/roles/permissions", permission_id: 105 },
-    { path: "/admin/admins/permissions", permission_id: 205 },
-    { path: "/admin/settings", permission_id: 100 },
-    { path: "/admin/roles", permission_id: 104 },
-    { path: "/admin/admins", permission_id: 204 },
-    { path: "/admin/countries", permission_id: 304 },
-    { path: "/admin/states", permission_id: 314 },
-    { path: "/admin/cities", permission_id: 324 },
-    { path: "/admin/customers", permission_id: 334 },
-    { path: "/admin/service-providers", permission_id: 374 },
-    { path: "/admin/rating-tags", permission_id: 344 },
-    { path: "/admin/service-categories", permission_id: 354 },
-    { path: "/admin/service-types", permission_id: 364 },
-];
-
-export const ADMIN_BREADCRUMB_ROUTES: AdminBreadcrumbRule[] = [
-    { path: "/admin/dashboard", items: [{ label: "Dashboard" }] },
-    { path: "/admin/roles", items: [{ label: "Roles" }] },
-    { path: "/admin/admins", items: [{ label: "Sub Admins" }] },
-    { path: "/admin/settings", items: [{ label: "Settings" }] },
-    { path: "/admin/countries", items: [{ label: "Countries" }] },
-    { path: "/admin/states", items: [{ label: "States" }] },
-    { path: "/admin/cities", items: [{ label: "Cities" }] },
-    { path: "/admin/customers", items: [{ label: "Customers" }] },
-    { path: "/admin/service-providers", items: [{ label: "Service providers" }] },
-    { path: "/admin/rating-tags", items: [{ label: "Rating Tags" }] },
-    { path: "/admin/service-categories", items: [{ label: "Service Categories" }] },
-    { path: "/admin/service-types", items: [{ label: "Service types" }] },
     {
-        path: "/admin/roles/permissions/",
-        startsWith: true,
+        path: "/admin/dashboard",
+        permission_id: true,
+        items: [{ label: "Dashboard" }]
+    },
+    {
+        path: "/admin/roles",
+        permission_id: 104,
+        items: [{ label: "Roles" }]
+    },
+    {
+        path: "/admin/roles/permissions/:slug",
+        permission_id: 105,
         items: [{ label: "Roles", href: "/admin/roles" }, { label: "Role Permissions" }]
     },
     {
-        path: "/admin/admins/permissions/",
-        startsWith: true,
+        path: "/admin/admins",
+        permission_id: 204,
+        items: [{ label: "Sub Admins" }]
+    },
+    {
+        path: "/admin/admins/permissions/:slug",
+        permission_id: 205,
         items: [{ label: "Sub Admins", href: "/admin/admins" }, { label: "Admin Permissions" }]
-    }
+    },
+    {
+        path: "/admin/settings",
+        permission_id: true,
+        items: [{ label: "Settings" }]
+    },
+    {
+        path: "/admin/countries",
+        permission_id: 304,
+        items: [{ label: "Countries" }]
+    },
+    {
+        path: "/admin/states",
+        permission_id: 314,
+        items: [{ label: "States" }]
+    },
+    {
+        path: "/admin/cities",
+        permission_id: 324,
+        items: [{ label: "Cities" }]
+    },
+    {
+        path: "/admin/customers",
+        permission_id: 334,
+        items: [{ label: "Customers" }]
+    },
+    {
+        path: "/admin/service-providers",
+        permission_id: 374,
+        items: [{ label: "Service providers" }]
+    },
+    {
+        path: "/admin/service-providers/:slug/images",
+        permission_id: 378,
+        items: [{ label: "Service Providers", href: "/admin/service-providers" }, { label: "Work Photos" }]
+    },
+    {
+        path: "/admin/rating-tags",
+        permission_id: 344,
+        items: [{ label: "Rating Tags" }]
+    },
+    {
+        path: "/admin/service-categories",
+        permission_id: 354,
+        items: [{ label: "Service Categories" }]
+    },
+    {
+        path: "/admin/service-types",
+        permission_id: 364,
+        items: [{ label: "Service types" }]
+    },
 ];

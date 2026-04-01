@@ -4,6 +4,8 @@ export { default as Textarea, textareaClassName } from "./Textarea";
 export { default as Select, selectClassName } from "./Select";
 export { default as Label } from "./Label";
 export { default as InputFile } from "./InputFile";
+export { default as FileDropzone, useFileDropzone, type FileDropzoneProps, type FileDropzoneContext } from "./FileDropzone";
+export { default as SortableList, type SortableListProps } from "./SortableList";
 export { default as Modal } from "./Modal";
 export { Badge, statusToBadgeVariant, type BadgeProps, type BadgeVariant, type BadgeSize } from "./Badge";
 export { ProgressBar, type ProgressBarProps, type ProgressTone } from "./ProgressBar";

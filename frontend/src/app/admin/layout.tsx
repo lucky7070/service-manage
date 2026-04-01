@@ -15,6 +15,7 @@ import { Home, ShieldAlert, UserCircle2 } from "lucide-react";
 import { ADMIN_ROUTE_PERMISSIONS } from "@/config";
 import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 import { setLoading, setMobileSidebarOpen } from "@/store/slices/appSlice";
+import { compareRoute } from "@/helpers/utils";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
 
@@ -27,16 +28,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const isLoginPage = useMemo(() => ["/admin/login"].includes(pathname), [pathname]);
 
-    const requiredPermission = useMemo(() => {
-        const matchedRule = [...ADMIN_ROUTE_PERMISSIONS].sort((a, b) => b.path.length - a.path.length).find((rule) => pathname.startsWith(rule.path));
-        return matchedRule?.permission_id ?? true;
-    }, [pathname]);
-
     const hasRouteAccess = useMemo(() => {
+        const matchedRule = ADMIN_ROUTE_PERMISSIONS.find((rule) => compareRoute(pathname, rule.path));
+        const requiredPermission = matchedRule?.permission_id ?? true;
         if (requiredPermission === true) return true;
         if (requiredPermission === false) return false;
         return admin.permissions.includes(requiredPermission);
-    }, [admin.permissions, requiredPermission]);
+    }, [admin.permissions, pathname]);
 
     useEffect(() => {
         (async () => {

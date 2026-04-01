@@ -3,10 +3,10 @@ import { PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/const
 import { trapErrors } from "../middlewares/trapErrors.js";
 
 const email = check("email", "Valid email is required.").exists().not().isEmpty().isEmail().isLength({ min: 2, max: 100 }).trim().toLowerCase();
-const password = check("password", "Password must be greater then 5 digit.!!").exists().not().isEmpty().isLength({ min: 5, max: 50 });
+const password = check("password", "Password must be greater then 5 digit.!!").exists().not().isEmpty().isLength({ min: 5, max: 50 }).trim();
 const name = check("name", "Name is required.").exists().not().isEmpty().isLength({ min: 2, max: 100 }).trim();
 const status = check("status", "Status is required.").exists().not().isEmpty().isIn([0, 1]);
-const mobile = check("mobile", "Enter a valid Indian mobile number.").trim().notEmpty().matches(PHONE_REGEXP).withMessage("Enter a valid Indian mobile number.").isInt().customSanitizer(value => String(value)).isLength({ min: 10, max: 10 }).withMessage('mobile must be exactly 10 digits');
+const mobile = check("mobile", "Enter a valid Indian mobile number.").trim().notEmpty().matches(PHONE_REGEXP).withMessage("Enter a valid Indian mobile number.").isInt().customSanitizer(value => String(value)).isLength({ min: 10, max: 10 }).withMessage('mobile must be exactly 10 digits').trim();
 const roleId = check("roleId", "Role ID is required.").exists().not().isEmpty().isMongoId();
 const countryId = check("countryId", "Country ID is required.").exists().not().isEmpty().isMongoId();
 const stateId = check("stateId", "State ID is required.").exists().not().isEmpty().isMongoId();
@@ -16,7 +16,7 @@ const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").ex
 const customerStatus = check("status", "Status is required.").exists().not().isEmpty().isIn([0, 1, "0", "1"]);
 
 const tagFor = check("tagFor", "Tag for is required.").exists().not().isEmpty().isIn(["customer", "provider"]);
-const tagName = check("tagName", "Tag name is required.").exists().not().isEmpty().isLength({ min: 1, max: 150 });
+const tagName = check("tagName", "Tag name is required.").exists().not().isEmpty().isLength({ min: 1, max: 100 }).trim();
 const tagType = check("tagType", "Tag type is required.").exists().not().isEmpty().isIn(["positive", "negative", "neutral"]);
 
 const categoryIdService = check("categoryId", "Category is required.").exists().not().isEmpty().isMongoId();
@@ -34,8 +34,7 @@ const experienceYearsProvider = check("experienceYears").optional().custom((valu
     return Number.isFinite(n) && n >= 0 && n <= 80;
 });
 
-const experienceDescriptionProvider = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 });
-const profileStatusProvider = check("profileStatus").optional({ values: "falsy" }).isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
+const experienceDescriptionProvider = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
 const profileStatusProviderRequired = check("profileStatus", "Profile status is required.").exists().not().isEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
 const isVerifiedProvider = check("isVerified", "isVerified must be 0 or 1.").exists().not().isEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const objectIdParam = param("id", "Invalid ID.").exists().not().isEmpty().isMongoId();

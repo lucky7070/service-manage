@@ -14,7 +14,7 @@ import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
 import Image from "@/components/ui/Image";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { buildServiceCategoryFormData, getSweetAlertConfig, resolveFileUrl, slugify, type ServiceCategoryFormValues } from "@/helpers/utils";
+import { getSweetAlertConfig, resolveFileUrl, slugify } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 type CategoryRow = {
@@ -27,6 +27,17 @@ type CategoryRow = {
     displayOrder: number;
     status: number;
     createdAt?: string;
+};
+
+type ServiceCategoryFormValues = {
+    _id: string;
+    slug: string;
+    name: string;
+    nameHi: string;
+    description: string;
+    displayOrder: number | "";
+    status: number;
+    image: string | null;
 };
 
 type CategoryRecord = {
@@ -60,7 +71,6 @@ export default function AdminServiceCategoriesPage() {
     const [data, setData] = useState<CategoryRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; }>({ limit: 10, pageNo: 1, query: "", sortBy: "displayOrder", sortOrder: "asc", status: "" });
     const [initialValues, setInitialValues] = useState<ServiceCategoryFormValues>({ _id: "", slug: "", name: "", nameHi: "", description: "", displayOrder: 0, status: 1, image: null });
-    const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const fetchRows = useCallback(async () => {
@@ -82,10 +92,7 @@ export default function AdminServiceCategoriesPage() {
         return () => { debouncedFetchRef.current.cancel(); };
     }, [param]);
 
-    const resetImage = () => {
-        setImageFile(null);
-        setImagePreview(null);
-    };
+    const resetImage = () => { setImagePreview(null) };
 
     const handleDelete = async (id: string) => {
         const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
@@ -257,141 +264,139 @@ export default function AdminServiceCategoriesPage() {
                 scrollable
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    const fd = buildServiceCategoryFormData(values, imageFile);
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/service-categories", fd, true);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            resetImage();
-                                            fetchRows();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    } else {
-                                        const { data } = await AxiosHelperAdmin.putData(`/service-categories/${values._id}`, fd, true);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            resetImage();
-                                            fetchRows();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting, values }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label>Image <span className="font-normal text-slate-500">(optional)</span></Label>
-                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
-                                                    {(imagePreview || resolveFileUrl(values.image)) ? (
-                                                        <Image
-                                                            src={imagePreview || resolveFileUrl(values.image) || ""}
-                                                            alt=""
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-full w-full items-center justify-center text-slate-400">
-                                                            <ImageIcon className="h-8 w-8" />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <InputFile accept="image/*"
-                                                    onChange={(e) => {
-                                                        const f = e.target.files?.[0] ?? null;
-                                                        setImageFile(f);
-                                                        if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
-                                                        if (f) setImagePreview(URL.createObjectURL(f));
-                                                        else setImagePreview(resolveFileUrl(values.image));
-                                                    }}
-                                                />
-                                            </div>
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/service-categories", values, true);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    resetImage();
+                                    fetchRows();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/service-categories/${values._id}`, values, true);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    resetImage();
+                                    fetchRows();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting, values, setFieldValue }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label>Image <span className="font-normal text-slate-500">(optional)</span></Label>
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                            {(imagePreview || resolveFileUrl(values.image)) ? <Image
+                                                src={imagePreview || resolveFileUrl(values.image) || ""}
+                                                alt=""
+                                                className="h-full w-full object-cover"
+                                            /> : <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                <ImageIcon className="h-8 w-8" />
+                                            </div>}
                                         </div>
+                                        <InputFile accept="image/*"
+                                            onChange={(e) => {
+                                                const f = e.target.files?.[0] ?? null;
+                                                setFieldValue('image', f);
+                                                if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+                                                if (f) {
+                                                    setImagePreview(URL.createObjectURL(f));
+                                                } else {
+                                                    setImagePreview(resolveFileUrl(values.image));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="sc-name">Name (English)</Label>
-                                            <Field name="name">
-                                                {({ field, form }: FieldProps<string>) => (
-                                                    <Input
-                                                        {...field}
-                                                        id="sc-name"
-                                                        placeholder="e.g. Home services"
-                                                        onBlur={(e) => {
-                                                            field.onBlur(e);
-                                                            if (!form.values._id && !form.values.slug?.trim()) {
-                                                                form.setFieldValue("slug", slugify(e.target.value));
-                                                            }
-                                                        }}
-                                                    />
-                                                )}
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="sc-slug">Slug</Label>
-                                            <Field
-                                                as={Input}
-                                                id="sc-slug"
-                                                name="slug"
-                                                className="font-mono"
-                                                placeholder="Auto-filled from name"
+                                <div className="space-y-2">
+                                    <Label htmlFor="sc-name">Name (English)</Label>
+                                    <Field name="name">
+                                        {({ field, form }: FieldProps<string>) => (
+                                            <Input
+                                                {...field}
+                                                id="sc-name"
+                                                placeholder="e.g. Home services"
+                                                onBlur={(e) => {
+                                                    field.onBlur(e);
+                                                    if (!form.values._id && !form.values.slug?.trim()) {
+                                                        form.setFieldValue("slug", slugify(e.target.value));
+                                                    }
+                                                }}
                                             />
-                                            <ErrorMessage className="text-xs text-rose-600" name="slug" component="small" />
-                                        </div>
+                                        )}
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="sc-nameHi">Name (Hindi) <span className="font-normal text-slate-500">optional</span></Label>
-                                            <Field as={Input} id="sc-nameHi" name="nameHi" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="nameHi" component="small" />
-                                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="sc-slug">Slug</Label>
+                                    <Field
+                                        as={Input}
+                                        id="sc-slug"
+                                        name="slug"
+                                        className="font-mono"
+                                        placeholder="Auto-filled from name"
+                                    />
+                                    <ErrorMessage className="text-xs text-rose-600" name="slug" component="small" />
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="sc-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
-                                            <Field as={Textarea} id="sc-desc" name="description" rows={3} />
-                                            <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
-                                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="sc-nameHi">Name (Hindi) <span className="font-normal text-slate-500">optional</span></Label>
+                                    <Field as={Input} id="sc-nameHi" name="nameHi" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="nameHi" component="small" />
+                                </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sc-order">Display order</Label>
-                                                <Field as={Input} id="sc-order" name="displayOrder" type="number" min={0} />
-                                                <ErrorMessage className="text-xs text-rose-600" name="displayOrder" component="small" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="sc-status">Status</Label>
-                                                <Field as={Select} id="sc-status" name="status">
-                                                    <option value={1}>Active</option>
-                                                    <option value={0}>Inactive</option>
-                                                </Field>
-                                                <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                            </div>
-                                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="sc-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
+                                    <Field as={Textarea} id="sc-desc" name="description" rows={3} />
+                                    <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
+                                </div>
 
-                                        <div className="flex justify-end gap-2 pt-2">
-                                            <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => { setOpen(null); resetImage(); }}>
-                                                Cancel
-                                            </Button>
-                                            <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
-                                                {isSubmitting ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sc-order">Display order</Label>
+                                        <Field as={Input} id="sc-order" name="displayOrder" type="number" min={0} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="displayOrder" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sc-status">Status</Label>
+                                        <Field as={Select} id="sc-status" name="status">
+                                            <option value={1}>Active</option>
+                                            <option value={0}>Inactive</option>
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-2">
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => { setOpen(null); resetImage(); }}>
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
+                                        {isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
         </section>

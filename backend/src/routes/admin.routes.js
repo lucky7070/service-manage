@@ -10,6 +10,7 @@ import { getState, createState, updateState, deleteState, getSingleState } from 
 import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../controller/admin/city.controller.js";
 import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
 import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
+import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServiceProviderPhoto, reorderServiceProviderPhotos } from "../controller/admin/serviceProviderPhoto.controller.js";
 import { getPredefinedRatingTag, createPredefinedRatingTag, updatePredefinedRatingTag, deletePredefinedRatingTag, getSinglePredefinedRatingTag } from "../controller/admin/predefinedRatingTag.controller.js";
 import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../controller/admin/serviceCategory.controller.js";
 import { getServiceType, createServiceType, updateServiceType, deleteServiceType, getSingleServiceType } from "../controller/admin/serviceType.controller.js";
@@ -22,6 +23,7 @@ const appSettingStorage = new Storage({ dir: "application", isImage: true, isDoc
 const customerStorage = new Storage({ dir: "customers", isImage: true, isDoc: false, fileSize: 2 });
 const serviceCategoryStorage = new Storage({ dir: "service-categories", isImage: true, isDoc: false, fileSize: 2 });
 const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: true, isDoc: true, fileSize: 5 });
+const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provider-work", isImage: true, isDoc: false, fileSize: 2 });
 
 router.use(requireAdminAuth);
 
@@ -91,6 +93,10 @@ router.put("/service-providers/:id/status", validator("service-provider-status")
 router.delete("/service-providers/:id", deleteServiceProvider);
 router.get("/service-providers/:id", getSingleServiceProvider);
 router.get("/service-providers", getServiceProvider);
+router.get("/service-providers/:id/photos", getServiceProviderPhotos);
+router.post("/service-providers/:id/photos", serviceProviderWorkPhotoStorage.array("photos", 20), uploadServiceProviderPhotos);
+router.put("/service-providers/:id/photos/reorder", reorderServiceProviderPhotos);
+router.delete("/service-providers/:id/photos/:photoId", deleteServiceProviderPhoto);
 
 // Predefined rating tags
 router.post("/rating-tags", validator("rating-tag"), createPredefinedRatingTag);

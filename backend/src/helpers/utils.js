@@ -1,4 +1,5 @@
 import moment from "moment";
+import mongoose from "mongoose";
 
 export const nowPlusMinutes = (minutes) => {
     return moment().add(minutes, "minutes").toDate();
@@ -20,3 +21,11 @@ export const orderId = (seq, prefix, width = 6) => {
 };
 
 export const escapeRegex = (str = "") => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export const ObjectId = (id) => {
+    try {
+        return new mongoose.Types.ObjectId(String(id));
+    } catch {
+        return null;
+    }
+};

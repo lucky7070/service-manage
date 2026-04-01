@@ -13,7 +13,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, Label, Modal, Select, Textarea } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { getSweetAlertConfig, serviceTypeFormToPayload, type ServiceTypeFormValues } from "@/helpers/utils";
+import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 
@@ -30,6 +30,17 @@ type ServiceTypeRow = {
     description?: string | null;
     status: number;
     createdAt?: string;
+};
+
+type ServiceTypeFormValues = {
+    _id: string;
+    categoryId: string;
+    name: string;
+    nameHi: string;
+    estimatedTimeMinutes: number | "";
+    basePrice: number | "";
+    description: string;
+    status: number;
 };
 
 type ServiceTypeRecord = {
@@ -314,113 +325,113 @@ export default function AdminServiceTypesPage() {
                 scrollable
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    const payload = serviceTypeFormToPayload(values);
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/service-types", payload);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchRows();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    } else {
-                                        const { data } = await AxiosHelperAdmin.putData(`/service-types/${values._id}`, payload);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchRows();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="st-category">Category</Label>
-                                            <Field as={Select} id="st-category" name="categoryId">
-                                                <option value="">Select category</option>
-                                                {categories.map((c) => (
-                                                    <option key={c._id} value={c._id}>
-                                                        {c.name}
-                                                    </option>
-                                                ))}
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="categoryId" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="st-name">Name (English)</Label>
-                                            <Field as={Input} id="st-name" name="name" placeholder="e.g. Tap Repair" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="st-nameHi">Name (Hindi) <span className="font-normal text-slate-500">optional</span></Label>
-                                            <Field as={Input} id="st-nameHi" name="nameHi" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="nameHi" component="small" />
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="st-est">Est. time (min)</Label>
-                                                <Field
-                                                    as={Input}
-                                                    id="st-est"
-                                                    name="estimatedTimeMinutes"
-                                                    type="number"
-                                                    min={0}
-                                                    placeholder="Optional"
-                                                />
-                                                <ErrorMessage className="text-xs text-rose-600" name="estimatedTimeMinutes" component="small" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="st-price">Base price</Label>
-                                                <Field
-                                                    as={Input}
-                                                    id="st-price"
-                                                    name="basePrice"
-                                                    type="number"
-                                                    min={0}
-                                                    step="0.01"
-                                                    placeholder="Optional"
-                                                />
-                                                <ErrorMessage className="text-xs text-rose-600" name="basePrice" component="small" />
-                                            </div>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="st-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
-                                            <Field as={Textarea} id="st-desc" name="description" rows={3} />
-                                            <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="st-status">Status</Label>
-                                            <Field as={Select} id="st-status" name="status">
-                                                <option value={1}>Active</option>
-                                                <option value={0}>Inactive</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                        </div>
-                                        <div className="flex justify-end gap-2">
-                                            <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
-                                                Cancel
-                                            </Button>
-                                            <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
-                                                {isSubmitting ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/service-types", values);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchRows();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/service-types/${values._id}`, values);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchRows();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            }
+
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="st-category">Category</Label>
+                                    <Field as={Select} id="st-category" name="categoryId">
+                                        <option value="">Select category</option>
+                                        {categories.map((c) => (
+                                            <option key={c._id} value={c._id}>
+                                                {c.name}
+                                            </option>
+                                        ))}
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="categoryId" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="st-name">Name (English)</Label>
+                                    <Field as={Input} id="st-name" name="name" placeholder="e.g. Tap Repair" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="st-nameHi">Name (Hindi) <span className="font-normal text-slate-500">optional</span></Label>
+                                    <Field as={Input} id="st-nameHi" name="nameHi" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="nameHi" component="small" />
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="st-est">Est. time (min)</Label>
+                                        <Field
+                                            as={Input}
+                                            id="st-est"
+                                            name="estimatedTimeMinutes"
+                                            type="number"
+                                            min={0}
+                                            placeholder="Optional"
+                                        />
+                                        <ErrorMessage className="text-xs text-rose-600" name="estimatedTimeMinutes" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="st-price">Base price</Label>
+                                        <Field
+                                            as={Input}
+                                            id="st-price"
+                                            name="basePrice"
+                                            type="number"
+                                            min={0}
+                                            step="0.01"
+                                            placeholder="Optional"
+                                        />
+                                        <ErrorMessage className="text-xs text-rose-600" name="basePrice" component="small" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="st-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
+                                    <Field as={Textarea} id="st-desc" name="description" rows={3} />
+                                    <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="st-status">Status</Label>
+                                    <Field as={Select} id="st-status" name="status">
+                                        <option value={1}>Active</option>
+                                        <option value={0}>Inactive</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
+                                        {isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
         </section>
