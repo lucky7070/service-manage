@@ -25,6 +25,11 @@ export default function AdminSidebar() {
     const isHoverExpanded = isSidebarCollapsed && isHoveringCollapsed;
     const effectiveCollapsed = isSidebarCollapsed && !isHoverExpanded;
 
+    const activeParentLabel = MENU.find((item) => {
+        if (!("children" in item)) return false;
+        return item.children.some((child) => child.href === pathname);
+    })?.label;
+
     return (
         <aside
             className={cn("relative z-0 flex h-full min-h-[calc(100vh-3.5rem)] flex-col rounded-2xl border border-indigo-100 bg-linear-to-b from-white via-[#f6f9ff] to-[#ecf2ff] p-4 text-slate-700 shadow-sm transition-[width] duration-200 dark:border-slate-700 dark:from-secondary-900 dark:via-[#15213f] dark:to-[#1c2f53] dark:text-slate-100", (isHoverExpanded || isSidebarCollapsed === false) ? "md:w-[260px] md:px-4" : "md:w-[88px] md:px-2")}
@@ -94,10 +99,10 @@ export default function AdminSidebar() {
                                             <item.icon className="h-4 w-4" />
                                             <p className="text-ellipsis md:text-clip ...">{item.label}</p>
                                         </span>
-                                        <ChevronDown className={`h-4 w-4 transition ${open[item.label] ? "rotate-180" : ""}`} />
+                                        <ChevronDown className={`h-4 w-4 transition ${(open[item.label] || activeParentLabel === item.label) ? "rotate-180" : ""}`} />
                                     </button>
 
-                                    {(isHoverExpanded || open[item.label]) ? (
+                                    {(isHoverExpanded || open[item.label] || activeParentLabel === item.label) ? (
                                         <div className="ml-2 mt-1 space-y-1 border-l border-indigo-300/30 pl-2 dark:border-slate-600">
                                             {item.children.map((child) => {
                                                 const ChildIcon = child.icon as unknown as LucideIcon;

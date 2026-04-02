@@ -1,4 +1,4 @@
-import { Building2, CircleHelp, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MessageSquare, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
+import { Building2, CircleHelp, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -157,6 +157,8 @@ export const PERMISSIONS = [
         name: "Enquiry Management",
         permissions: [
             { id: 401, label: "View Enquiries" },
+            { id: 402, label: "Resolve Enquiries" },
+            { id: 403, label: "Delete Enquiries" },
         ]
     },
 
@@ -172,9 +174,9 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/admins", label: "Sub Admins", icon: Users, permission_id: 204 },
             { href: "/admin/customers", label: "Customers", icon: UserCircle, permission_id: 334 },
             { href: "/admin/service-providers", label: "Service providers", icon: HardHat, permission_id: 374 },
-            { href: "/admin/enquiries", label: "Enquiries", icon: MessageSquare, permission_id: 401 },
         ]
     },
+    { href: "/admin/enquiries", label: "Enquiries", icon: MailQuestionMark, permission_id: 401 },
     {
         label: "Master",
         icon: Tags,

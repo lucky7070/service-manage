@@ -36,6 +36,7 @@ const experienceYearsProvider = check("experienceYears").optional().custom((valu
 const experienceDescriptionProvider = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
 const profileStatusProviderRequired = check("profileStatus", "Profile status is required.").exists().notEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
 const isVerifiedProvider = check("isVerified", "isVerified must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
+const isResolved = check("isResolved", "isResolved must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const objectIdParam = param("id", "Invalid ID.").exists().notEmpty().isMongoId();
 const passwordOptional = check("password", "Password must be greater then 5 digit.!!").optional({ nullable: true }).isLength({ min: 5, max: 50 });
 const imageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
@@ -130,6 +131,9 @@ export const validator = (method) => {
             break;
         case "banner":
             output = [bannerType, bannerLink, displayOrder];
+            break;
+        case "enquiry-resolve":
+            output = [objectIdParam, isResolved];
             break;
         case "setting-update":
             output = [settingType];

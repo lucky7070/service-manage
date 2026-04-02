@@ -3,12 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
 import moment from "moment";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import { Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Input } from "@/components/ui";
+import { Badge, Button, Input, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
+import PermissionBlock from "@/components/admin/PermissionBlock";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import { getSweetAlertConfig } from "@/helpers/utils";
 
 type EnquiryRow = {
     _id: string;
@@ -16,6 +22,8 @@ type EnquiryRow = {
     email: string;
     phone: string;
     message: string;
+    isResolved?: boolean;
+    resolvedAt?: string;
     createdAt?: string;
 };
 
@@ -26,7 +34,7 @@ type EnquiryRecord = {
     pagination: number[];
 };
 
-type SortBy = "name" | "email" | "phone" | "createdAt";
+type SortBy = "name" | "email" | "phone" | "isResolved" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 export default function AdminEnquiriesPage() {
@@ -36,12 +44,14 @@ export default function AdminEnquiriesPage() {
         limit: number;
         pageNo: number;
         query: string;
+        isResolved: "" | 0 | 1;
         sortBy: SortBy;
         sortOrder: SortOrder;
     }>({
         limit: 10,
         pageNo: 1,
         query: "",
+        isResolved: "",
         sortBy: "createdAt",
         sortOrder: "desc"
     });
@@ -72,6 +82,28 @@ export default function AdminEnquiriesPage() {
         });
     };
 
+    const handleResolveToggle = async (row: EnquiryRow, nextResolved: boolean) => {
+        const { data } = await AxiosHelperAdmin.putData(`/enquiries/${row._id}/resolve`, { isResolved: nextResolved ? 1 : 0 });
+        if (data.status) {
+            toast.success(data.message || "Updated.");
+            fetchEnquiries();
+        } else {
+            toast.error(data?.message || "Could not update enquiry.");
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
+        if (!isConfirmed) return;
+        const { data } = await AxiosHelperAdmin.deleteData(`/enquiries/${id}`);
+        if (data?.status) {
+            toast.success(data.message || "Deleted.");
+            fetchEnquiries();
+        } else {
+            toast.error(data?.message || "Could not delete enquiry.");
+        }
+    };
+
     return (
         <section className="space-y-4">
             <AdminPageHeader
@@ -87,7 +119,21 @@ export default function AdminEnquiriesPage() {
                         className="max-w-xs"
                         placeholder="Search name, email, phone..."
                     />
-                    <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                            value={param.isResolved}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setParam((prev) => ({ ...prev, pageNo: 1, isResolved: v === "" ? "" : (Number(v) as 0 | 1) }));
+                            }}
+                            className="max-w-[180px]"
+                        >
+                            <option value="">All</option>
+                            <option value={0}>Pending</option>
+                            <option value={1}>Resolved</option>
+                        </Select>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
+                    </div>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -105,8 +151,12 @@ export default function AdminEnquiriesPage() {
                                 </th>
                                 <th className="px-3 py-2">Message</th>
                                 <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("isResolved")} name="Status" active={param.sortBy === "isResolved"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("createdAt")} name="Created" active={param.sortBy === "createdAt"} sortOrder={param.sortOrder} />
                                 </th>
+                                <th className="px-3 py-2 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -118,16 +168,39 @@ export default function AdminEnquiriesPage() {
                                     <td className="max-w-[460px] px-3 py-2 text-slate-700 dark:text-slate-200">
                                         <span className="line-clamp-2">{row.message || "—"}</span>
                                     </td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <Badge variant={row.isResolved ? "success" : "warning"} size="sm">
+                                            {row.isResolved ? "Resolved" : "Pending"}
+                                        </Badge>
+                                    </td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY HH:mm") : "—"}</td>
-                                </tr>
-                            ))}
-                            {!data.record.length ? (
-                                <tr>
-                                    <td colSpan={5} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                        No records.
+                                    <td className="px-3 py-2">
+                                        <div className="flex justify-end gap-2">
+                                            <PermissionBlock permission_id={402}>
+                                                <Button
+                                                    size="sm"
+                                                    variant={row.isResolved ? "secondary" : "success"}
+                                                    onClick={() => handleResolveToggle(row, !row.isResolved)}
+                                                >
+                                                    {row.isResolved ? "Mark Pending" : "Mark Resolved"}
+                                                </Button>
+                                            </PermissionBlock>
+                                            <PermissionBlock permission_id={403}>
+                                                <Button
+                                                    size="sm"
+                                                    variant="danger"
+                                                    onClick={() => handleDelete(row._id)}
+                                                    title="Delete enquiry"
+                                                    aria-label="Delete enquiry"
+                                                >
+                                                    <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                </Button>
+                                            </PermissionBlock>
+                                        </div>
                                     </td>
                                 </tr>
-                            ) : null}
+                            ))}
+                            <AdminNoTableRecords show={!data.record.length} />
                         </tbody>
                     </table>
                 </div>
