@@ -51,6 +51,9 @@ const confirmPassword = check("confirm_password", "Please confirm your new passw
     if (value !== req.body.new_password) throw new Error("New password and confirmation do not match.");
     return true;
 })
+const question = check("question", "Question is required.").trim().notEmpty().isLength({ min: 3, max: 2000 });
+const answer = check("answer", "Answer is required.").trim().notEmpty().isLength({ min: 3, max: 10000 });
+const displayOrder = check("displayOrder", "Display order must be numeric.").optional({ values: "falsy" }).isInt({ min: 0, max: 999999 });
 
 export const validator = (method) => {
 
@@ -119,6 +122,9 @@ export const validator = (method) => {
             break;
         case "admin-profile-password":
             output = [currentPassword, newPassword, confirmPassword];
+            break;
+        case "faq":
+            output = [question, answer, customerStatus, displayOrder];
             break;
         case "setting-update":
             output = [settingType];

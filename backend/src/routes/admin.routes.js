@@ -12,6 +12,7 @@ import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleC
 import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
 import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServiceProviderPhoto, reorderServiceProviderPhotos } from "../controller/admin/serviceProviderPhoto.controller.js";
 import { getPredefinedRatingTag, createPredefinedRatingTag, updatePredefinedRatingTag, deletePredefinedRatingTag, getSinglePredefinedRatingTag } from "../controller/admin/predefinedRatingTag.controller.js";
+import { createFaq, deleteFaq, getFaq, getSingleFaq, updateFaq } from "../controller/admin/faq.controller.js";
 import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../controller/admin/serviceCategory.controller.js";
 import { getServiceType, createServiceType, updateServiceType, deleteServiceType, getSingleServiceType } from "../controller/admin/serviceType.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
@@ -105,6 +106,13 @@ router.put("/rating-tags/:id", validator("rating-tag"), updatePredefinedRatingTa
 router.delete("/rating-tags/:id", deletePredefinedRatingTag);
 router.get("/rating-tags/:id", getSinglePredefinedRatingTag);
 router.get("/rating-tags", getPredefinedRatingTag);
+
+// FAQs
+router.post("/faqs", validator("faq"), createFaq);
+router.put("/faqs/:id", validator("faq"), updateFaq);
+router.delete("/faqs/:id", deleteFaq);
+router.get("/faqs/:id", getSingleFaq);
+router.get("/faqs", getFaq);
 
 // Service Categories
 router.get("/service-categories/options", listServiceCategoriesForSelect);

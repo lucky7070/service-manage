@@ -1,4 +1,4 @@
-import { Building2, Globe, HardHat, LayoutDashboard, Layers, Map, MapPinned, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
+import { Building2, CircleHelp, Globe, HardHat, LayoutDashboard, Layers, Map, MapPinned, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -135,6 +135,15 @@ export const PERMISSIONS = [
             { id: 378, label: "View Provider Work Photos" },
         ]
     },
+    {
+        name: "FAQ Management",
+        permissions: [
+            { id: 381, label: "Create FAQ" },
+            { id: 382, label: "Update FAQ" },
+            { id: 383, label: "Delete FAQ" },
+            { id: 384, label: "View FAQ" },
+        ]
+    },
 
 ];
 
@@ -157,6 +166,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/rating-tags", label: "Rating Tags", icon: Tags, permission_id: 344 },
             { href: "/admin/service-categories", label: "Service Categories", icon: Layers, permission_id: 354 },
             { href: "/admin/service-types", label: "Service types", icon: Wrench, permission_id: 364 },
+            { href: "/admin/faqs", label: "FAQs", icon: CircleHelp, permission_id: 384 },
         ]
     },
     {
@@ -246,5 +256,10 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/service-types",
         permission_id: 364,
         items: [{ label: "Service types" }]
+    },
+    {
+        path: "/admin/faqs",
+        permission_id: 384,
+        items: [{ label: "FAQs" }]
     },
 ];

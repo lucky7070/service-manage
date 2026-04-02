@@ -1,26 +1,13 @@
 import mongoose from "mongoose";
 import moment from "moment";
 import { ServiceCategory } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, slugify } from "../../helpers/utils.js";
 import { deleteFile } from "../../libraries/storage.js";
 
-const slugify = (s) =>
-    String(s || "")
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 100);
-
-/** For service type dropdowns & filters */
 export const listServiceCategoriesForSelect = async (req, res) => {
     try {
-        const rows = await ServiceCategory.find({ deletedAt: null, isActive: true })
-            .select("_id name slug")
-            .sort({ displayOrder: 1, name: 1 })
-            .limit(500)
-            .lean();
 
+        const rows = await ServiceCategory.find({ deletedAt: null, isActive: true }).select("_id name slug").sort({ displayOrder: 1, name: 1 }).limit(500).lean();
         return res.success({ record: rows });
     } catch (error) {
         return res.someThingWentWrong(error);

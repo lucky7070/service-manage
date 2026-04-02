@@ -18,3 +18,4 @@ export { PredefinedRatingTag } from "./PredefinedRatingTag.js";
 export { Rating } from "./Rating.js";
 export { Role } from "./Role.js";
 export { Setting } from "./Setting.js";
+export { Faq } from "./Faq.js";
