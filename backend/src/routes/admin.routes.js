@@ -16,6 +16,7 @@ import { createFaq, deleteFaq, getFaq, getSingleFaq, updateFaq } from "../contro
 import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../controller/admin/serviceCategory.controller.js";
 import { getServiceType, createServiceType, updateServiceType, deleteServiceType, getSingleServiceType } from "../controller/admin/serviceType.controller.js";
 import { createBanner, deleteBanner, getBanner, updateBanner } from "../controller/admin/banner.controller.js";
+import { createCmsPage, deleteCmsPage, getCmsPages, getSingleCmsPage, updateCmsPage } from "../controller/admin/cmsPage.controller.js";
 import { deleteEnquiry, getEnquiry, resolveEnquiry } from "../controller/admin/enquiry.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
 import { Storage } from "../libraries/storage.js";
@@ -142,6 +143,13 @@ router.get("/banners", getBanner);
 router.get("/enquiries", getEnquiry);
 router.put("/enquiries/:id/resolve", validator("enquiry-resolve"), resolveEnquiry);
 router.delete("/enquiries/:id", deleteEnquiry);
+
+// CMS Pages
+router.post("/cms-pages", validator("cms-page"), createCmsPage);
+router.put("/cms-pages/:id", validator("cms-page"), updateCmsPage);
+router.delete("/cms-pages/:id", deleteCmsPage);
+router.get("/cms-pages/:id", getSingleCmsPage);
+router.get("/cms-pages", getCmsPages);
 
 
 export default router;

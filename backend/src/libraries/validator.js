@@ -57,6 +57,14 @@ const answer = check("answer", "Answer is required.").trim().notEmpty().isLength
 const displayOrder = check("displayOrder", "Display order must be numeric.").optional({ values: "falsy" }).isInt({ min: 0, max: 999999 });
 const bannerType = check("bannerType", "Banner type is required.").optional({ values: "falsy" }).isIn(BANNER_TYPES);
 const bannerLink = check("link", "Invalid link.").optional({ values: "falsy" }).isLength({ max: 500 }).trim();
+const pageSlug = check("pageSlug", "Page slug is required.").trim().notEmpty().isLength({ min: 2, max: 150 }).matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const pageTitle = check("pageTitle", "Page title is required.").trim().notEmpty().isLength({ min: 2, max: 255 });
+const pageTitleHi = check("pageTitleHi").optional({ values: "falsy" }).isLength({ max: 255 }).trim();
+const metaDescription = check("metaDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
+const metaKeywords = check("metaKeywords").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
+const content = check("content").optional({ values: "falsy" }).isLength({ max: 200000 }).trim();
+const contentHi = check("contentHi").optional({ values: "falsy" }).isLength({ max: 200000 }).trim();
+const viewCount = check("viewCount", "View count must be 0 or greater.").optional({ values: "falsy" }).isInt({ min: 0 });
 
 export const validator = (method) => {
 
@@ -134,6 +142,9 @@ export const validator = (method) => {
             break;
         case "enquiry-resolve":
             output = [objectIdParam, isResolved];
+            break;
+        case "cms-page":
+            output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
             break;
         case "setting-update":
             output = [settingType];

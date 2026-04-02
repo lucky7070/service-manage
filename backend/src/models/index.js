@@ -21,3 +21,4 @@ export { Setting } from "./Setting.js";
 export { Faq } from "./Faq.js";
 export { Banner } from "./Banner.js";
 export { Enquiry } from "./Enquiry.js";
+export { CmsPage } from "./CmsPage.js";

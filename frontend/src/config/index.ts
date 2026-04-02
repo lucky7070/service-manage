@@ -1,4 +1,4 @@
-import { Building2, CircleHelp, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
+import { Building2, CircleHelp, FileText, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -161,6 +161,15 @@ export const PERMISSIONS = [
             { id: 403, label: "Delete Enquiries" },
         ]
     },
+    {
+        name: "CMS Page Management",
+        permissions: [
+            { id: 411, label: "Create CMS Page" },
+            { id: 412, label: "Update CMS Page" },
+            { id: 413, label: "Delete CMS Page" },
+            { id: 414, label: "View CMS Page" },
+        ]
+    },
 
 ];
 
@@ -186,6 +195,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/service-types", label: "Service types", icon: Wrench, permission_id: 364 },
             { href: "/admin/faqs", label: "FAQs", icon: CircleHelp, permission_id: 384 },
             { href: "/admin/banners", label: "Banners", icon: ImageIcon, permission_id: 394 },
+            { href: "/admin/cms-pages", label: "CMS Pages", icon: FileText, permission_id: 414 },
         ]
     },
     {
@@ -290,5 +300,20 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/enquiries",
         permission_id: 401,
         items: [{ label: "Enquiries" }]
+    },
+    {
+        path: "/admin/cms-pages",
+        permission_id: 414,
+        items: [{ label: "CMS Pages" }]
+    },
+    {
+        path: "/admin/cms-pages/create",
+        permission_id: 411,
+        items: [{ label: "CMS Pages", href: "/admin/cms-pages" }, { label: "Create" }]
+    },
+    {
+        path: "/admin/cms-pages/:slug/edit",
+        permission_id: 412,
+        items: [{ label: "CMS Pages", href: "/admin/cms-pages" }, { label: "Edit" }]
     },
 ];

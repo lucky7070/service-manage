@@ -5,13 +5,16 @@ import { cn } from "@/helpers/utils";
 import { X } from "lucide-react";
 import { Button } from "./Button";
 
-export type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
+export type ModalSize = "sm" | "md" | "lg" | "xl" | "xxl" | "xxxl" | "xxxxl" | "full";
 
 const sizeToClass: Record<ModalSize, string> = {
     sm: "max-w-sm",
     md: "max-w-md",
     lg: "max-w-lg",
     xl: "max-w-xl",
+    xxl: "max-w-2xl",
+    xxxl: "max-w-3xl",
+    xxxxl: "max-w-4xl",
     full: "w-full max-w-7xl"
 };
 
