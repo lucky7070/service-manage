@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import AdminPageHeader from "../../../components/admin/AdminPageHeader";
-import { Button, Input, InputFile, Label } from "@/components/ui";
+import { Button, Input, InputFile, Label, PasswordInput } from "@/components/ui";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
 import { useRouter } from "next/navigation";
@@ -25,6 +25,21 @@ const profileValidationSchema = Yup.object().shape({
     name: Yup.string().min(2, "Too Short!").max(100, "Too Long!").required("Name Required.").trim(),
     mobile: Yup.string().matches(PHONE_REGEXP, PHONE_ERROR_MESSAGE).length(10, 'Mobile number must be exactly 10 digits.').required("Mobile Required."),
     email: Yup.string().email("Invalid email").required("Email Required.")
+});
+
+const passwordValidationSchema = Yup.object().shape({
+    current_password: Yup.string()
+        .required("Current password is required.")
+        .min(8, "Current password must be at least 8 characters.")
+        .max(50, "Current password must be at most 50 characters."),
+    new_password: Yup.string()
+        .required("New password is required.")
+        .min(8, "New password must be at least 8 characters.")
+        .max(50, "New password must be at most 50 characters.")
+        .notOneOf([Yup.ref("current_password")], "New password must be different from your current password."),
+    confirm_password: Yup.string()
+        .required("Please confirm your new password.")
+        .oneOf([Yup.ref("new_password")], "New password and confirmation do not match."),
 });
 
 export default function AdminProfilePage() {
@@ -92,13 +107,13 @@ export default function AdminProfilePage() {
     return (
         <section className="space-y-4">
             <AdminPageHeader title="Profile" subtitle="Manage account profile and admin identity details." />
-            <div className="grid gap-4 grid-cols-1 lg:grid-cols-4">
-                <div className="md:col-span-1">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-5">
+                <div className="lg:col-span-1">
                     <div className="flex h-full flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700 dark:bg-slate-900">
                         <InputFile id="profile-image" accept="image/*" onChange={(e) => setSelectedImage(e.target.files?.[0] || null)} className="hidden" />
                         <Label
                             htmlFor="profile-image"
-                            className="!mb-0 group relative flex h-24 w-24 cursor-pointer items-center justify-center rounded-full transition-all hover:scale-[1.02]"
+                            className="mb-0! group relative flex h-24 w-24 cursor-pointer items-center justify-center rounded-full transition-all hover:scale-[1.02]"
                         >
                             <span className="absolute -right-1 -top-1 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:bg-indigo-50 dark:border-slate-600 dark:bg-slate-800 dark:group-hover:bg-slate-700">
                                 <Edit2Icon className="h-3.5 w-3.5 text-slate-700 dark:text-slate-100" />
@@ -119,7 +134,7 @@ export default function AdminProfilePage() {
                         </div>
                     </div>
                 </div>
-                <div className="md:col-span-3">
+                <div className="lg:col-span-2">
                     <Formik
                         initialValues={{
                             name: profile.name || "",
@@ -142,7 +157,7 @@ export default function AdminProfilePage() {
                     >
                         {({ isSubmitting }) => (
                             <Form className="space-y-4 rounded-2xl border border-slate-200 p-4 text-sm dark:border-slate-700 dark:bg-slate-900">
-                                <div className="grid gap-3 md:grid-cols-2">
+                                <div className="grid gap-3 md:grid-cols-1">
                                     <div className="space-y-1">
                                         <Label htmlFor="profile-name">Name</Label>
                                         <Field as={Input} id="profile-name" name="name" placeholder="Enter name" />
@@ -163,6 +178,55 @@ export default function AdminProfilePage() {
                                 <div className="flex items-center justify-between gap-3 pt-1">
                                     <Button type="submit" variant="primary" size="md" disabled={isSubmitting}>
                                         {isSubmitting ? "Updating..." : "Update Profile"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
+                </div>
+                <div className="lg:col-span-2">
+                    <Formik
+                        initialValues={{
+                            current_password: '',
+                            new_password: '',
+                            confirm_password: '',
+                        }}
+                        enableReinitialize
+                        validationSchema={passwordValidationSchema}
+                        onSubmit={async (values, { setSubmitting, setErrors, resetForm }) => {
+                            const { data } = await AxiosHelperAdmin.putData("/profile/password", values);
+                            if (data.status) {
+                                toast.success(data.message);
+                                resetForm();
+                            } else {
+                                toast.error(data.message);
+                                setErrors(data.data);
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form className="space-y-4 rounded-2xl border border-slate-200 p-4 text-sm dark:border-slate-700 dark:bg-slate-900">
+                                <div className="grid gap-3 md:grid-cols-1">
+                                    <div className="space-y-1">
+                                        <Label htmlFor="current_password">Current Password</Label>
+                                        <Field as={PasswordInput} id="current_password" name="current_password" placeholder="Enter Current Password" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="current_password" component="small" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="new_password">New Password</Label>
+                                        <Field as={PasswordInput} id="new_password" name="new_password" placeholder="Enter New Password" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="new_password" component="small" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="confirm_password">Confirm Password</Label>
+                                        <Field as={PasswordInput} id="confirm_password" name="confirm_password" placeholder="Enter Confirm Password" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="confirm_password" component="small" />
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between gap-3 pt-1">
+                                    <Button type="submit" variant="primary" size="md" disabled={isSubmitting}>
+                                        {isSubmitting ? "Updating..." : "Update Password"}
                                     </Button>
                                 </div>
                             </Form>

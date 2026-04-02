@@ -29,3 +29,7 @@ export const ObjectId = (id) => {
         return null;
     }
 };
+
+export const escapeHtml = (value = "") => {
+    return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}

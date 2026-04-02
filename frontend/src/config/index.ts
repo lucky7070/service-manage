@@ -30,6 +30,7 @@ export type ProfileStatus = "pending" | "approved" | "rejected" | "suspended";
 export const PHONE_REGEXP = /^(?:(?:\+|0{0,2})91(\s*|[-])?|[0]?)?([6789]\d{2}([ -]?)\d{3}([ -]?)\d{4})$/;
 export const PHONE_ERROR_MESSAGE = "Enter a valid Indian mobile number.";
 export const SERVICE_PROVIDER_PROFILE_STATUSES: ProfileStatus[] = ["pending", "approved", "rejected", "suspended"];
+export const AUTH_PAGES = ["/admin/login", "/admin/forgot-password"];
 
 export const PERMISSIONS = [
     {

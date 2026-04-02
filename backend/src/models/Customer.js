@@ -5,9 +5,9 @@ import { Counter } from "./Counter.js";
 const Schema = new mongoose.Schema(
     {
         userId: { type: String, unique: true, index: true, default: null },
-        name: { type: String, required: true, default: null },
+        name: { type: String, required: true, trim: true, default: null },
         mobile: { type: String, required: true, unique: true, index: true, default: null },
-        email: { type: String, unique: true, sparse: true, index: true, default: null },
+        email: { type: String, unique: true, sparse: true, index: true, lowercase: true, trim: true, default: null },
         image: { type: String, default: '/customers/default.png' },
         dateOfBirth: { type: Date, default: null },
         preferredLanguage: { type: String, enum: ["en", "hi"], default: "en" },

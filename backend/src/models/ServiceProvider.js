@@ -6,9 +6,9 @@ import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
 const Schema = new mongoose.Schema(
     {
         userId: { type: String, unique: true, index: true, default: null },
-        name: { type: String, required: true, default: null },
+        name: { type: String, required: true, trim: true, default: null },
         mobile: { type: String, required: true, unique: true, index: true, default: null },
-        email: { type: String, unique: true, sparse: true, index: true, default: null },
+        email: { type: String, unique: true, sparse: true, index: true, trim: true, lowercase: true, default: null },
         image: { type: String, default: "/service-provider/default.png" },
         panCardNumber: { type: String, unique: true, sparse: true, default: null },
         aadharNumber: { type: String, unique: true, sparse: true, default: null },
@@ -45,7 +45,7 @@ Schema.pre("save", async function onSave(next) {
         const counter = await Counter.findByIdAndUpdate({ _id: "ServiceProvider" }, { $inc: { seq: 1 } }, { upsert: true, new: true, ...options });
         this.userId = orderId(counter.seq, "SP", 6);
     }
-    
+
     next();
 });
 

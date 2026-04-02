@@ -1,15 +1,12 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import moment from "moment";
 import mongoose from "mongoose";
 import { config } from "../../config/index.js";
-import { Admin, Notification } from "../../models/index.js";
-
-const cookieOptions = {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000
-};
+import { Admin, OtpVerification, Notification } from "../../models/index.js";
+import { generateOtp, nowPlusMinutes } from "../../helpers/utils.js";
+import { passwordResetMail, sendSmtpMail } from "../../libraries/mail.js";
+import { COOKIE_OPTIONS } from "../../config/constants.js";
 
 export const adminLogin = async (req, res) => {
     try {
@@ -27,7 +24,7 @@ export const adminLogin = async (req, res) => {
         if (!ok) return res.someThingWentWrong({ message: "Invalid credentials" });
 
         const token = jwt.sign({ id: admin._id, role: "admin" }, config.jwtSecret, { expiresIn: "7d" });
-        res.cookie("admin_token", token, cookieOptions);
+        res.cookie("admin_token", token, COOKIE_OPTIONS);
 
         return res.success({ admin }, "Admin login successful");
     } catch (error) {
@@ -114,4 +111,64 @@ export const updateAdminProfileImage = async (req, res) => {
 export const adminLogout = async (req, res) => {
     res.clearCookie("admin_token");
     return res.success([], "Logged out");
+};
+
+export const updateAdminPassword = async (req, res) => {
+    try {
+        const { current_password, new_password } = req.body;
+
+        const admin = await Admin.findById(req.admin.id).select("+password");
+        if (!admin) return res.noRecords(false, "Admin not found");
+
+        const ok = await bcrypt.compare(String(current_password), admin.password);
+        if (!ok) return res.someThingWentWrong({ message: "Current password is incorrect." });
+
+        admin.password = await bcrypt.hash(String(new_password), 10);
+        await admin.save();
+
+        return res.successUpdate({}, "Password updated successfully.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const requestAdminForgotPassword = async (req, res) => {
+    try {
+        const email = String(req.body.email || "").trim().toLowerCase();
+        if (!email) return res.someThingWentWrong({ message: "Email is required" });
+
+        const admin = await Admin.findOne({ email, deletedAt: null, isActive: true }).select("_id email name");
+        if (!admin) return res.success({}, "If an account exists for this email, a verification code has been sent.!");
+
+        const otp = generateOtp();
+        await OtpVerification.deleteMany({ phoneNumber: email });
+        await OtpVerification.create({ phoneNumber: email, purpose: "password_reset", expiresAt: nowPlusMinutes(config.otpExpiryMinutes), otpCode: otp });
+
+        const { subject, html } = passwordResetMail({ name: admin.name, otp });
+        await sendSmtpMail({ to: email, subject, html, subHeading: "Verify your identity to create a new password" });
+        return res.success([], "If an account exists for this email, a verification code has been sent.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const resetAdminPasswordWithToken = async (req, res) => {
+    try {
+        const { email, otp, new_password } = req.body;
+
+        const record = await OtpVerification.findOne({ phoneNumber: email.trim().toLowerCase(), otpCode: otp, purpose: "password_reset" }).sort({ createdAt: -1 });
+        if (!record || moment(record.expiresAt).isBefore(moment())) {
+            return res.someThingWentWrong({ message: "Invalid or expired code." });
+        }
+
+        const admin = await Admin.findOne({ email: record.phoneNumber.trim().toLowerCase(), deletedAt: null, isActive: true }).select("+password");
+        if (!admin) return res.someThingWentWrong({ message: "Invalid or expired reset session. Please start again." });
+
+        admin.password = await bcrypt.hash(String(new_password), 10);
+        await admin.save();
+
+        return res.success({}, "Password updated successfully. You can sign in now.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
 };

@@ -2,25 +2,24 @@ import { check, param } from "express-validator";
 import { PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
 import { trapErrors } from "../middlewares/trapErrors.js";
 
-const email = check("email", "Valid email is required.").exists().not().isEmpty().isEmail().isLength({ min: 2, max: 100 }).trim().toLowerCase();
-const password = check("password", "Password must be greater then 5 digit.!!").exists().not().isEmpty().isLength({ min: 5, max: 50 }).trim();
-const name = check("name", "Name is required.").exists().not().isEmpty().isLength({ min: 2, max: 100 }).trim();
-const status = check("status", "Status is required.").exists().not().isEmpty().isIn([0, 1]);
+const email = check("email", "Valid email is required.").exists().notEmpty().isEmail().isLength({ min: 2, max: 100 }).trim().normalizeEmail().toLowerCase();
+const password = check("password", "Password must be greater then 5 digit.!!").exists().notEmpty().isLength({ min: 5, max: 50 }).trim();
+const name = check("name", "Name is required.").exists().notEmpty().isLength({ min: 2, max: 100 }).trim();
+const status = check("status", "Status is required.").exists().notEmpty().isIn([0, 1]);
 const mobile = check("mobile", "Enter a valid Indian mobile number.").trim().notEmpty().matches(PHONE_REGEXP).withMessage("Enter a valid Indian mobile number.").isInt().customSanitizer(value => String(value)).isLength({ min: 10, max: 10 }).withMessage('mobile must be exactly 10 digits').trim();
-const roleId = check("roleId", "Role ID is required.").exists().not().isEmpty().isMongoId();
-const countryId = check("countryId", "Country ID is required.").exists().not().isEmpty().isMongoId();
-const stateId = check("stateId", "State ID is required.").exists().not().isEmpty().isMongoId();
-const settingType = param("type", "Setting type is invalid.").exists().not().isEmpty().isInt({ min: 1, max: 10 });
+const roleId = check("roleId", "Role ID is required.").exists().notEmpty().isMongoId();
+const countryId = check("countryId", "Country ID is required.").exists().notEmpty().isMongoId();
+const stateId = check("stateId", "State ID is required.").exists().notEmpty().isMongoId();
+const settingType = param("type", "Setting type is invalid.").exists().notEmpty().isInt({ min: 1, max: 10 });
 
-const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().not().isEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
-const customerStatus = check("status", "Status is required.").exists().not().isEmpty().isIn([0, 1, "0", "1"]);
+const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().notEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
+const customerStatus = check("status", "Status is required.").exists().notEmpty().isIn([0, 1, "0", "1"]);
 
-const tagFor = check("tagFor", "Tag for is required.").exists().not().isEmpty().isIn(["customer", "provider"]);
-const tagName = check("tagName", "Tag name is required.").exists().not().isEmpty().isLength({ min: 1, max: 100 }).trim();
-const tagType = check("tagType", "Tag type is required.").exists().not().isEmpty().isIn(["positive", "negative", "neutral"]);
+const tagFor = check("tagFor", "Tag for is required.").exists().notEmpty().isIn(["customer", "provider"]);
+const tagName = check("tagName", "Tag name is required.").exists().notEmpty().isLength({ min: 1, max: 100 }).trim();
+const tagType = check("tagType", "Tag type is required.").exists().notEmpty().isIn(["positive", "negative", "neutral"]);
 
-const categoryIdService = check("categoryId", "Category is required.").exists().not().isEmpty().isMongoId();
-
+const categoryIdService = check("categoryId", "Category is required.").exists().notEmpty().isMongoId();
 const slugServiceCategory = check("slug", "Slug: use lowercase letters, numbers, and hyphens only.").optional({ values: "falsy" }).matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).isLength({ min: 2, max: 100 });
 const nameHiCategory = check("nameHi").optional({ values: "falsy" }).isLength({ max: 200 });
 const descriptionCategory = check("description").optional({ values: "falsy" }).isLength({ max: 5000 });
@@ -35,14 +34,23 @@ const experienceYearsProvider = check("experienceYears").optional().custom((valu
 });
 
 const experienceDescriptionProvider = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
-const profileStatusProviderRequired = check("profileStatus", "Profile status is required.").exists().not().isEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
-const isVerifiedProvider = check("isVerified", "isVerified must be 0 or 1.").exists().not().isEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
-const objectIdParam = param("id", "Invalid ID.").exists().not().isEmpty().isMongoId();
+const profileStatusProviderRequired = check("profileStatus", "Profile status is required.").exists().notEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
+const isVerifiedProvider = check("isVerified", "isVerified must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
+const objectIdParam = param("id", "Invalid ID.").exists().notEmpty().isMongoId();
 const passwordOptional = check("password", "Password must be greater then 5 digit.!!").optional({ nullable: true }).isLength({ min: 5, max: 50 });
 const imageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
     if (!req.file) throw new Error("Profile image is required.");
     return true;
 });
+
+const resetToken = check("resetToken", "Reset token is required.").trim().notEmpty();
+const otp = check("otp", "Enter the 6-digit code.").trim().notEmpty().matches(/^[0-9]{6}$/).withMessage("OTP must be 6 digits.");
+const currentPassword = check("current_password", "Current password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
+const newPassword = check("new_password", "New password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
+const confirmPassword = check("confirm_password", "Please confirm your new password.").trim().notEmpty().custom((value, { req }) => {
+    if (value !== req.body.new_password) throw new Error("New password and confirmation do not match.");
+    return true;
+})
 
 export const validator = (method) => {
 
@@ -95,6 +103,22 @@ export const validator = (method) => {
             break;
         case "admin-profile-image":
             output = [imageRequired];
+            break;
+        case "admin-forgot-password":
+            output = [email];
+            break;
+        case "admin-forgot-password-reset":
+            output = [
+                email, otp,
+                newPassword.custom((value, { req }) => {
+                    if (value === req.body.current_password) throw new Error("New password must be different from your current password.");
+                    return true;
+                }),
+                confirmPassword
+            ];
+            break;
+        case "admin-profile-password":
+            output = [currentPassword, newPassword, confirmPassword];
             break;
         case "setting-update":
             output = [settingType];

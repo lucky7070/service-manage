@@ -15,6 +15,7 @@ import Link from "next/link";
 import { toggleMobileSidebarOpen, toggleSidebarCollapsed, toggleTheme } from "@/store/slices/appSlice";
 import { updateAdmin } from "@/store/slices/adminSlice";
 import moment from "moment";
+import ThemeToggle from "./ThemeToggle";
 
 export default function AdminTopbar() {
 
@@ -87,17 +88,7 @@ export default function AdminTopbar() {
             </div>
 
             <div className="ml-auto flex items-center gap-3">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => dispatch(toggleTheme())}
-                    className="rounded-xl border border-indigo-100 bg-white p-2 text-slate-600 hover:bg-indigo-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    title="Toggle theme"
-                    aria-label="Toggle theme"
-                >
-                    {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                </Button>
+                <ThemeToggle />
                 <div className="relative">
                     <Button
                         type="button"
