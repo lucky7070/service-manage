@@ -16,6 +16,7 @@ import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 type ServiceCategoryOption = { _id: string; name: string; slug?: string };
 
@@ -303,13 +304,7 @@ export default function AdminServiceTypesPage() {
                                 </tr>
                             ))}
 
-                            {!data.record.length ? (
-                                <tr>
-                                    <td colSpan={8} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                        No Records Available.
-                                    </td>
-                                </tr>
-                            ) : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>

@@ -17,6 +17,7 @@ import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl, slugify } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 type CategoryRow = {
     _id: string;
     slug: string;
@@ -239,13 +240,7 @@ export default function AdminServiceCategoriesPage() {
                                 );
                             })}
 
-                            {!data.record.length ? (
-                                <tr>
-                                    <td colSpan={7} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                        No records. Create categories with <strong>Create category</strong>.
-                                    </td>
-                                </tr>
-                            ) : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, CircleHelp, Globe, HardHat, Layers, Map, Shield, Tags, UserCog, UserCircle, Wrench } from "lucide-react";
+import { Building2, CircleHelp, Globe, HardHat, ImageIcon, Layers, Map, Shield, Tags, UserCog, UserCircle, Wrench } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import PermissionBlock from "@/components/admin/PermissionBlock";
@@ -16,6 +16,7 @@ type DashboardCountState = {
     customers: number;
     predefinedRatingTags: number;
     faqs: number;
+    banners: number;
     serviceCategories: number;
     serviceTypes: number;
     serviceProviders: number;
@@ -39,6 +40,7 @@ const DASHBOARD_CARDS: DashboardCard[] = [
     { key: "serviceProviders", title: "Service providers", href: "/admin/service-providers", permissionId: 374, icon: HardHat },
     { key: "predefinedRatingTags", title: "Rating Tags", href: "/admin/rating-tags", permissionId: 344, icon: Tags },
     { key: "faqs", title: "FAQs", href: "/admin/faqs", permissionId: 384, icon: CircleHelp },
+    { key: "banners", title: "Banners", href: "/admin/banners", permissionId: 394, icon: ImageIcon },
     { key: "serviceCategories", title: "Service Categories", href: "/admin/service-categories", permissionId: 354, icon: Layers },
     { key: "serviceTypes", title: "Service types", href: "/admin/service-types", permissionId: 364, icon: Wrench }
 ];
@@ -53,6 +55,7 @@ export default function AdminDashboardPage() {
         customers: 0,
         predefinedRatingTags: 0,
         faqs: 0,
+        banners: 0,
         serviceCategories: 0,
         serviceTypes: 0,
         serviceProviders: 0
@@ -71,6 +74,7 @@ export default function AdminDashboardPage() {
                     customers: Number(data.data.customers || 0),
                     predefinedRatingTags: Number(data.data.predefinedRatingTags || 0),
                     faqs: Number(data.data.faqs || 0),
+                    banners: Number(data.data.banners || 0),
                     serviceCategories: Number(data.data.serviceCategories || 0),
                     serviceTypes: Number(data.data.serviceTypes || 0),
                     serviceProviders: Number(data.data.serviceProviders || 0)

@@ -1,5 +1,5 @@
 import { check, param } from "express-validator";
-import { PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
+import { BANNER_TYPES, PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
 import { trapErrors } from "../middlewares/trapErrors.js";
 
 const email = check("email", "Valid email is required.").exists().notEmpty().isEmail().isLength({ min: 2, max: 100 }).trim().normalizeEmail().toLowerCase();
@@ -54,6 +54,8 @@ const confirmPassword = check("confirm_password", "Please confirm your new passw
 const question = check("question", "Question is required.").trim().notEmpty().isLength({ min: 3, max: 2000 });
 const answer = check("answer", "Answer is required.").trim().notEmpty().isLength({ min: 3, max: 10000 });
 const displayOrder = check("displayOrder", "Display order must be numeric.").optional({ values: "falsy" }).isInt({ min: 0, max: 999999 });
+const bannerType = check("bannerType", "Banner type is required.").optional({ values: "falsy" }).isIn(BANNER_TYPES);
+const bannerLink = check("link", "Invalid link.").optional({ values: "falsy" }).isLength({ max: 500 }).trim();
 
 export const validator = (method) => {
 
@@ -125,6 +127,9 @@ export const validator = (method) => {
             break;
         case "faq":
             output = [question, answer, customerStatus, displayOrder];
+            break;
+        case "banner":
+            output = [bannerType, bannerLink, displayOrder];
             break;
         case "setting-update":
             output = [settingType];

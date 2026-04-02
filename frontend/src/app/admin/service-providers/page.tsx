@@ -19,6 +19,7 @@ import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PHONE_ERROR_MESSAGE, PHONE_REGEXP, ProfileStatus, SERVICE_PROVIDER_PROFILE_STATUSES } from "@/config";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 type ServiceProvider = {
     _id: string;
@@ -300,13 +301,7 @@ export default function AdminServiceProvidersPage() {
                                     </td>
                                 </tr>
                             })}
-                            {!data.record.length ? (
-                                <tr>
-                                    <td colSpan={8} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                        No records.
-                                    </td>
-                                </tr>
-                            ) : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>

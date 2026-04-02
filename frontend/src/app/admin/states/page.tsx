@@ -17,6 +17,7 @@ import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AsyncFormSelect, { type AsyncSelectOption } from "@/components/ui/AsyncFormSelect";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 type CountryOption = AsyncSelectOption;
 
@@ -217,11 +218,7 @@ export default function AdminStatesPage() {
                                 </tr>
                             ))}
 
-                            {!data.record.length ? <tr>
-                                <td colSpan={5} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                    No Records Available.
-                                </td>
-                            </tr> : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>
@@ -236,80 +233,80 @@ export default function AdminStatesPage() {
                 size="md"
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/states", values);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchStates();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data || {});
-                                        }
-                                    } else {
-                                        const { data } = await AxiosHelperAdmin.putData(`/states/${values._id}`, values);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchStates();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data || {});
-                                        }
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting, setFieldValue }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="state-country">Country</Label>
-                                            <AsyncFormSelect
-                                                inputId="state-country"
-                                                loadOptions={loadCountryOptions}
-                                                value={selectedCountry}
-                                                onChange={(option) => {
-                                                    setSelectedCountry(option);
-                                                    setFieldValue("countryId", option?.value || "");
-                                                }}
-                                                placeholder="Search Country..."
-                                            />
-                                            <ErrorMessage className="text-xs text-rose-600" name="countryId" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="state-name">State Name</Label>
-                                            <Field as={Input} id="state-name" name="name" placeholder="e.g. Uttar Pradesh" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="state-status">Status</Label>
-                                            <Field as={Select}
-                                                id="state-status"
-                                                name="status"
-                                            >
-                                                <option value={1}>Active</option>
-                                                <option value={0}>Inactive</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                        </div>
-                                        <div className="flex justify-end gap-2">
-                                            <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
-                                                Cancel
-                                            </Button>
-                                            <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
-                                                {isSubmitting ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/states", values);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchStates();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/states/${values._id}`, values);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchStates();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting, setFieldValue }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="state-country">Country</Label>
+                                    <AsyncFormSelect
+                                        inputId="state-country"
+                                        loadOptions={loadCountryOptions}
+                                        value={selectedCountry}
+                                        onChange={(option) => {
+                                            setSelectedCountry(option);
+                                            setFieldValue("countryId", option?.value || "");
+                                        }}
+                                        placeholder="Search Country..."
+                                    />
+                                    <ErrorMessage className="text-xs text-rose-600" name="countryId" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="state-name">State Name</Label>
+                                    <Field as={Input} id="state-name" name="name" placeholder="e.g. Uttar Pradesh" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="state-status">Status</Label>
+                                    <Field as={Select}
+                                        id="state-status"
+                                        name="status"
+                                    >
+                                        <option value={1}>Active</option>
+                                        <option value={0}>Inactive</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
+                                        {isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
         </section>

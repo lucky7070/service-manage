@@ -15,6 +15,8 @@ import { getPredefinedRatingTag, createPredefinedRatingTag, updatePredefinedRati
 import { createFaq, deleteFaq, getFaq, getSingleFaq, updateFaq } from "../controller/admin/faq.controller.js";
 import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../controller/admin/serviceCategory.controller.js";
 import { getServiceType, createServiceType, updateServiceType, deleteServiceType, getSingleServiceType } from "../controller/admin/serviceType.controller.js";
+import { createBanner, deleteBanner, getBanner, updateBanner } from "../controller/admin/banner.controller.js";
+import { getEnquiry } from "../controller/admin/enquiry.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
 import { Storage } from "../libraries/storage.js";
 
@@ -25,6 +27,7 @@ const customerStorage = new Storage({ dir: "customers", isImage: true, isDoc: fa
 const serviceCategoryStorage = new Storage({ dir: "service-categories", isImage: true, isDoc: false, fileSize: 2 });
 const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: true, isDoc: true, fileSize: 5 });
 const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provider-work", isImage: true, isDoc: false, fileSize: 2 });
+const bannerStorage = new Storage({ dir: "banners", isImage: true, isDoc: false, fileSize: 5 });
 
 router.use(requireAdminAuth);
 
@@ -128,6 +131,15 @@ router.put("/service-types/:id", validator("service-type"), updateServiceType);
 router.delete("/service-types/:id", deleteServiceType);
 router.get("/service-types/:id", getSingleServiceType);
 router.get("/service-types", getServiceType);
+
+// Banners
+router.post("/banners", bannerStorage.single("bannerImage"), validator("banner"), createBanner);
+router.put("/banners/:id", bannerStorage.single("bannerImage"), validator("banner"), updateBanner);
+router.delete("/banners/:id", deleteBanner);
+router.get("/banners", getBanner);
+
+// Enquiries
+router.get("/enquiries", getEnquiry);
 
 
 export default router;

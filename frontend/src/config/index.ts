@@ -1,4 +1,4 @@
-import { Building2, CircleHelp, Globe, HardHat, LayoutDashboard, Layers, Map, MapPinned, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
+import { Building2, CircleHelp, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MessageSquare, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -144,6 +144,21 @@ export const PERMISSIONS = [
             { id: 384, label: "View FAQ" },
         ]
     },
+    {
+        name: "Banner Management",
+        permissions: [
+            { id: 391, label: "Create Banner" },
+            { id: 392, label: "Update Banner" },
+            { id: 393, label: "Delete Banner" },
+            { id: 394, label: "View Banner" },
+        ]
+    },
+    {
+        name: "Enquiry Management",
+        permissions: [
+            { id: 401, label: "View Enquiries" },
+        ]
+    },
 
 ];
 
@@ -157,6 +172,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/admins", label: "Sub Admins", icon: Users, permission_id: 204 },
             { href: "/admin/customers", label: "Customers", icon: UserCircle, permission_id: 334 },
             { href: "/admin/service-providers", label: "Service providers", icon: HardHat, permission_id: 374 },
+            { href: "/admin/enquiries", label: "Enquiries", icon: MessageSquare, permission_id: 401 },
         ]
     },
     {
@@ -167,6 +183,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/service-categories", label: "Service Categories", icon: Layers, permission_id: 354 },
             { href: "/admin/service-types", label: "Service types", icon: Wrench, permission_id: 364 },
             { href: "/admin/faqs", label: "FAQs", icon: CircleHelp, permission_id: 384 },
+            { href: "/admin/banners", label: "Banners", icon: ImageIcon, permission_id: 394 },
         ]
     },
     {
@@ -261,5 +278,15 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/faqs",
         permission_id: 384,
         items: [{ label: "FAQs" }]
+    },
+    {
+        path: "/admin/banners",
+        permission_id: 394,
+        items: [{ label: "Banners" }]
+    },
+    {
+        path: "/admin/enquiries",
+        permission_id: 401,
+        items: [{ label: "Enquiries" }]
     },
 ];

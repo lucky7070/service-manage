@@ -20,6 +20,7 @@ import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
 import Image from "@/components/ui/Image";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 type AdminRecord = {
     _id: string;
@@ -267,13 +268,7 @@ export default function AdminUsersPage() {
                                 </tr>
                             })}
 
-                            {!data.record.length ? (
-                                <tr>
-                                    <td colSpan={7} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                        No Records Available.
-                                    </td>
-                                </tr>
-                            ) : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>
@@ -289,114 +284,114 @@ export default function AdminUsersPage() {
                 size="md"
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/admins", values);
-                                        if (data.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchAdmins();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data || {});
-                                        }
-                                    } else {
-                                        const { data: data } = await AxiosHelperAdmin.putData(`/admins/${values._id}`, values);
-                                        if (data.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchAdmins();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data || {});
-                                        }
-                                    }
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/admins", values);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchAdmins();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            } else {
+                                const { data: data } = await AxiosHelperAdmin.putData(`/admins/${values._id}`, values);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchAdmins();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            }
 
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="admin-role">Role</Label>
-                                            <Field as={Select} id="admin-role" name="roleId">
-                                                <option value="">Select Role</option>
-                                                {roles.map((r) => (
-                                                    <option key={r._id} value={r._id}>
-                                                        {r.name}
-                                                    </option>
-                                                ))}
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="roleId" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="admin-name">Name</Label>
-                                            <Field as={Input} id="admin-name" name="name" placeholder="e.g. Sub Admin" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                        </div>
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-role">Role</Label>
+                                    <Field as={Select} id="admin-role" name="roleId">
+                                        <option value="">Select Role</option>
+                                        {roles.map((r) => (
+                                            <option key={r._id} value={r._id}>
+                                                {r.name}
+                                            </option>
+                                        ))}
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="roleId" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-name">Name</Label>
+                                    <Field as={Input} id="admin-name" name="name" placeholder="e.g. Sub Admin" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="admin-mobile">Mobile</Label>
-                                            <Field as={Input} id="admin-mobile" name="mobile" placeholder="e.g. 9876543210" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
-                                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-mobile">Mobile</Label>
+                                    <Field as={Input} id="admin-mobile" name="mobile" placeholder="e.g. 9876543210" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="admin-email">Email</Label>
-                                            <Field
-                                                as={Input}
-                                                id="admin-email"
-                                                name="email"
-                                                type="email"
-                                                autoComplete="off"
-                                                placeholder="e.g. subadmin@email.com"
-                                            />
-                                            <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="admin-password">Password</Label>
-                                            <Field
-                                                as={Input}
-                                                id="admin-password"
-                                                name="password"
-                                                type="password"
-                                                autoComplete="new-password"
-                                                placeholder="Create password"
-                                            />
-                                            <ErrorMessage className="text-xs text-rose-600" name="password" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="admin-status">Status</Label>
-                                            <Field as={Select} id="admin-status" name="status">
-                                                <option value={1}>Active</option>
-                                                <option value={0}>Inactive</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-email">Email</Label>
+                                    <Field
+                                        as={Input}
+                                        id="admin-email"
+                                        name="email"
+                                        type="email"
+                                        autoComplete="off"
+                                        placeholder="e.g. subadmin@email.com"
+                                    />
+                                    <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-password">Password</Label>
+                                    <Field
+                                        as={Input}
+                                        id="admin-password"
+                                        name="password"
+                                        type="password"
+                                        autoComplete="new-password"
+                                        placeholder="Create password"
+                                    />
+                                    <ErrorMessage className="text-xs text-rose-600" name="password" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="admin-status">Status</Label>
+                                    <Field as={Select} id="admin-status" name="status">
+                                        <option value={1}>Active</option>
+                                        <option value={0}>Inactive</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                </div>
 
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="md"
-                                                className="border border-indigo-100 dark:border-indigo-100"
-                                                onClick={() => setOpen(null)}
-                                            >
-                                                Cancel
-                                            </Button>
-                                            <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
-                                                {isSubmitting ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="md"
+                                        className="border border-indigo-100 dark:border-indigo-100"
+                                        onClick={() => setOpen(null)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
+                                        {isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
         </section>

@@ -16,6 +16,7 @@ import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 export type Role = {
     _id: string;
@@ -193,11 +194,7 @@ export default function AdminRolesPage() {
                                 </tr>
                             ))}
 
-                            {!data.record.length ? <tr>
-                                <td colSpan={4} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                    No Records Available.
-                                </td>
-                            </tr> : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>
@@ -212,69 +209,69 @@ export default function AdminRolesPage() {
                 size="md"
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/roles", values);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchRoles();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    } else {
-                                        const { data } = await AxiosHelperAdmin.putData(`/roles/${values._id}`, values);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchRoles();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="role-name">Role Name</Label>
-                                            <Field as={Input} id="role-name" name="name" placeholder="e.g. Support Manager" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="role-status">Role Status</Label>
-                                            <Field as={Select} id="role-status" name="status">
-                                                <option value={1}>Active</option>
-                                                <option value={0}>Inactive</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                        </div>
-                                        <div className="flex justify-end gap-2">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="md"
-                                                className="border border-indigo-100 dark:border-indigo-100"
-                                                onClick={() => setOpen(null)}
-                                            >
-                                                Cancel
-                                            </Button>
-                                            <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
-                                                {isSubmitting ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/roles", values);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchRoles();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/roles/${values._id}`, values);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchRoles();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="role-name">Role Name</Label>
+                                    <Field as={Input} id="role-name" name="name" placeholder="e.g. Support Manager" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="role-status">Role Status</Label>
+                                    <Field as={Select} id="role-status" name="status">
+                                        <option value={1}>Active</option>
+                                        <option value={0}>Inactive</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="md"
+                                        className="border border-indigo-100 dark:border-indigo-100"
+                                        onClick={() => setOpen(null)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
+                                        {isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
         </section>

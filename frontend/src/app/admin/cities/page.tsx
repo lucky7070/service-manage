@@ -17,6 +17,7 @@ import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AsyncFormSelect, { type AsyncSelectOption } from "@/components/ui/AsyncFormSelect";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 type CountryOption = AsyncSelectOption;
 type StateOption = AsyncSelectOption;
@@ -245,11 +246,7 @@ export default function AdminCitiesPage() {
                                 </tr>
                             ))}
 
-                            {!data.record.length ? <tr>
-                                <td colSpan={6} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                    No Records Available.
-                                </td>
-                            </tr> : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>
@@ -264,99 +261,99 @@ export default function AdminCitiesPage() {
                 size="md"
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/cities", values);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchCities();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data || {});
-                                        }
-                                    } else {
-                                        const { data } = await AxiosHelperAdmin.putData(`/cities/${values._id}`, values);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchCities();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data || {});
-                                        }
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {(formik: FormikProps<CityType>) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="city-country">Country</Label>
-                                            <AsyncFormSelect
-                                                inputId="city-country"
-                                                loadOptions={loadCountryOptions}
-                                                value={selectedCountry}
-                                                onChange={(option) => {
-                                                    setSelectedCountry(option);
-                                                    setSelectedState(null);
-                                                    formik.setFieldValue("countryId", option?.value || "");
-                                                    formik.setFieldValue("stateId", "");
-                                                }}
-                                                placeholder="Search Country..."
-                                            />
-                                            <ErrorMessage className="text-xs text-rose-600" name="countryId" component="small" />
-                                        </div>
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/cities", values);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchCities();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/cities/${values._id}`, values);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchCities();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {(formik: FormikProps<CityType>) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="city-country">Country</Label>
+                                    <AsyncFormSelect
+                                        inputId="city-country"
+                                        loadOptions={loadCountryOptions}
+                                        value={selectedCountry}
+                                        onChange={(option) => {
+                                            setSelectedCountry(option);
+                                            setSelectedState(null);
+                                            formik.setFieldValue("countryId", option?.value || "");
+                                            formik.setFieldValue("stateId", "");
+                                        }}
+                                        placeholder="Search Country..."
+                                    />
+                                    <ErrorMessage className="text-xs text-rose-600" name="countryId" component="small" />
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="city-state">State</Label>
-                                            <AsyncFormSelect
-                                                inputId="city-state"
-                                                loadOptions={loadStateOptions}
-                                                value={selectedState}
-                                                isDisabled={!selectedCountry?.value}
-                                                onChange={(option) => {
-                                                    setSelectedState(option);
-                                                    formik.setFieldValue("stateId", option?.value || "");
-                                                }}
-                                                placeholder={selectedCountry?.value ? "Search State..." : "Select Country First"}
-                                            />
-                                            <ErrorMessage className="text-xs text-rose-600" name="stateId" component="small" />
-                                        </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="city-state">State</Label>
+                                    <AsyncFormSelect
+                                        inputId="city-state"
+                                        loadOptions={loadStateOptions}
+                                        value={selectedState}
+                                        isDisabled={!selectedCountry?.value}
+                                        onChange={(option) => {
+                                            setSelectedState(option);
+                                            formik.setFieldValue("stateId", option?.value || "");
+                                        }}
+                                        placeholder={selectedCountry?.value ? "Search State..." : "Select Country First"}
+                                    />
+                                    <ErrorMessage className="text-xs text-rose-600" name="stateId" component="small" />
+                                </div>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="city-name">City Name</Label>
-                                            <Field as={Input} id="city-name" name="name" placeholder="e.g. Lucknow" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="city-status">Status</Label>
-                                            <Field as={Select}
-                                                id="city-status"
-                                                name="status"
-                                            >
-                                                <option value={1}>Active</option>
-                                                <option value={0}>Inactive</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                        </div>
-                                        <div className="flex justify-end gap-2">
-                                            <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
-                                                Cancel
-                                            </Button>
-                                            <Button disabled={formik.isSubmitting} type="submit" variant="primary" size="md">
-                                                {formik.isSubmitting ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                                <div className="space-y-2">
+                                    <Label htmlFor="city-name">City Name</Label>
+                                    <Field as={Input} id="city-name" name="name" placeholder="e.g. Lucknow" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="city-status">Status</Label>
+                                    <Field as={Select}
+                                        id="city-status"
+                                        name="status"
+                                    >
+                                        <option value={1}>Active</option>
+                                        <option value={0}>Inactive</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={formik.isSubmitting} type="submit" variant="primary" size="md">
+                                        {formik.isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
         </section>

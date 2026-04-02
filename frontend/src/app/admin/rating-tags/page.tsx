@@ -16,6 +16,7 @@ import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 type TagRow = {
     _id: string;
@@ -245,13 +246,7 @@ export default function AdminPredefinedRatingTagsPage() {
                                 </tr>
                             ))}
 
-                            {!data.record.length ? (
-                                <tr>
-                                    <td colSpan={6} className="px-3 py-6 text-center text-slate-500 dark:text-slate-400">
-                                        No Records Available.
-                                    </td>
-                                </tr>
-                            ) : null}
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>
@@ -266,86 +261,86 @@ export default function AdminPredefinedRatingTagsPage() {
                 size="md"
             >
                 <div className="space-y-4">
-                            <Formik
-                                initialValues={initialValues}
-                                enableReinitialize
-                                validationSchema={validationSchema}
-                                onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                                    const payload = {
-                                        tagFor: values.tagFor,
-                                        tagName: values.tagName.trim(),
-                                        tagType: values.tagType,
-                                        status: values.status
-                                    };
-                                    if (open === "add") {
-                                        const { data } = await AxiosHelperAdmin.postData("/rating-tags", payload);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchTags();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    } else {
-                                        const { data } = await AxiosHelperAdmin.putData(`/rating-tags/${values._id}`, payload);
-                                        if (data?.status) {
-                                            toast.success(data.message);
-                                            setOpen(null);
-                                            fetchTags();
-                                            resetForm();
-                                        } else {
-                                            toast.error(data.message);
-                                            setErrors(data.data);
-                                        }
-                                    }
-                                    setSubmitting(false);
-                                }}
-                            >
-                                {({ isSubmitting }) => (
-                                    <Form className="space-y-3">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="prt-tagFor">Tag for</Label>
-                                            <Field as={Select} id="prt-tagFor" name="tagFor">
-                                                <option value="customer">Customer</option>
-                                                <option value="provider">Provider</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="tagFor" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="prt-tagName">Tag name</Label>
-                                            <Field as={Input} id="prt-tagName" name="tagName" placeholder="e.g. Punctual" />
-                                            <ErrorMessage className="text-xs text-rose-600" name="tagName" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="prt-tagType">Type</Label>
-                                            <Field as={Select} id="prt-tagType" name="tagType">
-                                                <option value="positive">Positive</option>
-                                                <option value="negative">Negative</option>
-                                                <option value="neutral">Neutral</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="tagType" component="small" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="prt-status">Status</Label>
-                                            <Field as={Select} id="prt-status" name="status">
-                                                <option value={1}>Active</option>
-                                                <option value={0}>Inactive</option>
-                                            </Field>
-                                            <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                        </div>
-                                        <div className="flex justify-end gap-2">
-                                            <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
-                                                Cancel
-                                            </Button>
-                                            <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
-                                                {isSubmitting ? "Saving..." : "Save"}
-                                            </Button>
-                                        </div>
-                                    </Form>
-                                )}
-                            </Formik>
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            const payload = {
+                                tagFor: values.tagFor,
+                                tagName: values.tagName.trim(),
+                                tagType: values.tagType,
+                                status: values.status
+                            };
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/rating-tags", payload);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchTags();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/rating-tags/${values._id}`, payload);
+                                if (data?.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchTags();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data);
+                                }
+                            }
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label htmlFor="prt-tagFor">Tag for</Label>
+                                    <Field as={Select} id="prt-tagFor" name="tagFor">
+                                        <option value="customer">Customer</option>
+                                        <option value="provider">Provider</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="tagFor" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="prt-tagName">Tag name</Label>
+                                    <Field as={Input} id="prt-tagName" name="tagName" placeholder="e.g. Punctual" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="tagName" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="prt-tagType">Type</Label>
+                                    <Field as={Select} id="prt-tagType" name="tagType">
+                                        <option value="positive">Positive</option>
+                                        <option value="negative">Negative</option>
+                                        <option value="neutral">Neutral</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="tagType" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="prt-status">Status</Label>
+                                    <Field as={Select} id="prt-status" name="status">
+                                        <option value={1}>Active</option>
+                                        <option value={0}>Inactive</option>
+                                    </Field>
+                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
+                                        {isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </div>
             </Modal>
         </section>
