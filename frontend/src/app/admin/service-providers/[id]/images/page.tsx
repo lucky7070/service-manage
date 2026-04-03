@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "@/components/ui/Image";
 import { toast } from "react-toastify";
-import Swal from "sweetalert2";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 import { ArrowLeftIcon, GripVertical, Trash2 } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";

@@ -5,7 +5,7 @@ import { ErrorMessage, Field, Form, Formik, type FormikProps } from "formik";
 import { debounce } from "lodash";
 import * as Yup from "yup";
 import moment from "moment";
-import Swal from "sweetalert2";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 

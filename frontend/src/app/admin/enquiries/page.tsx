@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { debounce } from "lodash";
 import moment from "moment";
 import { toast } from "react-toastify";
-import Swal from "sweetalert2";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 import { Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";

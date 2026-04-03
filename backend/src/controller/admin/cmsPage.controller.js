@@ -5,6 +5,11 @@ import { escapeRegex } from "../../helpers/utils.js";
 
 export const createCmsPage = async (req, res) => {
     try {
+        
+        if (process.env.NODE_ENV === "production") {
+            return res.someThingWentWrong({ message: "CMS page creation is not available in production." });
+        }
+
         const { pageSlug, pageTitle, pageTitleHi = "", metaDescription = "", metaKeywords = "", content = "", contentHi = "", viewCount = 0 } = req.body;
 
         const doc = await CmsPage.create({
@@ -54,6 +59,11 @@ export const updateCmsPage = async (req, res) => {
 
 export const deleteCmsPage = async (req, res) => {
     try {
+
+        if (process.env.NODE_ENV === "production") {
+            return res.someThingWentWrong({ message: "CMS page creation is not available in production." });
+        }
+
         const doc = await CmsPage.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 

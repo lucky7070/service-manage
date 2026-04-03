@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, type LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MENU } from "@/config";
 import { useAppSelector } from "@/store/hooks";
 import { cn, resolveFileUrl } from "@/helpers/utils";
@@ -25,10 +25,17 @@ export default function AdminSidebar() {
     const isHoverExpanded = isSidebarCollapsed && isHoveringCollapsed;
     const effectiveCollapsed = isSidebarCollapsed && !isHoverExpanded;
 
-    const activeParentLabel = MENU.find((item) => {
-        if (!("children" in item)) return false;
-        return item.children.some((child) => child.href === pathname);
-    })?.label;
+    useEffect(() => {
+        (() => {
+            const activeParentLabel = MENU.find((item) => {
+                if (!("children" in item)) return false;
+                if (!Array.isArray(item.children)) return false;
+                return item.children.some((child) => child.href === pathname);
+            })?.label;
+
+            setOpen((v) => ({ ...v, [activeParentLabel || ""]: true }))
+        })();
+    }, [pathname]);
 
     return (
         <aside
@@ -99,10 +106,10 @@ export default function AdminSidebar() {
                                             <item.icon className="h-4 w-4" />
                                             <p className="text-ellipsis md:text-clip ...">{item.label}</p>
                                         </span>
-                                        <ChevronDown className={`h-4 w-4 transition ${(open[item.label] || activeParentLabel === item.label) ? "rotate-180" : ""}`} />
+                                        <ChevronDown className={`h-4 w-4 transition ${(open[item.label]) ? "rotate-180" : ""}`} />
                                     </button>
 
-                                    {(isHoverExpanded || open[item.label] || activeParentLabel === item.label) ? (
+                                    {(isHoverExpanded || open[item.label]) ? (
                                         <div className="ml-2 mt-1 space-y-1 border-l border-indigo-300/30 pl-2 dark:border-slate-600">
                                             {item.children.map((child) => {
                                                 const ChildIcon = child.icon as unknown as LucideIcon;

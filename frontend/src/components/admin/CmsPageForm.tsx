@@ -4,6 +4,7 @@ import { ChangeEvent } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import { Button, Input, Label, Textarea } from "@/components/ui";
+import RichTextEditor from "@/components/ui/RichTextEditor";
 
 export type CmsPageFormValues = {
     _id?: string;
@@ -33,78 +34,91 @@ type Props = {
     initialValues: CmsPageFormValues;
     submitLabel: string;
     isLoading?: boolean;
-    onSubmit: (values: CmsPageFormValues, helpers: { setSubmitting: (flag: boolean) => void; setErrors: (errors: Record<string, string>) => void; resetForm: () => void; }) => Promise<void>;   
+    disabled?: boolean;
+    onSubmit: (values: CmsPageFormValues, helpers: { setSubmitting: (flag: boolean) => void; setErrors: (errors: Record<string, string>) => void; resetForm: () => void; }) => Promise<void>;
 };
 
-export default function CmsPageForm({ isEdit = false, initialValues, submitLabel, onSubmit, isLoading = false }: Props) {
+export default function CmsPageForm({ isEdit = false, disabled = false, initialValues, submitLabel, onSubmit, isLoading = false }: Props) {
     return (
         <Formik initialValues={initialValues} enableReinitialize validationSchema={cmsPageValidationSchema} onSubmit={onSubmit}>
             {({ isSubmitting, setFieldValue, values }) => (
-                <Form className="space-y-3">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Form>
+                    <fieldset disabled={isSubmitting || disabled} className="space-y-3">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="cms-page-title">Page title</Label>
+                                <Field as={Input} id="cms-page-title" name="pageTitle" placeholder="About Us" disabled={isLoading} />
+                                <ErrorMessage className="text-xs text-rose-600" name="pageTitle" component="small" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="cms-page-slug">Page slug</Label>
+                                <Field
+                                    as={Input}
+                                    id="cms-page-slug"
+                                    name="pageSlug"
+                                    placeholder="about-us"
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                        const next = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-{2,}/g, "-");
+                                        setFieldValue("pageSlug", next);
+                                    }}
+                                    value={values.pageSlug}
+                                    disabled={isLoading}
+                                    readOnly={isEdit}
+                                />
+                                <ErrorMessage className="text-xs text-rose-600" name="pageSlug" component="small" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="cms-page-title-hi">Page title (Hindi)</Label>
+                                <Field as={Input} id="cms-page-title-hi" name="pageTitleHi" placeholder="हमारे बारे में" disabled={isLoading} />
+                                <ErrorMessage className="text-xs text-rose-600" name="pageTitleHi" component="small" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="cms-page-views">View count</Label>
+                                <Field as={Input} id="cms-page-views" name="viewCount" type="number" min={0} disabled={isLoading} />
+                                <ErrorMessage className="text-xs text-rose-600" name="viewCount" component="small" />
+                            </div>
+                        </div>
+
                         <div className="space-y-2">
-                            <Label htmlFor="cms-page-title">Page title</Label>
-                            <Field as={Input} id="cms-page-title" name="pageTitle" placeholder="About Us" disabled={isLoading} />
-                            <ErrorMessage className="text-xs text-rose-600" name="pageTitle" component="small" />
+                            <Label htmlFor="cms-page-meta-description">Meta description</Label>
+                            <Field as={Textarea} id="cms-page-meta-description" name="metaDescription" className="min-h-20" placeholder="SEO description..." disabled={isLoading} />
+                            <ErrorMessage className="text-xs text-rose-600" name="metaDescription" component="small" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="cms-page-slug">Page slug</Label>
-                            <Field
-                                as={Input}
-                                id="cms-page-slug"
-                                name="pageSlug"
-                                placeholder="about-us"
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                                    const next = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-{2,}/g, "-");
-                                    setFieldValue("pageSlug", next);
-                                }}
-                                value={values.pageSlug}
-                                disabled={isLoading}
-                                readOnly={isEdit}
+                            <Label htmlFor="cms-page-meta-keywords">Meta keywords</Label>
+                            <Field as={Textarea} id="cms-page-meta-keywords" name="metaKeywords" className="min-h-20" placeholder="keyword1, keyword2, keyword3" disabled={isLoading} />
+                            <ErrorMessage className="text-xs text-rose-600" name="metaKeywords" component="small" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="cms-page-content">Content</Label>
+                            <RichTextEditor
+                                value={values.content || ""}
+                                onChange={(html) => setFieldValue("content", html)}
+                                placeholder="Page content..."
+                                disabled={isSubmitting || isLoading || disabled}
                             />
-                            <ErrorMessage className="text-xs text-rose-600" name="pageSlug" component="small" />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="cms-page-title-hi">Page title (Hindi)</Label>
-                            <Field as={Input} id="cms-page-title-hi" name="pageTitleHi" placeholder="हमारे बारे में" disabled={isLoading} />
-                            <ErrorMessage className="text-xs text-rose-600" name="pageTitleHi" component="small" />
+                            <ErrorMessage className="text-xs text-rose-600" name="content" component="small" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="cms-page-views">View count</Label>
-                            <Field as={Input} id="cms-page-views" name="viewCount" type="number" min={0} disabled={isLoading} />
-                            <ErrorMessage className="text-xs text-rose-600" name="viewCount" component="small" />
+                            <Label htmlFor="cms-page-content-hi">Content (Hindi)</Label>
+                            <RichTextEditor
+                                value={values.contentHi || ""}
+                                onChange={(html) => setFieldValue("contentHi", html)}
+                                placeholder="पेज कंटेंट..."
+                                disabled={isSubmitting || isLoading || disabled}
+                            />
+                            <ErrorMessage className="text-xs text-rose-600" name="contentHi" component="small" />
                         </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="cms-page-meta-description">Meta description</Label>
-                        <Field as={Textarea} id="cms-page-meta-description" name="metaDescription" className="min-h-20" placeholder="SEO description..." disabled={isLoading} />
-                        <ErrorMessage className="text-xs text-rose-600" name="metaDescription" component="small" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cms-page-meta-keywords">Meta keywords</Label>
-                        <Field as={Textarea} id="cms-page-meta-keywords" name="metaKeywords" className="min-h-20" placeholder="keyword1, keyword2, keyword3" disabled={isLoading} />
-                        <ErrorMessage className="text-xs text-rose-600" name="metaKeywords" component="small" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cms-page-content">Content</Label>
-                        <Field as={Textarea} id="cms-page-content" name="content" className="min-h-40" placeholder="Page content..." disabled={isLoading} />
-                        <ErrorMessage className="text-xs text-rose-600" name="content" component="small" />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="cms-page-content-hi">Content (Hindi)</Label>
-                        <Field as={Textarea} id="cms-page-content-hi" name="contentHi" className="min-h-40" placeholder="पेज कंटेंट..." disabled={isLoading} />
-                        <ErrorMessage className="text-xs text-rose-600" name="contentHi" component="small" />
-                    </div>
-
-                    <div className="pt-1">
-                        <Button type="submit" variant="primary" size="md" fullWidth disabled={isSubmitting || isLoading}>
-                            {isSubmitting ? "Saving..." : submitLabel}
-                        </Button>
-                    </div>
+                        <div className="pt-1">
+                            <Button type="submit" variant="primary" size="md" fullWidth disabled={isSubmitting || isLoading || disabled}>
+                                {isSubmitting ? "Saving..." : submitLabel}
+                            </Button>
+                        </div>
+                    </fieldset>
                 </Form>
             )}
         </Formik>

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { debounce } from "lodash";
 import moment from "moment";
-import Swal from "sweetalert2";
+import Swal from 'sweetalert2/dist/sweetalert2.js';
 import { toast } from "react-toastify";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
@@ -12,7 +12,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Button, Input } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { getSweetAlertConfig } from "@/helpers/utils";
+import { getSweetAlertConfig, isProductionEnvironment } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
@@ -93,10 +93,10 @@ export default function AdminCmsPagesPage() {
                 action={
                     <PermissionBlock permission_id={411}>
                         <Link href="/admin/cms-pages/create">
-                            <Button type="button" variant="primary" size="md">
+                            {!isProductionEnvironment() ? <Button type="button" variant="primary" size="md">
                                 <Plus className="h-3.5 w-3.5" />
                                 Create CMS Page
-                            </Button>
+                            </Button> : null}
                         </Link>
                     </PermissionBlock>
                 }
@@ -148,11 +148,13 @@ export default function AdminCmsPagesPage() {
                                                     </Button>
                                                 </Link>
                                             </PermissionBlock>
-                                            <PermissionBlock permission_id={413}>
-                                                <Button size="sm" variant="danger" onClick={() => handleDelete(row._id)} title="Delete CMS Page" aria-label="Delete CMS Page">
-                                                    <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                            </PermissionBlock>
+                                            {!isProductionEnvironment() ? (
+                                                <PermissionBlock permission_id={413}>
+                                                    <Button size="sm" variant="danger" onClick={() => handleDelete(row._id)} title="Delete CMS Page" aria-label="Delete CMS Page">
+                                                        <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                    </Button>
+                                                </PermissionBlock>
+                                            ) : null}
                                         </div>
                                     </td>
                                 </tr>

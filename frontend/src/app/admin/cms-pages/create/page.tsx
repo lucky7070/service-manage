@@ -9,6 +9,7 @@ import PermissionBlock from "@/components/admin/PermissionBlock";
 import { Button } from "@/components/ui";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import CmsPageForm, { CmsPageFormValues } from "@/components/admin/CmsPageForm";
+import { isProductionEnvironment } from "@/helpers/utils";
 
 const initialValues: CmsPageFormValues = {
     pageSlug: "",
@@ -42,9 +43,16 @@ export default function CreateCmsPage() {
             <PermissionBlock permission_id={411}>
                 <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
                     <CmsPageForm
+                        disabled={isProductionEnvironment()}
                         initialValues={initialValues}
                         submitLabel="Create CMS Page"
                         onSubmit={async (values, { setSubmitting, setErrors }) => {
+
+                            if(isProductionEnvironment()) {
+                                toast.error("CMS page creation is not available in production.");
+                                return;
+                            }
+
                             const { data } = await AxiosHelperAdmin.postData("/cms-pages", values);
                             if (data?.status) {
                                 toast.success(data.message || "CMS page created.");
