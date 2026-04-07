@@ -61,7 +61,7 @@ export const resolveEnquiry = async (req, res) => {
         await doc.updateOne({
             isResolved: nextResolved,
             resolvedAt: nextResolved ? new Date() : null,
-            resolvedBy: nextResolved ? req.admin?.id || null : null
+            resolvedBy: nextResolved ? req.admin._id : null
         });
 
         return res.successUpdate({}, nextResolved ? "Enquiry marked as resolved." : "Enquiry marked as unresolved.");

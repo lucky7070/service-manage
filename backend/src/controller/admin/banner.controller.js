@@ -19,8 +19,8 @@ export const createBanner = async (req, res) => {
             bannerType: String(bannerType ?? "homepage"),
             link: String(link).trim() || null,
             displayOrder: Number(displayOrder) || 0,
-            createdBy: req.admin?.id || null,
-            updatedBy: req.admin?.id || null
+            createdBy: req.admin._id,
+            updatedBy: req.admin._id
         });
         return res.successInsert(doc);
     } catch (error) {
@@ -51,7 +51,7 @@ export const updateBanner = async (req, res) => {
                 bannerType: String(bannerType ?? "homepage"),
                 link: String(link).trim() || null,
                 displayOrder: Number(displayOrder) || 0,
-                updatedBy: req.admin?.id || null
+                updatedBy: req.admin._id
             }
         );
         return res.successUpdate(doc);
@@ -65,7 +65,7 @@ export const deleteBanner = async (req, res) => {
         const doc = await Banner.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
-        await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin?.id || null });
+        await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });
         return res.successDelete(doc);
     } catch (error) {
         return res.someThingWentWrong(error);

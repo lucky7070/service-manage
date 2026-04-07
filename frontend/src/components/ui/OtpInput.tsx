@@ -123,6 +123,11 @@ export default function OtpInput({
 
         if (disabled) return;
 
+        // Allow common keyboard shortcuts (paste/copy/cut/select-all/undo/redo).
+        if ((event.ctrlKey || event.metaKey) && ["a", "c", "v", "x", "z", "y"].includes(event.key.toLowerCase())) {
+            return;
+        }
+
         if (event.key === "Backspace") {
             event.preventDefault();
             updateOtpAtIndex(activeInput, "");
@@ -207,7 +212,7 @@ export default function OtpInput({
                     autoComplete: "off",
                     "aria-label": `Please enter OTP character ${index + 1}`,
                     disabled,
-                    className: cn("size-10 rounded-lg border border-indigo-100 bg-white text-center text-lg text-slate-900 outline-none transition focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 disabled:opacity-50 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:focus-visible:ring-indigo-200", !skipDefaultStyles && "shadow-xs", inputClassName),
+                    className: skipDefaultStyles ? inputClassName : cn("size-10 rounded-lg border border-indigo-100 bg-white text-center text-lg text-slate-900 outline-none transition focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 disabled:opacity-50 dark:border-indigo-100 dark:bg-slate-800 dark:text-slate-100 dark:focus-visible:ring-indigo-200", !skipDefaultStyles && "shadow-xs", inputClassName),
                     style: skipDefaultStyles ? inputStyle : { width: "3rem", textAlign: "center", ...inputStyle },
                     onChange: handleChangeAtActive,
                     onFocus: handleFocus(index),
@@ -229,11 +234,7 @@ export default function OtpInput({
 
                 return <React.Fragment key={index}>
                     <input id={getCellId(index)} {...cellProps} />
-                    {index < numInputs - 1
-                        ? typeof renderSeparator === "function"
-                            ? renderSeparator(index)
-                            : renderSeparator
-                        : null}
+                    {index < numInputs - 1 ? typeof renderSeparator === "function" ? renderSeparator(index) : renderSeparator : null}
                 </React.Fragment>
             })}
         </div>

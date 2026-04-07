@@ -1,19 +1,11 @@
 import type { Metadata } from "next";
-import Providers from "./providers";
+import "./front.css";
 
 export const metadata: Metadata = {
-    title: "Service Manage",
+    title: "Service Hub",
     description: "Book trusted plumbers, electricians, salon and cleaning services."
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-    return (
-        <html lang="en">
-            <body>
-                <Providers>
-                    {children}
-                </Providers>
-            </body>
-        </html>
-    );
+    return children
 }

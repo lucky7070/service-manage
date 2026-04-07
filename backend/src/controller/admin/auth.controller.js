@@ -36,7 +36,7 @@ export const adminProfile = async (req, res) => {
     try {
 
         const admins = await Admin.aggregate([
-            { $match: { _id: new mongoose.Types.ObjectId(String(req.admin.id)) } },
+            { $match: { _id: req.admin._id } },
             { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, roleId: 1, permissions: 1, createdAt: 1 } },
             { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleName" } },
             { $addFields: { roleName: { $ifNull: [{ $first: "$roleName.name" }, '--'] } } },
@@ -72,7 +72,7 @@ export const markAllAdminNotificationsRead = async (req, res) => {
 
 export const updateAdminProfile = async (req, res) => {
     try {
-        const admin = await Admin.findById(req.admin.id);
+        const admin = await Admin.findById(req.admin._id);
         if (!admin) return res.noRecords(false, "Admin not found");
 
         const vData = req.getBody(["name", "mobile", "email"]);
@@ -84,8 +84,8 @@ export const updateAdminProfile = async (req, res) => {
         });
         if (conflict) throw new Error("Admin with same mobile/email already exists.");
 
-        await Admin.updateOne({ _id: req.admin.id }, vData);
-        const updated = await Admin.findById(req.admin.id);
+        await Admin.updateOne({ _id: req.admin._id }, vData);
+        const updated = await Admin.findById(req.admin._id);
         return res.successUpdate(updated, "Profile updated");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -94,7 +94,7 @@ export const updateAdminProfile = async (req, res) => {
 
 export const updateAdminProfileImage = async (req, res) => {
     try {
-        const admin = await Admin.findById(req.admin.id);
+        const admin = await Admin.findById(req.admin._id);
         if (!admin) return res.noRecords(false, "Admin not found");
 
         if (!req.file) throw new Error("Profile image is required.");
@@ -117,7 +117,7 @@ export const updateAdminPassword = async (req, res) => {
     try {
         const { current_password, new_password } = req.body;
 
-        const admin = await Admin.findById(req.admin.id).select("+password");
+        const admin = await Admin.findById(req.admin._id).select("+password");
         if (!admin) return res.noRecords(false, "Admin not found");
 
         const ok = await bcrypt.compare(String(current_password), admin.password);

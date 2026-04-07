@@ -103,7 +103,7 @@ export const updateServiceProviderStatus = async (req, res) => {
 
         const updateDoc = { profileStatus: nextProfileStatus, isVerified: nextIsVerified };
         if (nextProfileStatus === "approved") {
-            updateDoc.approvedBy = req.admin?.id ?? null;
+            updateDoc.approvedBy = req.admin._id;
             updateDoc.approvedAt = moment().toISOString();
             updateDoc.rejectionReason = null;
         } else if (nextProfileStatus === "rejected") {

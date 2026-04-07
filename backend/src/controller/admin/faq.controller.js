@@ -12,8 +12,8 @@ export const createFaq = async (req, res) => {
             answer: String(answer).trim(),
             displayOrder: Number(displayOrder) || 0,
             isActive: Number(status) === 1,
-            createdBy: req.admin?.id || null,
-            updatedBy: req.admin?.id || null
+            createdBy: req.admin._id,
+            updatedBy: req.admin._id
         });
         return res.successInsert(doc);
     } catch (error) {
@@ -34,7 +34,7 @@ export const updateFaq = async (req, res) => {
                 answer: String(answer).trim(),
                 displayOrder: Number(displayOrder) || 0,
                 isActive: Number(status) === 1,
-                updatedBy: req.admin?.id || null
+                updatedBy: req.admin._id
             }
         );
         return res.successUpdate(doc);
@@ -48,7 +48,7 @@ export const deleteFaq = async (req, res) => {
         const doc = await Faq.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
-        await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin?.id || null });
+        await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });
         return res.successDelete(doc);
     } catch (error) {
         return res.someThingWentWrong(error);

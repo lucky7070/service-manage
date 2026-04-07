@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 
@@ -21,21 +19,15 @@ type Props = {
 export default function RichTextEditor({ value, onChange, placeholder = "Write something...", disabled = false }: Props) {
     const [showHtmlSource, setShowHtmlSource] = useState(false);
     const [htmlSource, setHtmlSource] = useState(value || "");
+    
+    const lastEmittedHtml = useRef<string | null>(null);
 
     const editor = useEditor({
         editable: !disabled,
         immediatelyRender: false,
         extensions: [
-            StarterKit,
-            Underline,
-            Link.configure({
-                openOnClick: false,
-                autolink: true,
-                linkOnPaste: true
-            }),
-            Placeholder.configure({
-                placeholder
-            })
+            StarterKit.configure({ link: { openOnClick: false, autolink: true, linkOnPaste: true }, underline: {} }),
+            Placeholder.configure({ placeholder })
         ],
         content: value || "",
         editorProps: {
@@ -46,17 +38,32 @@ export default function RichTextEditor({ value, onChange, placeholder = "Write s
         onUpdate: ({ editor }) => {
             if (disabled) return;
             const html = editor.getHTML();
+            lastEmittedHtml.current = html;
             onChange(html);
         }
     });
 
-    // Keep editor in sync when `value` changes from outside (e.g. switching edit record).
     useEffect(() => {
         if (!editor) return;
+        editor.setEditable(!disabled);
+    }, [editor, disabled]);
 
-        const next = value || "";
-        if (next !== editor.getHTML()) editor.commands.setContent(next);
-    }, [editor, value]);
+    useEffect(() => {
+        if (!editor || showHtmlSource) return;
+
+        const next = value ?? "";
+        // Same string we just pushed up — parent re-render; do not reset document (breaks typing).
+        if (lastEmittedHtml.current === next) return;
+
+        const current = editor.getHTML();
+        if (next === current) {
+            lastEmittedHtml.current = next;
+            return;
+        }
+
+        editor.commands.setContent(next, { emitUpdate: false });
+        lastEmittedHtml.current = next;
+    }, [editor, value, showHtmlSource]);
 
     const setLink = async () => {
         if (!editor) return;
@@ -184,8 +191,9 @@ export default function RichTextEditor({ value, onChange, placeholder = "Write s
                     onClick={() => {
                         if (showHtmlSource) {
                             const next = htmlSource || "";
+                            editor.commands.setContent(next, { emitUpdate: false });
+                            lastEmittedHtml.current = next;
                             onChange(next);
-                            editor.commands.setContent(next);
                             setShowHtmlSource(false);
                             return;
                         }
@@ -205,9 +213,10 @@ export default function RichTextEditor({ value, onChange, placeholder = "Write s
                 <textarea
                     value={htmlSource}
                     onChange={(e) => {
-                        const next = e.target.value;
-                        setHtmlSource(next);
-                        onChange(next);
+                        const v = e.target.value;
+                        setHtmlSource(v);
+                        lastEmittedHtml.current = v;
+                        onChange(v);
                     }}
                     disabled={disabled}
                     className="min-h-[220px] w-full rounded-md border border-indigo-100 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-none focus-visible:border-indigo-400 focus-visible:ring-[3px] focus-visible:ring-indigo-200 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900/30 dark:text-slate-100"

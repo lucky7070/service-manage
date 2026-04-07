@@ -21,7 +21,7 @@ export const createCmsPage = async (req, res) => {
             content: String(content).trim() || null,
             contentHi: String(contentHi).trim() || null,
             viewCount: Number(viewCount) || 0,
-            updatedBy: req.admin?.id || null
+            updatedBy: req.admin._id
         });
         return res.successInsert(doc);
     } catch (error) {
@@ -47,7 +47,7 @@ export const updateCmsPage = async (req, res) => {
                 content: String(content).trim() || null,
                 contentHi: String(contentHi).trim() || null,
                 viewCount: Number(viewCount) || 0,
-                updatedBy: req.admin?.id || null
+                updatedBy: req.admin._id
             }
         );
         return res.successUpdate(doc);
@@ -67,7 +67,7 @@ export const deleteCmsPage = async (req, res) => {
         const doc = await CmsPage.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
-        await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin?.id || null });
+        await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });
         return res.successDelete(doc);
     } catch (error) {
         return res.someThingWentWrong(error);
