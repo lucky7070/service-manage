@@ -3,8 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import LoginOtpForm from "@/components/front/auth/LoginOtpForm"
-import RegisterOtpForm from "@/components/front/auth/RegisterOtpForm"
+import LoginOtpForm from "@/components/front/auth/LoginForm"
+import RegisterOtpForm from "@/components/front/auth/RegisterForm"
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true)

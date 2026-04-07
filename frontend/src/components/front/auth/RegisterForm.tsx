@@ -27,7 +27,7 @@ const baseValidation = {
     acceptedTerms: Yup.boolean().oneOf([true], "You must accept Terms and Privacy Policy.")
 }
 
-export default function RegisterOtpForm() {
+export default function RegisterForm() {
     const router = useRouter();
     const [step, setStep] = useState<"details" | "otp">("details");
     const [loading, setLoading] = useState(false);
@@ -36,13 +36,14 @@ export default function RegisterOtpForm() {
         ? Yup.object(baseValidation)
         : Yup.object({ ...baseValidation, otp: Yup.string().trim().required("OTP is required.").matches(OTP_REGEXP, "OTP must be exactly 6 digits.") });
 
-    const sendOtp = async (mobile: string) => {
+    const sendOtp = async (mobile: string, setOTP: (otp: string) => void) => {
         setLoading(true);
         const { data } = await AxiosHelper.postData("/auth/send-otp", { mobile: mobile.trim(), purpose: "registration" });
         if (data.status) {
             toast.success(data.message || "OTP sent.");
             setStep("otp");
             setLoading(false);
+            setOTP(data.data);
         } else {
             toast.error(data?.message || "Could not send OTP.");
             setLoading(false);
@@ -66,9 +67,9 @@ export default function RegisterOtpForm() {
         <Formik<RegisterValues>
             initialValues={{ name: "", mobile: "", otp: "", acceptedTerms: false }}
             validationSchema={schema}
-            onSubmit={async (values) => {
+            onSubmit={async (values, { setFieldValue }) => {
                 if (step === "details") {
-                    await sendOtp(values.mobile);
+                    await sendOtp(values.mobile, (otp) => { setFieldValue("otp", otp); });
                 } else {
                     await registerAndVerify(values);
                 }
@@ -106,7 +107,7 @@ export default function RegisterOtpForm() {
                                     await validateField("name");
                                     await validateField("mobile");
                                     if (values.name.trim().length < 2 || !PHONE_REGEXP.test(values.mobile.trim())) return;
-                                    await sendOtp(values.mobile);
+                                    await sendOtp(values.mobile, (otp) => { setFieldValue("otp", otp); });
                                 }}
                             />
                             <ErrorMessage name="otp" component="small" className="mt-1 block text-xs text-rose-600" />

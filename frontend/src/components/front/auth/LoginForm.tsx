@@ -19,7 +19,7 @@ type LoginValues = {
     remember: boolean;
 };
 
-export default function LoginOtpForm() {
+export default function LoginForm() {
     const router = useRouter();
     const [step, setStep] = useState<"mobile" | "otp">("mobile");
     const [loading, setLoading] = useState(false);
@@ -34,14 +34,13 @@ export default function LoginOtpForm() {
     const sendOtp = async (mobile: string, setOTP: (otp: string) => void) => {
         setLoading(true);
         const { data } = await AxiosHelper.postData("/auth/send-otp", { mobile: mobile.trim(), purpose: "login" });
-        console.log(data.status);
         if (data.status) {
             toast.success(data.message || "OTP sent.");
             setStep("otp");
             setLoading(false);
             setOTP(data.data);
         } else {
-            toast.error(data?.message || "Could not send OTP.");
+            toast.error(data.message || "Could not send OTP.");
             setLoading(false);
         }
     };
@@ -49,12 +48,12 @@ export default function LoginOtpForm() {
     const verifyOtp = async ({ mobile, otp }: { mobile: string, otp: string }) => {
         setLoading(true);
         const { data } = await AxiosHelper.postData("/auth/register", { mobile, otp });
-        if (data.status && data.data?.token) {
+        if (data.status) {
             toast.success(data.message || "Login successful.");
             router.push("/user/dashboard");
             setLoading(false);
         } else {
-            toast.error(data?.message || "Invalid OTP.");
+            toast.error(data.message || "Invalid OTP.");
             setLoading(false);
         }
     };
