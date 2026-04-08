@@ -4,6 +4,7 @@ import { config } from "../config/index.js";
 import { COOKIE_OPTIONS, PHONE_REGEXP } from "../config/constants.js";
 import { generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
 import { OtpVerification, Customer } from "../models/index.js";
+import { sendOTP } from "../libraries/sms.js";
 
 export const sendOtp = async (req, res) => {
     try {
@@ -16,8 +17,13 @@ export const sendOtp = async (req, res) => {
 
         let user = await Customer.findOne({ mobile, deletedAt: null });
         if (!user && purpose === "login") return res.someThingWentWrong({ message: "User not registered..!!" });
+        if (user && purpose === "register") return res.someThingWentWrong({ message: "User already registered..!!" });
 
         const otp = generateOtp();
+        const isSent = await sendOTP(mobile, otp);
+        if (!isSent) return res.someThingWentWrong({ message: "Failed to send OTP" });
+
+        await OtpVerification.deleteMany({ phoneNumber: mobile });
         await OtpVerification.create({ phoneNumber: mobile, otpCode: otp, purpose, bookingId, expiresAt: nowPlusMinutes(config.otpExpiryMinutes) });
 
         return res.success(environment === "development" ? otp : "", "OTP sent");

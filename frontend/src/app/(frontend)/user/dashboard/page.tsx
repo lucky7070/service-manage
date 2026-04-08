@@ -13,7 +13,7 @@ export default function HomePage() {
 
     useEffect(() => {
         (async () => {
-            const { data } = await AxiosHelper.getData("/auth/profile");
+            const { data } = await AxiosHelper.getData("/customer/profile");
             if (data.status) {
                 setUser(data.data);
             } else {
@@ -28,7 +28,7 @@ export default function HomePage() {
             <pre>{JSON.stringify(user, null, 2)}</pre>
 
             <Button variant="outline" onClick={async () => {
-                const { data } = await AxiosHelper.postData("/auth/logout", {});
+                const { data } = await AxiosHelper.postData("/customer/logout", {});
                 if (data.status) {
                     router.push("/login");
                 } else {

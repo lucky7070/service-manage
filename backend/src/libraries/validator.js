@@ -44,7 +44,6 @@ const imageRequired = check("image", "Profile image is required.").custom((value
     return true;
 });
 
-const resetToken = check("resetToken", "Reset token is required.").trim().notEmpty();
 const otp = check("otp", "Enter the 6-digit code.").trim().notEmpty().matches(/^[0-9]{6}$/).withMessage("OTP must be 6 digits.");
 const currentPassword = check("current_password", "Current password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
 const newPassword = check("new_password", "New password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
@@ -65,6 +64,22 @@ const metaKeywords = check("metaKeywords").optional({ values: "falsy" }).isLengt
 const content = check("content").optional({ values: "falsy" }).isLength({ max: 200000 }).trim();
 const contentHi = check("contentHi").optional({ values: "falsy" }).isLength({ max: 200000 }).trim();
 const viewCount = check("viewCount", "View count must be 0 or greater.").optional({ values: "falsy" }).isInt({ min: 0 });
+const cityIdProvider = check("cityId", "City ID is required.").trim().notEmpty().isMongoId();
+const serviceCategoryIdProvider = check("serviceCategoryId", "Service category is required.").trim().notEmpty().isMongoId();
+const providerImageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
+    if (!req.files?.image?.[0]?.filename) throw new Error("Profile image is required.");
+    return true;
+});
+
+const providerPanDocRequired = check("panCardDocument", "PAN card document is required.").custom((value, { req }) => {
+    if (!req.files?.panCardDocument?.[0]?.filename) throw new Error("PAN card document is required.");
+    return true;
+});
+
+const providerAadharDocRequired = check("aadharDocument", "Aadhar document is required.").custom((value, { req }) => {
+    if (!req.files?.aadharDocument?.[0]?.filename) throw new Error("Aadhar document is required.");
+    return true;
+});
 
 export const validator = (method) => {
 
@@ -101,7 +116,7 @@ export const validator = (method) => {
             output = [name, customerStatus, slugServiceCategory, nameHiCategory, descriptionCategory, displayOrderCategory];
             break;
         case "service-provider":
-            output = [name, mobile, email, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider];
+            output = [name, mobile, email, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
             break;
         case "service-provider-status":
             output = [objectIdParam, profileStatusProviderRequired, isVerifiedProvider];
@@ -122,17 +137,13 @@ export const validator = (method) => {
             output = [email];
             break;
         case "admin-forgot-password-reset":
-            output = [
-                email, otp,
-                newPassword.custom((value, { req }) => {
-                    if (value === req.body.current_password) throw new Error("New password must be different from your current password.");
-                    return true;
-                }),
-                confirmPassword
-            ];
+            output = [email, otp, newPassword, confirmPassword];
             break;
         case "admin-profile-password":
-            output = [currentPassword, newPassword, confirmPassword];
+            output = [currentPassword, newPassword.custom((value, { req }) => {
+                if (value === req.body.current_password) throw new Error("New password must be different from your current password.");
+                return true;
+            }), confirmPassword];
             break;
         case "faq":
             output = [question, answer, customerStatus, displayOrder];
@@ -145,6 +156,9 @@ export const validator = (method) => {
             break;
         case "cms-page":
             output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
+            break;
+        case "service-provider-register":
+            output = [name, mobile, email, cityIdProvider, serviceCategoryIdProvider, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
             break;
         case "setting-update":
             output = [settingType];

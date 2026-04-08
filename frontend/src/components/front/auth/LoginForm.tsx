@@ -33,7 +33,7 @@ export default function LoginForm() {
 
     const sendOtp = async (mobile: string, setOTP: (otp: string) => void) => {
         setLoading(true);
-        const { data } = await AxiosHelper.postData("/auth/send-otp", { mobile: mobile.trim(), purpose: "login" });
+        const { data } = await AxiosHelper.postData("/customer/send-otp", { mobile: mobile.trim(), purpose: "login" });
         if (data.status) {
             toast.success(data.message || "OTP sent.");
             setStep("otp");
@@ -47,7 +47,7 @@ export default function LoginForm() {
 
     const verifyOtp = async ({ mobile, otp }: { mobile: string, otp: string }) => {
         setLoading(true);
-        const { data } = await AxiosHelper.postData("/auth/register", { mobile, otp });
+        const { data } = await AxiosHelper.postData("/customer/register", { mobile, otp });
         if (data.status) {
             toast.success(data.message || "Login successful.");
             router.push("/user/dashboard");

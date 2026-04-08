@@ -38,7 +38,7 @@ export default function RegisterForm() {
 
     const sendOtp = async (mobile: string, setOTP: (otp: string) => void) => {
         setLoading(true);
-        const { data } = await AxiosHelper.postData("/auth/send-otp", { mobile: mobile.trim(), purpose: "registration" });
+        const { data } = await AxiosHelper.postData("/customer/send-otp", { mobile: mobile.trim(), purpose: "registration" });
         if (data.status) {
             toast.success(data.message || "OTP sent.");
             setStep("otp");
@@ -52,7 +52,7 @@ export default function RegisterForm() {
 
     const registerAndVerify = async ({ name, mobile, otp }: { name: string, mobile: string, otp: string }) => {
         setLoading(true);
-        const { data } = await AxiosHelper.postData("/auth/register", { mobile, otp, name });
+        const { data } = await AxiosHelper.postData("/customer/register", { mobile, otp, name });
         if (data.status) {
             toast.success(data.message || "Account created successfully.");
             router.push("/user/dashboard");

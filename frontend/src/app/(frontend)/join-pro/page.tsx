@@ -1,12 +1,20 @@
 "use client"
 
-import { useState, type ChangeEvent } from "react"
+import { Formik, Form, Field, ErrorMessage } from "formik"
+import * as Yup from "yup"
+import { toast } from "react-toastify"
+import FrontAsyncSelect from "@/components/front/ui/async-select"
 import { Header } from "@/components/front/header"
 import { Footer } from "@/components/front/footer"
 import { Input } from "@/components/front/ui/input"
 import { Button } from "@/components/front/ui/button"
-import { Select } from "../../../components/front/ui/select"
+import Label from "@/components/front/ui/label"
+import AxiosHelper from "@/helpers/AxiosHelper"
+import { PHONE_REGEXP } from "@/config"
 import { Briefcase, TrendingUp, Calendar, Shield, Users, Smartphone, CheckCircle, ArrowRight, Star, IndianRupee } from "lucide-react"
+import { Textarea } from "@/components/front/ui/textarea"
+import { useState } from "react"
+
 
 const benefits = [
     {
@@ -58,31 +66,43 @@ const testimonials = [
     },
 ]
 
-const services = [
-    "Electrician",
-    "Plumber",
-    "House Cleaning",
-    "AC Repair",
-    "Painter",
-    "Carpenter",
-    "Pest Control",
-    "Appliance Repair",
-]
-
 export default function JoinProPage() {
-    const [formData, setFormData] = useState({
-        name: "",
-        phone: "",
-        email: "",
-        city: "",
-        service: "",
-        experience: "",
-    })
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        // Handle form submission
-    }
+    const [city, setCity] = useState<{ value: string; label: string } | null>(null);
+    const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
+
+    const loadCityOptions = async (inputValue: string) => {
+        const { data } = await AxiosHelper.getData("/cities-list", { query: inputValue, limit: 20 });
+        if (data.status && Array.isArray(data.data)) {
+            return data.data;
+        } else {
+            return [];
+        }
+    };
+
+    const loadServiceCategoryOptions = async (inputValue: string) => {
+        const { data } = await AxiosHelper.getData("/service-categories-list", { query: inputValue, limit: 20 });
+        if (data.status && Array.isArray(data.data)) {
+            return data.data;
+        } else {
+            return [];
+        }
+    };
+
+    const validationSchema = Yup.object({
+        name: Yup.string().trim().min(2, "Full name must be at least 2 characters.").required("Full name is required."),
+        mobile: Yup.string().trim().required("Mobile number is required.").matches(PHONE_REGEXP, "Enter a valid Indian mobile number."),
+        email: Yup.string().trim().email("Enter a valid email address.").required("Email is required."),
+        cityId: Yup.string().trim().required("City is required."),
+        serviceCategoryId: Yup.string().trim().required("Service category is required."),
+        panCardNumber: Yup.string().trim().matches(/^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/, "Enter a valid PAN (e.g. ABCDE1234F).").required("PAN number is required."),
+        aadharNumber: Yup.string().trim().matches(/^[0-9]{12}$/, "Aadhar must be exactly 12 digits.").required("Aadhar number is required."),
+        experienceYears: Yup.number().typeError("Experience years must be numeric.").min(0, "Experience must be 0 or more.").max(80, "Experience cannot exceed 80 years.").required("Experience years is required."),
+        experienceDescription: Yup.string().trim().max(5000, "Description is too long."),
+        image: Yup.mixed().required("Profile image is required."),
+        panCardDocument: Yup.mixed().required("PAN card document is required."),
+        aadharDocument: Yup.mixed().required("Aadhar document is required.")
+    });
 
     return (
         <>
@@ -123,68 +143,135 @@ export default function JoinProPage() {
                             {/* Registration Form */}
                             <div className="rounded-2xl bg-background p-8 text-foreground">
                                 <h2 className="mb-6 text-2xl font-bold">Register as a Pro</h2>
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                    <div>
-                                        <Input
-                                            placeholder="Full Name"
-                                            value={formData.name}
-                                            onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, name: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <Input
-                                            placeholder="Phone Number"
-                                            value={formData.phone}
-                                            onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <Input
-                                            type="email"
-                                            placeholder="Email Address"
-                                            value={formData.email}
-                                            onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <Input
-                                            placeholder="City"
-                                            value={formData.city}
-                                            onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, city: e.target.value })}
-                                            required
-                                        />
-                                    </div>
-                                    <div>
-                                        <Select
-                                            value={formData.service}
-                                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, service: e.target.value })}
-                                            placeholder="Select Service Category"
-                                        >
-                                            {services.map((s) => (
-                                                <option key={s} value={s.toLowerCase()}>{s}</option>
-                                            ))}
-                                        </Select>
-                                    </div>
-                                    <div>
-                                        <Select
-                                            value={formData.experience}
-                                            onChange={(e: ChangeEvent<HTMLSelectElement>) => setFormData({ ...formData, experience: e.target.value })}
-                                            placeholder="Years of Experience"
-                                        >
-                                            <option value="0-1">0-1 years</option>
-                                            <option value="1-3">1-3 years</option>
-                                            <option value="3-5">3-5 years</option>
-                                            <option value="5+">5+ years</option>
-                                        </Select>
-                                    </div>
-                                    <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                                        Apply Now
-                                        <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Button>
-                                </form>
+                                <Formik
+                                    initialValues={{
+                                        name: "",
+                                        mobile: "",
+                                        email: "",
+                                        cityId: "",
+                                        serviceCategoryId: "",
+                                        panCardNumber: "",
+                                        aadharNumber: "",
+                                        experienceYears: "",
+                                        experienceDescription: "",
+                                        image: null,
+                                        panCardDocument: null,
+                                        aadharDocument: null
+                                    }}
+                                    validationSchema={validationSchema}
+                                    onSubmit={async (values, { setSubmitting, resetForm }) => {
+                                        setSubmitting(true);
+
+                                        const { data } = await AxiosHelper.postData("/service-provider/register", values, true);
+                                        if (data.status) {
+                                            toast.success(data.message || "Registration submitted successfully.");
+                                            resetForm();
+                                            setServiceCategory(null);
+                                            setCity(null);
+                                        } else {
+                                            toast.error(data?.message || "Unable to submit registration.");
+                                        }
+                                        
+                                        setSubmitting(false);
+                                    }}
+                                >
+                                    {({ setFieldValue, isSubmitting }) => (
+                                        <Form className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <div>
+                                                <Label>Full Name</Label>
+                                                <Field as={Input} name="name" type="text" placeholder="John Doe" maxLength={100} />
+                                                <ErrorMessage name="name" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>Phone Number</Label>
+                                                <Field as={Input} name="mobile" type="tel" placeholder="9876543210" inputMode="numeric" maxLength={10} />
+                                                <ErrorMessage name="mobile" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>Email Address</Label>
+                                                <Field as={Input} name="email" type="email" placeholder="john@example.com" maxLength={100} />
+                                                <ErrorMessage name="email" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>City</Label>
+                                                <FrontAsyncSelect
+                                                    instanceId="join-pro-city-select"
+                                                    inputId="join-pro-city-select-input"
+                                                    cacheOptions
+                                                    defaultOptions
+                                                    loadOptions={loadCityOptions}
+                                                    isSearchable
+                                                    placeholder="Select city"
+                                                    value={city}
+                                                    onChange={(option) => {
+                                                        setFieldValue("cityId", option?.value || "")
+                                                        setCity(option || null);
+                                                    }}
+                                                />
+                                                <ErrorMessage name="cityId" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>Service Category</Label>
+                                                <FrontAsyncSelect
+                                                    instanceId="join-pro-service-category-select"
+                                                    inputId="join-pro-service-category-select-input"
+                                                    cacheOptions
+                                                    defaultOptions
+                                                    loadOptions={loadServiceCategoryOptions}
+                                                    isSearchable
+                                                    placeholder="Select service category"
+                                                    value={serviceCategory}
+                                                    onChange={(option) => {
+                                                        setFieldValue("serviceCategoryId", option?.value || "")
+                                                        setServiceCategory(option || null);
+                                                    }}
+                                                />
+                                                <ErrorMessage name="serviceCategoryId" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>PAN Number</Label>
+                                                <Field as={Input} name="panCardNumber" type="text" placeholder="ABCDE1234F" maxLength={10} />
+                                                <ErrorMessage name="panCardNumber" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>Aadhar Number</Label>
+                                                <Field as={Input} name="aadharNumber" type="text" placeholder="123412341234" maxLength={12} />
+                                                <ErrorMessage name="aadharNumber" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>Years of Experience</Label>
+                                                <Field as={Input} name="experienceYears" type="number" min={0} max={80} placeholder="3" />
+                                                <ErrorMessage name="experienceYears" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div className="col-span-1 sm:col-span-2">
+                                                <Label>Experience Description</Label>
+                                                <Field as={Textarea} name="experienceDescription" rows={4} placeholder="Briefly describe your experience" maxLength={5000} />
+                                                <ErrorMessage name="experienceDescription" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>Profile Image</Label>
+                                                <Input type="file" accept="image/*,application/pdf" onChange={(e) => setFieldValue("image", e.currentTarget.files?.[0] ?? null)} />
+                                                <ErrorMessage name="image" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>PAN Card Document</Label>
+                                                <Input type="file" accept="image/*,application/pdf" onChange={(e) => setFieldValue("panCardDocument", e.currentTarget.files?.[0] ?? null)} />
+                                                <ErrorMessage name="panCardDocument" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div>
+                                                <Label>Aadhar Document</Label>
+                                                <Input type="file" accept="image/*,application/pdf" onChange={(e) => setFieldValue("aadharDocument", e.currentTarget.files?.[0] ?? null)} />
+                                                <ErrorMessage name="aadharDocument" component="small" className="mt-1 block text-xs text-rose-600" />
+                                            </div>
+                                            <div className="col-span-1 sm:col-span-2 pt-2">
+                                                <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isSubmitting}>
+                                                    {isSubmitting ? "Please wait..." : "Apply Now"}
+                                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </Form>
+                                    )}
+                                </Formik>
                                 <p className="mt-4 text-center text-xs text-muted-foreground">
                                     By registering, you agree to our Terms of Service and Privacy Policy
                                 </p>

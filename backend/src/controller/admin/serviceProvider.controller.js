@@ -29,6 +29,7 @@ export const createServiceProvider = async (req, res) => {
             mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument,
             experienceYears: experienceYears ?? 0,
             experienceDescription: experienceDescription?.trim() || null,
+            registerFrom: "admin",
             profileStatus: "approved",
             isActive: true,
             isVerified: true,

@@ -1,0 +1,49 @@
+import { City, ServiceCategory } from "../models/index.js";
+import { escapeRegex } from "../helpers/utils.js";
+
+export const listCities = async (req, res) => {
+    try {
+        const query = String(req.query.query || "").trim();
+        const limitRaw = Number(req.query.limit);
+        const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 20) : 20;
+
+        const filter = { deletedAt: null, isActive: true };
+        if (query) filter.label = { $regex: escapeRegex(query), $options: "i" };
+
+        const rows = await City.aggregate([
+            { $lookup: { from: "states", localField: "stateId", foreignField: "_id", as: "state" } },
+            { $unwind: "$state" },
+            { $project: { value: '$_id', label: { $concat: ["$name", ", ", "$state.name"] }, deletedAt: 1, isActive: 1 } },
+            { $match: filter },
+            { $sort: { label: 1 } },
+            { $limit: limit }
+        ]);
+
+        return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listServiceCategories = async (req, res) => {
+    try {
+        const query = String(req.query.query || "").trim();
+        const limitRaw = Number(req.query.limit);
+        const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 20) : 20;
+
+        const filter = { deletedAt: null, isActive: true };
+        if (query) filter.name = { $regex: escapeRegex(query), $options: "i" };
+
+        const rows = await ServiceCategory.aggregate([
+            { $match: filter },
+            { $project: { value: '$_id', label: '$name' } },
+            { $sort: { label: 1 } },
+            { $limit: limit }
+        ]);
+
+        return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
