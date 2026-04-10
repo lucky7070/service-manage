@@ -18,6 +18,7 @@ import { getServiceType, createServiceType, updateServiceType, deleteServiceType
 import { createBanner, deleteBanner, getBanner, updateBanner } from "../controller/admin/banner.controller.js";
 import { createCmsPage, deleteCmsPage, getCmsPages, getSingleCmsPage, updateCmsPage } from "../controller/admin/cmsPage.controller.js";
 import { deleteEnquiry, getEnquiry, resolveEnquiry } from "../controller/admin/enquiry.controller.js";
+import { createTestimonial, deleteTestimonial, getSingleTestimonial, getTestimonial, updateTestimonial } from "../controller/admin/testimonial.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
 import { Storage } from "../libraries/storage.js";
 
@@ -29,6 +30,7 @@ const serviceCategoryStorage = new Storage({ dir: "service-categories", isImage:
 const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: true, isDoc: true, fileSize: 5 });
 const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provider-work", isImage: true, isDoc: false, fileSize: 2 });
 const bannerStorage = new Storage({ dir: "banners", isImage: true, isDoc: false, fileSize: 5 });
+const testimonialStorage = new Storage({ dir: "testimonials", isImage: true, isDoc: false, fileSize: 3 });
 
 router.use(requireAdminAuth);
 
@@ -143,6 +145,13 @@ router.get("/banners", getBanner);
 router.get("/enquiries", getEnquiry);
 router.put("/enquiries/:id/resolve", validator("enquiry-resolve"), resolveEnquiry);
 router.delete("/enquiries/:id", deleteEnquiry);
+
+// Testimonials
+router.post("/testimonials", testimonialStorage.single("image"), validator("testimonial"), createTestimonial);
+router.put("/testimonials/:id", testimonialStorage.single("image"), validator("testimonial"), updateTestimonial);
+router.delete("/testimonials/:id", deleteTestimonial);
+router.get("/testimonials/:id", getSingleTestimonial);
+router.get("/testimonials", getTestimonial);
 
 // CMS Pages
 router.post("/cms-pages", validator("cms-page"), createCmsPage);

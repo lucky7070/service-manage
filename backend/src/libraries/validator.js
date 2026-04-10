@@ -5,7 +5,7 @@ import { trapErrors } from "../middlewares/trapErrors.js";
 const email = check("email", "Valid email is required.").exists().notEmpty().isEmail().isLength({ min: 2, max: 100 }).trim().normalizeEmail().toLowerCase();
 const password = check("password", "Password must be greater then 5 digit.!!").exists().notEmpty().isLength({ min: 5, max: 50 }).trim();
 const name = check("name", "Name is required.").exists().notEmpty().isLength({ min: 2, max: 100 }).trim();
-const status = check("status", "Status is required.").exists().notEmpty().isIn([0, 1]);
+const status = check("status", "Status is required.").exists().notEmpty().isIn([0, 1, "0", "1"]);
 const mobile = check("mobile", "Enter a valid Indian mobile number.").trim().notEmpty().matches(PHONE_REGEXP).withMessage("Enter a valid Indian mobile number.").isInt().customSanitizer(value => String(value)).isLength({ min: 10, max: 10 }).withMessage('mobile must be exactly 10 digits').trim();
 const roleId = check("roleId", "Role ID is required.").exists().notEmpty().isMongoId();
 const countryId = check("countryId", "Country ID is required.").exists().notEmpty().isMongoId();
@@ -16,7 +16,6 @@ const subject = check("subject", "Subject must be 2–200 characters.").trim().n
 const message = check("message", "Message must be 10–5000 characters.").trim().notEmpty().isLength({ min: 10, max: 5000 });
 
 const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().notEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
-const customerStatus = check("status", "Status is required.").exists().notEmpty().isIn([0, 1, "0", "1"]);
 
 const tagFor = check("tagFor", "Tag for is required.").exists().notEmpty().isIn(["customer", "provider"]);
 const tagName = check("tagName", "Tag name is required.").exists().notEmpty().isLength({ min: 1, max: 100 }).trim();
@@ -57,6 +56,10 @@ const confirmPassword = check("confirm_password", "Please confirm your new passw
 const question = check("question", "Question is required.").trim().notEmpty().isLength({ min: 3, max: 2000 });
 const answer = check("answer", "Answer is required.").trim().notEmpty().isLength({ min: 3, max: 10000 });
 const displayOrder = check("displayOrder", "Display order must be numeric.").optional({ values: "falsy" }).isInt({ min: 0, max: 999999 });
+const testimonialForm = check("form", "Form must be customer or provider.").trim().notEmpty().isIn(["customer", "provider"]);
+const designation = check("designation", "Designation is required.").trim().notEmpty().isLength({ min: 2, max: 100 });
+const rating = check("rating", "Rating must be between 1 and 5.").exists().notEmpty().isFloat({ min: 1, max: 5 });
+const review = check("review", "Review is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
 const bannerType = check("bannerType", "Banner type is required.").optional({ values: "falsy" }).isIn(BANNER_TYPES);
 const bannerLink = check("link", "Invalid link.").optional({ values: "falsy" }).isLength({ max: 500 }).trim();
 const pageSlug = check("pageSlug", "Page slug is required.").trim().notEmpty().isLength({ min: 2, max: 150 }).matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -107,16 +110,16 @@ export const validator = (method) => {
             output = [countryId, stateId, name, status];
             break;
         case "customer":
-            output = [name, mobile, email, dateOfBirth, customerStatus];
+            output = [name, mobile, email, dateOfBirth, status];
             break;
         case "rating-tag":
-            output = [tagFor, tagName, tagType, customerStatus];
+            output = [tagFor, tagName, tagType, status];
             break;
         case "service-type":
-            output = [categoryIdService, name, customerStatus];
+            output = [categoryIdService, name, status];
             break;
         case "service-category":
-            output = [name, customerStatus, slugServiceCategory, nameHiCategory, descriptionCategory, displayOrderCategory];
+            output = [name, status, slugServiceCategory, nameHiCategory, descriptionCategory, displayOrderCategory];
             break;
         case "service-provider":
             output = [name, mobile, email, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
@@ -149,7 +152,10 @@ export const validator = (method) => {
             }), confirmPassword];
             break;
         case "faq":
-            output = [question, answer, customerStatus, displayOrder];
+            output = [question, answer, status, displayOrder];
+            break;
+        case "testimonial":
+            output = [testimonialForm, name, designation, rating, review, status];
             break;
         case "banner":
             output = [bannerType, bannerLink, displayOrder];

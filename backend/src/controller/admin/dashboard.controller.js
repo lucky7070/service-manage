@@ -1,10 +1,10 @@
-import { Admin, Banner, City, Country, Customer, Faq, PredefinedRatingTag, Role, ServiceCategory, ServiceProvider, ServiceType, State } from "../../models/index.js";
+import { Admin, Banner, City, Country, Customer, Faq, PredefinedRatingTag, Role, ServiceCategory, ServiceProvider, ServiceType, State, Testimonial } from "../../models/index.js";
 
 export const getDashboardStats = async (req, res) => {
     try {
         const filter = { deletedAt: null };
 
-        const [roles, admins, countries, states, cities, customers, predefinedRatingTags, faqs, banners, serviceCategories, serviceTypes, serviceProviders] = await Promise.all([
+        const [roles, admins, countries, states, cities, customers, predefinedRatingTags, faqs, banners, serviceCategories, serviceTypes, serviceProviders, testimonials] = await Promise.all([
             Role.countDocuments(filter),
             Admin.countDocuments(filter),
             Country.countDocuments(filter),
@@ -16,7 +16,8 @@ export const getDashboardStats = async (req, res) => {
             Banner.countDocuments(filter),
             ServiceCategory.countDocuments(filter),
             ServiceType.countDocuments(filter),
-            ServiceProvider.countDocuments(filter)
+            ServiceProvider.countDocuments(filter),
+            Testimonial.countDocuments(filter)
         ]);
 
         return res.success({
@@ -31,7 +32,8 @@ export const getDashboardStats = async (req, res) => {
             banners,
             serviceCategories,
             serviceTypes,
-            serviceProviders
+            serviceProviders,
+            testimonials
         });
     } catch (error) {
         return res.someThingWentWrong(error);

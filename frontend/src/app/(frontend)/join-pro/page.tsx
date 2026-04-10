@@ -3,8 +3,10 @@ import { JOIN_PRO_BENEFITS, JOIN_PRO_TESTIMONIALS, } from "@/config/constants";
 import { Briefcase, CheckCircle, ArrowRight, Star } from "lucide-react"
 import ProRegistrationForm from "@/components/front/forms/ProRegistrationForm";
 import { Button } from "@/components/front/ui";
+import { getTestimonials } from "@/lib/settings.server";
 
-export default function JoinProPage() {
+export default async function JoinProPage() {
+    const testimonials = await getTestimonials("provider")
     return (
         <>
             {/* Hero */}
@@ -80,7 +82,7 @@ export default function JoinProPage() {
                         </h2>
                     </div>
                     <div className="grid gap-8 md:grid-cols-2">
-                        {JOIN_PRO_TESTIMONIALS.map((t) => (
+                        {testimonials.map((t) => (
                             <div key={t.name} className="rounded-2xl border bg-card p-8">
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
@@ -89,18 +91,17 @@ export default function JoinProPage() {
                                         </div>
                                         <div>
                                             <h4 className="font-semibold text-foreground">{t.name}</h4>
-                                            <p className="text-sm text-muted-foreground">{t.service}</p>
+                                            <p className="text-sm text-muted-foreground">{t.designation}</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                        <span className="font-medium text-foreground">{t.rating}</span>
+                                        {Array.from({ length: t.rating }).map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
                                     </div>
                                 </div>
-                                <p className="mb-4 text-muted-foreground">{t.text}</p>
+                                <p className="mb-4 text-muted-foreground">{t.review}</p>
                                 <div className="flex items-center gap-2 text-sm font-semibold text-green-600">
                                     <Briefcase className="h-4 w-4" />
-                                    <span>Avg. Earnings: {t.earnings}</span>
+                                    <span>Avg. Earnings: ₹10,000</span>
                                 </div>
                             </div>
                         ))}

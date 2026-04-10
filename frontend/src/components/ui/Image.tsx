@@ -1,3 +1,5 @@
+"use client";
+
 import DEFAULT_NOT_FOUND_SRC from "@/assets/images/no-image.jpg";
 
 const Image = (props: React.ImgHTMLAttributes<HTMLImageElement>) => {

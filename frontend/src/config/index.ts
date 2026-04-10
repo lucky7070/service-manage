@@ -1,4 +1,4 @@
-import { Building2, CircleHelp, FileText, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench } from "lucide-react";
+import { Building2, CircleHelp, FileText, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -172,6 +172,15 @@ export const PERMISSIONS = [
             { id: 414, label: "View CMS Page" },
         ]
     },
+    {
+        name: "Testimonial Management",
+        permissions: [
+            { id: 421, label: "Create Testimonial" },
+            { id: 422, label: "Update Testimonial" },
+            { id: 423, label: "Delete Testimonial" },
+            { id: 424, label: "View Testimonial" },
+        ]
+    },
 
 ];
 
@@ -197,6 +206,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/service-types", label: "Service types", icon: Wrench, permission_id: 364 },
             { href: "/admin/faqs", label: "FAQs", icon: CircleHelp, permission_id: 384 },
             { href: "/admin/banners", label: "Banners", icon: ImageIcon, permission_id: 394 },
+            { href: "/admin/testimonials", label: "Testimonials", icon: Quote, permission_id: 424 },
             { href: "/admin/cms-pages", label: "CMS Pages", icon: FileText, permission_id: 414 },
         ]
     },
@@ -317,5 +327,10 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/cms-pages/:slug/edit",
         permission_id: 412,
         items: [{ label: "CMS Pages", href: "/admin/cms-pages" }, { label: "Edit" }]
+    },
+    {
+        path: "/admin/testimonials",
+        permission_id: 424,
+        items: [{ label: "Testimonials" }]
     },
 ];

@@ -7,11 +7,14 @@ public/uploads/*
 public/uploads/admins/*
 public/uploads/customers/*
 public/uploads/service-provider/*
+public/uploads/testimonials/*
 
 !public/uploads/admins/
 !public/uploads/customers/
 !public/uploads/service-provider/
+!public/uploads/testimonials/
 !public/uploads/img-not-found.jpg
 !public/uploads/admins/default.png
 !public/uploads/customers/default.png
 !public/uploads/service-provider/default.png
+!public/uploads/testimonials/default.png

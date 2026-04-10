@@ -1,4 +1,4 @@
-import { City, Enquiry, ServiceCategory } from "../models/index.js";
+import { City, Enquiry, ServiceCategory, Testimonial } from "../models/index.js";
 import { escapeRegex } from "../helpers/utils.js";
 
 export const listCities = async (req, res) => {
@@ -59,6 +59,28 @@ export const submitEnquiry = async (req, res) => {
             message: String(message).trim()
         });
         return res.success({}, "Thanks — we received your message and will get back to you soon.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listTestimonials = async (req, res) => {
+    try {
+        const limitRaw = Number(req.query.limit);
+        const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 20) : 20;
+        const form = String(req.query.form || "").trim();
+
+        const filter = { deletedAt: null, isActive: true };
+        if (form) filter.form = form;
+
+        const rows = await Testimonial.aggregate([
+            { $match: filter },
+            { $project: { _id: 1, form: 1, name: 1, designation: 1, image: 1, rating: 1, review: 1, createdAt: 1 } },
+            { $sort: { createdAt: -1 } },
+            { $limit: limit }
+        ]);
+
+        return res.success(rows);
     } catch (error) {
         return res.someThingWentWrong(error);
     }
