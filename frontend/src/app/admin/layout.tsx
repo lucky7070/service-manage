@@ -4,10 +4,8 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminTopbar from "@/components/admin/AdminTopbar";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
-import AxiosHelper from "@/helpers/AxiosHelper";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { updateSettings } from "@/store/slices/settingSlice";
 import { updateAdmin } from "@/store/slices/adminSlice";
 import PageLoader from "@/components/admin/PageLoader";
 import { ADMIN_ROUTE_PERMISSIONS, AUTH_PAGES } from "@/config";
@@ -35,13 +33,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (requiredPermission === false) return false;
         return admin.permissions.includes(requiredPermission);
     }, [admin.permissions, pathname]);
-
-    useEffect(() => {
-        (async () => {
-            const { data } = await AxiosHelper.getData("/general-settings");
-            if (data.status) dispatch(updateSettings(data.data));
-        })();
-    }, [dispatch]);
 
     useEffect(() => {
         (async () => {

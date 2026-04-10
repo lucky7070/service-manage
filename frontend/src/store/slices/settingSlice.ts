@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-type AppState = {
+export type SettingsState = {
     application_name: string;
     phone: string;
     email: string;
@@ -14,7 +14,7 @@ type AppState = {
     instagram: string;
 };
 
-const initialState: AppState = {
+export const initialSettingsState: SettingsState = {
     favicon: "",
     logo: "",
     application_name: "",
@@ -30,12 +30,12 @@ const initialState: AppState = {
 
 const appSlice = createSlice({
     name: "settings",
-    initialState,
+    initialState: initialSettingsState,
     reducers: {
-        updateSettings: (state, action: PayloadAction<Partial<AppState>>) => {
+        updateSettings: (state, action: PayloadAction<Partial<SettingsState>>) => {
             return { ...state, ...action.payload }
         },
-        resetSettings: () => initialState,
+        resetSettings: () => initialSettingsState,
     }
 });
 

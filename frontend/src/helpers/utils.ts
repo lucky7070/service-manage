@@ -1,4 +1,5 @@
 import { ADMIN_ROUTE_PERMISSIONS, AdminBreadcrumbItem } from "@/config";
+import envConfig from "@/config/env";
 import { SweetAlertOptions } from "sweetalert2";
 
 export function cn(...parts: Array<string | undefined | false | null>): string {
@@ -7,7 +8,7 @@ export function cn(...parts: Array<string | undefined | false | null>): string {
 
 export const resolveFileUrl = (fileName?: string | null) => {
     if (!fileName) return null;
-    return fileName.startsWith("http") ? fileName : `${process.env.NEXT_PUBLIC_UPLOAD_URL}${fileName}`;
+    return fileName.startsWith("http") ? fileName : `${envConfig.uploadUrl}${fileName}`;
 };
 
 export const getIconConfig = (icon: string) => {
@@ -117,5 +118,5 @@ export function slugify(s: string): string {
 }
 
 export function isProductionEnvironment(): boolean {
-    return process.env.NODE_ENV === "production";
+    return envConfig.environment === "production";
 }

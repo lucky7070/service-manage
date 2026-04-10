@@ -2,12 +2,15 @@
 
 import { Provider } from "react-redux";
 import { ToastContainer } from "react-toastify";
-import { store } from "@/store";
-import { useLayoutEffect } from "react";
+import { makeStore } from "@/store";
+import { useLayoutEffect, useMemo } from "react";
 import { setTheme, type ThemeMode } from "@/store/slices/appSlice";
+import type { SettingsState } from "@/store/slices/settingSlice";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({ children, initialSettings }: { children: React.ReactNode; initialSettings?: Partial<SettingsState> }) {
+
+    const store = useMemo(() => makeStore({ settings: initialSettings || {} }), [initialSettings]);
 
     useLayoutEffect(() => {
         const stored = window.localStorage.getItem("theme");
@@ -25,7 +28,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         });
 
         return () => { unsubscribe() };
-    }, []);
+    }, [store]);
 
     return <Provider store={store}>
         {children}

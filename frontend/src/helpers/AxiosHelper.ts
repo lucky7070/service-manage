@@ -1,26 +1,20 @@
+import envConfig from "@/config/env";
 import axios, { isAxiosError, type AxiosError, type AxiosResponse } from "axios";
 import { toast } from "react-toastify";
-
-const env = {
-    apiBase: process.env.NEXT_PUBLIC_API_URL,
-    apiBaseAdmin: process.env.NEXT_PUBLIC_API_URL_ADMIN,
-    apiLicence: process.env.NEXT_PUBLIC_API_LICENCE || "",
-    logErrors: process.env.NEXT_PUBLIC_LOG_ERRORS_IN_CONSOLE || "false"
-};
 
 export const getAxios = (key?: number) => {
     switch (key) {
         case 1:
             return axios.create({
                 withCredentials: true,
-                baseURL: env.apiBaseAdmin,
-                headers: { "x-api-key": env.apiLicence }
+                baseURL: envConfig.apiUrlAdmin,
+                headers: { "x-api-key": envConfig.apiLicence }
             });
         default:
             return axios.create({
                 withCredentials: true,
-                baseURL: env.apiBase,
-                headers: { "x-api-key": env.apiLicence }
+                baseURL: envConfig.apiUrl,
+                headers: { "x-api-key": envConfig.apiLicence }
             });
     }
 };
@@ -35,11 +29,11 @@ export const checkError = (error: AxiosError) => {
 };
 
 export const errorData = (error: AxiosError): AxiosResponse<unknown> | { status: false; message: string; data: unknown } => {
-    if (env.logErrors === "true") console.log(error?.response);
+    if (envConfig.logErrorsInConsole) console.log(error?.response);
     if (error.code === "ERR_NETWORK") {
         return { status: false, message: error.message || "Something went wrong..!!", data: error };
     }
-    
+
     checkError(error);
     return error.response ?? { status: false, message: "Something went wrong..!!", data: error };
 };

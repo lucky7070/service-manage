@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Calendar, IndianRupee, Shield, Smartphone, TrendingUp, Users, } from "lucide-react";
 
-// --- Join Pro (marketing) ---
 export type JoinProBenefit = {
     icon: LucideIcon;
     title: string;
@@ -97,3 +96,35 @@ export const FRONTEND_LOGIN_FORM = {
     signInLink: "Sign in",
     backToHome: "Back to home"
 } as const;
+
+
+export const FOOTER_LINKS = [
+    {
+        label: "Services",
+        list: [
+            { name: "Cleaning Services", href: "/services/cleaning" },
+            { name: "Electrical", href: "/services/electrical" },
+            { name: "Plumbing", href: "/services/plumbing" },
+            { name: "Painting", href: "/services/painting" },
+            { name: "Handyman", href: "/services/handyman" },
+            { name: "Appliance Repair", href: "/services/appliance-repair" },
+        ]
+    },
+    {
+        label: "Company",
+        list: [
+            { name: "About Us", href: "/about" },
+            { name: "Terms of Service", href: "/terms" },
+            { name: "Privacy Policy", href: "/privacy" },
+            { name: "Partner with Us", href: "/join-pro" },
+        ]
+    },
+    {
+        label: "Support",
+        list: [
+            { name: "Help Center", href: "/help" },
+            { name: "Safety", href: "/safety" },
+            { name: "Contact Us", href: "/contact" },
+        ]
+    },
+]
