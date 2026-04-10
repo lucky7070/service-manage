@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn, resolveFileUrl } from "@/helpers/utils";
-import { Button } from "./Button";
+import { Button } from "@/components/ui/Button";
 import { DownloadCloud } from "lucide-react";
 
 const fileInputClassName = "block w-full min-w-0 cursor-pointer text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-indigo-700 dark:text-slate-300 dark:file:bg-indigo-500/15 dark:file:text-indigo-200";

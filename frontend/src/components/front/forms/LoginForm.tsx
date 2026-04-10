@@ -6,12 +6,9 @@ import { Formik, Form, ErrorMessage, Field } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { Phone } from "lucide-react";
-import { Button } from "@/components/front/ui/button";
-import { Input } from "@/components/front/ui/input";
 import AxiosHelper from "@/helpers/AxiosHelper";
-import { PHONE_REGEXP, OTP_REGEXP } from "@/config";
-import OtpField from "./OtpField";
-import Label from "../ui/label";
+import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
+import { OtpField, Label, Button, Input } from "@/components/front/ui";
 
 type LoginValues = {
     mobile: string;

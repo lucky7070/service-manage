@@ -3,8 +3,14 @@
 import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import LoginOtpForm from "@/components/front/auth/LoginForm"
-import RegisterOtpForm from "@/components/front/auth/RegisterForm"
+import LoginOtpForm from "@/components/front/forms/LoginForm"
+import RegisterOtpForm from "@/components/front/forms/RegisterForm"
+import {
+    FRONTEND_LOGIN_BRAND,
+    FRONTEND_LOGIN_FORM,
+    FRONTEND_LOGIN_HERO,
+    FRONTEND_LOGIN_STATS
+} from "@/config/constants"
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true)
@@ -14,36 +20,30 @@ export default function LoginPage() {
             <div className="hidden w-1/2 bg-linear-to-br from-primary/90 to-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
                 <Link href="/" className="flex items-center gap-2 text-primary-foreground">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/20">
-                        <span className="text-lg font-bold">H</span>
+                        <span className="text-lg font-bold">{FRONTEND_LOGIN_BRAND.mark}</span>
                     </div>
-                    <span className="text-2xl font-bold">HomeServe Pro</span>
+                    <span className="text-2xl font-bold">{FRONTEND_LOGIN_BRAND.name}</span>
                 </Link>
 
                 <div className="space-y-6">
                     <h1 className="text-4xl font-bold leading-tight text-primary-foreground">
-                        Your trusted partner for all home services
+                        {FRONTEND_LOGIN_HERO.headline}
                     </h1>
                     <p className="text-lg text-primary-foreground/80">
-                        Join thousands of happy customers who trust us with their homes
+                        {FRONTEND_LOGIN_HERO.subline}
                     </p>
                     <div className="flex gap-8">
-                        <div>
-                            <div className="text-3xl font-bold text-primary-foreground">50K+</div>
-                            <div className="text-sm text-primary-foreground/70">Happy Customers</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-primary-foreground">10K+</div>
-                            <div className="text-sm text-primary-foreground/70">Verified Pros</div>
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-primary-foreground">4.8</div>
-                            <div className="text-sm text-primary-foreground/70">Average Rating</div>
-                        </div>
+                        {FRONTEND_LOGIN_STATS.map((stat) => (
+                            <div key={stat.label}>
+                                <div className="text-3xl font-bold text-primary-foreground">{stat.value}</div>
+                                <div className="text-sm text-primary-foreground/70">{stat.label}</div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
                 <p className="text-sm text-primary-foreground/60">
-                    Trusted by homeowners across India
+                    {FRONTEND_LOGIN_HERO.footer}
                 </p>
             </div>
 
@@ -51,34 +51,34 @@ export default function LoginPage() {
                 <div className="mb-8 lg:hidden">
                     <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
                         <ArrowLeft className="h-4 w-4" />
-                        Back to home
+                        {FRONTEND_LOGIN_FORM.backToHome}
                     </Link>
                 </div>
 
                 <div className="mx-auto w-full max-w-md">
                     <div className="mb-8">
                         <h2 className="text-3xl font-bold text-foreground">
-                            {isLogin ? "Welcome back" : "Create account"}
+                            {isLogin ? FRONTEND_LOGIN_FORM.welcomeBack : FRONTEND_LOGIN_FORM.createAccount}
                         </h2>
                         <p className="mt-2 text-muted-foreground">
-                            {isLogin ? "Enter your credentials to access your account" : "Fill in your details to get started"}
+                            {isLogin ? FRONTEND_LOGIN_FORM.enterCredentials : FRONTEND_LOGIN_FORM.fillDetails}
                         </p>
                     </div>
 
                     <div className="mb-6 flex rounded-lg bg-secondary p-1">
                         <button onClick={() => setIsLogin(true)} className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${isLogin ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                            Login
+                            {FRONTEND_LOGIN_FORM.loginTab}
                         </button>
                         <button onClick={() => setIsLogin(false)} className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${!isLogin ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                            Sign Up
+                            {FRONTEND_LOGIN_FORM.signUpTab}
                         </button>
                     </div>
 
                     {isLogin ? <LoginOtpForm /> : <RegisterOtpForm />}
                     <p className="mt-6 text-center text-sm text-muted-foreground">
-                        {isLogin ? "Don't have an account? " : "Already have an account? "}
+                        {isLogin ? FRONTEND_LOGIN_FORM.noAccount : FRONTEND_LOGIN_FORM.hasAccount}
                         <Link href="/login" onClick={() => setIsLogin(!isLogin)} className="font-medium text-primary hover:underline">
-                            {isLogin ? "Sign up" : "Sign in"}
+                            {isLogin ? FRONTEND_LOGIN_FORM.signUpLink : FRONTEND_LOGIN_FORM.signInLink}
                         </Link>
                     </p>
                 </div>

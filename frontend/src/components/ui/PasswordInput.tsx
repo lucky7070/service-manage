@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/helpers/utils";
-import { inputClassName } from "./Input";
+import { inputClassName } from "@/components/ui/Input";
 
 export type PasswordInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> & {
     showToggle?: boolean;

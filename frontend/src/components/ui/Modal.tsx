@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn } from "@/helpers/utils";
 import { X } from "lucide-react";
-import { Button } from "./Button";
+import { Button } from "@/components/ui/Button";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl" | "xxl" | "xxxl" | "xxxxl" | "full";
 

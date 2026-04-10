@@ -3,9 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { Search, MapPin, Shield, Clock, Star, Users } from "lucide-react"
-import { Select } from "@/components/front/ui/select"
-import { Input } from "../ui/input"
-import { Button } from "../ui/button"
+import { Select, Input, Button } from "@/components/front/ui"
 
 const cities = [
     { value: "bangalore", label: "Bangalore" },
@@ -119,6 +117,7 @@ export function HeroSection() {
                                     src="/images/hero-home.jpg"
                                     alt="Happy family with professional home service"
                                     fill
+                                    sizes="(min-width: 1024px) min(50vw, 720px), 100vw"
                                     className="object-cover"
                                     priority
                                 />

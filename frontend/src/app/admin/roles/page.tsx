@@ -9,7 +9,7 @@ import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import { Fingerprint, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import AdminPageHeader from "../../../components/admin/AdminPageHeader";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";

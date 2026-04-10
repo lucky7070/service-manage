@@ -11,6 +11,9 @@ const roleId = check("roleId", "Role ID is required.").exists().notEmpty().isMon
 const countryId = check("countryId", "Country ID is required.").exists().notEmpty().isMongoId();
 const stateId = check("stateId", "State ID is required.").exists().notEmpty().isMongoId();
 const settingType = param("type", "Setting type is invalid.").exists().notEmpty().isInt({ min: 1, max: 10 });
+const phone = check("phone", "Enter a valid Indian mobile number.").optional({ values: "falsy" }).trim().matches(PHONE_REGEXP);
+const subject = check("subject", "Subject must be 2–200 characters.").trim().notEmpty().isLength({ min: 2, max: 200 });
+const message = check("message", "Message must be 10–5000 characters.").trim().notEmpty().isLength({ min: 10, max: 5000 });
 
 const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().notEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
 const customerStatus = check("status", "Status is required.").exists().notEmpty().isIn([0, 1, "0", "1"]);
@@ -154,11 +157,14 @@ export const validator = (method) => {
         case "enquiry-resolve":
             output = [objectIdParam, isResolved];
             break;
+        case "enquiry-submit":
+            output = [name, email, phone, subject, message];
+            break;
         case "cms-page":
             output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
             break;
         case "service-provider-register":
-            output = [name, mobile, email, cityIdProvider, serviceCategoryIdProvider, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
+            output = [name, mobile, email, cityIdProvider, serviceCategoryIdProvider, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, otp, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
             break;
         case "setting-update":
             output = [settingType];

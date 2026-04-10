@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import AdminPageHeader from "../../../components/admin/AdminPageHeader";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Button, Input, InputFile, Label, Select, Textarea } from "@/components/ui";
 import PermissionBlock from "@/components/admin/PermissionBlock";

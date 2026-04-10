@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/helpers/utils";
-import { inputClassName } from "./Input";
+import { inputClassName } from "@/components/ui/Input";
 
 export const selectClassName = inputClassName;
 

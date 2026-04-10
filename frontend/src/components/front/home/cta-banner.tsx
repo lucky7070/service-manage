@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowRight, CheckCircle } from "lucide-react"
-import { Button } from "../ui/button"
+import { Button } from "@/components/front/ui"
 
 const benefits = [
     "10,000+ Verified Professionals",

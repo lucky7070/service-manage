@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import AdminPageHeader from "../../../components/admin/AdminPageHeader";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { Button, Input, InputFile, Label, PasswordInput } from "@/components/ui";
 import { toast } from "react-toastify";
 import * as Yup from "yup";

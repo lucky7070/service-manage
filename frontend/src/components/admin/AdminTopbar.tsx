@@ -1,7 +1,6 @@
 "use client";
 
 import { Bell, CheckCheck, ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, User } from "lucide-react";
-import { Moon, Sun } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -12,10 +11,10 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resolveFileUrl } from "@/helpers/utils";
 import Image from "@/components/ui/Image";
 import Link from "next/link";
-import { toggleMobileSidebarOpen, toggleSidebarCollapsed, toggleTheme } from "@/store/slices/appSlice";
+import { toggleMobileSidebarOpen, toggleSidebarCollapsed } from "@/store/slices/appSlice";
 import { updateAdmin } from "@/store/slices/adminSlice";
 import moment from "moment";
-import ThemeToggle from "./ThemeToggle";
+import ThemeToggle from "@/components/admin/ThemeToggle";
 
 export default function AdminTopbar() {
 
@@ -24,7 +23,6 @@ export default function AdminTopbar() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const admin = useAppSelector((state) => state.admin);
-    const isDark = useAppSelector((state) => state.app.theme === "dark");
     const isSidebarCollapsed = useAppSelector((state) => state.app.sidebarCollapsed);
     const profileName = admin.name || "Admin";
     const profileSubText = admin.roleName || admin.email || admin.mobile || "Signed in";

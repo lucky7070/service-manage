@@ -1,5 +1,5 @@
 import { Star, Shield, Clock, BadgeCheck } from "lucide-react"
-import { Button } from "@/components/front/ui/button"
+import { Button } from "@/components/front/ui"
 
 const professionals = [
     {

@@ -6,12 +6,9 @@ import { useRouter } from "next/navigation";
 import { Formik, Form, ErrorMessage, Field } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
-import { Button } from "@/components/front/ui/button";
-import { Input } from "@/components/front/ui/input";
-import OtpField from "./OtpField";
+import { Button, Input, OtpField, Label } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
-import { PHONE_REGEXP, OTP_REGEXP } from "@/config";
-import Label from "../ui/label";
+import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
 import { Phone, User } from "lucide-react";
 
 type RegisterValues = {

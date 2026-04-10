@@ -1,7 +1,7 @@
 "use client";
 
 import OtpInput from "@/components/ui/OtpInput";
-import Label from "../ui/label";
+import { Label } from "@/components/front/ui";
 
 type Props = {
     value: string;

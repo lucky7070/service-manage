@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import AdminPageHeader from "../../../../../components/admin/AdminPageHeader";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Button, Label, ToggleSwitch } from "@/components/ui";
 import { useRouter } from "next/navigation";

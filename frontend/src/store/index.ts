@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
-import settingReducer from "./slices/settingSlice";
-import adminReducer from "./slices/adminSlice";
-import appReducer from "./slices/appSlice";
+import settingReducer from "@/store/slices/settingSlice";
+import adminReducer from "@/store/slices/adminSlice";
+import appReducer from "@/store/slices/appSlice";
 
 export const store = configureStore({
     reducer: {

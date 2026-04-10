@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import { errorData, getAxios } from "./AxiosHelper";
+import { errorData, getAxios } from "@/helpers/AxiosHelper";
 
 const AxiosHelperAdmin = {
     getData: async (url: string, formData: Record<string, unknown> | null = null) => {

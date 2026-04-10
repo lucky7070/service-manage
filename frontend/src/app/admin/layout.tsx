@@ -15,7 +15,7 @@ import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 import { setLoading, setMobileSidebarOpen } from "@/store/slices/appSlice";
 import { compareRoute } from "@/helpers/utils";
 import NotAuthorized from "@/components/admin/NotAuthorized";
-import "./admin.css";
+import "@/app/admin/admin.css";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
 

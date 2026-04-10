@@ -2,9 +2,7 @@
 
 import { useState } from "react"
 import { MapPin, Search, Navigation, X } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, } from "./ui/dialog"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Input } from "@/components/front/ui"
 
 const popularCities = [
     { name: "Bangalore", state: "Karnataka", popular: true },
@@ -37,9 +35,7 @@ export function LocationPickerModal({
     const [searchQuery, setSearchQuery] = useState("")
 
     const filteredCities = popularCities.filter(
-        (city) =>
-            city.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            city.state.toLowerCase().includes(searchQuery.toLowerCase())
+        (city) => city.name.toLowerCase().includes(searchQuery.toLowerCase()) || city.state.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
     const popularCitiesList = filteredCities.filter((c) => c.popular)

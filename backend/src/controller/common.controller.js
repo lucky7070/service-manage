@@ -1,4 +1,4 @@
-import { City, ServiceCategory } from "../models/index.js";
+import { City, Enquiry, ServiceCategory } from "../models/index.js";
 import { escapeRegex } from "../helpers/utils.js";
 
 export const listCities = async (req, res) => {
@@ -47,3 +47,19 @@ export const listServiceCategories = async (req, res) => {
     }
 };
 
+export const submitEnquiry = async (req, res) => {
+    try {
+        const { name, email, phone, subject, message } = req.getBody(["name", "email", "phone", "subject", "message"]);
+        const phoneVal = phone && String(phone).trim() ? String(phone).trim() : null;
+        await Enquiry.create({
+            name: String(name).trim(),
+            email: String(email).trim().toLowerCase(),
+            phone: phoneVal,
+            subject: String(subject).trim(),
+            message: String(message).trim()
+        });
+        return res.success({}, "Thanks — we received your message and will get back to you soon.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};

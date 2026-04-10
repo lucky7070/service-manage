@@ -32,6 +32,7 @@ type FrontAsyncSelectProps = {
     loadOptions: (inputValue: string) => Promise<FrontSelectOption[]>;
     onChange: (option: FrontSelectOption | null) => void;
     placeholder?: string;
+    isDisabled?: boolean;
 };
 
 export default function FrontAsyncSelect({
@@ -44,7 +45,8 @@ export default function FrontAsyncSelect({
     value,
     loadOptions,
     onChange,
-    placeholder = "Search..."
+    placeholder = "Search...",
+    isDisabled = false
 }: FrontAsyncSelectProps) {
     return (
         <AsyncSelect<FrontSelectOption, false>
@@ -56,6 +58,7 @@ export default function FrontAsyncSelect({
             classNames={unstyled ? asyncSelectClassNames : undefined}
             loadOptions={loadOptions}
             isSearchable={isSearchable}
+            isDisabled={isDisabled}
             placeholder={placeholder}
             value={value}
             onChange={(option) => onChange(option)}

@@ -21,6 +21,7 @@ type EnquiryRow = {
     name: string;
     email: string;
     phone: string;
+    subject?: string;
     message: string;
     isResolved?: boolean;
     resolvedAt?: string;
@@ -34,27 +35,13 @@ type EnquiryRecord = {
     pagination: number[];
 };
 
-type SortBy = "name" | "email" | "phone" | "isResolved" | "createdAt";
+type SortBy = "name" | "email" | "phone" | "subject" | "isResolved" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 export default function AdminEnquiriesPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [data, setData] = useState<EnquiryRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{
-        limit: number;
-        pageNo: number;
-        query: string;
-        isResolved: "" | 0 | 1;
-        sortBy: SortBy;
-        sortOrder: SortOrder;
-    }>({
-        limit: 10,
-        pageNo: 1,
-        query: "",
-        isResolved: "",
-        sortBy: "createdAt",
-        sortOrder: "desc"
-    });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; isResolved: "" | 0 | 1; sortBy: SortBy; sortOrder: SortOrder; }>({ limit: 10, pageNo: 1, query: "", isResolved: "", sortBy: "createdAt", sortOrder: "desc" });
 
     const fetchEnquiries = useCallback(async () => {
         const { data } = await AxiosHelperAdmin.getData("/enquiries", param);
@@ -117,7 +104,7 @@ export default function AdminEnquiriesPage() {
                         value={param.query}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
                         className="max-w-xs"
-                        placeholder="Search name, email, phone..."
+                        placeholder="Search name, email, phone, subject..."
                     />
                     <div className="flex flex-wrap items-center gap-2">
                         <Select
@@ -149,6 +136,9 @@ export default function AdminEnquiriesPage() {
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("phone")} name="Phone" active={param.sortBy === "phone"} sortOrder={param.sortOrder} />
                                 </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("subject")} name="Subject" active={param.sortBy === "subject"} sortOrder={param.sortOrder} />
+                                </th>
                                 <th className="px-3 py-2">Message</th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("isResolved")} name="Status" active={param.sortBy === "isResolved"} sortOrder={param.sortOrder} />
@@ -165,6 +155,9 @@ export default function AdminEnquiriesPage() {
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name || "—"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.email || "—"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.phone || "—"}</td>
+                                    <td className="max-w-[200px] px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <span className="line-clamp-2">{row.subject || "—"}</span>
+                                    </td>
                                     <td className="max-w-[460px] px-3 py-2 text-slate-700 dark:text-slate-200">
                                         <span className="line-clamp-2">{row.message || "—"}</span>
                                     </td>

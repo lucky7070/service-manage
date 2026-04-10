@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { AUTH_PAGES, AUTH_PAGES_USER } from "./config";
+import { AUTH_PAGES, AUTH_PAGES_USER } from "@/config";
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;

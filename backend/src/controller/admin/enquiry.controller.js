@@ -9,7 +9,7 @@ export const getEnquiry = async (req, res) => {
 
         limit = limit ? parseInt(limit, 10) : 10;
         pageNo = pageNo ? parseInt(pageNo, 10) : 1;
-        sortBy = ["name", "email", "phone", "isResolved", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
+        sortBy = ["name", "email", "phone", "subject", "isResolved", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
         sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
 
         const filter = { deletedAt: null };
@@ -19,6 +19,7 @@ export const getEnquiry = async (req, res) => {
                 { name: { $regex: q, $options: "i" } },
                 { email: { $regex: q, $options: "i" } },
                 { phone: { $regex: q, $options: "i" } },
+                { subject: { $regex: q, $options: "i" } },
                 { message: { $regex: q, $options: "i" } }
             ];
         }
@@ -28,7 +29,7 @@ export const getEnquiry = async (req, res) => {
 
         const pipeline = [
             { $match: filter },
-            { $project: { _id: 1, name: 1, email: 1, phone: 1, message: 1, isResolved: 1, resolvedAt: 1, createdAt: 1 } }
+            { $project: { _id: 1, name: 1, email: 1, phone: 1, subject: 1, message: 1, isResolved: 1, resolvedAt: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];

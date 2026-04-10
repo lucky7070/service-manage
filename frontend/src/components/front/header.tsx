@@ -3,8 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Menu, X, MapPin, ChevronDown, Phone } from "lucide-react"
-import { Button } from "./ui/button"
-import { LocationPickerModal } from "./location-picker-modal"
+import { Button } from "@/components/front/ui"
+import { LocationPickerModal } from "@/components/front/location-picker-modal"
 
 export function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

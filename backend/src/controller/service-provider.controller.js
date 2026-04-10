@@ -17,7 +17,7 @@ export const sendOtp = async (req, res) => {
 
         let user = await ServiceProvider.findOne({ mobile, deletedAt: null });
         if (!user && purpose === "login") return res.someThingWentWrong({ message: "Service Provider not registered..!!" });
-        if (user && purpose === "register") return res.someThingWentWrong({ message: "Service Provider already registered..!!" });
+        if (user && purpose === "registration") return res.someThingWentWrong({ message: "Service Provider already registered..!!" });
 
         const otp = generateOtp();
         const isSent = await sendOTP(mobile, otp);
@@ -58,7 +58,16 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
     try {
-        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
+        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "", otp } = req.body;
+
+        const verify = await OtpVerification.findOne({
+            phoneNumber: String(mobile).trim(),
+            otpCode: String(otp).trim(),
+            purpose: "registration"
+        }).sort({ createdAt: -1 });
+        if (!verify || moment(verify.expiresAt).isBefore(moment())) {
+            return res.someThingWentWrong({ message: "Invalid or expired OTP" });
+        }
 
         const existing = await ServiceProvider.findOne({
             deletedAt: null,
@@ -108,6 +117,8 @@ export const register = async (req, res) => {
             isVerified: false,
             isActive: true
         });
+
+        await verify.deleteOne();
 
         return res.successInsert({}, "Registration submitted successfully. Our team will contact you soon.");
     } catch (error) {

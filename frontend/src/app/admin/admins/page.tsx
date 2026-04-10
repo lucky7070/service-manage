@@ -10,11 +10,11 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import { Fingerprint, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
-import AdminPageHeader from "../../../components/admin/AdminPageHeader";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { Role } from "../roles/page";
+import { Role } from "@/app/admin/roles/page";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
