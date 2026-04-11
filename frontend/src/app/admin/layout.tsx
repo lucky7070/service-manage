@@ -13,6 +13,8 @@ import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 import { setLoading, setMobileSidebarOpen } from "@/store/slices/appSlice";
 import { compareRoute } from "@/helpers/utils";
 import NotAuthorized from "@/components/admin/NotAuthorized";
+import { deleteAuthCookie } from "./actions";
+import { toast } from "react-toastify";
 import "@/app/admin/admin.css";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -42,7 +44,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 dispatch(updateAdmin(data.data));
                 dispatch(setLoading(false));
             } else {
-                // if (!isLoginPage) router.push("/admin/login");
+                deleteAuthCookie();
+                toast.error(data.message);
+                if (!isAuthPage) router.push("/admin/login");
                 dispatch(setLoading(false));
             }
         })();
