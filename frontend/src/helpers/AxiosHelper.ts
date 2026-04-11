@@ -30,15 +30,17 @@ export const checkError = (error: AxiosError) => {
 export const axiosResponse = (data: unknown, status: number = 200): AxiosResponse<unknown> => ({ data: data, status: status, statusText: "OK", headers: {}, config: {} as InternalAxiosRequestConfig<unknown> })
 export const errorData = (error: AxiosError): AxiosResponse<unknown> => {
     if (envConfig.logErrorsInConsole) console.log(error?.response);
-    if (["ERR_NETWORK", "ERR_BAD_REQUEST", "ECONNREFUSED", "ECONNABORTED"].includes(error.code ?? "")) {
+    if (["ERR_NETWORK", "ECONNREFUSED", "ECONNABORTED"].includes(error.code ?? "")) {
         return axiosResponse({ status: false, message: error.message || "Something went wrong..!!", data: error }, 500);
     }
 
-    checkError(error);
+    // checkError(error);
     if (typeof error === "string") {
         return axiosResponse({ status: false, message: error, data: error }, 500);
     } if (typeof error.response === "string") {
         return axiosResponse({ status: false, message: error.response, data: error.response }, error.status ?? 500);
+    } else if (typeof error.response?.data === "object") {
+        return axiosResponse(error.response?.data as AxiosResponse<unknown>, error.status ?? 422);
     } else if (typeof error.response === "object") {
         return axiosResponse(error.response as AxiosResponse<unknown>, error.status ?? 422);
     } else {
