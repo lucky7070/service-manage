@@ -142,7 +142,7 @@ export const profile = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.clearCookie("service-provider-token");
+        res.clearCookie("service-provider-token", COOKIE_OPTIONS);
         return res.success([], "Logged out");
     } catch (error) {
         return res.someThingWentWrong(error);

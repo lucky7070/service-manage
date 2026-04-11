@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import moment from "moment";
-import mongoose from "mongoose";
 import { config } from "../../config/index.js";
 import { Admin, OtpVerification, Notification } from "../../models/index.js";
 import { generateOtp, nowPlusMinutes } from "../../helpers/utils.js";
@@ -109,7 +108,7 @@ export const updateAdminProfileImage = async (req, res) => {
 };
 
 export const adminLogout = async (req, res) => {
-    res.clearCookie("admin_token");
+    res.clearCookie("admin_token", COOKIE_OPTIONS);
     return res.success([], "Logged out");
 };
 

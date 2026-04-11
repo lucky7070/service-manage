@@ -71,7 +71,7 @@ export const profile = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.clearCookie("customer_token");
+        res.clearCookie("customer_token", COOKIE_OPTIONS);
         return res.success([], "Logged out");
     } catch (error) {
         return res.someThingWentWrong(error);

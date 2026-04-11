@@ -1,0 +1,2576 @@
+{
+  "info": {
+    "name": "Service Manage API",
+    "description": "Backend routes under `/api` (except `/health` at server root).\n\n- Set `xApiKey` to match `X_API_KEY` in backend `.env`.\n- Admin routes: **Admin auth → Login** first (cookies on).\n- JSON bodies use sample values; replace Mongo ids like `507f1f77bcf86cd799439011` with real ids from your DB.\n- Multipart requests include **form-data** defaults; attach files where indicated.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "rootUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "xApiKey",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{rootUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Open (public)",
+      "item": [
+        {
+          "name": "General settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/general-settings"
+          }
+        },
+        {
+          "name": "Service categories list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-categories-list?query=&limit=20"
+          }
+        },
+        {
+          "name": "Cities list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/cities-list?query=&limit=20"
+          }
+        },
+        {
+          "name": "Testimonials (public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/testimonials?limit=6&form="
+          }
+        },
+        {
+          "name": "Submit enquiry (contact)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/enquiries",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"9876543210\",\n  \"subject\": \"Hello\",\n  \"message\": \"This is a test message with enough length.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/send-otp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"purpose\": \"registration\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Test User\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Profile (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/profile",
+            "description": "Requires customer cookie after register/login flow."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service provider",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/send-otp",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"purpose\": \"registration\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Register (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/register",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Demo Provider",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "mobile",
+                  "value": "9876543210",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "provider@example.com",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "cityId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "serviceCategoryId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "panCardNumber",
+                  "value": "ABCDE1234F",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "aadharNumber",
+                  "value": "123456789012",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceYears",
+                  "value": "3",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceDescription",
+                  "value": "Field service experience.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "otp",
+                  "value": "123456",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "panCardDocument",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "aadharDocument",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
+          }
+        },
+        {
+          "name": "Profile (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/profile"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin auth",
+      "item": [
+        {
+          "name": "Admin login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@example.com\",\n  \"password\": \"yourpassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Saves admin cookie for subsequent /admin/* requests."
+          }
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/forgot-password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Forgot password reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/forgot-password/reset",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"otp\": \"123456\",\n  \"new_password\": \"Newpass123!\",\n  \"confirm_password\": \"Newpass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin (authenticated)",
+      "item": [
+        {
+          "name": "Dashboard stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/dashboard-stats"
+          }
+        },
+        {
+          "name": "Admin profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/profile"
+          }
+        },
+        {
+          "name": "Notifications read all",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/notifications/read-all"
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"admin@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/profile/password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"CurrentP1!\",\n  \"new_password\": \"Newpass12!\",\n  \"confirm_password\": \"Newpass12!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update profile image (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/profile/image",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Select an image file for `image`."
+          }
+        },
+        {
+          "name": "Admin logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/logout"
+          }
+        },
+        {
+          "name": "Settings (all)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/settings"
+          }
+        },
+        {
+          "name": "Settings by type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/settings/1"
+          }
+        },
+        {
+          "name": "Update settings by type (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/settings/1",
+            "description": "Multipart per setting fields."
+          }
+        },
+        {
+          "name": "Create role",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/roles",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Role\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/roles/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Role\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/roles/:id"
+          }
+        },
+        {
+          "name": "Get single role",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/roles/:id"
+          }
+        },
+        {
+          "name": "List roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/roles"
+          }
+        },
+        {
+          "name": "Add role permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/roles/:id/permissions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    101,\n    102,\n    103\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Permission ids must match your Permission model / seed (numeric codes)."
+          }
+        },
+        {
+          "name": "List admins",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/admins"
+          }
+        },
+        {
+          "name": "Create admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/admins",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sub Admin\",\n  \"mobile\": \"9876543210\",\n  \"roleId\": \"507f1f77bcf86cd799439011\",\n  \"email\": \"subadmin@example.com\",\n  \"password\": \"Adminpass1!\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/admins/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sub Admin\",\n  \"mobile\": \"9876543210\",\n  \"roleId\": \"507f1f77bcf86cd799439011\",\n  \"email\": \"subadmin@example.com\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Admin permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/admins/:id/permissions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    201,\n    202\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Use numeric permission codes from your app."
+          }
+        },
+        {
+          "name": "Delete admin",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/admins/:id"
+          }
+        },
+        {
+          "name": "Get admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/admins/:id"
+          }
+        },
+        {
+          "name": "Create country",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/countries",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"India\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update country",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/countries/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"India\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete country",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/countries/:id"
+          }
+        },
+        {
+          "name": "Get country",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/countries/:id"
+          }
+        },
+        {
+          "name": "List countries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/countries"
+          }
+        },
+        {
+          "name": "Create state",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/states",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"countryId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Maharashtra\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update state",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/states/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"countryId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Maharashtra\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete state",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/states/:id"
+          }
+        },
+        {
+          "name": "Get state",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/states/:id"
+          }
+        },
+        {
+          "name": "List states",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/states"
+          }
+        },
+        {
+          "name": "Create city",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cities",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"countryId\": \"507f1f77bcf86cd799439011\",\n  \"stateId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Mumbai\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update city",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cities/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"countryId\": \"507f1f77bcf86cd799439011\",\n  \"stateId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Mumbai\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete city",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cities/:id"
+          }
+        },
+        {
+          "name": "Get city",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cities/:id"
+          }
+        },
+        {
+          "name": "List cities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cities"
+          }
+        },
+        {
+          "name": "Create customer (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/customers",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Test Customer",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "mobile",
+                  "value": "9876543210",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "customer@example.com",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "dateOfBirth",
+                  "value": "1990-01-15",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Optional profile image. All text fields required by validator."
+          }
+        },
+        {
+          "name": "Update customer (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/customers/:id",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Test Customer",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "mobile",
+                  "value": "9876543210",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "customer@example.com",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "dateOfBirth",
+                  "value": "1990-01-15",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete customer",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/customers/:id"
+          }
+        },
+        {
+          "name": "Get customer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/customers/:id"
+          }
+        },
+        {
+          "name": "List customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/customers"
+          }
+        },
+        {
+          "name": "Create service provider (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "SP Name",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "mobile",
+                  "value": "9123456789",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "sp@example.com",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "panCardNumber",
+                  "value": "ABCDE1234F",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "aadharNumber",
+                  "value": "123456789012",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceYears",
+                  "value": "2",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceDescription",
+                  "value": "Experienced technician.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "panCardDocument",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "aadharDocument",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update service provider (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "SP Name",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "mobile",
+                  "value": "9123456789",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "sp@example.com",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "panCardNumber",
+                  "value": "ABCDE1234F",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "aadharNumber",
+                  "value": "123456789012",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceYears",
+                  "value": "2",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceDescription",
+                  "value": "Experienced technician.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "panCardDocument",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "aadharDocument",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update service provider status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profileStatus\": \"approved\",\n  \"isVerified\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete service provider",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id"
+          }
+        },
+        {
+          "name": "Get service provider",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id"
+          }
+        },
+        {
+          "name": "List service providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers"
+          }
+        },
+        {
+          "name": "Provider photos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id/photos"
+          }
+        },
+        {
+          "name": "Upload provider photos (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id/photos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Field name `photos` — you can add multiple files in Postman (same key). Max 20."
+          }
+        },
+        {
+          "name": "Reorder provider photos",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id/photos/reorder",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderedIds\": [\n    \"507f1f77bcf86cd799439011\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Replace orderedIds with all photo _id values for that provider, in desired order."
+          }
+        },
+        {
+          "name": "Delete provider photo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-providers/:id/photos/:photoId"
+          }
+        },
+        {
+          "name": "Create rating tag",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/rating-tags",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tagFor\": \"customer\",\n  \"tagName\": \"Punctual\",\n  \"tagType\": \"positive\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update rating tag",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/rating-tags/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tagFor\": \"customer\",\n  \"tagName\": \"Punctual\",\n  \"tagType\": \"positive\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete rating tag",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/rating-tags/:id"
+          }
+        },
+        {
+          "name": "Get rating tag",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/rating-tags/:id"
+          }
+        },
+        {
+          "name": "List rating tags",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/rating-tags"
+          }
+        },
+        {
+          "name": "Create FAQ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/faqs",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"How do I book a service?\",\n  \"answer\": \"Choose a category and follow the booking steps on the site.\",\n  \"status\": 1,\n  \"displayOrder\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update FAQ",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/faqs/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"How do I book a service?\",\n  \"answer\": \"Choose a category and follow the booking steps on the site.\",\n  \"status\": 1,\n  \"displayOrder\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete FAQ",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/faqs/:id"
+          }
+        },
+        {
+          "name": "Get FAQ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/faqs/:id"
+          }
+        },
+        {
+          "name": "List FAQs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/faqs"
+          }
+        },
+        {
+          "name": "Service categories options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-categories/options"
+          }
+        },
+        {
+          "name": "Create service category (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-categories",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Plumbing",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "nameHi",
+                  "value": "प्लंबिंग",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "description",
+                  "value": "Water and pipe related services.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "slug",
+                  "value": "plumbing",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "displayOrder",
+                  "value": "0",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update service category (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-categories/:id",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Plumbing",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "nameHi",
+                  "value": "प्लंबिंग",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "description",
+                  "value": "Water and pipe related services.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "slug",
+                  "value": "plumbing",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "displayOrder",
+                  "value": "0",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete service category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-categories/:id"
+          }
+        },
+        {
+          "name": "Get service category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-categories/:id"
+          }
+        },
+        {
+          "name": "List service categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-categories"
+          }
+        },
+        {
+          "name": "Create service type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Leak repair\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update service type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-types/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Leak repair\",\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete service type",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-types/:id"
+          }
+        },
+        {
+          "name": "Get service type",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-types/:id"
+          }
+        },
+        {
+          "name": "List service types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/service-types"
+          }
+        },
+        {
+          "name": "Create banner (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/banners",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "bannerTitle",
+                  "value": "Summer offers",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerTitleHi",
+                  "value": "",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerSubtitle",
+                  "value": "Book now",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerSubtitleHi",
+                  "value": "",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerType",
+                  "value": "homepage",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "link",
+                  "value": "/services",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "displayOrder",
+                  "value": "0",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerImage",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update banner (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/banners/:id",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "bannerTitle",
+                  "value": "Summer offers",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerTitleHi",
+                  "value": "",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerSubtitle",
+                  "value": "Book now",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerSubtitleHi",
+                  "value": "",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerType",
+                  "value": "homepage",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "link",
+                  "value": "/services",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "displayOrder",
+                  "value": "0",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "bannerImage",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete banner",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/banners/:id"
+          }
+        },
+        {
+          "name": "List banners",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/banners"
+          }
+        },
+        {
+          "name": "List enquiries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/enquiries"
+          }
+        },
+        {
+          "name": "Resolve enquiry",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/enquiries/:id/resolve",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isResolved\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete enquiry",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/enquiries/:id"
+          }
+        },
+        {
+          "name": "Create testimonial (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/testimonials",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "form",
+                  "value": "customer",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "Rahul Sharma",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "designation",
+                  "value": "Home owner",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "rating",
+                  "value": "5",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "review",
+                  "value": "Quick response and professional work. Highly recommended.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update testimonial (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/testimonials/:id",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "form",
+                  "value": "customer",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "Rahul Sharma",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "designation",
+                  "value": "Home owner",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "rating",
+                  "value": "5",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "review",
+                  "value": "Quick response and professional work. Highly recommended.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete testimonial",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/testimonials/:id"
+          }
+        },
+        {
+          "name": "Get testimonial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/testimonials/:id"
+          }
+        },
+        {
+          "name": "List testimonials (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/testimonials"
+          }
+        },
+        {
+          "name": "Create CMS page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cms-pages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageSlug\": \"about-us\",\n  \"pageTitle\": \"About Us\",\n  \"pageTitleHi\": \"\",\n  \"metaDescription\": \"Learn about our company and mission.\",\n  \"metaKeywords\": \"about, services, trust\",\n  \"content\": \"<p>We connect customers with trusted service professionals.</p>\",\n  \"contentHi\": \"\",\n  \"viewCount\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update CMS page",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cms-pages/:id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageSlug\": \"about-us\",\n  \"pageTitle\": \"About Us\",\n  \"pageTitleHi\": \"\",\n  \"metaDescription\": \"Learn about our company and mission.\",\n  \"metaKeywords\": \"about, services, trust\",\n  \"content\": \"<p>We connect customers with trusted service professionals.</p>\",\n  \"contentHi\": \"\",\n  \"viewCount\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete CMS page",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cms-pages/:id"
+          }
+        },
+        {
+          "name": "Get CMS page",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cms-pages/:id"
+          }
+        },
+        {
+          "name": "List CMS pages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/cms-pages"
+          }
+        }
+      ]
+    }
+  ]
+}

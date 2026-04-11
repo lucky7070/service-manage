@@ -1,9 +1,11 @@
 
-import { JOIN_PRO_BENEFITS, JOIN_PRO_TESTIMONIALS, } from "@/config/constants";
-import { Briefcase, CheckCircle, ArrowRight, Star } from "lucide-react"
+import { JOIN_PRO_BENEFITS } from "@/config/constants";
+import { Briefcase, CheckCircle, ArrowRight, Quote, Star } from "lucide-react"
 import ProRegistrationForm from "@/components/front/forms/ProRegistrationForm";
 import { Button } from "@/components/front/ui";
 import { getTestimonials } from "@/lib/settings.server";
+import Image from "@/components/ui/Image";
+import { resolveFileUrl } from "@/helpers/utils";
 
 export default async function JoinProPage() {
     const testimonials = await getTestimonials("provider")
@@ -82,20 +84,21 @@ export default async function JoinProPage() {
                         </h2>
                     </div>
                     <div className="grid gap-8 md:grid-cols-2">
-                        {testimonials.map((t) => (
-                            <div key={t.name} className="rounded-2xl border bg-card p-8">
+                        {testimonials.map((t) => {
+                            const ratingOutOf5 = Math.min(5, Math.max(0, Math.round(Number(t.rating) || 0)));
+                            return <div key={t._id} className="rounded-2xl border bg-card p-8">
                                 <div className="mb-4 flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 font-bold text-primary">
-                                            {t.name[0]}
-                                        </div>
+                                        <Image src={resolveFileUrl(t.image) || ""} alt={t.name} className="h-12 w-12 rounded-full" />
                                         <div>
                                             <h4 className="font-semibold text-foreground">{t.name}</h4>
                                             <p className="text-sm text-muted-foreground">{t.designation}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
-                                        {Array.from({ length: t.rating }).map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
+                                    <div className="flex shrink-0 items-center gap-0.5" role="img" aria-label={`${ratingOutOf5} out of 5 stars`}>
+                                        {Array.from({ length: 5 }).map((_, i) => (
+                                            <Star key={i} className={`h-4 w-4 ${i < ratingOutOf5 ? "fill-amber-400 text-amber-400" : "fill-transparent text-muted-foreground/35"}`} />
+                                        ))}
                                     </div>
                                 </div>
                                 <p className="mb-4 text-muted-foreground">{t.review}</p>
@@ -104,7 +107,19 @@ export default async function JoinProPage() {
                                     <span>Avg. Earnings: ₹10,000</span>
                                 </div>
                             </div>
-                        ))}
+                        })}
+
+                        {testimonials.length === 0 && <div
+                            className="col-span-1 md:col-span-2 mx-auto rounded-2xl border border-dashed border-muted-foreground/25 bg-card px-8 py-14 text-center"
+                            role="status"
+                            aria-live="polite"
+                        >
+                            <Quote className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" aria-hidden />
+                            <p className="text-lg font-semibold text-foreground">No testimonials yet</p>
+                            <p className="mt-2 text-sm text-muted-foreground">
+                                Success stories from our pros will appear here soon. Register above and you could be featured next.
+                            </p>
+                        </div>}
                     </div>
                 </div>
             </section>

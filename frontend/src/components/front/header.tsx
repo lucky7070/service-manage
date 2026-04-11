@@ -39,7 +39,7 @@ export function Header() {
                             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
                                 <Image src={String(resolveFileUrl(settings.logo))} alt="logo" className="h-9 w-9 rounded-xl object-cover" />
                             </div>
-                            <span className="text-xl font-bold text-gray-900">{settings.application_name || ""}</span>
+                            <span className="text-xl font-bold text-orange-600">{settings.application_name || ""}</span>
                         </Link>
                     </div>
 
