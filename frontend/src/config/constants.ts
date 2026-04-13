@@ -115,7 +115,7 @@ export const FOOTER_LINKS = [
         list: [
             { name: "About Us", href: "/about" },
             { name: "Terms of Service", href: "/terms" },
-            { name: "Privacy Policy", href: "/privacy" },
+            { name: "Privacy Policy", href: "/privacy-policy" },
             { name: "Partner with Us", href: "/join-pro" },
         ]
     },
@@ -124,7 +124,7 @@ export const FOOTER_LINKS = [
         list: [
             { name: "Help Center", href: "/help" },
             { name: "Safety", href: "/safety" },
-            { name: "Contact Us", href: "/contact" },
+            { name: "Contact Us", href: "/contact-us" },
         ]
     },
 ]

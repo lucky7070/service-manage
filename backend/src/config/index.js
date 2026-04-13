@@ -10,5 +10,6 @@ export const config = {
     otpExpiryMinutes: Number(process.env.OTP_EXPIRY_MINUTES || 10),
     frontendUrl: String(process.env.FRONTEND_URL || "").split(",").map((s) => s.trim()).filter(Boolean),
     isProduction: String(process.env.NODE_ENV || "development").toLowerCase() === "production",
+    isDevelopment: String(process.env.NODE_ENV || "development").toLowerCase() === "development",
     crossOrigin: String(process.env.CROSS_ORIGIN_COOKIES || "false").toLowerCase() === "true",
 };

@@ -1,4 +1,4 @@
-import { City, Enquiry, ServiceCategory, Testimonial } from "../models/index.js";
+import { City, Enquiry, ServiceCategory, Testimonial, CmsPage } from "../models/index.js";
 import { escapeRegex } from "../helpers/utils.js";
 
 export const listCities = async (req, res) => {
@@ -81,6 +81,24 @@ export const listTestimonials = async (req, res) => {
         ]);
 
         return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const getPrivacyPolicy = async (req, res) => {
+    try {
+        const data = await CmsPage.findOne({ pageSlug: "privacy-policy" });
+        if (!data) return res.noRecords();
+
+        return res.success({
+            title: data.pageTitle,
+            content: data.content,
+            contentHi: data.contentHi,
+            pageTitle: data.pageTitle,
+            metaDescription: data.metaDescription,
+            updatedAt: data.updatedAt,
+        });
     } catch (error) {
         return res.someThingWentWrong(error);
     }

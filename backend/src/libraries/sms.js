@@ -1,5 +1,6 @@
 import axios from "axios";
 import logger from "../helpers/logger.js";
+import { config } from "../config/index.js";
 
 const normalizeMobile = (value) => String(value ?? "").replace(/\+/g, "").trim();
 const SMS_URL = "https://api.bulksmsadmin.com/BulkSMSapi/keyApiSendSMS/sendSMS";
@@ -11,6 +12,7 @@ const sendOTP = async (mobile, otp) => {
         const numbers = Array.isArray(mobile) ? mobile : [mobile];
         const smsReciever = numbers.map((number) => normalizeMobile(number)).filter((number) => number.length === 10).map((number) => ({ reciever: number }));
 
+        if (config.isDevelopment) return true;
         if (smsReciever.length === 0) return false;
 
         const { data } = await axios.post(SMS_URL, {
@@ -23,7 +25,7 @@ const sendOTP = async (mobile, otp) => {
 
         return Boolean(data?.isSuccess);
     } catch (_error) {
-        logger.error(`Send OTP failed: ${JSON.stringify(_error.response?.data)}`);
+        logger.error(`Send OTP failed: ${JSON.stringify(_error)}`);
         return false;
     }
 };
