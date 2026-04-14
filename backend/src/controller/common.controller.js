@@ -47,6 +47,25 @@ export const listServiceCategories = async (req, res) => {
     }
 };
 
+export const listServiceCategoriesForHome = async (req, res) => {
+    try {
+        const limitRaw = Number(req.query.limit);
+        const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 8;
+
+        const rows = await ServiceCategory.find(
+            { deletedAt: null, isActive: true },
+            { name: 1, slug: 1, description: 1, image: 1, displayOrder: 1 }
+        )
+            .sort({ displayOrder: -1, name: 1 })
+            .limit(limit)
+            .lean();
+
+        return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
 export const submitEnquiry = async (req, res) => {
     try {
         const { name, email, phone, subject, message } = req.getBody(["name", "email", "phone", "subject", "message"]);
@@ -68,14 +87,14 @@ export const listTestimonials = async (req, res) => {
     try {
         const limitRaw = Number(req.query.limit);
         const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 20) : 20;
-        const form = String(req.query.form || "").trim();
+        const from = String(req.query.from || "").trim();
 
         const filter = { deletedAt: null, isActive: true };
-        if (form) filter.form = form;
+        if (from) filter.from = from;
 
         const rows = await Testimonial.aggregate([
             { $match: filter },
-            { $project: { _id: 1, form: 1, name: 1, designation: 1, image: 1, rating: 1, review: 1, createdAt: 1 } },
+            { $project: { _id: 1, from: 1, name: 1, designation: 1, image: 1, rating: 1, review: 1, createdAt: 1 } },
             { $sort: { createdAt: -1 } },
             { $limit: limit }
         ]);

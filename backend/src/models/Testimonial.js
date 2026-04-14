@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const Schema = new mongoose.Schema(
     {
-        form: { type: String, default: 'customer', enum: ["customer", "provider"], required: true, trim: true },
+        from: { type: String, default: 'customer', enum: ["customer", "provider"], required: true, trim: true },
         name: { type: String, required: true, trim: true },
         designation: { type: String, required: true, trim: true },
         image: { type: String, default: '/testimonials/default.png' },

@@ -5,11 +5,11 @@ import { escapeRegex } from "../../helpers/utils.js";
 
 export const createTestimonial = async (req, res) => {
     try {
-        const { form = "customer", name, designation, rating = 5, review, status = 1 } = req.body;
+        const { from = "customer", name, designation, rating = 5, review, status = 1 } = req.body;
         const image = req.file?.filename ? `/testimonials/${req.file.filename}` : "/testimonials/default.png";
 
         const doc = await Testimonial.create({
-            form: String(form).trim(),
+            from: String(from).trim(),
             name: String(name).trim(),
             designation: String(designation).trim(),
             image,
@@ -28,12 +28,12 @@ export const updateTestimonial = async (req, res) => {
         const doc = await Testimonial.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!doc) return res.noRecords();
 
-        const { form = "customer", name, designation, rating = 5, review, status = 1 } = req.body;
+        const { from = "customer", name, designation, rating = 5, review, status = 1 } = req.body;
         const image = req.file?.filename ? `/testimonials/${req.file.filename}` : doc.image;
 
         await doc.updateOne(
             {
-                form: String(form).trim(),
+                from: String(from).trim(),
                 name: String(name).trim(),
                 designation: String(designation).trim(),
                 image,
@@ -62,10 +62,10 @@ export const deleteTestimonial = async (req, res) => {
 
 export const getTestimonial = async (req, res) => {
     try {
-        let { limit, pageNo, query, form, status, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+        let { limit, pageNo, query, from, status, sortBy = "createdAt", sortOrder = "desc" } = req.query;
         limit = limit ? parseInt(limit, 10) : 10;
         pageNo = pageNo ? parseInt(pageNo, 10) : 1;
-        sortBy = ["name", "designation", "rating", "form", "status", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
+        sortBy = ["name", "designation", "rating", "from", "status", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
         sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
 
         const filter = { deletedAt: null };
@@ -77,7 +77,7 @@ export const getTestimonial = async (req, res) => {
                 { review: { $regex: q, $options: "i" } }
             ];
         }
-        if (form !== null && form !== undefined && String(form).trim()) filter.form = String(form).trim();
+        if (from !== null && from !== undefined && String(from).trim()) filter.from = String(from).trim();
         if (status !== null && status !== undefined && status !== "") filter.isActive = Number(status) === 1;
 
         const pipeline = [
@@ -85,7 +85,7 @@ export const getTestimonial = async (req, res) => {
             {
                 $project: {
                     _id: 1,
-                    form: 1,
+                    from: 1,
                     name: 1,
                     designation: 1,
                     image: 1,
@@ -116,7 +116,7 @@ export const getSingleTestimonial = async (req, res) => {
 
         return res.success({
             _id: doc._id,
-            form: doc.form,
+            from: doc.from,
             name: doc.name,
             designation: doc.designation,
             image: doc.image,

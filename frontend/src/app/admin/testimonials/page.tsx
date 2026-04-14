@@ -21,7 +21,7 @@ import Image from "@/components/ui/Image";
 
 type TestimonialRow = {
     _id: string;
-    form: "customer" | "provider";
+    from: "customer" | "provider";
     name: string;
     designation: string;
     image: string | File | null;
@@ -38,13 +38,13 @@ type TestimonialRecord = {
     pagination: number[];
 };
 
-type SortBy = "name" | "designation" | "form" | "rating" | "status" | "createdAt";
+type SortBy = "name" | "designation" | "from" | "rating" | "status" | "createdAt";
 type SortOrder = "asc" | "desc";
 
-const initialFormValues: TestimonialRow = { _id: "", form: "customer", name: "", designation: "", image: null, rating: 5, review: "", status: 1 };
+const initialFormValues: TestimonialRow = { _id: "", from: "customer", name: "", designation: "", image: null, rating: 5, review: "", status: 1 };
 
 const validationSchema = Yup.object().shape({
-    form: Yup.string().oneOf(["customer", "provider"], "Select source.").required("Source is required."),
+    from: Yup.string().oneOf(["customer", "provider"], "Select source.").required("Source is required."),
     name: Yup.string().min(2, "Too short.").max(100, "Too long.").required("Name is required.").trim(),
     designation: Yup.string().min(2, "Too short.").max(100, "Too long.").required("Designation is required.").trim(),
     image: Yup.mixed().nullable(),
@@ -57,7 +57,7 @@ export default function AdminTestimonialsPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit">(null);
     const [data, setData] = useState<TestimonialRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; form: "" | "customer" | "provider"; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", status: "", form: "" });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; from: "" | "customer" | "provider"; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", status: "", from: "" });
     const [initialValues, setInitialValues] = useState<TestimonialRow>(initialFormValues);
 
     const fetchTestimonials = useCallback(async () => {
@@ -132,10 +132,10 @@ export default function AdminTestimonialsPage() {
                     />
                     <div className="flex flex-wrap items-center gap-2">
                         <Select
-                            value={param.form}
+                            value={param.from}
                             onChange={(e) => {
                                 const v = e.target.value as "" | "customer" | "provider";
-                                setParam((prev) => ({ ...prev, pageNo: 1, form: v }));
+                                setParam((prev) => ({ ...prev, pageNo: 1, from: v }));
                             }}
                             className="max-w-[180px]"
                         >
@@ -171,7 +171,7 @@ export default function AdminTestimonialsPage() {
                                     <AdminTableHeader onClick={() => onSort("designation")} name="Designation" active={param.sortBy === "designation"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
-                                    <AdminTableHeader onClick={() => onSort("form")} name="Source" active={param.sortBy === "form"} sortOrder={param.sortOrder} />
+                                    <AdminTableHeader onClick={() => onSort("from")} name="Source" active={param.sortBy === "from"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("rating")} name="Rating" active={param.sortBy === "rating"} sortOrder={param.sortOrder} />
@@ -196,7 +196,7 @@ export default function AdminTestimonialsPage() {
                                     </td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.designation}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.form === "provider" ? "Provider" : "Customer"}</td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.from === "provider" ? "Provider" : "Customer"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{Number(row.rating || 0).toFixed(1)}</td>
                                     <td className="max-w-[360px] px-3 py-2 text-slate-700 dark:text-slate-200"><span className="line-clamp-2">{row.review}</span></td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
@@ -281,12 +281,12 @@ export default function AdminTestimonialsPage() {
                             <Form className="space-y-3">
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     <div className="space-y-2">
-                                        <Label htmlFor="testimonial-form">Source</Label>
-                                        <Field as={Select} id="testimonial-form" name="form">
+                                        <Label htmlFor="testimonial-from">Source</Label>
+                                        <Field as={Select} id="testimonial-from" name="from">
                                             <option value="customer">Customer</option>
                                             <option value="provider">Provider</option>
                                         </Field>
-                                        <ErrorMessage className="text-xs text-rose-600" name="form" component="small" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="from" component="small" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="testimonial-rating">Rating</Label>

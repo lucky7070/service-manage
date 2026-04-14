@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Providers from "@/app/providers";
-import { getServerSettings } from "@/lib/settings.server";
+import { getServerSettings } from "@/lib/api.server";
 
 export const metadata: Metadata = {
     title: "Service Manage",

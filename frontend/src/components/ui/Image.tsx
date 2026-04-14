@@ -2,12 +2,11 @@
 
 import DEFAULT_NOT_FOUND_SRC from "@/assets/images/no-image.jpg";
 
-const Image = (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
-    const { src, alt, onError, ...rest } = props;
+const Image = ({ src, alt, onError, ...rest }: React.ImgHTMLAttributes<HTMLImageElement>) => {
 
     // eslint-disable-next-line @next/next/no-img-element
     return <img
-        src={src}
+        src={src || String(DEFAULT_NOT_FOUND_SRC.src)}
         alt={alt || ""}
         onError={(e) => {
             onError?.(e);

@@ -1,9 +1,9 @@
 
 import { JOIN_PRO_BENEFITS } from "@/config/constants";
-import { Briefcase, CheckCircle, ArrowRight, Quote, Star } from "lucide-react"
+import { CheckCircle, ArrowRight, Quote, Star } from "lucide-react"
 import ProRegistrationForm from "@/components/front/forms/ProRegistrationForm";
 import { Button } from "@/components/front/ui";
-import { getTestimonials } from "@/lib/settings.server";
+import { getTestimonials } from "@/lib/api.server";
 import Image from "@/components/ui/Image";
 import { resolveFileUrl } from "@/helpers/utils";
 
@@ -102,10 +102,6 @@ export default async function JoinProPage() {
                                     </div>
                                 </div>
                                 <p className="mb-4 text-muted-foreground">{t.review}</p>
-                                <div className="flex items-center gap-2 text-sm font-semibold text-green-600">
-                                    <Briefcase className="h-4 w-4" />
-                                    <span>Avg. Earnings: ₹10,000</span>
-                                </div>
                             </div>
                         })}
 

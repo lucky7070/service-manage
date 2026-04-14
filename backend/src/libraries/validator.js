@@ -56,7 +56,7 @@ const confirmPassword = check("confirm_password", "Please confirm your new passw
 const question = check("question", "Question is required.").trim().notEmpty().isLength({ min: 3, max: 2000 });
 const answer = check("answer", "Answer is required.").trim().notEmpty().isLength({ min: 3, max: 10000 });
 const displayOrder = check("displayOrder", "Display order must be numeric.").optional({ values: "falsy" }).isInt({ min: 0, max: 999999 });
-const testimonialForm = check("form", "Form must be customer or provider.").trim().notEmpty().isIn(["customer", "provider"]);
+const testimonialFrom = check("from", "Form must be customer or provider.").trim().notEmpty().isIn(["customer", "provider"]);
 const designation = check("designation", "Designation is required.").trim().notEmpty().isLength({ min: 2, max: 100 });
 const rating = check("rating", "Rating must be between 1 and 5.").exists().notEmpty().isFloat({ min: 1, max: 5 });
 const review = check("review", "Review is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
@@ -155,7 +155,7 @@ export const validator = (method) => {
             output = [question, answer, status, displayOrder];
             break;
         case "testimonial":
-            output = [testimonialForm, name, designation, rating, review, status];
+            output = [testimonialFrom, name, designation, rating, review, status];
             break;
         case "banner":
             output = [bannerType, bannerLink, displayOrder];

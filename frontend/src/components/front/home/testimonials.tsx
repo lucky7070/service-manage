@@ -1,6 +1,6 @@
 import Image from "@/components/ui/Image"
 import { resolveFileUrl } from "@/helpers/utils"
-import { getTestimonials } from "@/lib/settings.server"
+import { getTestimonials } from "@/lib/api.server"
 import { Star, Quote } from "lucide-react"
 
 export async function Testimonials() {
