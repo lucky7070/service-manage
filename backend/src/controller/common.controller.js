@@ -103,3 +103,21 @@ export const getPrivacyPolicy = async (req, res) => {
         return res.someThingWentWrong(error);
     }
 };
+
+export const getTermsAndConditions = async (req, res) => {
+    try {
+        const data = await CmsPage.findOne({ pageSlug: "terms-and-conditions" });
+        if (!data) return res.noRecords();
+
+        return res.success({
+            title: data.pageTitle,
+            content: data.content,
+            contentHi: data.contentHi,
+            pageTitle: data.pageTitle,
+            metaDescription: data.metaDescription,
+            updatedAt: data.updatedAt,
+        });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};

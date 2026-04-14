@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getGeneralSettings } from "../controller/admin/setting.controller.js";
-import { listServiceCategories, listCities, listTestimonials, submitEnquiry, getPrivacyPolicy } from "../controller/common.controller.js";
+import { listServiceCategories, listCities, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions } from "../controller/common.controller.js";
 import { validator } from "../libraries/validator.js";
 
 const router = Router();
@@ -12,5 +12,6 @@ router.get("/cities-list", listCities);
 router.get("/testimonials", listTestimonials);
 router.post("/enquiries", validator("enquiry-submit"), submitEnquiry);
 router.get("/privacy-policy", getPrivacyPolicy);
+router.get("/terms-and-conditions", getTermsAndConditions);
 
 export default router;

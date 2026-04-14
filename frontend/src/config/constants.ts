@@ -114,7 +114,7 @@ export const FOOTER_LINKS = [
         label: "Company",
         list: [
             { name: "About Us", href: "/about" },
-            { name: "Terms of Service", href: "/terms" },
+            { name: "Terms and Conditions", href: "/terms-and-conditions" },
             { name: "Privacy Policy", href: "/privacy-policy" },
             { name: "Partner with Us", href: "/join-pro" },
         ]
