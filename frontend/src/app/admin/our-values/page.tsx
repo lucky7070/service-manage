@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import { debounce } from "lodash";
 import * as Yup from "yup";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
@@ -13,9 +14,14 @@ import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AdminPagination from "@/components/admin/AdminPagination";
+import AdminTableHeader from "@/components/admin/AdminTableHeader";
 
 type OurValueRow = { _id: string; icon: string; title: string; description: string; displayOrder: number; status: number };
 type OurValueForm = { _id: string; icon: string | File | null; title: string; description: string; displayOrder: number; status: number };
+type OurValueRecord = { count: number; record: OurValueRow[]; totalPages: number; pagination: number[] };
+type SortBy = "title" | "description" | "displayOrder" | "status" | "createdAt";
+type SortOrder = "asc" | "desc";
 
 const ourValueSchema = Yup.object({
     title: Yup.string().trim().min(2, "Too short.").max(200, "Too long.").required("Title is required."),
@@ -25,16 +31,30 @@ const ourValueSchema = Yup.object({
 });
 
 export default function AdminOurValuesPage() {
+    const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit">(null);
-    const [values, setValues] = useState<OurValueRow[]>([]);
+    const [data, setData] = useState<OurValueRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; status: "" | 0 | 1; sortBy: SortBy; sortOrder: SortOrder }>({ limit: 10, pageNo: 1, query: "", status: "", sortBy: "displayOrder", sortOrder: "asc" });
     const [valueInitial, setValueInitial] = useState<OurValueForm>({ _id: "", icon: null, title: "", description: "", displayOrder: 0, status: 1 });
 
     const fetchData = useCallback(async () => {
-        const valueRes = await AxiosHelperAdmin.getData("/our-values", { limit: 200, pageNo: 1 });
-        setValues(valueRes.data?.status ? valueRes.data?.data?.record || [] : []);
-    }, []);
+        const { data } = await AxiosHelperAdmin.getData("/our-values", param);
+        if (data.status && data.data) {
+            const { count, totalPages, record, pagination } = data.data;
+            setData({ count, totalPages, record, pagination });
+        } else {
+            setData({ count: 0, totalPages: 0, record: [], pagination: [] });
+        }
+    }, [param]);
 
-    useEffect(() => { (async () => { await fetchData(); })(); }, [fetchData]);
+    useEffect(() => {
+        debouncedFetchRef.current = debounce(() => { fetchData(); }, 500);
+    }, [fetchData]);
+
+    useEffect(() => {
+        debouncedFetchRef.current();
+        return () => { debouncedFetchRef.current.cancel(); };
+    }, [param]);
 
     const deleteValue = async (id: string) => {
         const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
@@ -48,41 +68,76 @@ export default function AdminOurValuesPage() {
         }
     };
 
+    const onSort = (nextSortBy: SortBy) => {
+        setParam((prev) => {
+            const nextOrder: SortOrder = prev.sortBy === nextSortBy ? (prev.sortOrder === "asc" ? "desc" : "asc") : "asc";
+            return { ...prev, pageNo: 1, sortBy: nextSortBy, sortOrder: nextOrder };
+        });
+    };
+
     return (
         <section className="space-y-4">
-            <AdminPageHeader title="Our Values" subtitle="Manage public “about” values shown on the site." />
-
-            <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
-                <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Values</h3>
+            <AdminPageHeader
+                title="Our Values"
+                subtitle="Manage public “about” values shown on the site."
+                action={
                     <PermissionBlock permission_id={431}>
-                        <Button
-                            type="button"
-                            variant="primary"
-                            size="md"
-                            onClick={() => {
-                                setValueInitial({ _id: "", icon: null, title: "", description: "", displayOrder: 0, status: 1 });
-                                setOpen("add");
-                            }}
-                        >
+                        <Button type="button" variant="primary" size="md" onClick={() => {
+                            setValueInitial({ _id: "", icon: null, title: "", description: "", displayOrder: 0, status: 1 });
+                            setOpen("add");
+                        }}>
                             <Plus className="h-3.5 w-3.5" /> Add Value
                         </Button>
                     </PermissionBlock>
+                }
+            />
+
+            <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
+                <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <Input
+                        value={param.query}
+                        onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
+                        className="max-w-xs"
+                        placeholder="Search title/description..."
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                            value={param.status}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
+                            }}
+                            className="max-w-[180px]"
+                        >
+                            <option value="">All</option>
+                            <option value={1}>Active</option>
+                            <option value={0}>Inactive</option>
+                        </Select>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
+                    </div>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                         <thead className="bg-[#edf3ff] text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             <tr>
                                 <th className="px-3 py-2">Icon</th>
-                                <th className="px-3 py-2">Title</th>
-                                <th className="px-3 py-2">Description</th>
-                                <th className="px-3 py-2">Order</th>
-                                <th className="px-3 py-2">Status</th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("title")} name="Title" active={param.sortBy === "title"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("description")} name="Description" active={param.sortBy === "description"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("displayOrder")} name="Display Order" active={param.sortBy === "displayOrder"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("status")} name="Status" active={param.sortBy === "status"} sortOrder={param.sortOrder} />
+                                </th>
                                 <th className="px-3 py-2 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {values.map((row) => {
+                            {data.record.map((row) => {
                                 const thumb = resolveFileUrl(row.icon);
                                 return <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
                                     <td className="px-3 py-2">
@@ -122,10 +177,11 @@ export default function AdminOurValuesPage() {
                                     </td>
                                 </tr>
                             })}
-                            <AdminNoTableRecords show={values.length === 0} />
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>
+                <AdminPagination data={data} param={param} setParam={setParam} />
             </div>
 
             <Modal show={!!open} onClose={() => setOpen(null)} title={open === "add" ? "Add Our Value" : "Update Our Value"} size="lg">

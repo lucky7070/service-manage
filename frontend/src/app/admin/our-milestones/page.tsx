@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorMessage, Field, Form, Formik } from "formik";
+import { debounce } from "lodash";
 import * as Yup from "yup";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
@@ -12,8 +13,13 @@ import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, Label, Modal, Select, Textarea } from "@/components/ui";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AdminPagination from "@/components/admin/AdminPagination";
+import AdminTableHeader from "@/components/admin/AdminTableHeader";
 
 type OurMilestone = { _id: string; year: string; event: string; displayOrder: number; status: number };
+type OurMilestoneRecord = { count: number; record: OurMilestone[]; totalPages: number; pagination: number[] };
+type SortBy = "year" | "event" | "displayOrder" | "status" | "createdAt";
+type SortOrder = "asc" | "desc";
 
 const ourMilestoneSchema = Yup.object({
     year: Yup.string().trim().min(2, "Too short.").max(20, "Too long.").required("Year is required."),
@@ -23,16 +29,30 @@ const ourMilestoneSchema = Yup.object({
 });
 
 export default function AdminOurMilestonesPage() {
-    const [milestones, setMilestones] = useState<OurMilestone[]>([]);
+    const debouncedFetchRef = useRef(debounce(() => { }, 0));
+    const [data, setData] = useState<OurMilestoneRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; status: "" | 0 | 1; sortBy: SortBy; sortOrder: SortOrder }>({ limit: 10, pageNo: 1, query: "", status: "", sortBy: "displayOrder", sortOrder: "asc" });
     const [open, setOpen] = useState<null | "add" | "edit">(null);
     const [milestoneInitial, setMilestoneInitial] = useState<OurMilestone>({ _id: "", year: "", event: "", displayOrder: 0, status: 1 });
 
     const fetchData = useCallback(async () => {
-        const milestoneRes = await AxiosHelperAdmin.getData("/our-milestones", { limit: 200, pageNo: 1 });
-        setMilestones(milestoneRes.data?.status ? milestoneRes.data?.data?.record || [] : []);
-    }, []);
+        const { data } = await AxiosHelperAdmin.getData("/our-milestones", param);
+        if (data.status && data.data) {
+            const { count, totalPages, record, pagination } = data.data;
+            setData({ count, totalPages, record, pagination });
+        } else {
+            setData({ count: 0, totalPages: 0, record: [], pagination: [] });
+        }
+    }, [param]);
 
-    useEffect(() => { (async () => { await fetchData(); })(); }, [fetchData]);
+    useEffect(() => {
+        debouncedFetchRef.current = debounce(() => { fetchData(); }, 500);
+    }, [fetchData]);
+
+    useEffect(() => {
+        debouncedFetchRef.current();
+        return () => { debouncedFetchRef.current.cancel(); };
+    }, [param]);
 
     const deleteMilestone = async (id: string) => {
         const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
@@ -46,40 +66,74 @@ export default function AdminOurMilestonesPage() {
         }
     };
 
+    const onSort = (nextSortBy: SortBy) => {
+        setParam((prev) => {
+            const nextOrder: SortOrder = prev.sortBy === nextSortBy ? (prev.sortOrder === "asc" ? "desc" : "asc") : "asc";
+            return { ...prev, pageNo: 1, sortBy: nextSortBy, sortOrder: nextOrder };
+        });
+    };
+
     return (
         <section className="space-y-4">
-            <AdminPageHeader title="Our Milestones" subtitle="Manage public timeline milestones on the about page." />
-
-            <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
-                <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Milestones</h3>
+            <AdminPageHeader
+                title="Our Milestones"
+                subtitle="Manage public timeline milestones on the about page."
+                action={
                     <PermissionBlock permission_id={441}>
-                        <Button
-                            type="button"
-                            variant="primary"
-                            size="md"
-                            onClick={() => {
-                                setMilestoneInitial({ _id: "", year: "", event: "", displayOrder: 0, status: 1 });
-                                setOpen("add");
-                            }}
-                        >
+                        <Button type="button" variant="primary" size="md" onClick={() => {
+                            setMilestoneInitial({ _id: "", year: "", event: "", displayOrder: 0, status: 1 });
+                            setOpen("add");
+                        }}>
                             <Plus className="h-3.5 w-3.5" /> Add Milestone
                         </Button>
                     </PermissionBlock>
+                }
+            />
+            <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
+                <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <Input
+                        value={param.query}
+                        onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
+                        className="max-w-xs"
+                        placeholder="Search year/event..."
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                            value={param.status}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
+                            }}
+                            className="max-w-[180px]"
+                        >
+                            <option value="">All</option>
+                            <option value={1}>Active</option>
+                            <option value={0}>Inactive</option>
+                        </Select>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
+                    </div>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                         <thead className="bg-[#edf3ff] text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             <tr>
-                                <th className="px-3 py-2">Year</th>
-                                <th className="px-3 py-2">Event</th>
-                                <th className="px-3 py-2">Order</th>
-                                <th className="px-3 py-2">Status</th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("year")} name="Year" active={param.sortBy === "year"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("event")} name="Event" active={param.sortBy === "event"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("displayOrder")} name="Display Order" active={param.sortBy === "displayOrder"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("status")} name="Status" active={param.sortBy === "status"} sortOrder={param.sortOrder} />
+                                </th>
                                 <th className="px-3 py-2 text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {milestones.map((row) => (
+                            {data.record.map((row) => (
                                 <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
                                         <Badge variant="secondary">{row.year}</Badge>
@@ -109,10 +163,11 @@ export default function AdminOurMilestonesPage() {
                                     </td>
                                 </tr>
                             ))}
-                            <AdminNoTableRecords show={milestones.length === 0} />
+                            <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
                     </table>
                 </div>
+                <AdminPagination data={data} param={param} setParam={setParam} />
             </div>
 
             <Modal show={!!open} onClose={() => setOpen(null)} title={open === "add" ? "Add Our Milestone" : "Update Our Milestone"} size="lg">
