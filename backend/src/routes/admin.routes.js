@@ -19,6 +19,8 @@ import { createBanner, deleteBanner, getBanner, updateBanner } from "../controll
 import { createCmsPage, deleteCmsPage, getCmsPages, getSingleCmsPage, updateCmsPage } from "../controller/admin/cmsPage.controller.js";
 import { deleteEnquiry, getEnquiry, resolveEnquiry } from "../controller/admin/enquiry.controller.js";
 import { createTestimonial, deleteTestimonial, getSingleTestimonial, getTestimonial, updateTestimonial } from "../controller/admin/testimonial.controller.js";
+import { createOurValue, updateOurValue, deleteOurValue, getOurValues } from "../controller/admin/ourValue.controller.js";
+import { createOurMilestone, updateOurMilestone, deleteOurMilestone, getOurMilestones } from "../controller/admin/ourMilestone.controller.js";
 import { getDashboardStats } from "../controller/admin/dashboard.controller.js";
 import { Storage } from "../libraries/storage.js";
 
@@ -31,6 +33,7 @@ const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: t
 const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provider-work", isImage: true, isDoc: false, fileSize: 2 });
 const bannerStorage = new Storage({ dir: "banners", isImage: true, isDoc: false, fileSize: 5 });
 const testimonialStorage = new Storage({ dir: "testimonials", isImage: true, isDoc: false, fileSize: 3 });
+const ourValueStorage = new Storage({ dir: "our-values", isImage: true, isDoc: false, fileSize: 2 });
 
 router.use(requireAdminAuth);
 
@@ -159,6 +162,17 @@ router.put("/cms-pages/:id", validator("cms-page"), updateCmsPage);
 router.delete("/cms-pages/:id", deleteCmsPage);
 router.get("/cms-pages/:id", getSingleCmsPage);
 router.get("/cms-pages", getCmsPages);
+
+// Our Content
+router.post("/our-values", ourValueStorage.single("icon"), validator("our-value-create"), createOurValue);
+router.put("/our-values/:id", ourValueStorage.single("icon"), validator("our-value-update"), updateOurValue);
+router.delete("/our-values/:id", deleteOurValue);
+router.get("/our-values", getOurValues);
+
+router.post("/our-milestones", validator("our-milestone"), createOurMilestone);
+router.put("/our-milestones/:id", validator("our-milestone"), updateOurMilestone);
+router.delete("/our-milestones/:id", deleteOurMilestone);
+router.get("/our-milestones", getOurMilestones);
 
 
 export default router;

@@ -44,7 +44,7 @@ export function Header() {
                     </div>
 
                     <nav className="hidden items-center gap-1 md:flex">
-                        <Link href="/services/cleaning">
+                        <Link href="/services">
                             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">Services</Button>
                         </Link>
                         <Link href="/about">

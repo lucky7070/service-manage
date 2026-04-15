@@ -22,4 +22,6 @@ export { Faq } from "./Faq.js";
 export { Banner } from "./Banner.js";
 export { Enquiry } from "./Enquiry.js";
 export { CmsPage } from "./CmsPage.js";
+export { OurValue } from "./OurValue.js";
+export { OurMilestone } from "./OurMilestone.js";
 export { Testimonial } from "./Testimonial.js";

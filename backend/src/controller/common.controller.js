@@ -1,4 +1,4 @@
-import { City, Enquiry, ServiceCategory, Testimonial, CmsPage } from "../models/index.js";
+import { OurMilestone, OurValue, City, Enquiry, ServiceCategory, Testimonial, CmsPage } from "../models/index.js";
 import { escapeRegex } from "../helpers/utils.js";
 
 export const listCities = async (req, res) => {
@@ -20,6 +20,23 @@ export const listCities = async (req, res) => {
         ]);
 
         return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const getAboutContent = async (req, res) => {
+    try {
+        const [ourStory, valuesRows, milestoneRows] = await Promise.all([
+            CmsPage.findOne({ pageSlug: "our-story" }),
+            OurValue.find({ deletedAt: null, isActive: true }, { icon: 1, title: 1, description: 1, displayOrder: 1 }).sort({ displayOrder: 1, createdAt: 1 }).lean(),
+            OurMilestone.find({ deletedAt: null, isActive: true }, { year: 1, event: 1, displayOrder: 1 }).sort({ displayOrder: 1, createdAt: 1 }).lean()
+        ]);
+
+        const values = valuesRows.map((row) => ({ icon: row.icon, title: row.title, description: row.description }));
+        const milestones = milestoneRows.map((row) => ({ year: row.year, event: row.event }));
+
+        return res.success({ ourStory: ourStory?.content || "No content available.", values, milestones });
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -61,6 +78,23 @@ export const listServiceCategoriesForHome = async (req, res) => {
             .lean();
 
         return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const getServiceCategoryBySlug = async (req, res) => {
+    try {
+        const slug = String(req.params.slug).trim().toLowerCase();
+        if (!slug) return res.noRecords();
+
+        const row = await ServiceCategory.findOne(
+            { slug, deletedAt: null, isActive: true },
+            { name: 1, slug: 1, description: 1, image: 1, displayOrder: 1 }
+        ).lean();
+
+        if (!row) return res.noRecords();
+        return res.success(row);
     } catch (error) {
         return res.someThingWentWrong(error);
     }

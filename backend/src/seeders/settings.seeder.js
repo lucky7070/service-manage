@@ -9,6 +9,7 @@ export const SETTINGS_SEED_ROWS = [
     [1, "address", "Address", "text", "226,1st floor, Opp. Rajasthan Patrika Office, Manji Ka Hatha, Paota, Jodhpur, Rajasthan - 342001"],
     [1, "email", "Email", "text", "info@adiyogifintech.com"],
     [1, "phone", "Phone", "text", "9602570577"],
+    [1, "brand_tagline", "Brand Tagline", "text", "Your trusted partner for all home services. Quality work, verified professionals, satisfaction guaranteed."],
     [2, "facebook", "Facebook", "text", "https://www.facebook.com"],
     [2, "twitter", "Twitter", "text", "https://www.twitter.com"],
     [2, "linkdin", "Linkdin", "text", "https://www.linkdin.com"],

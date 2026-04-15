@@ -8,7 +8,9 @@ export function cn(...parts: Array<string | undefined | false | null>): string {
 
 export const resolveFileUrl = (fileName?: string | null) => {
     if (!fileName) return null;
-    return fileName.startsWith("http") ? fileName : `${envConfig.uploadUrl}${fileName}`;
+    if (fileName.startsWith("/")) return `${envConfig.uploadUrl}${fileName}`;
+    if (fileName.startsWith("http")) return fileName;
+    return null;
 };
 
 export const getIconConfig = (icon: string) => {

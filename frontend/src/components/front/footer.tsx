@@ -31,7 +31,7 @@ export function Footer() {
                             <span className="text-xl font-bold text-white">{settings.application_name || ""}</span>
                         </Link>
                         <p className="mb-6 text-sm text-gray-400 leading-relaxed">
-                            Your trusted partner for all home services. Quality work, verified professionals, satisfaction guaranteed.
+                           {settings.brand_tagline || ""}
                         </p>
                         {socialLinks.length ? <div className="flex gap-3">
                             {socialLinks.map((item) => <a

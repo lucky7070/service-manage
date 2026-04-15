@@ -1,4 +1,4 @@
-import { Building2, CircleHelp, FileText, Globe, HardHat, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
+import { Building2, CircleHelp, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -181,6 +181,24 @@ export const PERMISSIONS = [
             { id: 424, label: "View Testimonial" },
         ]
     },
+    {
+        name: "Our Value Management",
+        permissions: [
+            { id: 431, label: "Create Our Value" },
+            { id: 432, label: "Update Our Value" },
+            { id: 433, label: "Delete Our Value" },
+            { id: 434, label: "View Our Values" },
+        ]
+    },
+    {
+        name: "Our Milestone Management",
+        permissions: [
+            { id: 441, label: "Create Our Milestone" },
+            { id: 442, label: "Update Our Milestone" },
+            { id: 443, label: "Delete Our Milestone" },
+            { id: 444, label: "View Our Milestones" },
+        ]
+    },
 
 ];
 
@@ -207,6 +225,8 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/faqs", label: "FAQs", icon: CircleHelp, permission_id: 384 },
             { href: "/admin/banners", label: "Banners", icon: ImageIcon, permission_id: 394 },
             { href: "/admin/testimonials", label: "Testimonials", icon: Quote, permission_id: 424 },
+            { href: "/admin/our-values", label: "Our Values", icon: Heart, permission_id: 434 },
+            { href: "/admin/our-milestones", label: "Our Milestones", icon: History, permission_id: 444 },
             { href: "/admin/cms-pages", label: "CMS Pages", icon: FileText, permission_id: 414 },
         ]
     },
@@ -332,5 +352,15 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/testimonials",
         permission_id: 424,
         items: [{ label: "Testimonials" }]
+    },
+    {
+        path: "/admin/our-values",
+        permission_id: 434,
+        items: [{ label: "Our Values" }]
+    },
+    {
+        path: "/admin/our-milestones",
+        permission_id: 444,
+        items: [{ label: "Our Milestones" }]
     },
 ];

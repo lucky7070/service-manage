@@ -41,3 +41,34 @@ export async function getHomeServiceCategories(limit = 8): Promise<ServiceCatego
     
     return [];
 }
+
+export type OurValue = {
+    icon: string;
+    title: string;
+    description: string;
+};
+
+export type OurMilestone = {
+    year: string;
+    event: string;
+};
+
+export async function getAboutContent(): Promise<{ ourStory: string; values: OurValue[]; milestones: OurMilestone[] }> {
+    const { data } = await AxiosHelper.getData("/about-content");
+    if (data.status && data.data) {
+        return {
+            ourStory: data.data.ourStory,
+            values: Array.isArray(data.data.values) ? data.data.values : [],
+            milestones: Array.isArray(data.data.milestones) ? data.data.milestones : []
+        };
+    }
+    return { ourStory: "", values: [], milestones: [] };
+}
+
+export async function getServiceCategoryBySlug(slug: string): Promise<ServiceCategory | null> {
+    const { data } = await AxiosHelper.getData(`/service-categories/${slug}`);
+    if (data.status && data.data && !Array.isArray(data.data)) {
+        return data.data as ServiceCategory;
+    }
+    return null;
+}

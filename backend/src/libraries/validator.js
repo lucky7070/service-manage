@@ -86,6 +86,14 @@ const providerAadharDocRequired = check("aadharDocument", "Aadhar document is re
     if (!req.files?.aadharDocument?.[0]?.filename) throw new Error("Aadhar document is required.");
     return true;
 });
+const ourValueIconRequired = check("icon", "Icon image is required.").custom((value, { req }) => {
+    if (!req.file?.filename) throw new Error("Icon image is required.");
+    return true;
+});
+const title = check("title", "Title is required.").trim().notEmpty().isLength({ min: 2, max: 200 });
+const description = check("description", "Description is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
+const year = check("year", "Year is required.").trim().notEmpty().isLength({ min: 4, max: 4 });
+const event = check("event", "Event is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
 
 export const validator = (method) => {
 
@@ -171,6 +179,15 @@ export const validator = (method) => {
             break;
         case "service-provider-register":
             output = [name, mobile, email, cityIdProvider, serviceCategoryIdProvider, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, otp, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
+            break;
+        case "our-value-create":
+            output = [ourValueIconRequired, title, description, displayOrder, status];
+            break;
+        case "our-value-update":
+            output = [title, description, displayOrder, status];
+            break;
+        case "our-milestone":
+            output = [year, event, displayOrder, status];
             break;
         case "setting-update":
             output = [settingType];

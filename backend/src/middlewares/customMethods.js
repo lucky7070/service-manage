@@ -74,7 +74,7 @@ export const customMethods = (req, res, next) => {
         return this.status(403).json({
             status: false,
             message: error.message || language.SOMETHING_WENT_WRONG,
-            data: process.env.SHOW_ERROR ? String(error.stack || "").split("\n").slice(0, 10) : []
+            data: (process.env.SHOW_ERROR && error?.stack) ? String(error.stack || "").split("\n").slice(0, 10) : []
         });
     };
 

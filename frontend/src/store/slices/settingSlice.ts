@@ -7,6 +7,7 @@ export type SettingsState = {
     copyright: string;
     logo: string;
     favicon: string;
+    brand_tagline: string;
     address: string;
     facebook: string;
     twitter: string;
@@ -20,6 +21,7 @@ export const initialSettingsState: SettingsState = {
     application_name: "",
     copyright: "",
     address: "",
+    brand_tagline: "",
     email: "",
     phone: "",
     facebook: "",
