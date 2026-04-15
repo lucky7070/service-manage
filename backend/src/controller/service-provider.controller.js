@@ -2,8 +2,9 @@ import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../config/index.js";
 import { COOKIE_OPTIONS, PHONE_REGEXP } from "../config/constants.js";
-import { generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
-import { OtpVerification, ServiceProvider } from "../models/index.js";
+import { ObjectId, generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
+import { OtpVerification, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
+import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
 
 export const sendOtp = async (req, res) => {
@@ -133,8 +134,8 @@ export const profile = async (req, res) => {
     try {
         const { id } = req.serviceProvider;
 
-        const user = await ServiceProvider.findById(id, "_id name mobile email image");
-        return res.success({ _id: user._id, name: user.name, mobile: user.mobile, email: user.email, image: user.image }, "User profile fetched successfully");
+        const user = await ServiceProvider.findById(id, "_id userId name mobile email image cityId serviceCategoryId panCardNumber aadharNumber panCardDocument aadharDocument experienceYears experienceDescription registerFrom profileStatus rejectionReason approvedAt isAvailable currentLatitude currentLongitude totalCompletedServices totalRating ratingCount isActive isVerified lastLogin").lean();
+        return res.success(user, "User profile fetched successfully");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -144,6 +145,103 @@ export const logout = async (req, res) => {
     try {
         res.clearCookie("service-provider-token", COOKIE_OPTIONS);
         return res.success([], "Logged out");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const getWorkPhotos = async (req, res) => {
+    try {
+
+        const { id } = req.serviceProvider;
+        const rows = await ServiceProviderPhoto.find({ providerId: id }).sort({ displayOrder: 1, createdAt: 1 }).lean();
+        return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const uploadWorkPhotos = async (req, res) => {
+    try {
+
+        const files = req.files || [];
+        if (!Array.isArray(files) || files.length === 0) {
+            return res.someThingWentWrong({ message: "No image files were uploaded." });
+        }
+
+        const { id } = req.serviceProvider;
+        const last = await ServiceProviderPhoto.findOne({ providerId: id }, "displayOrder").sort({ displayOrder: -1 }).lean();
+        let nextOrder = (last?.displayOrder ?? -1) + 1;
+
+        const created = [];
+        for (const file of files) {
+            if (!file?.filename) continue;
+            const doc = await ServiceProviderPhoto.create({
+                providerId: id,
+                photoUrl: `/service-provider-work/${file.filename}`,
+                displayOrder: nextOrder++
+            });
+
+            created.push(doc.toObject());
+        }
+
+        if (!created.length) return res.someThingWentWrong({ message: "No valid images were saved." });
+        return res.successInsert({ record: created }, "Photos uploaded.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const deleteWorkPhoto = async (req, res) => {
+    try {
+
+        const photoId = ObjectId(req.params.photoId);
+        if (!photoId) return res.someThingWentWrong({ message: "Invalid photo id." });
+
+        const { id } = req.serviceProvider;
+        const doc = await ServiceProviderPhoto.findOne({ _id: photoId, providerId: id });
+        if (!doc) return res.noRecords();
+
+        if (doc.photoUrl) deleteFile(doc.photoUrl);
+        await doc.deleteOne();
+        return res.successDelete(undefined, "Photo removed.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const reorderWorkPhotos = async (req, res) => {
+    try {
+
+        const { orderedIds } = req.body || {};
+        const { id } = req.serviceProvider;
+        if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+            return res.someThingWentWrong({ message: "orderedIds must be a non-empty array." });
+        }
+
+        const ids = orderedIds.map((x) => ObjectId(x)).filter(Boolean);
+        if (ids.length !== orderedIds.length) {
+            return res.someThingWentWrong({ message: "Invalid photo id in orderedIds." });
+        }
+
+        const existing = await ServiceProviderPhoto.find({ providerId: id }, "_id").lean();
+        if (existing.length !== ids.length) {
+            return res.someThingWentWrong({ message: "Photo list does not match server state." });
+        }
+
+        const idSet = new Set(existing.map((row) => String(row._id)));
+        for (const id of ids) {
+            if (!idSet.has(String(id))) {
+                return res.someThingWentWrong({ message: "Unknown photo id in orderedIds." });
+            }
+        }
+
+        await Promise.all(ids.map((photoId, index) =>
+            ServiceProviderPhoto.updateOne({ _id: photoId, providerId: id }, { $set: { displayOrder: index } })
+        ));
+
+        const rows = await ServiceProviderPhoto.find({ providerId: id }).sort({ displayOrder: 1, createdAt: 1 }).lean();
+        return res.success(rows, "Order updated.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

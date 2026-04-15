@@ -373,6 +373,93 @@
             ],
             "url": "{{baseUrl}}/service-provider/profile"
           }
+        },
+        {
+          "name": "Work photos - list (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos"
+          }
+        },
+        {
+          "name": "Work photos - upload (auth, multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Attach one or more image files with field name `photos`."
+          }
+        },
+        {
+          "name": "Work photos - reorder (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos/reorder",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderedIds\": [\n    \"507f1f77bcf86cd799439011\",\n    \"507f191e810c19729de860ea\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Send all photo ids in desired final order."
+          }
+        },
+        {
+          "name": "Work photos - delete (auth)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos/:photoId",
+            "description": "Replace :photoId with a real work photo id."
+          }
         }
       ]
     },
