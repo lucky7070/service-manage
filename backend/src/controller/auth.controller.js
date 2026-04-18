@@ -50,7 +50,7 @@ export const register = async (req, res) => {
         await verify.deleteOne();
 
         const token = jwt.sign({ id: user._id, role: "customer" }, config.customerJwtSecret, { expiresIn: "7d" });
-        res.cookie("customer_token", token, COOKIE_OPTIONS);
+        res.setCookie("customer_token", token);
 
         return res.success({ _id: user._id, name: user.name, mobile: user.mobile, email: user.email, image: user.image }, "Success..!!");
     } catch (error) {
@@ -71,7 +71,7 @@ export const profile = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.clearCookie("customer_token", COOKIE_OPTIONS);
+        res.deleteCookie("customer_token");
         return res.success([], "Logged out");
     } catch (error) {
         return res.someThingWentWrong(error);

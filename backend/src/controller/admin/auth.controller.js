@@ -23,7 +23,7 @@ export const adminLogin = async (req, res) => {
         if (!ok) return res.someThingWentWrong({ message: "Invalid credentials" });
 
         const token = jwt.sign({ id: admin._id, role: "admin" }, config.jwtSecret, { expiresIn: "7d" });
-        res.cookie("admin_token", token, COOKIE_OPTIONS);
+        res.setCookie("admin_token", token);
 
         return res.success({ admin }, "Admin login successful");
     } catch (error) {
@@ -108,7 +108,7 @@ export const updateAdminProfileImage = async (req, res) => {
 };
 
 export const adminLogout = async (req, res) => {
-    res.clearCookie("admin_token", COOKIE_OPTIONS);
+    res.deleteCookie("admin_token");
     return res.success([], "Logged out");
 };
 

@@ -49,11 +49,13 @@ export default async function AboutPage() {
                             values.map((value) => {
                                 const iconUrl = resolveFileUrl(value.icon);
                                 return <div key={value.title} className="rounded-2xl border bg-card p-6">
-                                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                                    <div className="mb-4 flex h-12 w-12 items-center justify-center">
                                         {iconUrl ? (
-                                            <Image src={iconUrl} alt={`${value.title} icon`} className="h-6 w-6 object-contain" />
+                                            <Image src={iconUrl} alt={`${value.title} icon`} className="w-full h-full object-contain rounded-xl" />
                                         ) : (
-                                            <ImageIcon className="h-6 w-6 text-primary" />
+                                            <div className="w-full h-full flex items-center justify-center bg-primary/10 rounded-xl">
+                                                <ImageIcon className="h-6 w-6 text-primary" />
+                                            </div>
                                         )}
                                     </div>
                                     <h3 className="mb-2 font-semibold text-foreground">{value.title}</h3>
@@ -82,7 +84,7 @@ export default async function AboutPage() {
                                 milestones.map((milestone, index) => (
                                     <div key={`${milestone.year}-${index}`} className="flex gap-4">
                                         <div className="flex flex-col items-center">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground">
+                                            <div className="flex min-h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-primary-foreground">
                                                 <CheckCircle className="h-5 w-5" />
                                             </div>
                                             {index < milestones.length - 1 && (

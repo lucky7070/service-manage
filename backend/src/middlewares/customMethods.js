@@ -1,3 +1,4 @@
+import { COOKIE_OPTIONS } from "../config/constants.js";
 import language from "../languages/english.js";
 
 const toInt = (value, fallback) => {
@@ -103,7 +104,11 @@ export const customMethods = (req, res, next) => {
     };
 
     res.setCookie = function setCookie(key, value) {
-        this.cookie(key, value, { maxAge: 24 * 60 * 60 * 1000, httpOnly: true });
+        this.cookie(key, value, COOKIE_OPTIONS);
+    };
+
+    res.deleteCookie = function deleteCookie(key) {
+        this.clearCookie(key, COOKIE_OPTIONS);
     };
 
     next();

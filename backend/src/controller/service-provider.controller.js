@@ -42,16 +42,16 @@ export const login = async (req, res) => {
         const verify = await OtpVerification.findOne({ phoneNumber: mobile, otpCode: otp, purpose: "login" }).sort({ createdAt: -1 });
         if (!verify || moment(verify.expiresAt).isBefore(moment())) return res.someThingWentWrong({ message: "Invalid or expired OTP" });
 
-        let user = await ServiceProvider.findOne({ mobile: verify.phoneNumber, deletedAt: null });
+        const user = await ServiceProvider.findOne({ mobile: verify.phoneNumber, deletedAt: null }, "_id userId name mobile email image cityId serviceCategoryId panCardNumber aadharNumber panCardDocument aadharDocument experienceYears experienceDescription registerFrom profileStatus rejectionReason approvedAt isAvailable currentLatitude currentLongitude totalCompletedServices totalRating ratingCount isActive isVerified lastLogin");
         if (!user) return res.someThingWentWrong({ message: "User not registered..!!" });
 
         await user.updateOne({ lastLogin: now() });
         await verify.deleteOne();
 
         const token = jwt.sign({ id: user._id, role: "service-provider" }, config.serviceProviderJwtSecret, { expiresIn: "7d" });
-        res.cookie("service-provider-token", token, COOKIE_OPTIONS);
+        res.setCookie("service-provider-token", token);
 
-        return res.success({ _id: user._id, name: user.name, mobile: user.mobile }, "Success..!!");
+        return res.success(user, "Success..!!");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -143,7 +143,7 @@ export const profile = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.clearCookie("service-provider-token", COOKIE_OPTIONS);
+        res.deleteCookie("service-provider-token");
         return res.success([], "Logged out");
     } catch (error) {
         return res.someThingWentWrong(error);

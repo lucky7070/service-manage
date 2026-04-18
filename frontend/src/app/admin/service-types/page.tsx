@@ -17,6 +17,9 @@ import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import { useSearchParams } from "next/navigation";
+import AsyncFormSelect from "@/components/ui/AsyncFormSelect";
+import AxiosHelper from "@/helpers/AxiosHelper";
 
 type ServiceCategoryOption = { _id: string; name: string; slug?: string };
 
@@ -73,37 +76,16 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function AdminServiceTypesPage() {
+
+    const searchParams = useSearchParams();
+    const category = searchParams.get('category')
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [categories, setCategories] = useState<ServiceCategoryOption[]>([]);
     const [open, setOpen] = useState<null | "add" | "edit">(null);
+    const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
     const [data, setData] = useState<ServiceTypeRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{
-        limit: number;
-        pageNo: number;
-        query: string;
-        sortBy: SortBy;
-        sortOrder: SortOrder;
-        status: "" | 0 | 1;
-        categoryId: string;
-    }>({
-        limit: 10,
-        pageNo: 1,
-        query: "",
-        sortBy: "createdAt",
-        sortOrder: "desc",
-        status: "",
-        categoryId: ""
-    });
-    const [initialValues, setInitialValues] = useState<ServiceTypeFormValues>({
-        _id: "",
-        categoryId: "",
-        name: "",
-        nameHi: "",
-        estimatedTimeMinutes: "",
-        basePrice: "",
-        description: "",
-        status: 1
-    });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; categoryId: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", status: "", categoryId: category ?? "" });
+    const [initialValues, setInitialValues] = useState<ServiceTypeFormValues>({ _id: "", categoryId: "", name: "", nameHi: "", estimatedTimeMinutes: "", basePrice: "", description: "", status: 1 });
 
     useEffect(() => {
         (async () => {
@@ -156,16 +138,7 @@ export default function AdminServiceTypesPage() {
     };
 
     const openAdd = () => {
-        setInitialValues({
-            _id: "",
-            categoryId: categories[0]?._id ?? "",
-            name: "",
-            nameHi: "",
-            estimatedTimeMinutes: "",
-            basePrice: "",
-            description: "",
-            status: 1
-        });
+        setInitialValues({ _id: "", categoryId: "", name: "", nameHi: "", estimatedTimeMinutes: "", basePrice: "", description: "", status: 1 });
         setOpen("add");
     };
 
@@ -219,18 +192,25 @@ export default function AdminServiceTypesPage() {
                         placeholder="Search by name..."
                     />
                     <div className="flex flex-wrap items-center gap-2">
-                        <Select
-                            value={param.categoryId}
-                            onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, categoryId: e.target.value }))}
-                            className="max-w-[200px]"
-                        >
-                            <option value="">All categories</option>
-                            {categories.map((c) => (
-                                <option key={c._id} value={c._id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </Select>
+                        <AsyncFormSelect
+                            inputId="join-pro-service-category-select-input"
+                            cacheOptions
+                            defaultOptions
+                            loadOptions={async (inputValue: string) => {
+                                const { data } = await AxiosHelper.getData("/service-categories-list", { query: inputValue, limit: 20 });
+                                if (data.status && Array.isArray(data.data)) {
+                                    return data.data;
+                                } else {
+                                    return [];
+                                }
+                            }}
+                            placeholder="Select service category"
+                            value={serviceCategory}
+                            onChange={(option) => {
+                                setParam((prev) => ({ ...prev, pageNo: 1, categoryId: option?.value || "" }))
+                                setServiceCategory(option || null);
+                            }}
+                        />
                         <Select
                             value={param.status}
                             onChange={(e) => {

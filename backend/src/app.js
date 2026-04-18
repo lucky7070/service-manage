@@ -27,8 +27,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 app.use(customMethods);
+app.get("", (req, res) => res.success([], `Backend is healthy..!! ✅`));
 app.use(licenseCheck);
-app.get("/health", (req, res) => res.success({ ok: true }, "Backend is healthy"));
 
 const uploadsDir = path.resolve("./public/uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
