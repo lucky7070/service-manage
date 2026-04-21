@@ -13,7 +13,7 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { getSweetAlertConfig } from "@/helpers/utils";
+import { getSweetAlertConfig, slugify } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AsyncFormSelect, { type AsyncSelectOption } from "@/components/ui/AsyncFormSelect";
@@ -29,6 +29,7 @@ type CityType = {
     countryName?: string;
     stateName?: string;
     name: string;
+    slug: string;
     status: number;
     createdAt?: string;
 };
@@ -40,17 +41,18 @@ type CityRecord = {
     pagination: number[];
 };
 
-type SortBy = "name" | "countryName" | "stateName" | "status" | "createdAt";
+type SortBy = "name" | "slug" | "countryName" | "stateName" | "status" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 const validationSchema = Yup.object().shape({
     countryId: Yup.string().required("Country required."),
     stateId: Yup.string().required("State required."),
     name: Yup.string().min(2, "Too Short!").max(100, "Too Long!").required("City name required.").trim(),
+    slug: Yup.string().matches(/^[a-z0-9_-]+$/, "Slug: use lowercase letters, numbers, hyphens, and underscores only.").min(3, "Slug must be at least 3 characters.").max(60, "Slug must be at most 60 characters."),
     status: Yup.number().required("Status required")
 });
 
-const emptyInitialValues: CityType = { _id: "", countryId: "", stateId: "", name: "", status: 1 };
+const emptyInitialValues: CityType = { _id: "", countryId: "", stateId: "", name: "", slug: "", status: 1 };
 
 export default function AdminCitiesPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
@@ -200,6 +202,9 @@ export default function AdminCitiesPage() {
                                     <AdminTableHeader onClick={() => onSort("name")} name="City" active={param.sortBy === "name"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("slug")} name="Slug" active={param.sortBy === "slug"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("status")} name="Status" active={param.sortBy === "status"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
@@ -214,6 +219,7 @@ export default function AdminCitiesPage() {
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.countryName || "-"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.stateName || "-"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
+                                    <td className="px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-300">{row.slug?.trim() ? row.slug : "—"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
                                         <Badge variant={row.status === 1 ? "success" : "secondary"} size="sm">
                                             {row.status === 1 ? "Active" : "Inactive"}
@@ -329,8 +335,16 @@ export default function AdminCitiesPage() {
 
                                 <div className="space-y-2">
                                     <Label htmlFor="city-name">City Name</Label>
-                                    <Field as={Input} id="city-name" name="name" placeholder="e.g. Lucknow" />
+                                    <Field as={Input} id="city-name" name="name" className="font-mono" placeholder="e.g. Lucknow" autoComplete="off" onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                                        formik.setFieldValue("slug", slugify(e.target.value));
+                                    }} />
                                     <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="city-slug">Slug</Label>
+                                    <Field as={Input} id="city-slug" name="slug" className="font-mono" placeholder="Auto-filled from city name" autoComplete="off" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="slug" component="small" />
+                                    <p className="text-xs text-slate-500 dark:text-slate-400">Unique URL key; generated from the name unless you change it.</p>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="city-status">Status</Label>

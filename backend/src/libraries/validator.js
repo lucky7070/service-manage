@@ -13,6 +13,7 @@ const stateId = check("stateId", "State ID is required.").exists().notEmpty().is
 const settingType = param("type", "Setting type is invalid.").exists().notEmpty().isInt({ min: 1, max: 10 });
 const phone = check("phone", "Enter a valid Indian mobile number.").optional({ values: "falsy" }).trim().matches(PHONE_REGEXP);
 const subject = check("subject", "Subject must be 2–200 characters.").trim().notEmpty().isLength({ min: 2, max: 200 });
+const slug = check("slug", "Slug: use lowercase letters, numbers, hyphens, and underscores only.").matches(/^[a-z0-9_-]+$/).isLength({ min: 3, max: 60 }).withMessage("Slug must be 3 to 60 characters.").trim();
 const message = check("message", "Message must be 10–5000 characters.").trim().notEmpty().isLength({ min: 10, max: 5000 });
 
 const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().notEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
@@ -115,7 +116,7 @@ export const validator = (method) => {
             output = [countryId, name, status];
             break;
         case "city":
-            output = [countryId, stateId, name, status];
+            output = [countryId, stateId, name, status, slug];
             break;
         case "customer":
             output = [name, mobile, email, dateOfBirth, status];

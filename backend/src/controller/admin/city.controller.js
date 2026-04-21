@@ -1,73 +1,74 @@
 import mongoose from "mongoose";
 import moment from "moment";
 import { City, Country, State } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const createCity = async (req, res) => {
     try {
-        const { countryId, stateId, name, status = 1 } = req.body;
+        const { countryId, stateId, name, slug, status = 1 } = req.body;
         if (!countryId) return res.someThingWentWrong({ message: "Country is required." });
         if (!stateId) return res.someThingWentWrong({ message: "State is required." });
-        if (!name?.trim()) return res.someThingWentWrong({ message: "City name is required." });
+        if (!name) return res.someThingWentWrong({ message: "City name is required." });
+        if (!slug) return res.someThingWentWrong({ message: "Valid slug is required (lowercase letters, numbers, hyphens, underscores only)." });
 
-        const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(`${countryId}`), deletedAt: null });
+        const country = await Country.findOne({ _id: ObjectId(countryId), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });
 
-        const state = await State.findOne({ _id: new mongoose.Types.ObjectId(`${stateId}`), countryId: country._id, deletedAt: null });
+        const state = await State.findOne({ _id: ObjectId(stateId), countryId: country._id, deletedAt: null });
         if (!state) return res.noRecords({ message: "State not found for selected country." });
 
-        const normalizedName = name.trim();
-        const exists = await City.findOne({
-            countryId: country._id,
-            stateId: state._id,
-            name: { $regex: `^${escapeRegex(normalizedName)}$`, $options: "i" },
-            deletedAt: null
-        });
-        if (exists) throw new Error(`City with name "${normalizedName}" already exists for selected state.`);
+        const exists = await City.findOne({ countryId: country._id, stateId: state._id, name: { $regex: `^${escapeRegex(name)}$`, $options: "i" }, deletedAt: null });
+        if (exists) throw new Error(`City with name "${name}" already exists for selected state.`);
 
-        const city = await City.create({ countryId: country._id, stateId: state._id, name: normalizedName, isActive: Number(status) === 1 });
+        const slugTaken = await City.findOne({ slug, deletedAt: null });
+        if (slugTaken) throw new Error(`City with slug "${slug}" already exists.`);
+
+        const city = await City.create({ countryId: country._id, stateId: state._id, name, slug, isActive: Number(status) === 1 });
         return res.successInsert(city);
     } catch (error) {
+        if (error.code === 11000) {
+            return res.someThingWentWrong({ message: "That city slug is already in use." });
+        }
         return res.someThingWentWrong(error);
     }
 };
 
 export const updateCity = async (req, res) => {
     try {
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const city = await City.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!city) return res.noRecords();
 
-        const { countryId, stateId, name, status = 1 } = req.body;
+        const { countryId, stateId, name, slug, status = 1 } = req.body;
         if (!countryId) return res.someThingWentWrong({ message: "Country is required." });
         if (!stateId) return res.someThingWentWrong({ message: "State is required." });
-        if (!name?.trim()) return res.someThingWentWrong({ message: "City name is required." });
+        if (!name) return res.someThingWentWrong({ message: "City name is required." });
+        if (!slug) return res.someThingWentWrong({ message: "Valid slug is required (lowercase letters, numbers, hyphens, underscores only)." });
 
-        const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(`${countryId}`), deletedAt: null });
+        const country = await Country.findOne({ _id: ObjectId(countryId), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });
 
-        const state = await State.findOne({ _id: new mongoose.Types.ObjectId(`${stateId}`), countryId: country._id, deletedAt: null });
+        const state = await State.findOne({ _id: ObjectId(stateId), countryId: country._id, deletedAt: null });
         if (!state) return res.noRecords({ message: "State not found for selected country." });
 
-        const normalizedName = name.trim();
-        const exists = await City.findOne({
-            _id: { $ne: city._id },
-            countryId: country._id,
-            stateId: state._id,
-            name: { $regex: `^${escapeRegex(normalizedName)}$`, $options: "i" },
-            deletedAt: null
-        });
-        if (exists) throw new Error(`City with name "${normalizedName}" already exists for selected state.`);
+        const exists = await City.findOne({ _id: { $ne: city._id }, countryId: country._id, stateId: state._id, name: { $regex: `^${escapeRegex(name)}$`, $options: "i" }, deletedAt: null });
+        if (exists) throw new Error(`City with name "${name}" already exists for selected state.`);
 
-        await City.updateOne({ _id: city._id }, { countryId: country._id, stateId: state._id, name: normalizedName, isActive: Number(status) === 1 });
+        const slugTaken = await City.findOne({ _id: { $ne: city._id }, slug, deletedAt: null });
+        if (slugTaken) throw new Error(`City with slug "${slug}" already exists.`);
+
+        await City.updateOne({ _id: city._id }, { countryId: country._id, stateId: state._id, name, slug, isActive: Number(status) === 1 });
         return res.successUpdate(city);
     } catch (error) {
+        if (error.code === 11000) {
+            return res.someThingWentWrong({ message: "That city slug is already in use." });
+        }
         return res.someThingWentWrong(error);
     }
 };
 
 export const deleteCity = async (req, res) => {
     try {
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const city = await City.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!city) return res.noRecords();
 
         await city.updateOne({ deletedAt: moment().toISOString() });
@@ -83,14 +84,14 @@ export const getCity = async (req, res) => {
 
         limit = limit ? parseInt(limit) : 10;
         pageNo = pageNo ? parseInt(pageNo) : 1;
-        sortBy = ["name", "countryName", "stateName", "status", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
+        sortBy = ["name", "slug", "countryName", "stateName", "status", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
         sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
 
         const filter = { deletedAt: null };
         if (query) filter.name = { $regex: escapeRegex(String(query)), $options: "i" };
         if (status !== null && status !== undefined && status !== "") filter.isActive = Number(status) === 1;
-        if (countryId) filter.countryId = new mongoose.Types.ObjectId(`${countryId}`);
-        if (stateId) filter.stateId = new mongoose.Types.ObjectId(`${stateId}`);
+        if (countryId) filter.countryId = ObjectId(countryId);
+        if (stateId) filter.stateId = ObjectId(stateId);
 
         const pipeline = [
             { $match: filter },
@@ -99,6 +100,7 @@ export const getCity = async (req, res) => {
             {
                 $project: {
                     name: 1,
+                    slug: 1,
                     countryId: 1,
                     stateId: 1,
                     countryName: { $first: "$country.name" },
@@ -126,7 +128,7 @@ export const getCity = async (req, res) => {
 
 export const getSingleCity = async (req, res) => {
     try {
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const city = await City.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!city) return res.noRecords();
 
         return res.success({
@@ -134,6 +136,7 @@ export const getSingleCity = async (req, res) => {
             countryId: city.countryId,
             stateId: city.stateId,
             name: city.name,
+            slug: city.slug ?? "",
             status: city.isActive ? 1 : 0,
             createdAt: city.createdAt
         });

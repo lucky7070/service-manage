@@ -2,6 +2,7 @@ import { seedSettings } from "./settings.seeder.js";
 import { seedServiceCategories } from "./serviceCategory.seeder.js";
 import { seedServiceTypes } from "./serviceType.seeder.js";
 import { seedDefaultAdmin } from "./defaultAdmin.seeder.js";
+import { seedIndiaLocations } from "./indiaLocation.seeder.js";
 
 /**
  * Registered seeders in execution order (dependencies first).
@@ -10,6 +11,7 @@ import { seedDefaultAdmin } from "./defaultAdmin.seeder.js";
 export const SEEDER_REGISTRY = [
     { name: "defaultAdmin", description: "Default Super Admin account", run: seedDefaultAdmin },
     { name: "settings", description: "Application settings defaults", run: seedSettings },
+    { name: "location", description: "India country/state/city master data", run: seedIndiaLocations },
     { name: "serviceCategories", description: "Service category trade groups", run: seedServiceCategories },
     { name: "serviceTypes", description: "Sample service types under categories", run: () => seedServiceTypes({ seedCategoriesFirst: true }) }
 ];
