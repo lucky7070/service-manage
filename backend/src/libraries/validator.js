@@ -13,7 +13,7 @@ const stateId = check("stateId", "State ID is required.").exists().notEmpty().is
 const settingType = param("type", "Setting type is invalid.").exists().notEmpty().isInt({ min: 1, max: 10 });
 const phone = check("phone", "Enter a valid Indian mobile number.").optional({ values: "falsy" }).trim().matches(PHONE_REGEXP);
 const subject = check("subject", "Subject must be 2–200 characters.").trim().notEmpty().isLength({ min: 2, max: 200 });
-const slug = check("slug", "Slug: use lowercase letters, numbers, hyphens, and underscores only.").matches(/^[a-z0-9_-]+$/).isLength({ min: 3, max: 60 }).withMessage("Slug must be 3 to 60 characters.").trim();
+const slug = check("slug", "Slug: use lowercase letters, numbers, hyphens, and underscores only.").exists().notEmpty().matches(/^[a-z0-9_-]+$/).isLength({ min: 3, max: 60 }).withMessage("Slug must be 3 to 60 characters.").trim();
 const message = check("message", "Message must be 10–5000 characters.").trim().notEmpty().isLength({ min: 10, max: 5000 });
 
 const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().notEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
@@ -22,25 +22,24 @@ const tagFor = check("tagFor", "Tag for is required.").exists().notEmpty().isIn(
 const tagName = check("tagName", "Tag name is required.").exists().notEmpty().isLength({ min: 1, max: 100 }).trim();
 const tagType = check("tagType", "Tag type is required.").exists().notEmpty().isIn(["positive", "negative", "neutral"]);
 
-const categoryIdService = check("categoryId", "Category is required.").exists().notEmpty().isMongoId();
-const slugServiceCategory = check("slug", "Slug: use lowercase letters, numbers, and hyphens only.").optional({ values: "falsy" }).matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).isLength({ min: 2, max: 100 });
+const categoryId = check("categoryId", "Category is required.").exists().notEmpty().isMongoId();
+const slugOptional = check("slug", "Slug: use lowercase letters, numbers, and hyphens only.").optional({ values: "falsy" }).matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).isLength({ min: 2, max: 100 });
 const nameHiCategory = check("nameHi").optional({ values: "falsy" }).isLength({ max: 200 });
-const descriptionCategory = check("description").optional({ values: "falsy" }).isLength({ max: 5000 });
-const displayOrderCategory = check("displayOrder").optional({ values: "falsy" }).isInt({ min: 0, max: 999999 });
+const descriptionOptional = check("description").optional({ values: "falsy" }).isLength({ max: 5000 });
 
-const panCardNumberProvider = check("panCardNumber", "Valid PAN is required (e.g. ABCDE1234F).").trim().notEmpty().matches(/^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/).customSanitizer((v) => String(v).trim().toUpperCase());
-const aadharNumberProvider = check("aadharNumber", "Aadhar must be exactly 12 digits.").trim().notEmpty().matches(/^[0-9]{12}$/);
-const experienceYearsProvider = check("experienceYears").optional().custom((value) => {
+const panCardNumber = check("panCardNumber", "Valid PAN is required (e.g. ABCDE1234F).").trim().notEmpty().matches(/^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/).customSanitizer((v) => String(v).trim().toUpperCase());
+const aadharNumber = check("aadharNumber", "Aadhar must be exactly 12 digits.").trim().notEmpty().matches(/^[0-9]{12}$/);
+const experienceYears = check("experienceYears").optional().custom((value) => {
     if (value === undefined || value === null || value === "") return true;
     const n = Number(value);
     return Number.isFinite(n) && n >= 0 && n <= 80;
 });
 
-const experienceDescriptionProvider = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
-const profileStatusProviderRequired = check("profileStatus", "Profile status is required.").exists().notEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
-const isVerifiedProvider = check("isVerified", "isVerified must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
+const experienceDescription = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
+const profileStatus = check("profileStatus", "Profile status is required.").exists().notEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
+const isVerified = check("isVerified", "isVerified must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const isResolved = check("isResolved", "isResolved must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
-const objectIdParam = param("id", "Invalid ID.").exists().notEmpty().isMongoId();
+const id = param("id", "Invalid ID.").exists().notEmpty().isMongoId();
 const passwordOptional = check("password", "Password must be greater then 5 digit.!!").optional({ nullable: true }).isLength({ min: 5, max: 50 });
 const imageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
     if (!req.file) throw new Error("Profile image is required.");
@@ -48,9 +47,9 @@ const imageRequired = check("image", "Profile image is required.").custom((value
 });
 
 const otp = check("otp", "Enter the 6-digit code.").trim().notEmpty().matches(/^[0-9]{6}$/).withMessage("OTP must be 6 digits.");
-const currentPassword = check("current_password", "Current password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
-const newPassword = check("new_password", "New password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
-const confirmPassword = check("confirm_password", "Please confirm your new password.").trim().notEmpty().custom((value, { req }) => {
+const current_password = check("current_password", "Current password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
+const new_password = check("new_password", "New password must be 8–50 characters.").trim().notEmpty().isLength({ min: 8, max: 50 });
+const confirm_password = check("confirm_password", "Please confirm your new password.").trim().notEmpty().custom((value, { req }) => {
     if (value !== req.body.new_password) throw new Error("New password and confirmation do not match.");
     return true;
 })
@@ -71,20 +70,20 @@ const metaKeywords = check("metaKeywords").optional({ values: "falsy" }).isLengt
 const content = check("content").optional({ values: "falsy" }).isLength({ max: 200000 }).trim();
 const contentHi = check("contentHi").optional({ values: "falsy" }).isLength({ max: 200000 }).trim();
 const viewCount = check("viewCount", "View count must be 0 or greater.").optional({ values: "falsy" }).isInt({ min: 0 });
-const cityIdProvider = check("cityId", "City ID is required.").trim().notEmpty().isMongoId();
-const serviceCategoryIdProvider = check("serviceCategoryId", "Service category is required.").trim().notEmpty().isMongoId();
-const providerImageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
-    if (!req.files?.image?.[0]?.filename) throw new Error("Profile image is required.");
+const cityId = check("cityId", "City ID is required.").trim().notEmpty().isMongoId();
+const serviceCategoryId = check("serviceCategoryId", "Service category is required.").trim().notEmpty().isMongoId();
+const image = check("image", "Profile image is required.").custom((value, { req }) => {
+    if (!req.params?.id && !req.files?.image?.[0]?.filename) throw new Error("Profile image is required.");
     return true;
 });
 
-const providerPanDocRequired = check("panCardDocument", "PAN card document is required.").custom((value, { req }) => {
-    if (!req.files?.panCardDocument?.[0]?.filename) throw new Error("PAN card document is required.");
+const panCardDocument = check("panCardDocument", "PAN card document is required.").custom((value, { req }) => {
+    if (!req.params?.id && !req.files?.panCardDocument?.[0]?.filename) throw new Error("PAN card document is required.");
     return true;
 });
 
-const providerAadharDocRequired = check("aadharDocument", "Aadhar document is required.").custom((value, { req }) => {
-    if (!req.files?.aadharDocument?.[0]?.filename) throw new Error("Aadhar document is required.");
+const aadharDocument = check("aadharDocument", "Aadhar document is required.").custom((value, { req }) => {
+    if (!req.params?.id && !req.files?.aadharDocument?.[0]?.filename) throw new Error("Aadhar document is required.");
     return true;
 });
 const ourValueIconRequired = check("icon", "Icon image is required.").custom((value, { req }) => {
@@ -125,16 +124,16 @@ export const validator = (method) => {
             output = [tagFor, tagName, tagType, status];
             break;
         case "service-type":
-            output = [categoryIdService, name, status];
+            output = [categoryId, name, status];
             break;
         case "service-category":
-            output = [name, status, slugServiceCategory, nameHiCategory, descriptionCategory, displayOrderCategory];
+            output = [name, status, slug, nameHiCategory, descriptionOptional, displayOrder];
             break;
         case "service-provider":
-            output = [name, mobile, email, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
+            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, image, panCardDocument, aadharDocument];
             break;
         case "service-provider-status":
-            output = [objectIdParam, profileStatusProviderRequired, isVerifiedProvider];
+            output = [id, profileStatus, isVerified];
             break;
         case "admin":
             output = [name, mobile, roleId, email, password, status];
@@ -152,13 +151,13 @@ export const validator = (method) => {
             output = [email];
             break;
         case "admin-forgot-password-reset":
-            output = [email, otp, newPassword, confirmPassword];
+            output = [email, otp, new_password, confirm_password];
             break;
         case "admin-profile-password":
-            output = [currentPassword, newPassword.custom((value, { req }) => {
+            output = [current_password, new_password.custom((value, { req }) => {
                 if (value === req.body.current_password) throw new Error("New password must be different from your current password.");
                 return true;
-            }), confirmPassword];
+            }), confirm_password];
             break;
         case "faq":
             output = [question, answer, status, displayOrder];
@@ -170,7 +169,7 @@ export const validator = (method) => {
             output = [bannerType, bannerLink, displayOrder];
             break;
         case "enquiry-resolve":
-            output = [objectIdParam, isResolved];
+            output = [id, isResolved];
             break;
         case "enquiry-submit":
             output = [name, email, phone, subject, message];
@@ -179,7 +178,7 @@ export const validator = (method) => {
             output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
             break;
         case "service-provider-register":
-            output = [name, mobile, email, cityIdProvider, serviceCategoryIdProvider, panCardNumberProvider, aadharNumberProvider, experienceYearsProvider, experienceDescriptionProvider, otp, providerImageRequired, providerPanDocRequired, providerAadharDocRequired];
+            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument];
             break;
         case "our-value-create":
             output = [ourValueIconRequired, title, description, displayOrder, status];

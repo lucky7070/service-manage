@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 const Schema = new mongoose.Schema({
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", required: true, index: true, default: null },
     serviceTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceType", required: true, index: true, default: null },
-    cityIds: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: "City" }], default: [] },
     price: { type: Number, default: null },
     isActive: { type: Boolean, default: true }
 }, { timestamps: true });

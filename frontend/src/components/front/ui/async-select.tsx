@@ -25,8 +25,8 @@ type FrontAsyncSelectProps = {
     cacheOptions?: boolean;
     defaultOptions?: boolean;
     isSearchable: boolean;
-    instanceId: string;
-    inputId: string;
+    instanceId?: string;
+    inputId?: string;
     unstyled?: boolean;
     value: FrontSelectOption | null;
     loadOptions: (inputValue: string) => Promise<FrontSelectOption[]>;
@@ -37,7 +37,7 @@ type FrontAsyncSelectProps = {
 
 export default function FrontAsyncSelect({
     cacheOptions,
-    defaultOptions,
+    defaultOptions = true,
     isSearchable,
     unstyled = true,
     instanceId,

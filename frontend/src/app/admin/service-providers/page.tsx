@@ -9,7 +9,7 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import Link from "next/link";
-import { CircleCheckBig, ImageIcon, Images, Pencil, Plus, Trash2 } from "lucide-react";
+import { CircleCheckBig, ImageIcon, Images, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
@@ -20,12 +20,16 @@ import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PHONE_ERROR_MESSAGE, PHONE_REGEXP, ProfileStatus, SERVICE_PROVIDER_PROFILE_STATUSES } from "@/config";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AsyncFormSelect from "@/components/ui/AsyncFormSelect";
+import AxiosHelper from "@/helpers/AxiosHelper";
 
 type ServiceProvider = {
     _id: string;
     name: string;
     mobile: string;
     email: string;
+    cityId: string;
+    serviceCategoryId: string;
     panCardNumber: string;
     aadharNumber: string;
     image: File | string | null;
@@ -34,6 +38,9 @@ type ServiceProvider = {
     experienceYears: number | "";
     experienceDescription: string;
     profileStatus: ProfileStatus;
+
+    cityName?: string;
+    serviceCategoryName?: string;
 
     userId?: string;
     isVerified?: boolean;
@@ -48,10 +55,10 @@ type ServiceProviderRecord = {
     pagination: number[];
 };
 
-type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt";
+type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending" };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending" };
 
 const statusValidationSchema = Yup.object().shape({
     profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
@@ -74,21 +81,31 @@ const validationSchema = Yup.object().shape({
 
 export default function AdminServiceProvidersPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
-    const [open, setOpen] = useState<null | "add" | "edit">(null);
-    const [statusOpen, setStatusOpen] = useState(false);
+    const [open, setOpen] = useState<null | "add" | "edit" | "status">(null);
     const [data, setData] = useState<ServiceProviderRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "" });
     const [initialValues, setInitialValues] = useState<ServiceProvider>(INITIAL_VALUES);
-    const [statusValues, setStatusValues] = useState<{ _id: string; userId: string; name: string; mobile: string; email: string; profileStatus: ProfileStatus; isVerified: boolean }>({
-        _id: "",
-        userId: "",
-        name: "",
-        mobile: "",
-        email: "",
-        profileStatus: "pending",
-        isVerified: false
-    });
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [city, setCity] = useState<{ value: string; label: string } | null>(null);
+    const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
+
+    const loadCityOptions = async (inputValue: string) => {
+        const { data } = await AxiosHelper.getData("/cities-list", { query: inputValue, limit: 20 });
+        if (data.status && Array.isArray(data.data)) {
+            return data.data;
+        } else {
+            return [];
+        }
+    };
+
+    const loadServiceCategoryOptions = async (inputValue: string) => {
+        const { data } = await AxiosHelper.getData("/service-categories-list", { query: inputValue, limit: 20 });
+        if (data.status && Array.isArray(data.data)) {
+            return data.data;
+        } else {
+            return [];
+        }
+    };
 
     const fetchRows = useCallback(async () => {
         const { data } = await AxiosHelperAdmin.getData("/service-providers", param);
@@ -136,6 +153,8 @@ export default function AdminServiceProvidersPage() {
             name: String(data.name ?? ""),
             mobile: String(data.mobile ?? ""),
             email: String(data.email ?? ""),
+            cityId: String(data.cityId ?? ""),
+            serviceCategoryId: String(data.serviceCategoryId ?? ""),
             panCardNumber: String(data.panCardNumber ?? ""),
             aadharNumber: String(data.aadharNumber ?? ""),
             experienceYears: data.experienceYears ?? 0,
@@ -146,20 +165,17 @@ export default function AdminServiceProvidersPage() {
             aadharDocument: data.aadharDocument || null,
         });
 
+        setCity({ value: String(data.cityId ?? ""), label: String(data.cityName ?? "") });
+        setServiceCategory({ value: String(data.serviceCategoryId ?? ""), label: String(data.serviceCategoryName ?? "") });
+
         if (typeof data.image === 'string') setImagePreview(resolveFileUrl(data.image));
     };
 
     const openStatusModal = (row: ServiceProvider) => {
-        setStatusValues({
-            _id: row._id,
-            userId: row.userId || "—",
-            name: row.name || "—",
-            mobile: row.mobile || "—",
-            email: row.email || "—",
-            profileStatus: row.profileStatus || "pending",
-            isVerified: Boolean(row.isVerified)
-        });
-        setStatusOpen(true);
+        setInitialValues(row);
+        setCity({ value: String(row.cityId ?? ""), label: String(row.cityName ?? "") });
+        setServiceCategory({ value: String(row.serviceCategoryId ?? ""), label: String(row.serviceCategoryName ?? "") });
+        setOpen("status");
     };
 
     return (
@@ -221,6 +237,12 @@ export default function AdminServiceProvidersPage() {
                                     <AdminTableHeader onClick={() => onSort("email")} name="Email" active={param.sortBy === "email"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("cityId")} name="City" active={param.sortBy === "cityId"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("serviceCategoryId")} name="Service category" active={param.sortBy === "serviceCategoryId"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("profileStatus")} name="Profile status" active={param.sortBy === "profileStatus"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">Verified</th>
@@ -249,6 +271,8 @@ export default function AdminServiceProvidersPage() {
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.mobile}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.email}</td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.cityName || "—"}</td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.serviceCategoryName || "—"}</td>
                                     <td className="px-3 py-2">
                                         <Badge
                                             className="capitalize"
@@ -282,6 +306,16 @@ export default function AdminServiceProvidersPage() {
                                                     <Images className="h-4 w-4 shrink-0" strokeWidth={2} />
                                                 </Link>
                                             </PermissionBlock>
+                                            <PermissionBlock permission_id={3740}>
+                                                <Link
+                                                    href={`/admin/service-providers/${row._id}/services`}
+                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 px-3 text-xs font-medium text-primary-800 transition-all hover:bg-primary-200 dark:bg-primary-900/40 dark:text-primary-200"
+                                                    title="Provider Services"
+                                                    aria-label="Provider Services"
+                                                >
+                                                    <Wrench className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                </Link>
+                                            </PermissionBlock>
                                             <PermissionBlock permission_id={372}>
                                                 <Button size="sm" variant="primary" onClick={() => openStatusModal(row)} title="Update status" aria-label="Update status">
                                                     <CircleCheckBig className="h-4 w-4 shrink-0" strokeWidth={2} />
@@ -309,7 +343,7 @@ export default function AdminServiceProvidersPage() {
             </div>
 
             <Modal
-                show={!!open}
+                show={["add", "edit"].includes(String(open))}
                 onClose={() => setOpen(null)}
                 title={open === "add" ? "Create service provider" : "Update service provider"}
                 subTitle="Required: name, mobile, email, PAN, Aadhar. Optional: photo, document uploads, experience."
@@ -361,28 +395,67 @@ export default function AdminServiceProvidersPage() {
                                                 <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">No image</div>
                                             )}
                                         </div>
-                                        <InputFile
-                                            accept="image/jpeg,image/png,image/webp,image/gif"
-                                            onChange={(e) => {
-                                                const f = e.target.files?.[0];
-                                                if (f) {
-                                                    setFieldValue('image', f);
-                                                    setImagePreview(URL.createObjectURL(f));
-                                                }
-                                            }}
-                                        />
+                                        <div className="">
+                                            <InputFile
+                                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                                onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) {
+                                                        setFieldValue('image', f);
+                                                        setImagePreview(URL.createObjectURL(f));
+                                                    }
+                                                }}
+                                            />
+                                            <ErrorMessage className="text-xs text-rose-600" name="image" component="small" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="space-y-2">
-                                        <Label htmlFor="sp-name">Name <span className="text-red-500">*</span> </Label>
-                                        <Field as={Input} id="sp-name" name="name" />
-                                        <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                        <Label htmlFor="sp-cityId">City <span className="text-red-500">*</span> </Label>
+                                        <AsyncFormSelect
+                                            inputId="join-pro-city-select-input"
+                                            cacheOptions
+                                            defaultOptions
+                                            loadOptions={loadCityOptions}
+                                            isDisabled={isSubmitting}
+                                            placeholder="Search and Select City"
+                                            value={city}
+                                            onChange={(option) => {
+                                                setFieldValue("cityId", option?.value || "")
+                                                setCity(option || null);
+                                            }}
+                                        />
+                                        <ErrorMessage className="text-xs text-rose-600" name="cityId" component="small" />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="sp-mobile">Mobile <span className="text-red-500">*</span> </Label>
-                                        <Field as={Input} id="sp-mobile" name="mobile" placeholder="10 digits" maxLength={10} />
-                                        <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
+                                        <Label htmlFor="sp-serviceCategoryId">Service category <span className="text-red-500">*</span> </Label>
+                                        <AsyncFormSelect
+                                            inputId="join-pro-service-category-select-input"
+                                            cacheOptions
+                                            defaultOptions
+                                            loadOptions={loadServiceCategoryOptions}
+                                            isDisabled={isSubmitting}
+                                            placeholder="Select service category"
+                                            value={serviceCategory}
+                                            onChange={(option) => {
+                                                setFieldValue("serviceCategoryId", option?.value || "")
+                                                setServiceCategory(option || null);
+                                            }}
+                                        />
+                                        <ErrorMessage className="text-xs text-rose-600" name="serviceCategoryId" component="small" />
+                                    </div>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-email">Email <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-email" name="email" type="email" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-exp-y">Experience (years) <span className="text-red-500">*</span></Label>
+                                        <Field as={Input} id="sp-exp-y" name="experienceYears" type="number" min={0} max={80} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="experienceYears" component="small" />
                                     </div>
                                 </div>
                                 <div className="grid gap-3 sm:grid-cols-2">
@@ -441,22 +514,24 @@ export default function AdminServiceProvidersPage() {
             </Modal>
 
             <Modal
-                show={statusOpen}
-                onClose={() => setStatusOpen(false)}
+                show={open === "status"}
+                onClose={() => setOpen(null)}
                 title="Update provider status"
                 subTitle="Update profile and verification status."
                 size="md"
             >
                 <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-2 rounded-lg border border-indigo-100 p-3 text-sm dark:border-slate-700">
-                        <p><span className="font-medium">User ID:</span> {statusValues.userId}</p>
-                        <p><span className="font-medium">Name:</span> {statusValues.name}</p>
-                        <p><span className="font-medium">Mobile:</span> {statusValues.mobile}</p>
-                        <p><span className="font-medium">Email:</span> {statusValues.email}</p>
+                        <p><span className="font-medium">User ID:</span> {initialValues.userId}</p>
+                        <p><span className="font-medium">Name:</span> {initialValues.name}</p>
+                        <p><span className="font-medium">Mobile:</span> {initialValues.mobile}</p>
+                        <p><span className="font-medium">Email:</span> {initialValues.email}</p>
+                        <p><span className="font-medium">City:</span> {initialValues.cityName || "—"}</p>
+                        <p><span className="font-medium">Service category:</span> {initialValues.serviceCategoryName || "—"}</p>
                     </div>
 
                     <Formik
-                        initialValues={statusValues}
+                        initialValues={initialValues}
                         enableReinitialize
                         validationSchema={statusValidationSchema}
                         onSubmit={async (values, { setSubmitting }) => {
@@ -467,7 +542,7 @@ export default function AdminServiceProvidersPage() {
                             const { data } = await AxiosHelperAdmin.putData(`/service-providers/${values._id}/status`, payload);
                             if (data?.status) {
                                 toast.success(data.message || "Provider status updated.");
-                                setStatusOpen(false);
+                                setOpen(null);
                                 fetchRows();
                             } else {
                                 toast.error(data?.message || "Unable to update status.");
@@ -502,7 +577,7 @@ export default function AdminServiceProvidersPage() {
                                 </div>
 
                                 <div className="flex justify-end gap-2 pt-1">
-                                    <Button type="button" variant="secondary" onClick={() => setStatusOpen(false)}>
+                                    <Button type="button" variant="secondary" onClick={() => setOpen(null)}>
                                         Cancel
                                     </Button>
                                     <Button type="submit" variant="primary" disabled={isSubmitting}>

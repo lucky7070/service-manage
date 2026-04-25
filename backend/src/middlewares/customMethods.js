@@ -41,7 +41,7 @@ export const customMethods = (req, res, next) => {
         });
     };
 
-    res.datatableNoRecords = function datatableNoRecords() {
+    res.datatableNoRecords = function datatableNoRecords(extraData = {}) {
         return this.status(404).json({
             status: true,
             message: language.NO_RECORD_FOUND,
@@ -50,12 +50,13 @@ export const customMethods = (req, res, next) => {
                 current_page: 1,
                 totalPages: 0,
                 pagination: [],
-                record: []
+                record: [],
+                ...extraData
             }
         });
     };
 
-    res.pagination = function pagination(results = [], totalCount = 0, limitArg = 10, pageNoArg = 1, range = 3) {
+    res.pagination = function pagination(results = [], totalCount = 0, limitArg = 10, pageNoArg = 1, range = 3, extraData = {}) {
         const totalPages = Math.ceil(totalCount / limitArg) || 0;
         const paginationList = [pageNoArg];
 
@@ -67,7 +68,8 @@ export const customMethods = (req, res, next) => {
             current_page: pageNoArg,
             totalPages,
             pagination: paginationList,
-            record: results
+            record: results,
+            ...extraData
         });
     };
 

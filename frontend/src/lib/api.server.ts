@@ -38,7 +38,7 @@ export async function getHomeServiceCategories(limit = 8): Promise<ServiceCatego
     if (data.status && data.data && Array.isArray(data.data)) {
         return data.data as ServiceCategory[];
     }
-    
+
     return [];
 }
 
@@ -70,5 +70,63 @@ export async function getServiceCategoryBySlug(slug: string): Promise<ServiceCat
     if (data.status && data.data && !Array.isArray(data.data)) {
         return data.data as ServiceCategory;
     }
+    return null;
+}
+
+export type ProviderSearchResult = {
+    city: { name: string; slug: string };
+    serviceCategory: { name: string; slug: string };
+    record: Array<{
+        _id: string;
+        name: string;
+        image: string;
+        experienceYears: number;
+        totalCompletedServices: number;
+        totalRating: number;
+        ratingCount: number;
+        averageRating: number | null;
+    }>;
+    count: number;
+    pageNo: number;
+    limit: number;
+    totalPages: number;
+};
+
+export async function getServiceProvidersBySlugs(city: string, serviceCategory: string, pageNo = 1, limit = 12): Promise<ProviderSearchResult | null> {
+    const { data } = await AxiosHelper.getData(`/service-providers/${city}/${serviceCategory}`, { pageNo, limit });
+    if (data.status && data.data) {
+        return data.data as ProviderSearchResult;
+    }
+
+    return null;
+}
+
+export type PublicServiceProvider = {
+    _id: string;
+    userId?: string;
+    name: string;
+    image?: string | null;
+    experienceYears: number;
+    experienceDescription?: string | null;
+    totalCompletedServices: number;
+    totalRating: number;
+    ratingCount: number;
+    averageRating: number | null;
+    isAvailable?: boolean;
+    cityId: string;
+    cityName: string;
+    citySlug: string;
+    serviceCategoryId: string;
+    serviceCategoryName: string;
+    serviceCategorySlug: string;
+    photos: Array<string>;
+};
+
+export async function getPublicServiceProvider(id: string): Promise<PublicServiceProvider | null> {
+    const { data } = await AxiosHelper.getData(`/service-provider/${id}`);
+    if (data.status && data.data && !Array.isArray(data.data)) {
+        return data.data as PublicServiceProvider;
+    }
+
     return null;
 }

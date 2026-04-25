@@ -291,6 +291,14 @@ const admin = [
         description: "Replace orderedIds with all photo _id values for that provider, in desired order.",
     }),
     req("Delete provider photo", "DELETE", "/admin/service-providers/:id/photos/:photoId"),
+    req("Provider services", "GET", "/admin/service-providers/:id/services"),
+    req("Add provider service", "POST", "/admin/service-providers/:id/services", {
+        body: { serviceTypeId: OID, price: 499, status: 1 },
+    }),
+    req("Update provider service", "PUT", "/admin/service-providers/:id/services/:serviceId", {
+        body: { serviceTypeId: OID, price: 599, status: 1 },
+    }),
+    req("Delete provider service", "DELETE", "/admin/service-providers/:id/services/:serviceId"),
     req("Create rating tag", "POST", "/admin/rating-tags", {
         body: { tagFor: "customer", tagName: "Punctual", tagType: "positive", status: 1 },
     }),

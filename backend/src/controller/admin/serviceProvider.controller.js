@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 import moment from "moment";
-import { ServiceProvider, ServiceProviderPhoto } from "../../models/index.js";
+import { City, ServiceProvider, ServiceCategory, ServiceProviderPhoto } from "../../models/index.js";
 import { escapeRegex } from "../../helpers/utils.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 
 export const createServiceProvider = async (req, res) => {
     try {
-        const { name, mobile, email, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
+        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
 
         const checkExist = await ServiceProvider.findOne({ deletedAt: null, $or: [{ mobile }, { email }, { panCardNumber }, { aadharNumber }] });
         if (checkExist) {
@@ -15,6 +15,12 @@ export const createServiceProvider = async (req, res) => {
             if (checkExist.panCardNumber === panCardNumber) throw new Error("This PAN is already registered.");
             throw new Error("This Aadhar number is already registered.");
         }
+
+        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(cityId)), deletedAt: null });
+        if (!city) throw new Error("City not found.");
+
+        const serviceCategory = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(String(serviceCategoryId)), deletedAt: null });
+        if (!serviceCategory) throw new Error("Service category not found.");
 
         const files = req.files || {};
         let image = "/service-provider/default.png";
@@ -26,7 +32,7 @@ export const createServiceProvider = async (req, res) => {
 
         const record = await ServiceProvider.create({
             name: name.trim(),
-            mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument,
+            mobile, email, panCardNumber, cityId, serviceCategoryId, aadharNumber, image, panCardDocument, aadharDocument,
             experienceYears: experienceYears ?? 0,
             experienceDescription: experienceDescription?.trim() || null,
             registerFrom: "admin",
@@ -48,7 +54,7 @@ export const updateServiceProvider = async (req, res) => {
         const record = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
         if (!record) return res.noRecords();
 
-        const { name, mobile, email, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
+        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
 
         const checkExist = await ServiceProvider.findOne({ _id: { $ne: record._id }, deletedAt: null, $or: [{ mobile }, { email }, { panCardNumber }, { aadharNumber }] });
         if (checkExist) {
@@ -57,6 +63,12 @@ export const updateServiceProvider = async (req, res) => {
             if (checkExist.panCardNumber === panCardNumber) throw new Error("This PAN is already registered.");
             throw new Error("This Aadhar number is already registered.");
         }
+
+        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(cityId)), deletedAt: null });
+        if (!city) throw new Error("City not found.");
+
+        const serviceCategory = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(String(serviceCategoryId)), deletedAt: null });
+        if (!serviceCategory) throw new Error("Service category not found.");
 
         const files = req.files || {};
         let image = record.image;
@@ -69,18 +81,7 @@ export const updateServiceProvider = async (req, res) => {
 
         await ServiceProvider.updateOne(
             { _id: record._id },
-            {
-                name: name.trim(),
-                mobile,
-                email,
-                panCardNumber,
-                aadharNumber,
-                image,
-                panCardDocument,
-                aadharDocument,
-                experienceYears: experienceYears ?? 0,
-                experienceDescription: experienceDescription?.trim() || null,
-            }
+            { name: name.trim(), cityId, serviceCategoryId, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, }
         );
         return res.successUpdate(record);
     } catch (error) {
@@ -136,7 +137,7 @@ export const deleteServiceProvider = async (req, res) => {
 
 export const getServiceProvider = async (req, res) => {
     try {
-        let { limit, pageNo, query, profileStatus, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+        let { limit, pageNo, query, profileStatus, cityId, serviceCategoryId, sortBy = "createdAt", sortOrder = "desc" } = req.query;
 
         limit = limit ? parseInt(limit, 10) : 10;
         pageNo = pageNo ? parseInt(pageNo, 10) : 1;
@@ -162,9 +163,21 @@ export const getServiceProvider = async (req, res) => {
             }
         }
 
+        if (cityId !== null && cityId !== undefined && cityId !== "") {
+            filter.cityId = new mongoose.Types.ObjectId(String(cityId));
+        }
+
+        if (serviceCategoryId !== null && serviceCategoryId !== undefined && serviceCategoryId !== "") {
+            filter.serviceCategoryId = new mongoose.Types.ObjectId(String(serviceCategoryId));
+        }
+
         const pipeline = [
             { $match: filter },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, profileStatus: 1, isVerified: 1, isActive: 1, experienceYears: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
+            { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
+            { $unwind: { path: "$city" } },
+            { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
+            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, isVerified: 1, isActive: 1, experienceYears: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];
@@ -194,6 +207,8 @@ export const getSingleServiceProvider = async (req, res) => {
             name: doc.name,
             mobile: doc.mobile,
             email: doc.email ?? "",
+            cityId: doc.cityId,
+            serviceCategoryId: doc.serviceCategoryId,
             panCardNumber: doc.panCardNumber ?? "",
             aadharNumber: doc.aadharNumber ?? "",
             image: doc.image,

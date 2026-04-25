@@ -61,17 +61,9 @@ const validationSchema = Yup.object().shape({
     categoryId: Yup.string().required("Category is required."),
     name: Yup.string().min(2, "Too short.").max(150, "Too long.").required("Name is required.").trim(),
     nameHi: Yup.string().max(200, "Too long.").nullable(),
-    estimatedTimeMinutes: Yup.mixed().test("est", "Must be ≥ 0", (v) => {
-        if (v === "" || v === undefined || v === null) return true;
-        const n = Number(v);
-        return !Number.isNaN(n) && n >= 0;
-    }),
-    basePrice: Yup.mixed().test("price", "Must be ≥ 0", (v) => {
-        if (v === "" || v === undefined || v === null) return true;
-        const n = Number(v);
-        return !Number.isNaN(n) && n >= 0;
-    }),
-    description: Yup.string().max(2000, "Too long.").nullable(),
+    estimatedTimeMinutes: Yup.number().typeError("Estimated time must be numeric.").min(0, "Must be ≥ 0").required("Estimated time is required."),
+    basePrice: Yup.number().typeError("Base price must be numeric.").min(0, "Must be ≥ 0").required("Base price is required."),
+    description: Yup.string().max(2000, "Too long.").required("Description is required.").trim(),
     status: Yup.number().required("Status required")
 });
 
@@ -365,7 +357,7 @@ export default function AdminServiceTypesPage() {
                                             name="estimatedTimeMinutes"
                                             type="number"
                                             min={0}
-                                            placeholder="Optional"
+                                            placeholder="Est. time (min)"
                                         />
                                         <ErrorMessage className="text-xs text-rose-600" name="estimatedTimeMinutes" component="small" />
                                     </div>
@@ -378,7 +370,7 @@ export default function AdminServiceTypesPage() {
                                             type="number"
                                             min={0}
                                             step="0.01"
-                                            placeholder="Optional"
+                                            placeholder="Base price"
                                         />
                                         <ErrorMessage className="text-xs text-rose-600" name="basePrice" component="small" />
                                     </div>

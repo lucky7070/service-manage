@@ -135,6 +135,10 @@ export const PERMISSIONS = [
             { id: 376, label: "Update Provider Work Photo" },
             { id: 377, label: "Delete Provider Work Photo" },
             { id: 378, label: "View Provider Work Photos" },
+            { id: 3710, label: "Create Service Provider Price" },
+            { id: 3720, label: "Update Service Provider Price" },
+            { id: 3730, label: "Delete Service Provider Price" },
+            { id: 3740, label: "View Service Provider Prices" },
         ]
     },
     {
@@ -302,6 +306,11 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/service-providers/:slug/images",
         permission_id: 378,
         items: [{ label: "Service Providers", href: "/admin/service-providers" }, { label: "Work Photos" }]
+    },
+    {
+        path: "/admin/service-providers/:slug/services",
+        permission_id: 3740,
+        items: [{ label: "Service Providers", href: "/admin/service-providers" }, { label: "Provider Services" }]
     },
     {
         path: "/admin/rating-tags",

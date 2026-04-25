@@ -11,6 +11,7 @@ import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../c
 import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
 import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
 import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServiceProviderPhoto, reorderServiceProviderPhotos } from "../controller/admin/serviceProviderPhoto.controller.js";
+import { createProviderService, deleteProviderService, getProviderServices, updateProviderService } from "../controller/admin/providerService.controller.js";
 import { getPredefinedRatingTag, createPredefinedRatingTag, updatePredefinedRatingTag, deletePredefinedRatingTag, getSinglePredefinedRatingTag } from "../controller/admin/predefinedRatingTag.controller.js";
 import { createFaq, deleteFaq, getFaq, getSingleFaq, updateFaq } from "../controller/admin/faq.controller.js";
 import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../controller/admin/serviceCategory.controller.js";
@@ -108,6 +109,10 @@ router.get("/service-providers/:id/photos", getServiceProviderPhotos);
 router.post("/service-providers/:id/photos", serviceProviderWorkPhotoStorage.array("photos", 20), uploadServiceProviderPhotos);
 router.put("/service-providers/:id/photos/reorder", reorderServiceProviderPhotos);
 router.delete("/service-providers/:id/photos/:photoId", deleteServiceProviderPhoto);
+router.get("/service-providers/:id/services", getProviderServices);
+router.post("/service-providers/:id/services", createProviderService);
+router.put("/service-providers/:id/services/:serviceId", updateProviderService);
+router.delete("/service-providers/:id/services/:serviceId", deleteProviderService);
 
 // Predefined rating tags
 router.post("/rating-tags", validator("rating-tag"), createPredefinedRatingTag);

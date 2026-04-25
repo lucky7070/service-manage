@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import { Counter } from "./Counter.js";
+import { orderId } from "../helpers/utils.js";
 
 const Schema = new mongoose.Schema({
     bookingNumber: { type: String, required: true, unique: true, index: true, default: null },
@@ -34,5 +36,15 @@ const Schema = new mongoose.Schema({
         locationType: { type: String, enum: ["home", "office", "other"], default: "home" }
     }
 }, { timestamps: true });
+
+Schema.pre("save", async function onSave(next) {
+    if (this.isNew && !this.userId) {
+        const options = this.$session() ? { session: this.$session() } : {};
+        const counter = await Counter.findByIdAndUpdate({ _id: "Booking" }, { $inc: { seq: 1 } }, { upsert: true, new: true, ...options });
+        this.bookingNumber = orderId(counter.seq, "TXN", 7);
+    }
+
+    next();
+});
 
 export const Booking = mongoose.model("Booking", Schema);
