@@ -6,7 +6,16 @@ const Schema = new mongoose.Schema({
     bookingNumber: { type: String, required: true, unique: true, index: true, default: null },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true, index: true, default: null },
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", required: true, index: true, default: null },
-    serviceTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceType", required: true, default: null },
+    serviceCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceCategory", required: true, default: null },
+    serviceTypeId: {
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: "ServiceType" }],
+        required: true,
+        default: [],
+        validate: {
+            validator: (value) => Array.isArray(value) && value.length > 0,
+            message: "At least one service type is required."
+        }
+    },
     cityId: { type: mongoose.Schema.Types.ObjectId, ref: "City", required: true, default: null },
     status: {
         type: String,
@@ -24,6 +33,7 @@ const Schema = new mongoose.Schema({
     completionTime: { type: Date, default: null },
     cancellationReason: { type: String, default: null },
     cancelledBy: { type: String, enum: ["customer", "provider", "admin"], default: null },
+    addressId: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true, default: null },
     location: {
         addressLine1: { type: String, default: null },
         addressLine2: { type: String, default: null },

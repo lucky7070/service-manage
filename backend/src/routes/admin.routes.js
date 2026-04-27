@@ -9,6 +9,7 @@ import { getCountry, createCountry, updateCountry, deleteCountry, getSingleCount
 import { getState, createState, updateState, deleteState, getSingleState } from "../controller/admin/state.controller.js";
 import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../controller/admin/city.controller.js";
 import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
+import { createCustomerAddress, deleteCustomerAddress, getCustomerAddresses, updateCustomerAddress } from "../controller/admin/customerAddress.controller.js";
 import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
 import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServiceProviderPhoto, reorderServiceProviderPhotos } from "../controller/admin/serviceProviderPhoto.controller.js";
 import { createProviderService, deleteProviderService, getProviderServices, updateProviderService } from "../controller/admin/providerService.controller.js";
@@ -97,6 +98,10 @@ router.put("/customers/:id", customerStorage.single("image"), validator("custome
 router.delete("/customers/:id", deleteCustomer);
 router.get("/customers/:id", getSingleCustomer);
 router.get("/customers", getCustomer);
+router.get("/customers/:id/addresses", getCustomerAddresses);
+router.post("/customers/:id/addresses", validator("customer-address"), createCustomerAddress);
+router.put("/customers/:id/addresses/:addressId", validator("customer-address-update"), updateCustomerAddress);
+router.delete("/customers/:id/addresses/:addressId", deleteCustomerAddress);
 
 // Service providers
 router.post("/service-providers", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider"), createServiceProvider);

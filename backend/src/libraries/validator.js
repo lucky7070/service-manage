@@ -95,6 +95,18 @@ const description = check("description", "Description is required.").trim().notE
 const year = check("year", "Year is required.").trim().notEmpty().isLength({ min: 4, max: 4 });
 const event = check("event", "Event is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
 
+const addressId = param("addressId", "Invalid address ID.").exists().notEmpty().isMongoId();
+const addressLine1 = check("addressLine1", "Address line 1 is required.").trim().notEmpty().isLength({ min: 2, max: 100 });
+const addressLine2 = check("addressLine2", "Address line 2 is required.").trim().notEmpty().isLength({ min: 2, max: 100 });
+const landmark = check("landmark").optional({ values: "falsy" }).trim().isLength({ max: 200 });
+const addressState = check("state", "State is required.").trim().notEmpty().isMongoId();
+const addressCity = check("city", "City is required.").trim().notEmpty().isMongoId();
+const pincode = check("pincode", "Pincode must be 6 digits.").trim().notEmpty().matches(/^\d{6}$/);
+const latitude = check("latitude", "Latitude must be numeric.").optional({ values: "falsy" }).isFloat({ min: -90, max: 90 }).withMessage("Latitude must be between -90 and 90.");
+const longitude = check("longitude", "Longitude must be numeric.").optional({ values: "falsy" }).isFloat({ min: -180, max: 180 }).withMessage("Longitude must be between -180 and 180.");
+const locationType = check("locationType", "Invalid location type.").optional({ values: "falsy" }).isIn(["home", "office", "other"]);
+const isDefault = check("isDefault", "Default address must be 0 or 1.").optional({ values: "falsy" }).isIn([0, 1, "0", "1", true, false, "true", "false"]);
+
 export const validator = (method) => {
 
     let output = [];
@@ -119,6 +131,12 @@ export const validator = (method) => {
             break;
         case "customer":
             output = [name, mobile, email, dateOfBirth, status];
+            break;
+        case "customer-address":
+            output = [id, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
+            break;
+        case "customer-address-update":
+            output = [id, addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
             break;
         case "rating-tag":
             output = [tagFor, tagName, tagType, status];

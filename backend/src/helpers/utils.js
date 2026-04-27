@@ -30,6 +30,14 @@ export const ObjectId = (id) => {
     }
 };
 
+export const toBoolean = (value) => value === true || value === "true" || Number(value) === 1;
+
+export const optionalNumber = (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : Number.NaN;
+};
+
 export const escapeHtml = (value = "") => {
     return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }

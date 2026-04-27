@@ -95,6 +95,10 @@ export const PERMISSIONS = [
             { id: 332, label: "Update Customer" },
             { id: 333, label: "Delete Customer" },
             { id: 334, label: "View Customer" },
+            { id: 335, label: "Create Customer Address" },
+            { id: 336, label: "Update Customer Address" },
+            { id: 337, label: "Delete Customer Address" },
+            { id: 338, label: "View Customer Addresses" },
         ]
     },
     {
@@ -296,6 +300,11 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/customers",
         permission_id: 334,
         items: [{ label: "Customers" }]
+    },
+    {
+        path: "/admin/customers/:slug/addresses",
+        permission_id: 338,
+        items: [{ label: "Customers", href: "/admin/customers" }, { label: "Customer Addresses" }]
     },
     {
         path: "/admin/service-providers",

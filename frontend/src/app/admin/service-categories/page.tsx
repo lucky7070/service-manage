@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ErrorMessage, Field, Form, Formik, type FieldProps } from "formik";
+import { ErrorMessage, Field, Form, Formik } from "formik";
 import { debounce } from "lodash";
 import * as Yup from "yup";
 import moment from "moment";
@@ -324,21 +324,12 @@ export default function AdminServiceCategoriesPage() {
 
                                 <div className="space-y-2">
                                     <Label htmlFor="sc-name">Name (English)</Label>
-                                    <Field name="name">
-                                        {({ field, form }: FieldProps<string>) => (
-                                            <Input
-                                                {...field}
-                                                id="sc-name"
-                                                placeholder="e.g. Home services"
-                                                onBlur={(e) => {
-                                                    field.onBlur(e);
-                                                    if (!form.values._id && !form.values.slug?.trim()) {
-                                                        form.setFieldValue("slug", slugify(e.target.value));
-                                                    }
-                                                }}
-                                            />
-                                        )}
-                                    </Field>
+                                    <Field as={Input} name="name" id="sc-name" placeholder="e.g. Home services" onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        if (!values._id && !values.slug?.trim()) {
+                                            setFieldValue("nameHi", e.target.value);
+                                            setFieldValue("slug", slugify(e.target.value));
+                                        }
+                                    }} />
                                     <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
                                 </div>
 
@@ -375,8 +366,8 @@ export default function AdminServiceCategoriesPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="sc-status">Status</Label>
                                         <Field as={Select} id="sc-status" name="status">
-                                            <Option value={1}>Active</option>
-                                            <Option value={0}>Inactive</option>
+                                            <Option value={1}>Active</Option>
+                                            <Option value={0}>Inactive</Option>
                                         </Field>
                                         <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                     </div>

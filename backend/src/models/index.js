@@ -10,7 +10,7 @@ export { ServiceCategory } from "./ServiceCategory.js";
 export { ServiceType } from "./ServiceType.js";
 export { ProviderService } from "./ProviderService.js";
 export { Booking } from "./Booking.js";
-export { BookingLocation } from "./BookingLocation.js";
+export { Address } from "./Address.js";
 export { ChatMessage } from "./ChatMessage.js";
 export { Notification } from "./Notification.js";
 export { OtpVerification } from "./OtpVerification.js";

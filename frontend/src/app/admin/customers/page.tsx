@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Image from "@/components/ui/Image";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { debounce } from "lodash";
@@ -8,7 +9,7 @@ import * as Yup from "yup";
 import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
-import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import { ImageIcon, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
@@ -261,6 +262,13 @@ export default function AdminCustomersPage() {
                                         </td>
                                         <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
                                             <div className="flex justify-end gap-1.5 sm:gap-2">
+                                                <PermissionBlock permission_id={338}>
+                                                    <Link href={`/admin/customers/${row._id}/addresses`}>
+                                                        <Button size="sm" variant="secondary" title="Manage addresses" aria-label="Manage addresses">
+                                                            <MapPin className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                        </Button>
+                                                    </Link>
+                                                </PermissionBlock>
                                                 <PermissionBlock permission_id={332}>
                                                     <Button size="sm" variant="secondary" onClick={() => openEdit(row._id)} title="Edit customer" aria-label="Edit customer">
                                                         <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />

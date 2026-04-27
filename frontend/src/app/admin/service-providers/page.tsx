@@ -346,8 +346,8 @@ export default function AdminServiceProvidersPage() {
                 show={["add", "edit"].includes(String(open))}
                 onClose={() => setOpen(null)}
                 title={open === "add" ? "Create service provider" : "Update service provider"}
-                subTitle="Required: name, mobile, email, PAN, Aadhar. Optional: photo, document uploads, experience."
-                size="lg"
+                subTitle="Required: name, mobile, email, PAN, Aadhar, document uploads, experience. Optional: photo."
+                size="xxl"
                 scrollable
             >
                 <div className="space-y-4">
@@ -449,24 +449,12 @@ export default function AdminServiceProvidersPage() {
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="sp-email">Email <span className="text-red-500">*</span> </Label>
-                                        <Field as={Input} id="sp-email" name="email" type="email" />
+                                        <Field as={Input} id="sp-email" name="email" type="email" placeholder="e.g. subadmin@email.com" />
                                         <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="sp-exp-y">Experience (years) <span className="text-red-500">*</span></Label>
-                                        <Field as={Input} id="sp-exp-y" name="experienceYears" type="number" min={0} max={80} />
-                                        <ErrorMessage className="text-xs text-rose-600" name="experienceYears" component="small" />
-                                    </div>
-                                </div>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="sp-email">Email <span className="text-red-500">*</span> </Label>
-                                        <Field as={Input} id="sp-email" name="email" type="email" />
-                                        <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="sp-exp-y">Experience (years) <span className="text-red-500">*</span></Label>
-                                        <Field as={Input} id="sp-exp-y" name="experienceYears" type="number" min={0} max={80} />
+                                        <Field as={Input} id="sp-exp-y" name="experienceYears" type="number" min={0} max={80} placeholder="Experience (years)" />
                                         <ErrorMessage className="text-xs text-rose-600" name="experienceYears" component="small" />
                                     </div>
                                 </div>
