@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { ChevronDown } from "lucide-react";
-import { Button, Select } from "@/components/ui";
+import { Button, Select, Option } from "@/components/ui";
 
 type PaginationData = {
     count: number;
@@ -30,9 +30,9 @@ export default function AdminPagination<T extends { limit: number; pageNo: numbe
                             aria-label="Rows per page"
                         >
                             {[5, 10, 20, 50].map((n) => (
-                                <option key={n} value={n}>
+                                <Option key={n} value={n}>
                                     {n}
-                                </option>
+                                </Option>
                             ))}
                         </Select>
                         <ChevronDown className="pointer-events-none absolute right-2 top-2 h-4 w-4 opacity-50" aria-hidden />

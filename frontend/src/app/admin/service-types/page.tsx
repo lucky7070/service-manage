@@ -11,17 +11,15 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Modal, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, Label, Modal, Select, Option, Textarea } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 import { useSearchParams } from "next/navigation";
-import AsyncFormSelect from "@/components/ui/AsyncFormSelect";
-import AxiosHelper from "@/helpers/AxiosHelper";
-
-type ServiceCategoryOption = { _id: string; name: string; slug?: string };
+import ReactSelect from "@/components/ui/ReactSelect";
+import { SelectOption } from "@/components/ui/AsyncSelect";
 
 type ServiceTypeRow = {
     _id: string;
@@ -72,9 +70,10 @@ export default function AdminServiceTypesPage() {
     const searchParams = useSearchParams();
     const category = searchParams.get('category')
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
-    const [categories, setCategories] = useState<ServiceCategoryOption[]>([]);
+    const [categories, setCategories] = useState<SelectOption[]>([]);
     const [open, setOpen] = useState<null | "add" | "edit">(null);
     const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
+    const [selectedServiceCategory, setSelectedServiceCategory] = useState<{ value: string; label: string } | null>(null);
     const [data, setData] = useState<ServiceTypeRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; categoryId: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", status: "", categoryId: category ?? "" });
     const [initialValues, setInitialValues] = useState<ServiceTypeFormValues>({ _id: "", categoryId: "", name: "", nameHi: "", estimatedTimeMinutes: "", basePrice: "", description: "", status: 1 });
@@ -82,8 +81,8 @@ export default function AdminServiceTypesPage() {
     useEffect(() => {
         (async () => {
             const { data } = await AxiosHelperAdmin.getData("/service-categories/options");
-            if (data?.status && data?.data?.record && Array.isArray(data.data.record)) {
-                setCategories(data.data.record);
+            if (data?.status && data?.data && Array.isArray(data.data)) {
+                setCategories(data.data.map((c: { _id: string; name: string }) => ({ value: c._id, label: c.name })));
             } else {
                 setCategories([]);
             }
@@ -131,6 +130,7 @@ export default function AdminServiceTypesPage() {
 
     const openAdd = () => {
         setInitialValues({ _id: "", categoryId: "", name: "", nameHi: "", estimatedTimeMinutes: "", basePrice: "", description: "", status: 1 });
+        setSelectedServiceCategory(null);
         setOpen("add");
     };
 
@@ -148,6 +148,7 @@ export default function AdminServiceTypesPage() {
                 description: r.description ?? "",
                 status: r.status
             });
+            setSelectedServiceCategory({ value: String(r.categoryId), label: r.categoryName || "" });
             setOpen("edit");
         } else {
             toast.error(data?.message || "Could not load service type.");
@@ -184,19 +185,12 @@ export default function AdminServiceTypesPage() {
                         placeholder="Search by name..."
                     />
                     <div className="flex flex-wrap items-center gap-2">
-                        <AsyncFormSelect
+                        <ReactSelect
                             inputId="join-pro-service-category-select-input"
                             cacheOptions
                             defaultOptions
-                            loadOptions={async (inputValue: string) => {
-                                const { data } = await AxiosHelper.getData("/service-categories-list", { query: inputValue, limit: 20 });
-                                if (data.status && Array.isArray(data.data)) {
-                                    return data.data;
-                                } else {
-                                    return [];
-                                }
-                            }}
-                            placeholder="Select service category"
+                            options={categories}
+                            placeholder="Search service category"
                             value={serviceCategory}
                             onChange={(option) => {
                                 setParam((prev) => ({ ...prev, pageNo: 1, categoryId: option?.value || "" }))
@@ -211,9 +205,9 @@ export default function AdminServiceTypesPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All</option>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
+                            <Option value="">All</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -324,18 +318,20 @@ export default function AdminServiceTypesPage() {
                             setSubmitting(false);
                         }}
                     >
-                        {({ isSubmitting }) => (
+                        {({ isSubmitting, setFieldValue }) => (
                             <Form className="space-y-3">
                                 <div className="space-y-2">
                                     <Label htmlFor="st-category">Category</Label>
-                                    <Field as={Select} id="st-category" name="categoryId">
-                                        <option value="">Select category</option>
-                                        {categories.map((c) => (
-                                            <option key={c._id} value={c._id}>
-                                                {c.name}
-                                            </option>
-                                        ))}
-                                    </Field>
+                                    <ReactSelect
+                                        inputId="st-category"
+                                        options={categories}
+                                        placeholder="Select service category"
+                                        value={selectedServiceCategory}
+                                        onChange={(option) => {
+                                            setFieldValue("categoryId", option?.value || "");
+                                            setSelectedServiceCategory(option || null);
+                                        }}
+                                    />
                                     <ErrorMessage className="text-xs text-rose-600" name="categoryId" component="small" />
                                 </div>
                                 <div className="space-y-2">
@@ -376,15 +372,15 @@ export default function AdminServiceTypesPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="st-desc">Description <span className="font-normal text-slate-500">optional</span></Label>
+                                    <Label htmlFor="st-desc">Description</Label>
                                     <Field as={Textarea} id="st-desc" name="description" rows={3} />
                                     <ErrorMessage className="text-xs text-rose-600" name="description" component="small" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="st-status">Status</Label>
                                     <Field as={Select} id="st-status" name="status">
-                                        <option value={1}>Active</option>
-                                        <option value={0}>Inactive</option>
+                                        <Option value={1}>Active</Option>
+                                        <Option value={0}>Inactive</Option>
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                 </div>

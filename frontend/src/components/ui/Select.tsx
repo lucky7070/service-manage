@@ -12,6 +12,15 @@ const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HT
     )
 );
 
+export const Option = React.forwardRef<HTMLOptionElement, React.OptionHTMLAttributes<HTMLOptionElement>>(
+    ({ className, children, ...props }, ref) => (
+        <option ref={ref} className={cn(selectClassName, 'capitalize', className)} {...props}>
+            {children}
+        </option>
+    )
+);
+
 Select.displayName = "Select";
+Option.displayName = "Option";
 
 export default Select;

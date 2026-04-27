@@ -12,7 +12,7 @@ import { Fingerprint, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
+import { Badge, Button, Input, Label, Modal, Select, Option } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { Role } from "@/app/admin/roles/page";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
@@ -166,9 +166,9 @@ export default function AdminUsersPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All</option>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
+                            <Option value="">All</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
                         </Select>
 
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
@@ -321,11 +321,11 @@ export default function AdminUsersPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="admin-role">Role</Label>
                                     <Field as={Select} id="admin-role" name="roleId">
-                                        <option value="">Select Role</option>
+                                        <Option value="">Select Role</Option>
                                         {roles.map((r) => (
-                                            <option key={r._id} value={r._id}>
+                                            <Option key={r._id} value={r._id}>
                                                 {r.name}
-                                            </option>
+                                            </Option>
                                         ))}
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="roleId" component="small" />
@@ -369,8 +369,8 @@ export default function AdminUsersPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="admin-status">Status</Label>
                                     <Field as={Select} id="admin-status" name="status">
-                                        <option value={1}>Active</option>
-                                        <option value={0}>Inactive</option>
+                                        <Option value={1}>Active</Option>
+                                        <Option value={0}>Inactive</Option>
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                 </div>

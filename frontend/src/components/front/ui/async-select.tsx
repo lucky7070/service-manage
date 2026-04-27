@@ -4,7 +4,7 @@ import AsyncSelect from "react-select/async";
 
 export type FrontSelectOption = { value: string; label: string };
 
-const asyncSelectClassNames = {
+export const selectClassNames = {
     control: (state: { isFocused: boolean }) => `min-h-11! rounded-md! border bg-transparent text-sm shadow-xs transition-[color,box-shadow] ${state.isFocused ? "border-ring ring-ring/50 ring-[3px]" : "border-input"} dark:bg-input/30`,
     valueContainer: () => "px-3 py-0",
     input: () => "m-0 p-0 text-sm text-foreground",
@@ -21,7 +21,7 @@ const asyncSelectClassNames = {
     singleValue: () => "text-foreground"
 };
 
-type FrontAsyncSelectProps = {
+export type FrontAsyncSelectProps = {
     cacheOptions?: boolean;
     defaultOptions?: boolean;
     isSearchable: boolean;
@@ -55,7 +55,7 @@ export default function FrontAsyncSelect({
             cacheOptions={cacheOptions}
             defaultOptions={defaultOptions}
             unstyled={unstyled}
-            classNames={unstyled ? asyncSelectClassNames : undefined}
+            classNames={unstyled ? selectClassNames : undefined}
             loadOptions={loadOptions}
             isSearchable={isSearchable}
             isDisabled={isDisabled}

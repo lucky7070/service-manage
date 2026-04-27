@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import { Search, ShieldCheck, Clock3, Star, Users } from "lucide-react"
 import { Button, FrontAsyncSelect, Label } from "@/components/front/ui"
@@ -27,9 +27,20 @@ const validationSchema = Yup.object().shape({
 
 export function HeroSection() {
     const router = useRouter()
-    const search = JSON.parse(localStorage.getItem("search") || "{}");
-    const [city, setCity] = useState<CityOption | null>(search.city || null);
-    const [service, setService] = useState<CategoryOption | null>(search.service || null);
+    const [city, setCity] = useState<CityOption | null>(null);
+    const [service, setService] = useState<CategoryOption | null>(null);
+
+    useEffect(() => {
+        (() => {
+            try {
+                const saved = JSON.parse(window.localStorage.getItem("search") || "{}");
+                if (saved?.city && typeof saved.city === 'object') setCity(saved.city || null);
+                if (saved?.service && typeof saved.service === 'object') setService(saved.service || null);
+            } catch {
+                window.localStorage.removeItem("search");
+            }
+        })();
+    }, []);
 
     const loadCityOptions = useCallback(async (inputValue: string) => {
         const { data } = await AxiosHelper.getData("/cities-list", { limit: 20, status: 1, query: inputValue || "" });
@@ -88,6 +99,7 @@ export function HeroSection() {
                         <div className="mb-7 rounded-2xl border border-white/60 bg-white/90 p-3 shadow-2xl shadow-orange-100/50 backdrop-blur">
                             <Formik
                                 initialValues={{ city: city?.value || '', service: service?.value || '' }}
+                                enableReinitialize
                                 validationSchema={validationSchema}
                                 onSubmit={values => {
                                     if (!values.city || !values.service) return;

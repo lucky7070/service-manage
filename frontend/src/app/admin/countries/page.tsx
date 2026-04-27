@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
+import { Badge, Button, Input, Label, Modal, Select, Option } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -128,9 +128,9 @@ export default function AdminCountriesPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All</option>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
+                            <Option value="">All</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -245,8 +245,8 @@ export default function AdminCountriesPage() {
                                         id="country-status"
                                         name="status"
                                     >
-                                        <option value={1}>Active</option>
-                                        <option value={0}>Inactive</option>
+                                        <Option value={1}>Active</Option>
+                                        <Option value={0}>Inactive</Option>
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                 </div>

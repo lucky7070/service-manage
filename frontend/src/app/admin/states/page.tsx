@@ -11,15 +11,15 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
+import { Badge, Button, Input, Label, Modal, Select, Option } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
-import AsyncFormSelect, { type AsyncSelectOption } from "@/components/ui/AsyncFormSelect";
+import AsyncSelect, { type SelectOption } from "@/components/ui/AsyncSelect";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
-type CountryOption = AsyncSelectOption;
+type CountryOption = SelectOption;
 
 type StateType = {
     _id: string;
@@ -155,9 +155,9 @@ export default function AdminStatesPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All</option>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
+                            <Option value="">All</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -268,7 +268,7 @@ export default function AdminStatesPage() {
                             <Form className="space-y-3">
                                 <div className="space-y-2">
                                     <Label htmlFor="state-country">Country</Label>
-                                    <AsyncFormSelect
+                                    <AsyncSelect
                                         inputId="state-country"
                                         loadOptions={loadCountryOptions}
                                         value={selectedCountry}
@@ -291,8 +291,8 @@ export default function AdminStatesPage() {
                                         id="state-status"
                                         name="status"
                                     >
-                                        <option value={1}>Active</option>
-                                        <option value={0}>Inactive</option>
+                                        <Option value={1}>Active</Option>
+                                        <Option value={0}>Inactive</Option>
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                 </div>

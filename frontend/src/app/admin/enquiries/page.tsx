@@ -9,7 +9,7 @@ import { Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Select } from "@/components/ui";
+import { Badge, Button, Input, Select, Option } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
@@ -115,9 +115,9 @@ export default function AdminEnquiriesPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All</option>
-                            <option value={0}>Pending</option>
-                            <option value={1}>Resolved</option>
+                            <Option value="">All</Option>
+                            <Option value={0}>Pending</Option>
+                            <Option value={1}>Resolved</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>

@@ -2,7 +2,7 @@ export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from "@
 export { default as Input, inputClassName } from "@/components/ui/Input";
 export { default as PasswordInput, type PasswordInputProps } from "@/components/ui/PasswordInput";
 export { default as Textarea, textareaClassName } from "@/components/ui/Textarea";
-export { default as Select, selectClassName } from "@/components/ui/Select";
+export { default as Select, Option, selectClassName } from "@/components/ui/Select";
 export { default as Label } from "@/components/ui/Label";
 export { default as InputFile } from "@/components/ui/InputFile";
 export { default as FileDropzone, useFileDropzone, type FileDropzoneProps, type FileDropzoneContext } from "@/components/ui/FileDropzone";

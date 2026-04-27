@@ -11,7 +11,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, Textarea } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -139,9 +139,9 @@ export default function AdminTestimonialsPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All Sources</option>
-                            <option value="customer">Customer</option>
-                            <option value="provider">Provider</option>
+                            <Option value="">All Sources</Option>
+                            <Option value="customer">Customer</Option>
+                            <Option value="provider">Provider</Option>
                         </Select>
                         <Select
                             value={param.status}
@@ -151,9 +151,9 @@ export default function AdminTestimonialsPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All Status</option>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
+                            <Option value="">All Status</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -283,8 +283,8 @@ export default function AdminTestimonialsPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="testimonial-from">Source</Label>
                                         <Field as={Select} id="testimonial-from" name="from">
-                                            <option value="customer">Customer</option>
-                                            <option value="provider">Provider</option>
+                                            <Option value="customer">Customer</Option>
+                                            <Option value="provider">Provider</Option>
                                         </Field>
                                         <ErrorMessage className="text-xs text-rose-600" name="from" component="small" />
                                     </div>
@@ -331,8 +331,8 @@ export default function AdminTestimonialsPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="testimonial-status">Status</Label>
                                     <Field as={Select} id="testimonial-status" name="status">
-                                        <option value={1}>Active</option>
-                                        <option value={0}>Inactive</option>
+                                        <Option value={1}>Active</Option>
+                                        <Option value={0}>Inactive</Option>
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                 </div>

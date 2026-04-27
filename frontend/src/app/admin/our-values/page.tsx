@@ -11,7 +11,7 @@ import Image from "@/components/ui/Image";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea, Option } from "@/components/ui";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 import AdminPagination from "@/components/admin/AdminPagination";
@@ -109,9 +109,9 @@ export default function AdminOurValuesPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All</option>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
+                            <Option value="">All</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -260,8 +260,8 @@ export default function AdminOurValuesPage() {
                             <div>
                                 <Label>Status</Label>
                                 <Field as={Select} name="status">
-                                    <option value={1}>Active</option>
-                                    <option value={0}>Inactive</option>
+                                    <Option value={1}>Active</Option>
+                                    <Option value={0}>Inactive</Option>
                                 </Field>
                                 <ErrorMessage name="status" component="small" className="text-xs text-rose-600" />
                             </div>

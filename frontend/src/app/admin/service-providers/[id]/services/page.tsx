@@ -10,8 +10,8 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Modal, Select } from "@/components/ui";
-import AsyncFormSelect, { type AsyncSelectOption } from "@/components/ui/AsyncFormSelect";
+import { Badge, Button, Input, Label, Modal, Select, Option } from "@/components/ui";
+import AsyncSelect, { type SelectOption } from "@/components/ui/AsyncSelect";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { getSweetAlertConfig } from "@/helpers/utils";
 
@@ -26,7 +26,7 @@ type ProviderServiceRow = {
     status: 0 | 1;
 };
 
-type ServiceTypeOption = AsyncSelectOption & {
+type ServiceTypeOption = SelectOption & {
     basePrice?: number | null;
 };
 
@@ -206,7 +206,7 @@ export default function ServiceProviderServicesPage() {
                         <Form className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="provider-service-type">Service Type</Label>
-                                <AsyncFormSelect
+                                <AsyncSelect
                                     inputId="provider-service-type"
                                     loadOptions={loadServiceTypeOptions}
                                     value={serviceType}
@@ -233,8 +233,8 @@ export default function ServiceProviderServicesPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="provider-service-status">Status</Label>
                                     <Field as={Select} id="provider-service-status" name="status">
-                                        <option value={1}>Active</option>
-                                        <option value={0}>Inactive</option>
+                                        <Option value={1}>Active</Option>
+                                        <Option value={0}>Inactive</Option>
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                 </div>

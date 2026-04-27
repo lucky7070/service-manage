@@ -11,13 +11,14 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, Textarea } from "@/components/ui";
 import Image from "@/components/ui/Image";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl, slugify } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+
 type CategoryRow = {
     _id: string;
     slug: string;
@@ -166,9 +167,9 @@ export default function AdminServiceCategoriesPage() {
                             }}
                             className="max-w-[180px]"
                         >
-                            <option value="">All</option>
-                            <option value={1}>Active</option>
-                            <option value={0}>Inactive</option>
+                            <Option value="">All</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -374,8 +375,8 @@ export default function AdminServiceCategoriesPage() {
                                     <div className="space-y-2">
                                         <Label htmlFor="sc-status">Status</Label>
                                         <Field as={Select} id="sc-status" name="status">
-                                            <option value={1}>Active</option>
-                                            <option value={0}>Inactive</option>
+                                            <Option value={1}>Active</option>
+                                            <Option value={0}>Inactive</option>
                                         </Field>
                                         <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                     </div>

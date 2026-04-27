@@ -11,7 +11,7 @@ import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Modal, Select } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Option } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -188,9 +188,9 @@ export default function AdminBannerPage() {
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, bannerType: e.target.value === "" ? "" : (e.target.value as BannerType) }))}
                             className="max-w-[180px]"
                         >
-                            <option value="">All types</option>
-                            <option value="homepage">Homepage</option>
-                            <option value="category">Category</option>
+                            <Option value="">All types</Option>
+                            <Option value="homepage">Homepage</Option>
+                            <Option value="category">Category</Option>
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
@@ -364,8 +364,8 @@ export default function AdminBannerPage() {
                                 <div className="space-y-2">
                                     <Label htmlFor="bannerType">Banner type</Label>
                                     <Field as={Select} id="bannerType" name="bannerType">
-                                        <option value="homepage">Homepage</option>
-                                        <option value="category">Category</option>
+                                        <Option value="homepage">Homepage</Option>
+                                        <Option value="category">Category</Option>
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="bannerType" component="small" />
                                 </div>

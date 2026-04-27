@@ -6,7 +6,7 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Button, Input, InputFile, Label, Select, Textarea } from "@/components/ui";
+import { Button, Input, InputFile, Label, Select, Option, Textarea } from "@/components/ui";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 
 type SettingRow = {
@@ -137,8 +137,8 @@ export default function AdminSettingsPage() {
                                                 <Field as={Textarea} id={row.setting_name} name={row.setting_name} className="min-h-24" />
                                             ) : row.filed_type === "check" ? (
                                                 <Field as={Select} id={row.setting_name} name={row.setting_name}>
-                                                    <option value="1">Enabled</option>
-                                                    <option value="0">Disabled</option>
+                                                    <Option value="1">Enabled</Option>
+                                                    <Option value="0">Disabled</Option>
                                                 </Field>
                                             ) : row.filed_type === "file" ? (
                                                 <div className="space-y-2">

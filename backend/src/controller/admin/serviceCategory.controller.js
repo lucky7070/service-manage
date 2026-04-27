@@ -8,7 +8,7 @@ export const listServiceCategoriesForSelect = async (req, res) => {
     try {
 
         const rows = await ServiceCategory.find({ deletedAt: null, isActive: true }).select("_id name slug").sort({ displayOrder: 1, name: 1 }).limit(500).lean();
-        return res.success({ record: rows });
+        return res.success(rows);
     } catch (error) {
         return res.someThingWentWrong(error);
     }

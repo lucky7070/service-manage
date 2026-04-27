@@ -13,14 +13,14 @@ import { CircleCheckBig, ImageIcon, Images, Pencil, Plus, Trash2, Wrench } from 
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Modal, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, Textarea } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PHONE_ERROR_MESSAGE, PHONE_REGEXP, ProfileStatus, SERVICE_PROVIDER_PROFILE_STATUSES } from "@/config";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
-import AsyncFormSelect from "@/components/ui/AsyncFormSelect";
+import AsyncSelect from "@/components/ui/AsyncSelect";
 import AxiosHelper from "@/helpers/AxiosHelper";
 
 type ServiceProvider = {
@@ -210,9 +210,9 @@ export default function AdminServiceProvidersPage() {
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, profileStatus: e.target.value === "" ? "" : (e.target.value as ProfileStatus) }))}
                             className="max-w-[180px]"
                         >
-                            <option value="">All statuses</option>
+                            <Option value="">All statuses</Option>
                             {SERVICE_PROVIDER_PROFILE_STATUSES.map((k) => (
-                                <option key={k} value={k} className="capitalize">{k}</option>
+                                <Option key={k} value={k} className="capitalize">{k}</Option>
                             ))}
                         </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
@@ -413,7 +413,7 @@ export default function AdminServiceProvidersPage() {
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="sp-cityId">City <span className="text-red-500">*</span> </Label>
-                                        <AsyncFormSelect
+                                        <AsyncSelect
                                             inputId="join-pro-city-select-input"
                                             cacheOptions
                                             defaultOptions
@@ -430,7 +430,7 @@ export default function AdminServiceProvidersPage() {
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="sp-serviceCategoryId">Service category <span className="text-red-500">*</span> </Label>
-                                        <AsyncFormSelect
+                                        <AsyncSelect
                                             inputId="join-pro-service-category-select-input"
                                             cacheOptions
                                             defaultOptions
@@ -556,9 +556,9 @@ export default function AdminServiceProvidersPage() {
                                     <Label htmlFor="status-profileStatus">Profile status</Label>
                                     <Field as={Select} id="status-profileStatus" name="profileStatus">
                                         {SERVICE_PROVIDER_PROFILE_STATUSES.map((status) => (
-                                            <option key={status} value={status} className="capitalize">
+                                            <Option key={status} value={status} className="capitalize">
                                                 {status}
-                                            </option>
+                                            </Option>
                                         ))}
                                     </Field>
                                     <ErrorMessage className="text-xs text-rose-600" name="profileStatus" component="small" />
@@ -571,8 +571,8 @@ export default function AdminServiceProvidersPage() {
                                         value={values.isVerified ? "1" : "0"}
                                         onChange={(e) => setFieldValue("isVerified", e.target.value === "1")}
                                     >
-                                        <option value="1">Verified</option>
-                                        <option value="0">Not Verified</option>
+                                        <Option value="1">Verified</Option>
+                                        <Option value="0">Not Verified</Option>
                                     </Select>
                                 </div>
 
