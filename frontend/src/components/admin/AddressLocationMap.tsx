@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import L from "leaflet";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 type AddressLocationMapProps = {
     latitude: number | null;

@@ -97,17 +97,16 @@ export const FRONTEND_LOGIN_FORM = {
     backToHome: "Back to home"
 } as const;
 
-
 export const FOOTER_LINKS = [
     {
         label: "Services",
         list: [
             { name: "Cleaning Services", href: "/services/cleaning" },
-            { name: "Electrical", href: "/services/electrical" },
-            { name: "Plumbing", href: "/services/plumbing" },
+            { name: "Electrician", href: "/services/electrician" },
+            { name: "Plumber", href: "/services/plumber" },
             { name: "Painting", href: "/services/painting" },
-            { name: "Handyman", href: "/services/handyman" },
-            { name: "Appliance Repair", href: "/services/appliance-repair" },
+            { name: "Home Renovation", href: "/services/home-renovation" },
+            { name: "Air Conditioner Repair", href: "/services/air-conditioner-repair" },
         ]
     },
     {

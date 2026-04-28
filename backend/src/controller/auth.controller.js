@@ -62,8 +62,53 @@ export const profile = async (req, res) => {
     try {
         const { id } = req.customer;
 
-        const user = await Customer.findById(id, "_id name mobile email image");
-        return res.success({ _id: user._id, name: user.name, mobile: user.mobile, email: user.email, image: user.image }, "User profile fetched successfully");
+        const user = await Customer.findById(id, "_id userId name mobile email image dateOfBirth preferredLanguage");
+        return res.success({
+            _id: user._id,
+            userId: user.userId,
+            name: user.name,
+            mobile: user.mobile,
+            email: user.email,
+            image: user.image,
+            dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format("YYYY-MM-DD") : "",
+            preferredLanguage: user.preferredLanguage || "en"
+        }, "User profile fetched successfully");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const updateProfile = async (req, res) => {
+    try {
+        const { name, email = "", dateOfBirth = "", preferredLanguage = "en" } = req.body;
+        const customer = await Customer.findOne({ _id: req.customer._id, deletedAt: null, isActive: true });
+        if (!customer) return res.noRecords();
+
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+        if (normalizedEmail) {
+            const duplicate = await Customer.findOne({ _id: { $ne: customer._id }, email: normalizedEmail, deletedAt: null });
+            if (duplicate) return res.someThingWentWrong({ message: "Customer with this email already exists." });
+        }
+
+        const dob = dateOfBirth ? new Date(dateOfBirth) : null;
+        if (dateOfBirth && Number.isNaN(dob.getTime())) return res.someThingWentWrong({ message: "Invalid date of birth." });
+
+        customer.name = String(name).trim();
+        customer.email = normalizedEmail;
+        customer.dateOfBirth = dob;
+        customer.preferredLanguage = preferredLanguage || "en";
+        await customer.save();
+
+        return res.successUpdate({
+            _id: customer._id,
+            userId: customer.userId,
+            name: customer.name,
+            mobile: customer.mobile,
+            email: customer.email,
+            image: customer.image,
+            dateOfBirth: customer.dateOfBirth ? moment(customer.dateOfBirth).format("YYYY-MM-DD") : "",
+            preferredLanguage: customer.preferredLanguage || "en"
+        }, "Profile updated successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

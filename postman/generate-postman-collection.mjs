@@ -88,7 +88,7 @@ const collection = {
 const open = [
     req("General settings", "GET", "/general-settings"),
     req("Service categories list", "GET", "/service-categories-list?query=&limit=20"),
-    req("Cities list", "GET", "/cities-list?query=&limit=20"),
+    req("Cities list", "GET", "/cities-with-state?query=&limit=20"),
     req("Testimonials (public)", "GET", "/testimonials?limit=6&form="),
     req(
         "Submit enquiry (contact)",
@@ -110,6 +110,41 @@ const customer = [
     req("Send OTP", "POST", "/customer/send-otp", { body: { mobile: "9876543210", purpose: "registration" } }),
     req("Register", "POST", "/customer/register", { body: { mobile: "9876543210", otp: "123456", name: "Test User" } }),
     req("Profile (auth)", "GET", "/customer/profile", { description: "Requires customer cookie after register/login flow." }),
+    req("Update profile (auth)", "PUT", "/customer/profile", { body: { name: "Test User", email: "customer@example.com", dateOfBirth: "1990-01-15", preferredLanguage: "en" } }),
+    req("Dashboard (auth)", "GET", "/customer/dashboard"),
+    req("Bookings (auth)", "GET", "/customer/bookings?pageNo=1&limit=10&status="),
+    req("States for address (auth)", "GET", "/customer/states?query=&limit=20"),
+    req("Cities for address (auth)", "GET", `/customer/cities?stateId=${OID}&query=&limit=20`),
+    req("Addresses (auth)", "GET", "/customer/addresses"),
+    req("Create address (auth)", "POST", "/customer/addresses", {
+        body: {
+            addressLine1: "House 10",
+            addressLine2: "Main Road",
+            landmark: "Near Market",
+            state: OID,
+            city: OID,
+            pincode: "342001",
+            latitude: "26.238947",
+            longitude: "73.024309",
+            locationType: "home",
+            isDefault: 1
+        }
+    }),
+    req("Update address (auth)", "PUT", "/customer/addresses/:addressId", {
+        body: {
+            addressLine1: "House 10",
+            addressLine2: "Main Road",
+            landmark: "Near Market",
+            state: OID,
+            city: OID,
+            pincode: "342001",
+            latitude: "26.238947",
+            longitude: "73.024309",
+            locationType: "home",
+            isDefault: 1
+        }
+    }),
+    req("Delete address (auth)", "DELETE", "/customer/addresses/:addressId"),
     req("Logout", "POST", "/customer/logout"),
 ];
 

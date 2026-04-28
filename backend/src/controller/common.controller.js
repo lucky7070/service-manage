@@ -1,8 +1,41 @@
 import mongoose from "mongoose";
-import { OurMilestone, OurValue, City, Enquiry, ServiceCategory, ServiceProvider, ServiceProviderPhoto, Testimonial, CmsPage } from "../models/index.js";
-import { escapeRegex } from "../helpers/utils.js";
+import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, Testimonial, CmsPage } from "../models/index.js";
+import { escapeRegex, ObjectId } from "../helpers/utils.js";
+
+
+export const listStates = async (req, res) => {
+    try {
+        const query = String(req.query.query || "").trim();
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 20;
+
+        const filter = { deletedAt: null, isActive: true };
+        if (query) filter.name = { $regex: query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+
+        const rows = await State.find(filter, { name: 1 }).sort({ name: 1 }).limit(limit).lean();
+        return res.success(rows.map((row) => ({ value: row._id, label: row.name })));
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
 
 export const listCities = async (req, res) => {
+    try {
+        const query = String(req.query.query || "").trim();
+        const stateId = ObjectId(req.query.stateId);
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 20;
+
+        const filter = { deletedAt: null, isActive: true };
+        if (stateId) filter.stateId = stateId;
+        if (query) filter.name = { $regex: query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+
+        const rows = await City.find(filter, { name: 1 }).sort({ name: 1 }).limit(limit).lean();
+        return res.success(rows.map((row) => ({ value: row._id, label: row.name })));
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listCitiesWithState = async (req, res) => {
     try {
         const query = String(req.query.query || "").trim();
         const limitRaw = Number(req.query.limit);

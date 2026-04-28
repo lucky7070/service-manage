@@ -16,6 +16,7 @@ import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, Label, Modal, Option, Select } from "@/components/ui";
 import AsyncSelect, { type SelectOption } from "@/components/ui/AsyncSelect";
 import { getSweetAlertConfig } from "@/helpers/utils";
+import AxiosHelper from "@/helpers/AxiosHelper";
 
 interface AddressFormValues {
     _id: string;
@@ -96,9 +97,9 @@ export default function CustomerAddressesPage() {
     }, [getData]);
 
     const loadStateOptions = useCallback(async (inputValue: string): Promise<SelectOption[]> => {
-        const { data } = await AxiosHelperAdmin.getData("/states", { limit: 20, pageNo: 1, status: 1, query: inputValue || "", sortBy: "name", sortOrder: "asc" });
-        if (data.status && Array.isArray(data?.data?.record)) {
-            return data.data.record.map((row: { _id: string; name: string }) => ({ value: row._id, label: row.name }));
+        const { data } = await AxiosHelper.getData("/states-list", { limit: 20, query: inputValue || "" });
+        if (data.status && Array.isArray(data?.data)) {
+            return data.data;
         }
         return [];
     }, []);
@@ -106,9 +107,9 @@ export default function CustomerAddressesPage() {
     const loadCityOptions = useCallback(async (inputValue: string): Promise<SelectOption[]> => {
         if (!selectedState?.value) return [];
 
-        const { data } = await AxiosHelperAdmin.getData("/cities", { limit: 20, pageNo: 1, status: 1, stateId: selectedState.value, query: inputValue || "", sortBy: "name", sortOrder: "asc" });
-        if (data.status && Array.isArray(data?.data?.record)) {
-            return data.data.record.map((row: { _id: string; name: string }) => ({ value: row._id, label: row.name }));
+        const { data } = await AxiosHelper.getData("/cities-list", { limit: 20, stateId: selectedState.value, query: inputValue || "" });
+        if (data.status && Array.isArray(data?.data)) {
+            return data.data;
         }
         return [];
     }, [selectedState]);

@@ -43,7 +43,7 @@ export function HeroSection() {
     }, []);
 
     const loadCityOptions = useCallback(async (inputValue: string) => {
-        const { data } = await AxiosHelper.getData("/cities-list", { limit: 20, status: 1, query: inputValue || "" });
+        const { data } = await AxiosHelper.getData("/cities-with-state", { limit: 20, status: 1, query: inputValue || "" });
         if (data.status && data?.data && Array.isArray(data.data)) {
             return data.data.map((city: { _id: string; label: string; slug: string }) => ({
                 value: city.slug,

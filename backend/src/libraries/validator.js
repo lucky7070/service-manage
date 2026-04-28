@@ -106,6 +106,7 @@ const latitude = check("latitude", "Latitude must be numeric.").optional({ value
 const longitude = check("longitude", "Longitude must be numeric.").optional({ values: "falsy" }).isFloat({ min: -180, max: 180 }).withMessage("Longitude must be between -180 and 180.");
 const locationType = check("locationType", "Invalid location type.").optional({ values: "falsy" }).isIn(["home", "office", "other"]);
 const isDefault = check("isDefault", "Default address must be 0 or 1.").optional({ values: "falsy" }).isIn([0, 1, "0", "1", true, false, "true", "false"]);
+const preferredLanguage = check("preferredLanguage", "Preferred language must be en or hi.").optional({ values: "falsy" }).isIn(["en", "hi"]);
 
 export const validator = (method) => {
 
@@ -132,11 +133,20 @@ export const validator = (method) => {
         case "customer":
             output = [name, mobile, email, dateOfBirth, status];
             break;
+        case "customer-profile-update":
+            output = [name, email, dateOfBirth, preferredLanguage];
+            break;
         case "customer-address":
             output = [id, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
             break;
         case "customer-address-update":
             output = [id, addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
+            break;
+        case "customer-self-address":
+            output = [addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
+            break;
+        case "customer-self-address-update":
+            output = [addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
             break;
         case "rating-tag":
             output = [tagFor, tagName, tagType, status];

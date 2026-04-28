@@ -90,7 +90,7 @@ export default function AdminServiceProvidersPage() {
     const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
 
     const loadCityOptions = async (inputValue: string) => {
-        const { data } = await AxiosHelper.getData("/cities-list", { query: inputValue, limit: 20 });
+        const { data } = await AxiosHelper.getData("/cities-with-state", { query: inputValue, limit: 20 });
         if (data.status && Array.isArray(data.data)) {
             return data.data;
         } else {

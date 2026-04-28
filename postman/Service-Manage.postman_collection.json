@@ -74,7 +74,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/cities-list?query=&limit=20"
+            "url": "{{baseUrl}}/cities-with-state?query=&limit=20"
           }
         },
         {
@@ -190,6 +190,171 @@
             ],
             "url": "{{baseUrl}}/customer/profile",
             "description": "Requires customer cookie after register/login flow."
+          }
+        },
+        {
+          "name": "Update profile (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"customer@example.com\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"preferredLanguage\": \"en\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Dashboard (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/dashboard"
+          }
+        },
+        {
+          "name": "Bookings (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/bookings?pageNo=1&limit=10&status="
+          }
+        },
+        {
+          "name": "States for address (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/states?query=&limit=20"
+          }
+        },
+        {
+          "name": "Cities for address (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/cities?stateId=507f1f77bcf86cd799439011&query=&limit=20"
+          }
+        },
+        {
+          "name": "Addresses (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/addresses"
+          }
+        },
+        {
+          "name": "Create address (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/addresses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressLine1\": \"House 10\",\n  \"addressLine2\": \"Main Road\",\n  \"landmark\": \"Near Market\",\n  \"state\": \"507f1f77bcf86cd799439011\",\n  \"city\": \"507f1f77bcf86cd799439011\",\n  \"pincode\": \"342001\",\n  \"latitude\": \"26.238947\",\n  \"longitude\": \"73.024309\",\n  \"locationType\": \"home\",\n  \"isDefault\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update address (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/addresses/:addressId",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressLine1\": \"House 10\",\n  \"addressLine2\": \"Main Road\",\n  \"landmark\": \"Near Market\",\n  \"state\": \"507f1f77bcf86cd799439011\",\n  \"city\": \"507f1f77bcf86cd799439011\",\n  \"pincode\": \"342001\",\n  \"latitude\": \"26.238947\",\n  \"longitude\": \"73.024309\",\n  \"locationType\": \"home\",\n  \"isDefault\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete address (auth)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/addresses/:addressId"
           }
         },
         {

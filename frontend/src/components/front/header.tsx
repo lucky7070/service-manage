@@ -50,7 +50,7 @@ export function Header() {
                         <Link href="/about">
                             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">About</Button>
                         </Link>
-                        <Link href="/bookings">
+                        <Link href="/user/bookings">
                             <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">My Bookings</Button>
                         </Link>
                         <Link href="/login">
@@ -82,7 +82,7 @@ export function Header() {
                                     Join as Pro
                                 </Button>
                             </Link>
-                            <Link href="/bookings" onClick={() => setMobileMenuOpen(false)}>
+                            <Link href="/user/bookings" onClick={() => setMobileMenuOpen(false)}>
                                 <Button variant="ghost" className="w-full justify-start text-gray-600">
                                     My Bookings
                                 </Button>
