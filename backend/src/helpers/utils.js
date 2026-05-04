@@ -13,6 +13,10 @@ export const generateBookingNumber = () => {
     return `BK-${stamp}-${rand}`;
 };
 
+export const generateRandomString = (length) => {
+    return Math.random().toString(36).substring(2, 2 + length);
+};
+
 export const now = () => moment().toDate();
 
 export const orderId = (seq, prefix, width = 6) => {

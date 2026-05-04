@@ -107,6 +107,9 @@ const longitude = check("longitude", "Longitude must be numeric.").optional({ va
 const locationType = check("locationType", "Invalid location type.").optional({ values: "falsy" }).isIn(["home", "office", "other"]);
 const isDefault = check("isDefault", "Default address must be 0 or 1.").optional({ values: "falsy" }).isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const preferredLanguage = check("preferredLanguage", "Preferred language must be en or hi.").optional({ values: "falsy" }).isIn(["en", "hi"]);
+const paymentType = check("paymentType", "Payment type must be Credit or Debit.").exists().notEmpty().isIn([1, 2, "1", "2"]);
+const amount = check("amount", "Amount must be greater than 0.").exists().notEmpty().isFloat({ min: 0.01 });
+const particulars = check("particulars").optional({ values: "falsy" }).trim().isLength({ max: 5000 });
 
 export const validator = (method) => {
 
@@ -147,6 +150,9 @@ export const validator = (method) => {
             break;
         case "customer-self-address-update":
             output = [addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
+            break;
+        case "customer-ledger":
+            output = [id, paymentType,  amount, particulars];
             break;
         case "rating-tag":
             output = [tagFor, tagName, tagType, status];

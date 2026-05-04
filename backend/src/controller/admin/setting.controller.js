@@ -6,7 +6,8 @@ const TYPE_REQUIRED_FIELDS = {
     3: ["email_from", "smtp_host", "smtp_port", "smtp_user", "smtp_pass"],
     4: ["razorpay_key", "razorpay_secret", "merchant_id"],
     5: ["sms_key", "sms_url", "sms_hash", "sms_sender"],
-    6: ["force_update_android", "force_update_ios", "app_version_android", "app_version_ios", "app_url_android", "app_url_ios", "force_update_message_android", "force_update_message_ios", "maintenance", "maintenance_toggle", "information_banner_toggle"]
+    6: ["force_update_android", "force_update_ios", "app_version_android", "app_version_ios", "app_url_android", "app_url_ios", "force_update_message_android", "force_update_message_ios", "maintenance", "maintenance_toggle", "information_banner_toggle"],
+    7: ["refer_amount", "signup_rewards"]
 };
 
 export const getGeneralSettings = async (req, res) => {

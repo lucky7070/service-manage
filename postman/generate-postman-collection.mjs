@@ -107,7 +107,7 @@ const open = [
 ];
 
 const customer = [
-    req("Send OTP", "POST", "/customer/send-otp", { body: { mobile: "9876543210", purpose: "registration" } }),
+    req("Send OTP", "POST", "/customer/send-otp", { body: { mobile: "9876543210", purpose: "register" } }),
     req("Register", "POST", "/customer/register", { body: { mobile: "9876543210", otp: "123456", name: "Test User" } }),
     req("Profile (auth)", "GET", "/customer/profile", { description: "Requires customer cookie after register/login flow." }),
     req("Update profile (auth)", "PUT", "/customer/profile", { body: { name: "Test User", email: "customer@example.com", dateOfBirth: "1990-01-15", preferredLanguage: "en" } }),
@@ -149,7 +149,7 @@ const customer = [
 ];
 
 const serviceProvider = [
-    req("Send OTP", "POST", "/service-provider/send-otp", { body: { mobile: "9876543210", purpose: "registration" } }),
+    req("Send OTP", "POST", "/service-provider/send-otp", { body: { mobile: "9876543210", purpose: "register" } }),
     req("Login", "POST", "/service-provider/login", { body: { mobile: "9876543210", otp: "123456" } }),
     req("Register (multipart)", "POST", "/service-provider/register", {
         formdata: [
@@ -282,6 +282,10 @@ const admin = [
     req("Delete customer", "DELETE", "/admin/customers/:id"),
     req("Get customer", "GET", "/admin/customers/:id"),
     req("List customers", "GET", "/admin/customers"),
+    req("Customer ledger", "GET", "/admin/customers/:id/ledger?pageNo=1&limit=10&paymentType=&query="),
+    req("Add customer ledger entry", "POST", "/admin/customers/:id/ledger", {
+        body: { paymentType: 1, amount: 100, particulars: "Admin wallet credit" },
+    }),
     req("Create service provider (multipart)", "POST", "/admin/service-providers", {
         formdata: [
             fd.text("name", "SP Name"),

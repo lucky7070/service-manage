@@ -141,7 +141,7 @@
             "url": "{{baseUrl}}/customer/send-otp",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"purpose\": \"registration\"\n}",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"purpose\": \"register\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -394,7 +394,7 @@
             "url": "{{baseUrl}}/service-provider/send-otp",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"purpose\": \"registration\"\n}",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"purpose\": \"register\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1494,6 +1494,47 @@
               }
             ],
             "url": "{{baseUrl}}/admin/customers"
+          }
+        },
+        {
+          "name": "Customer ledger",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/customers/:id/ledger?pageNo=1&limit=10&paymentType=&query="
+          }
+        },
+        {
+          "name": "Add customer ledger entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/customers/:id/ledger",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentType\": 1,\n  \"amount\": 100,\n  \"particulars\": \"Admin wallet credit\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           }
         },
         {

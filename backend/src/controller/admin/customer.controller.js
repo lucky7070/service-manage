@@ -174,6 +174,7 @@ export const getSingleCustomer = async (req, res) => {
             email: customer.email,
             dateOfBirth: customer.dateOfBirth ? moment(customer.dateOfBirth).format("YYYY-MM-DD") : "",
             image: customer.image,
+            balance: customer.balance || 0,
             status: customer.isActive ? 1 : 0,
             createdAt: customer.createdAt
         });

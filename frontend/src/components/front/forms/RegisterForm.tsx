@@ -14,6 +14,7 @@ import { Phone, User } from "lucide-react";
 type RegisterValues = {
     name: string;
     mobile: string;
+    referralCode: string;
     otp: string;
     acceptedTerms: boolean;
 };
@@ -21,6 +22,7 @@ type RegisterValues = {
 const baseValidation = {
     name: Yup.string().trim().min(2, "Full name must be at least 2 characters.").required("Full name is required."),
     mobile: Yup.string().trim().required("Mobile number is required.").matches(PHONE_REGEXP, "Enter a valid Indian mobile number."),
+    referralCode: Yup.string().trim().max(20, "Referral code is too long."),
     acceptedTerms: Yup.boolean().oneOf([true], "You must accept Terms and Privacy Policy.")
 }
 
@@ -35,7 +37,7 @@ export default function RegisterForm() {
 
     const sendOtp = async (mobile: string, setOTP: (otp: string) => void) => {
         setLoading(true);
-        const { data } = await AxiosHelper.postData("/customer/send-otp", { mobile: mobile.trim(), purpose: "registration" });
+        const { data } = await AxiosHelper.postData("/customer/send-otp", { mobile: mobile.trim(), purpose: "register" });
         if (data.status) {
             toast.success(data.message || "OTP sent.");
             setStep("otp");
@@ -47,9 +49,9 @@ export default function RegisterForm() {
         }
     };
 
-    const registerAndVerify = async ({ name, mobile, otp }: { name: string, mobile: string, otp: string }) => {
+    const registerAndVerify = async ({ name, mobile, otp, referralCode }: { name: string, mobile: string, otp: string, referralCode: string }) => {
         setLoading(true);
-        const { data } = await AxiosHelper.postData("/customer/register", { mobile, otp, name });
+        const { data } = await AxiosHelper.postData("/customer/register", { mobile, otp, name, referralCode: referralCode.trim() });
         if (data.status) {
             toast.success(data.message || "Account created successfully.");
             router.push("/user/dashboard");
@@ -62,7 +64,7 @@ export default function RegisterForm() {
 
     return (
         <Formik<RegisterValues>
-            initialValues={{ name: "", mobile: "", otp: "", acceptedTerms: false }}
+            initialValues={{ name: "", mobile: "", referralCode: "", otp: "", acceptedTerms: false }}
             validationSchema={schema}
             onSubmit={async (values, { setFieldValue }) => {
                 if (step === "details") {
@@ -90,6 +92,12 @@ export default function RegisterForm() {
                             <Field as={Input} className="pl-10" type="tel" placeholder="9876543210" name="mobile" disabled={loading || step === "otp"} inputMode="numeric" maxLength={10} />
                         </div>
                         <ErrorMessage name="mobile" component="small" className="mt-1 block text-red-600" />
+                    </div>
+
+                    <div>
+                        <Label>Referral Code <span className="text-muted-foreground">(optional)</span></Label>
+                        <Field as={Input} type="text" placeholder="Enter referral code" name="referralCode" disabled={loading || step === "otp"} maxLength={20} />
+                        <ErrorMessage name="referralCode" component="small" className="mt-1 block text-red-600" />
                     </div>
 
                     {step === "otp" ? (

@@ -58,7 +58,7 @@ const ProRegistrationForm = () => {
     }, [step]);
 
     const sendOtp = async (mobile: string, setOTP: (otp: string) => void) => {
-        const { data } = await AxiosHelper.postData("/service-provider/send-otp", { mobile: mobile.trim(), purpose: "registration" });
+        const { data } = await AxiosHelper.postData("/service-provider/send-otp", { mobile: mobile.trim(), purpose: "register" });
         if (data.status) {
             toast.success(data.message || "OTP sent.");
             setStep("otp");
@@ -104,7 +104,7 @@ const ProRegistrationForm = () => {
                     setCity(null);
                     setStep("details");
                 } else {
-                    toast.error(data?.message || "Unable to submit registration.");
+                    toast.error(data?.message || "Unable to submit register.");
                 }
             }}
         >

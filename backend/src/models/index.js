@@ -11,6 +11,7 @@ export { ServiceType } from "./ServiceType.js";
 export { ProviderService } from "./ProviderService.js";
 export { Booking } from "./Booking.js";
 export { Address } from "./Address.js";
+export { Ledger } from "./Ledger.js";
 export { ChatMessage } from "./ChatMessage.js";
 export { Notification } from "./Notification.js";
 export { OtpVerification } from "./OtpVerification.js";

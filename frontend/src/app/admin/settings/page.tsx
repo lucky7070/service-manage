@@ -27,7 +27,8 @@ const TYPE_LABELS: Record<number, string> = {
     3: "Email Setting",
     4: "Payment Setting",
     5: "SMS Setting",
-    6: "App Controls"
+    6: "App Controls",
+    7: "Rewards Setting"
 };
 
 export default function AdminSettingsPage() {

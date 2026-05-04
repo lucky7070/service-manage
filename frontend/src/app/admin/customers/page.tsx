@@ -9,7 +9,7 @@ import * as Yup from "yup";
 import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
-import { ImageIcon, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
+import { ImageIcon, MapPin, Pencil, Plus, Trash2, WalletCards } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
@@ -266,6 +266,13 @@ export default function AdminCustomersPage() {
                                                     <Link href={`/admin/customers/${row._id}/addresses`}>
                                                         <Button size="sm" variant="secondary" title="Manage addresses" aria-label="Manage addresses">
                                                             <MapPin className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                        </Button>
+                                                    </Link>
+                                                </PermissionBlock>
+                                                <PermissionBlock permission_id={3310}>
+                                                    <Link href={`/admin/customers/${row._id}/ledger`}>
+                                                        <Button size="sm" variant="secondary" title="Manage ledger" aria-label="Manage ledger">
+                                                            <WalletCards className="h-4 w-4 shrink-0" strokeWidth={2} />
                                                         </Button>
                                                     </Link>
                                                 </PermissionBlock>

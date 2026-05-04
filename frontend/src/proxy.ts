@@ -22,7 +22,7 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    if (pathname.startsWith("/user") || ["/login"].includes(pathname)) {
+    if (pathname.startsWith("/user") || AUTH_PAGES_USER.includes(pathname)) {
         const token = request.cookies.get("customer_token")?.value;
         if (AUTH_PAGES_USER.includes(pathname) && token) {
             const url = request.nextUrl.clone();

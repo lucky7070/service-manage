@@ -150,7 +150,7 @@ export const getCustomerDashboard = async (req, res) => {
     try {
         const customerId = req.customer._id;
         const [profile, addressCount, statusRows, recentBookings] = await Promise.all([
-            Customer.findById(customerId, "_id userId name mobile email image dateOfBirth preferredLanguage").lean(),
+            Customer.findById(customerId, "_id userId name mobile email image dateOfBirth preferredLanguage balance referralCode").lean(),
             Address.countDocuments({ customerId, deletedAt: null }),
             Booking.aggregate([{ $match: { customerId } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
             Booking.aggregate(bookingListPipeline({ customerId, limit: 5, pageNo: 1 }))

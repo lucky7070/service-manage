@@ -18,7 +18,7 @@ export const sendOtp = async (req, res) => {
 
         let user = await ServiceProvider.findOne({ mobile, deletedAt: null });
         if (!user && purpose === "login") return res.someThingWentWrong({ message: "Service Provider not registered..!!" });
-        if (user && purpose === "registration") return res.someThingWentWrong({ message: "Service Provider already registered..!!" });
+        if (user && purpose === "register") return res.someThingWentWrong({ message: "Service Provider already registered..!!" });
 
         const otp = generateOtp();
         const isSent = await sendOTP(mobile, otp);
@@ -64,7 +64,7 @@ export const register = async (req, res) => {
         const verify = await OtpVerification.findOne({
             phoneNumber: String(mobile).trim(),
             otpCode: String(otp).trim(),
-            purpose: "registration"
+            purpose: "register"
         }).sort({ createdAt: -1 });
         if (!verify || moment(verify.expiresAt).isBefore(moment())) {
             return res.someThingWentWrong({ message: "Invalid or expired OTP" });

@@ -1,10 +1,11 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../config/index.js";
-import { COOKIE_OPTIONS, PHONE_REGEXP } from "../config/constants.js";
+import { PHONE_REGEXP } from "../config/constants.js";
 import { generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
 import { OtpVerification, Customer } from "../models/index.js";
 import { sendOTP } from "../libraries/sms.js";
+import { getSettings } from "../helpers/database.js";
 
 export const sendOtp = async (req, res) => {
     try {
@@ -34,17 +35,47 @@ export const sendOtp = async (req, res) => {
 
 export const register = async (req, res) => {
     try {
-        const { name = `New Customer ${moment().format("DDMMYYYYHHmmss").toUpperCase()}`, mobile, otp } = req.body;
+        const { name = "New Customer", mobile, otp, referralCode = "" } = req.body;
         if (!name || !mobile) return res.someThingWentWrong({ message: "Name and mobile are required" });
         if (!PHONE_REGEXP.test(String(mobile).trim())) return res.someThingWentWrong({ message: "Enter a valid Indian mobile number." });
 
-        const verify = await OtpVerification.findOne({ phoneNumber: mobile, otpCode: otp, purpose: { $in: ["registration", "login"] } }).sort({ createdAt: -1 });
+        const verify = await OtpVerification.findOne({ phoneNumber: mobile, otpCode: otp, purpose: { $in: ["register", "login"] } }).sort({ createdAt: -1 });
         if (!verify || moment(verify.expiresAt).isBefore(moment())) return res.someThingWentWrong({ message: "Invalid or expired OTP" });
 
         let user = await Customer.findOne({ mobile: verify.phoneNumber, deletedAt: null });
-        if (!user && verify.purpose === "login") return res.someThingWentWrong({ message: "User not registered..!!" });
+        if (!user) {
 
-        if (!user) user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true });
+            if (verify.purpose === "login") return res.someThingWentWrong({ message: "User not registered..!!" });
+
+            let referrer = null;
+            let referredBy = null;
+            const normalizedReferralCode = String(referralCode || "").trim().toUpperCase();
+            if (normalizedReferralCode) {
+                referrer = await Customer.findOne({ referralCode: normalizedReferralCode, deletedAt: null, isActive: true });
+                if (!referrer) return res.someThingWentWrong({ message: "Invalid referral code" });
+
+                referredBy = referrer._id;
+            }
+
+            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy });
+
+            const settings = await getSettings(["signup_rewards", "refer_amount"]);
+            const signupReward = Number(settings.signup_rewards || 0);
+            if (signupReward > 0) {
+                await user.addLedger({ amount: signupReward, paymentType: 1, paymentMethod: 6, particulars: "Signup reward" });
+            }
+
+            const referralReward = Number(settings.refer_amount || 0);
+            if (referrer && referralReward > 0 && String(referrer._id) !== String(user._id)) {
+                await referrer.addLedger({
+                    amount: referralReward,
+                    paymentType: 1,
+                    paymentMethod: 2,
+                    requestId: user._id,
+                    particulars: `Referral reward for ${user.userId}`
+                });
+            }
+        }
 
         await user.updateOne({ lastLogin: now() });
         await verify.deleteOne();
@@ -52,7 +83,7 @@ export const register = async (req, res) => {
         const token = jwt.sign({ id: user._id, role: "customer" }, config.customerJwtSecret, { expiresIn: "7d" });
         res.setCookie("customer_token", token);
 
-        return res.success({ _id: user._id, name: user.name, mobile: user.mobile, email: user.email, image: user.image }, "Success..!!");
+        return res.success({ _id: user._id, name: user.name, mobile: user.mobile, email: user.email, image: user.image, balance: user.balance, referralCode: user.referralCode }, "Success..!!");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -62,7 +93,7 @@ export const profile = async (req, res) => {
     try {
         const { id } = req.customer;
 
-        const user = await Customer.findById(id, "_id userId name mobile email image dateOfBirth preferredLanguage");
+        const user = await Customer.findById(id, "_id userId name mobile email image dateOfBirth preferredLanguage balance referralCode");
         return res.success({
             _id: user._id,
             userId: user.userId,
@@ -70,6 +101,8 @@ export const profile = async (req, res) => {
             mobile: user.mobile,
             email: user.email,
             image: user.image,
+            balance: user.balance || 0,
+            referralCode: user.referralCode || "",
             dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format("YYYY-MM-DD") : "",
             preferredLanguage: user.preferredLanguage || "en"
         }, "User profile fetched successfully");
