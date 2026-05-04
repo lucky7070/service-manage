@@ -1,6 +1,6 @@
 import moment from "moment";
-import { Address, Booking, City, Customer, State } from "../models/index.js";
-import { ObjectId, optionalNumber, toBoolean } from "../helpers/utils.js";
+import { Address, Booking, City, Customer, Ledger, State } from "../models/index.js";
+import { ObjectId, escapeRegex, optionalNumber, toBoolean } from "../helpers/utils.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
     const match = { customerId };
@@ -191,6 +191,42 @@ export const listCustomerBookings = async (req, res) => {
 
         const total = countRows.length > 0 ? countRows[0].total_count : 0;
         if (record.length === 0) return res.datatableNoRecords();
+        return res.pagination(record, total, limit, pageNo);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listCustomerLedger = async (req, res) => {
+    try {
+
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const paymentType = String(req.query.paymentType || "").trim();
+        const query = String(req.query.query || "").trim();
+
+        const filter = { customerId: req.customer._id };
+        if (paymentType) filter.paymentType = Number(paymentType);
+        if (query) {
+            const q = escapeRegex(query);
+            filter.$or = [
+                { voucherNo: { $regex: q, $options: "i" } },
+                { particulars: { $regex: q, $options: "i" } }
+            ];
+        }
+
+        const [record, countRows] = await Promise.all([
+            Ledger.aggregate([
+                { $match: filter },
+                { $project: { voucherNo: 1, amount: 1, currentBalance: 1, updatedBalance: 1, paymentType: 1, paymentMethod: 1, requestId: 1, particulars: 1, createdAt: 1 } },
+                { $sort: { createdAt: -1, _id: -1 } },
+                { $skip: (pageNo - 1) * limit },
+                { $limit: limit }
+            ]),
+            Ledger.aggregate([{ $match: filter }, { $count: "total_count" }])
+        ]);
+
+        const total = countRows.length > 0 ? countRows[0].total_count : 0;
         return res.pagination(record, total, limit, pageNo);
     } catch (error) {
         return res.someThingWentWrong(error);

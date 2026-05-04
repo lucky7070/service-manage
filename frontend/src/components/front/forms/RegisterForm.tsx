@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Formik, Form, ErrorMessage, Field } from "formik";
@@ -28,8 +28,17 @@ const baseValidation = {
 
 export default function RegisterForm() {
     const router = useRouter();
+    const [referralCode, setReferralCode] = useState("");
     const [step, setStep] = useState<"details" | "otp">("details");
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            const code = String(new URLSearchParams(window.location.search).get("ref") || "").trim().toUpperCase();
+            setReferralCode(code);
+        }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     const schema = step === "details"
         ? Yup.object(baseValidation)
@@ -64,7 +73,8 @@ export default function RegisterForm() {
 
     return (
         <Formik<RegisterValues>
-            initialValues={{ name: "", mobile: "", referralCode: "", otp: "", acceptedTerms: false }}
+            initialValues={{ name: "", mobile: "", referralCode, otp: "", acceptedTerms: false }}
+            enableReinitialize
             validationSchema={schema}
             onSubmit={async (values, { setFieldValue }) => {
                 if (step === "details") {
@@ -96,7 +106,7 @@ export default function RegisterForm() {
 
                     <div>
                         <Label>Referral Code <span className="text-muted-foreground">(optional)</span></Label>
-                        <Field as={Input} type="text" placeholder="Enter referral code" name="referralCode" disabled={loading || step === "otp"} maxLength={20} />
+                        <Field as={Input} type="text" placeholder="Enter referral code" name="referralCode" disabled={loading || step === "otp"} maxLength={20} readOnly={!!referralCode} />
                         <ErrorMessage name="referralCode" component="small" className="mt-1 block text-red-600" />
                     </div>
 

@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, Home, LayoutDashboard, UserRound } from "lucide-react";
+import { CalendarCheck, Gift, Home, LayoutDashboard, UserRound, WalletCards } from "lucide-react";
 import { cn } from "@/helpers/utils";
 
 const links = [
     { href: "/user/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/user/bookings", label: "Bookings", icon: CalendarCheck },
+    { href: "/user/ledger", label: "Ledger", icon: WalletCards },
+    { href: "/user/refer-earn", label: "Refer and Earn", icon: Gift, highlight: true },
     { href: "/user/addresses", label: "Addresses", icon: Home },
     { href: "/user/profile", label: "Profile", icon: UserRound }
 ];
@@ -20,7 +22,7 @@ export default function AccountNav() {
             <div className="mb-3 px-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">My Account</p>
             </div>
-            <nav className="grid gap-2 sm:grid-cols-4 lg:grid-cols-1">
+            <nav className="grid gap-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-1">
                 {links.map((item) => {
                     const Icon = item.icon;
                     const active = pathname === item.href;
@@ -30,6 +32,7 @@ export default function AccountNav() {
                             href={item.href}
                             className={cn(
                                 "flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground lg:justify-start",
+                                item.highlight && "bg-amber-50 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100 hover:text-amber-800",
                                 active && "bg-primary text-white hover:bg-primary hover:text-white"
                             )}
                         >

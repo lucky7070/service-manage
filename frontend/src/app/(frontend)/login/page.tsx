@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import LoginOtpForm from "@/components/front/forms/LoginForm"
@@ -14,6 +14,14 @@ import {
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true)
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            const hasReferralCode = Boolean(new URLSearchParams(window.location.search).get("ref"));
+            if (hasReferralCode) setIsLogin(false);
+        }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     return (
         <div className="flex min-h-screen">
