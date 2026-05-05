@@ -1,4 +1,6 @@
 import { COOKIE_OPTIONS } from "../config/constants.js";
+import { config } from "../config/index.js";
+import logger from "../helpers/logger.js";
 import language from "../languages/english.js";
 
 const toInt = (value, fallback) => {
@@ -74,6 +76,7 @@ export const customMethods = (req, res, next) => {
     };
 
     res.someThingWentWrong = function someThingWentWrong(error = { message: language.SOMETHING_WENT_WRONG }) {
+        if (config.showError && error instanceof Error) { logger.error(error.message, error); }
         return this.status(403).json({
             status: false,
             message: error.message || language.SOMETHING_WENT_WRONG,

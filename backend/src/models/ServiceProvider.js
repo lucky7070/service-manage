@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
-import { orderId } from "../helpers/utils.js";
+import { orderId, slugify, generateOtp } from "../helpers/utils.js";
 import { Counter } from "./Counter.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
 
 const Schema = new mongoose.Schema(
     {
         userId: { type: String, unique: true, index: true, default: null },
+        slug: { type: String, unique: true, index: true, default: null },
         name: { type: String, required: true, trim: true, default: null },
         mobile: { type: String, required: true, index: true, default: null },
         email: { type: String, sparse: true, index: true, trim: true, lowercase: true, default: null },
@@ -47,6 +48,7 @@ Schema.pre("save", async function onSave(next) {
         const options = this.$session() ? { session: this.$session() } : {};
         const counter = await Counter.findByIdAndUpdate({ _id: "ServiceProvider" }, { $inc: { seq: 1 } }, { upsert: true, new: true, ...options });
         this.userId = orderId(counter.seq, "SP", 6);
+        this.slug = slugify(this.name) + "-" + generateOtp(4);
     }
 
     next();

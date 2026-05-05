@@ -2,11 +2,12 @@ import { Router } from "express";
 import { sendOtp, register, profile, updateProfile, logout } from "../controller/auth.controller.js";
 import { createCustomerAddress, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookings, listCustomerLedger } from "../controller/customer.controller.js";
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
+import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { validator } from "../libraries/validator.js";
 
 const router = Router();
 
-router.post("/send-otp", sendOtp);
+router.post("/send-otp", otpRateLimiter, sendOtp);
 router.post("/register", register);
 
 router.use(requireCustomerAuth);

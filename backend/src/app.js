@@ -2,6 +2,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import express from "express";
 import fs from "fs";
+import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from 'url';
@@ -14,14 +15,9 @@ import { errorHandler, notFound } from "./middlewares/errorHandler.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
-app.use(
-    cors({
-        origin: config.frontendUrl,
-        credentials: true,
-        allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-    })
-);
+app.disable('x-powered-by');
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cors({ origin: config.frontendUrl, credentials: true }));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

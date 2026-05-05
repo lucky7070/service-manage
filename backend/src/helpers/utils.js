@@ -5,7 +5,7 @@ export const nowPlusMinutes = (minutes) => {
     return moment().add(minutes, "minutes").toDate();
 };
 
-export const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+export const generateOtp = (number_of_digits = 6) => String(Math.floor(10 ** (number_of_digits - 1) + Math.random() * 9 * 10 ** (number_of_digits - 1)));
 
 export const generateBookingNumber = () => {
     const stamp = moment().valueOf().toString(36).toUpperCase();

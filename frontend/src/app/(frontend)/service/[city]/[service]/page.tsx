@@ -56,7 +56,7 @@ export default async function ProviderSearchPage({
                                             <p className="truncate font-semibold text-gray-900">{row.name}</p>
                                             <p className="text-xs text-gray-500">{data.serviceCategory.name}</p>
                                         </div>
-                                        <Link href={`/book/${row._id}`} className="ml-auto">
+                                        <Link href={`/book/${row.slug}`} className="ml-auto">
                                             <Button>Book Now</Button>
                                         </Link>
                                     </div>

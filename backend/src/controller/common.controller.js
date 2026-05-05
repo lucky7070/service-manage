@@ -164,6 +164,7 @@ export const listServiceProviders = async (req, res) => {
                 $project: {
                     _id: 1,
                     name: 1,
+                    slug: 1,
                     image: 1,
                     experienceYears: { $ifNull: ["$experienceYears", 0] },
                     totalCompletedServices: { $ifNull: ["$totalCompletedServices", 0] },
@@ -191,11 +192,18 @@ export const listServiceProviders = async (req, res) => {
 
 export const getPublicServiceProvider = async (req, res) => {
     try {
-        const id = String(req.params.id || "").trim();
-        if (!mongoose.Types.ObjectId.isValid(id)) return res.noRecords();
 
+        const filter = { deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true };
+        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+            filter._id = ObjectId(req.params.id);
+        } else {
+            filter.slug = req.params.id;
+        }
+
+        if (!filter._id && !filter.slug) return res.noRecords();
+    
         const [doc] = await ServiceProvider.aggregate([
-            { $match: { _id: new mongoose.Types.ObjectId(id), deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true } },
+            { $match: filter },
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
             { $unwind: { path: "$city" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
@@ -210,6 +218,7 @@ export const getPublicServiceProvider = async (req, res) => {
                 $project: {
                     userId: 1,
                     name: 1,
+                    slug: 1,
                     image: 1,
                     photos: 1,
                     experienceYears: { $ifNull: ["$experienceYears", 0] },

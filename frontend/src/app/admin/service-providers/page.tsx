@@ -76,6 +76,11 @@ const validationSchema = Yup.object().shape({
         const n = Number(v);
         return !Number.isNaN(n) && n >= 0 && n <= 80;
     }),
+    cityId: Yup.string().required("City is required."),
+    serviceCategoryId: Yup.string().required("Service category is required."),
+    image: Yup.mixed().required("Image is required."),
+    panCardDocument: Yup.mixed().required("PAN card document is required."),
+    aadharDocument: Yup.mixed().required("Aadhar document is required."),
     experienceDescription: Yup.string().max(5000, "Too long.").nullable(),
 });
 
@@ -444,6 +449,18 @@ export default function AdminServiceProvidersPage() {
                                             }}
                                         />
                                         <ErrorMessage className="text-xs text-rose-600" name="serviceCategoryId" component="small" />
+                                    </div>
+                                </div>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-name">Name <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-name" name="name" type="text" placeholder="e.g. John Doe" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sp-mobile">Mobile <span className="text-red-500">*</span> </Label>
+                                        <Field as={Input} id="sp-mobile" name="mobile" type="text" placeholder="e.g. 9876543210" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
                                     </div>
                                 </div>
                                 <div className="grid gap-3 sm:grid-cols-2">

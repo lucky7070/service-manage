@@ -79,6 +79,7 @@ export type ProviderSearchResult = {
     record: Array<{
         _id: string;
         name: string;
+        slug: string;
         image: string;
         experienceYears: number;
         totalCompletedServices: number;
@@ -103,9 +104,10 @@ export async function getServiceProvidersBySlugs(city: string, serviceCategory: 
 
 export type PublicServiceProvider = {
     _id: string;
-    userId?: string;
+    slug: string;
+    userId: string;
     name: string;
-    image?: string | null;
+    image: string | null;
     experienceYears: number;
     experienceDescription?: string | null;
     totalCompletedServices: number;

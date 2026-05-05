@@ -41,14 +41,12 @@ export default function CustomerLedgerPage() {
 
     const user = useAppSelector((state) => state.user);
     const [data, setData] = useState<LedgerData>({ record: [], count: 0, totalPages: 0, current_page: 1 });
-    const [paymentType, setPaymentType] = useState("");
-    const [query, setQuery] = useState("");
-    const [pageNo, setPageNo] = useState(1);
+    const [params, setParams] = useState({ pageNo: 1, paymentType: "", query: "" });
     const [loading, setLoading] = useState(true);
 
     const getData = useCallback(async () => {
         setLoading(true);
-        const { data, status } = await AxiosHelper.getData("/customer/ledger", { pageNo, limit: 10, paymentType, query: query.trim() });
+        const { data, status } = await AxiosHelper.getData("/customer/ledger", params);
         if (data.status) {
             setData(data.data as LedgerData);
         } else if (status === 404) {
@@ -58,7 +56,7 @@ export default function CustomerLedgerPage() {
         }
 
         setLoading(false);
-    }, [pageNo, paymentType, query]);
+    }, [params]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => { void getData(); }, 0);
@@ -88,9 +86,9 @@ export default function CustomerLedgerPage() {
                             <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                    <Input value={query} onChange={(event) => setQuery(event.target.value)} className="pl-10" placeholder="Search voucher or particulars..." />
+                                    <Input value={params.query} onChange={(event) => setParams((prev) => ({ ...prev, query: String(event.target.value).trim(), pageNo: 1 }))} className="pl-10" placeholder="Search voucher or particulars..." />
                                 </div>
-                                <Select value={paymentType} onChange={(event) => { setPaymentType(event.target.value); setPageNo(1); }} className="lg:max-w-[180px]">
+                                <Select value={params.paymentType} onChange={(event) => { setParams((prev) => ({ ...prev, paymentType: event.target.value, pageNo: 1 })); }} className="lg:max-w-[180px]">
                                     <option value="">All entries</option>
                                     <option value="1">Credit</option>
                                     <option value="2">Debit</option>
@@ -128,10 +126,10 @@ export default function CustomerLedgerPage() {
                                 ))}
                             </div>
 
-                            {data.totalPages > 1 ? (
+                            {data.totalPages > 1 && !loading && data.record.length > 0 ? (
                                 <div className="mt-5 flex justify-end gap-2">
-                                    <Button type="button" variant="outline" disabled={pageNo <= 1} onClick={() => setPageNo((prev) => Math.max(prev - 1, 1))}>Previous</Button>
-                                    <Button type="button" variant="outline" disabled={pageNo >= data.totalPages} onClick={() => setPageNo((prev) => prev + 1)}>Next</Button>
+                                    <Button type="button" variant="outline" disabled={params.pageNo <= 1} onClick={() => setParams((prev) => ({ ...prev, pageNo: Math.max(prev.pageNo - 1, 1) }))}>Previous</Button>
+                                    <Button type="button" variant="outline" disabled={params.pageNo >= data.totalPages} onClick={() => setParams((prev) => ({ ...prev, pageNo: prev.pageNo + 1 }))}>Next</Button>
                                 </div>
                             ) : null}
                         </div>
