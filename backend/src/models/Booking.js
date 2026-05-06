@@ -3,7 +3,7 @@ import { Counter } from "./Counter.js";
 import { orderId } from "../helpers/utils.js";
 
 const Schema = new mongoose.Schema({
-    bookingNumber: { type: String, required: true, unique: true, index: true, default: null },
+    bookingNumber: { type: String, unique: true, index: true, default: null },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true, index: true, default: null },
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", required: true, index: true, default: null },
     serviceCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceCategory", required: true, default: null },
@@ -48,10 +48,10 @@ const Schema = new mongoose.Schema({
 }, { timestamps: true });
 
 Schema.pre("save", async function onSave(next) {
-    if (this.isNew && !this.userId) {
+    if (this.isNew && !this.bookingNumber) {
         const options = this.$session() ? { session: this.$session() } : {};
         const counter = await Counter.findByIdAndUpdate({ _id: "Booking" }, { $inc: { seq: 1 } }, { upsert: true, new: true, ...options });
-        this.bookingNumber = orderId(counter.seq, "TXN", 7);
+        this.bookingNumber = orderId(counter.seq, "BOK", 7);
     }
 
     next();

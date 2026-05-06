@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sendOtp, register, login, profile, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos } from "../controller/service-provider.controller.js";
+import { sendOtp, register, login, profile, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote } from "../controller/service-provider.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
@@ -15,6 +15,10 @@ router.post("/register", serviceProviderStorage.fields([{ name: "image", maxCoun
 
 router.use(requireServiceProviderAuth);
 router.get("/profile", profile);
+router.get("/bookings", listProviderBookings);
+router.put("/bookings/:bookingId/quote", validator("booking-quote"), setBookingQuote);
+router.get("/bookings/:bookingId/messages", validator("customer-booking-id"), listProviderBookingMessages);
+router.post("/bookings/:bookingId/messages", validator("booking-message"), sendProviderBookingMessage);
 router.get("/work-photos", getWorkPhotos);
 router.post("/work-photos", serviceProviderWorkPhotoStorage.array("photos", 20), uploadWorkPhotos);
 router.delete("/work-photos/:photoId", deleteWorkPhoto);

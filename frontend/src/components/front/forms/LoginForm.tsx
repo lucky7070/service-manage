@@ -9,6 +9,8 @@ import { Phone } from "lucide-react";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
 import { OtpField, Label, Button, Input } from "@/components/front/ui";
+import { useAppDispatch } from "@/store/hooks";
+import { updateUser, type UserState } from "@/store/slices/userSlice";
 
 type LoginValues = {
     mobile: string;
@@ -18,6 +20,7 @@ type LoginValues = {
 
 export default function LoginForm() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
     const [step, setStep] = useState<"mobile" | "otp">("mobile");
     const [loading, setLoading] = useState(false);
 
@@ -47,7 +50,10 @@ export default function LoginForm() {
         const { data } = await AxiosHelper.postData("/customer/register", { mobile, otp });
         if (data.status) {
             toast.success(data.message || "Login successful.");
-            router.push("/user/dashboard");
+            dispatch(updateUser(data.data as Partial<UserState>));
+            
+            const redirect = String(new URLSearchParams(window.location.search).get("redirect") || "/user/dashboard");
+            router.push(redirect.startsWith("/") ? redirect : "/user/dashboard");
             setLoading(false);
         } else {
             toast.error(data.message || "Invalid OTP.");

@@ -110,6 +110,15 @@ const preferredLanguage = check("preferredLanguage", "Preferred language must be
 const paymentType = check("paymentType", "Payment type must be Credit or Debit.").exists().notEmpty().isIn([1, 2, "1", "2"]);
 const amount = check("amount", "Amount must be greater than 0.").exists().notEmpty().isFloat({ min: 0.01 });
 const particulars = check("particulars").optional({ values: "falsy" }).trim().isLength({ max: 5000 });
+const bookingId = param("bookingId", "Invalid booking ID.").exists().notEmpty().isMongoId();
+const providerId = check("providerId", "Provider is required.").exists().notEmpty().isMongoId();
+const serviceTypeIds = check("serviceTypeId", "At least one service type is required.").exists().isArray({ min: 1 });
+const serviceTypeIdItems = check("serviceTypeId.*", "Invalid service type.").isMongoId();
+const bookingAddressId = check("addressId", "Address is required.").exists().notEmpty().isMongoId();
+const scheduledTime = check("scheduledTime", "Scheduled date and time is required.").exists().notEmpty().isISO8601().toDate();
+const issueDescription = check("issueDescription").optional({ values: "falsy" }).trim().isLength({ max: 5000 });
+const quotedPrice = check("quotedPrice", "Quoted price must be greater than 0.").exists().notEmpty().isFloat({ min: 0.01 });
+const chatMessage = check("message", "Message is required.").trim().notEmpty().isLength({ min: 1, max: 5000 });
 
 export const validator = (method) => {
 
@@ -153,6 +162,18 @@ export const validator = (method) => {
             break;
         case "customer-ledger":
             output = [id, paymentType,  amount, particulars];
+            break;
+        case "customer-booking-create":
+            output = [providerId, serviceTypeIds, serviceTypeIdItems, bookingAddressId, scheduledTime, issueDescription];
+            break;
+        case "customer-booking-id":
+            output = [bookingId];
+            break;
+        case "booking-quote":
+            output = [bookingId, quotedPrice];
+            break;
+        case "booking-message":
+            output = [bookingId, chatMessage];
             break;
         case "rating-tag":
             output = [tagFor, tagName, tagType, status];

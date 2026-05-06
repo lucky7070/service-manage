@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import moment from "moment";
 import AccountNav from "@/components/front/user/AccountNav";
 import { Button, Select } from "@/components/front/ui";
@@ -88,6 +89,11 @@ export default function CustomerBookingsPage() {
                                         <span>City: {booking.cityName || "—"}</span>
                                         <span>Booked: {booking.bookingTime ? moment(booking.bookingTime).format("DD MMM YYYY") : "—"}</span>
                                         <span>Amount: {booking.finalPrice != null ? `₹${booking.finalPrice}` : "—"}</span>
+                                    </div>
+                                    <div className="flex justify-end mt-3">
+                                        <Link href={`/user/bookings/${booking._id}`} className="inline-flex">
+                                            <Button type="button" variant="outline" size="sm">View Details</Button>
+                                        </Link>
                                     </div>
                                 </div>
                             ))}

@@ -10,6 +10,8 @@ import { Button, Input, OtpField, Label } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
 import { Phone, User } from "lucide-react";
+import { useAppDispatch } from "@/store/hooks";
+import { updateUser, type UserState } from "@/store/slices/userSlice";
 
 type RegisterValues = {
     name: string;
@@ -28,6 +30,7 @@ const baseValidation = {
 
 export default function RegisterForm() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
     const [referralCode, setReferralCode] = useState("");
     const [step, setStep] = useState<"details" | "otp">("details");
     const [loading, setLoading] = useState(false);
@@ -63,7 +66,10 @@ export default function RegisterForm() {
         const { data } = await AxiosHelper.postData("/customer/register", { mobile, otp, name, referralCode: referralCode.trim() });
         if (data.status) {
             toast.success(data.message || "Account created successfully.");
-            router.push("/user/dashboard");
+            dispatch(updateUser(data.data as Partial<UserState>));
+            
+            const redirect = String(new URLSearchParams(window.location.search).get("redirect") || "/user/dashboard");
+            router.push(redirect.startsWith("/") ? redirect : "/user/dashboard");
             setLoading(false);
         } else {
             toast.error(data?.message || "Invalid OTP.");

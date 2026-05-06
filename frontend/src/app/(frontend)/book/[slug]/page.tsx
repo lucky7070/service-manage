@@ -5,6 +5,7 @@ import Image from "@/components/ui/Image";
 import { getPublicServiceProvider } from "@/lib/api.server";
 import { resolveFileUrl } from "@/helpers/utils";
 import { ProviderWorkPhotoCarousel } from "@/components/front/provider-work-photo-carousel";
+import BookingWidget from "@/components/front/booking-widget";
 
 const BookPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
 
@@ -56,9 +57,7 @@ const BookPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
                             </p>
                         </div>
 
-                        <button className="mt-6 w-full rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600">
-                            Continue Booking
-                        </button>
+                        <BookingWidget provider={provider} />
                     </aside>
 
                     <div className="space-y-6">

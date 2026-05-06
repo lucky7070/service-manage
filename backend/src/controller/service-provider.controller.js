@@ -3,7 +3,7 @@ import moment from "moment";
 import { config } from "../config/index.js";
 import { COOKIE_OPTIONS, PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
-import { OtpVerification, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
+import { Booking, ChatMessage, OtpVerification, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
 
@@ -242,6 +242,65 @@ export const reorderWorkPhotos = async (req, res) => {
 
         const rows = await ServiceProviderPhoto.find({ providerId: id }).sort({ displayOrder: 1, createdAt: 1 }).lean();
         return res.success(rows, "Order updated.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listProviderBookings = async (req, res) => {
+    try {
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const status = String(req.query.status || "").trim();
+        const filter = { providerId: req.serviceProvider._id };
+        if (status) filter.status = status;
+
+        const [record, countRows] = await Promise.all([
+            Booking.find(filter).sort({ createdAt: -1 }).skip((pageNo - 1) * limit).limit(limit).lean(),
+            Booking.aggregate([{ $match: filter }, { $count: "total_count" }])
+        ]);
+        const total = countRows.length > 0 ? countRows[0].total_count : 0;
+        return res.pagination(record, total, limit, pageNo);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const setBookingQuote = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+        if (["completed", "cancelled"].includes(booking.status)) return res.someThingWentWrong({ message: "This booking cannot be quoted." });
+
+        booking.quotedPrice = Number(req.body.quotedPrice);
+        booking.status = "price_pending";
+        await booking.save();
+        return res.successUpdate(booking, "Quote sent successfully.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listProviderBookingMessages = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id }, { _id: 1 });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+
+        const messages = await ChatMessage.find({ bookingId: booking._id }).sort({ createdAt: 1 }).lean();
+        return res.success(messages);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const sendProviderBookingMessage = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id }, { _id: 1 });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+
+        const message = await ChatMessage.create({ bookingId: booking._id, senderId: req.serviceProvider._id, senderType: "provider", message: String(req.body.message || "").trim() });
+        req.app.locals.io?.to(`booking:${booking._id}`).emit("booking:message", message);
+        return res.successInsert(message, "Message sent.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

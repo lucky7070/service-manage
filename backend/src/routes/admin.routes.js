@@ -11,6 +11,7 @@ import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../c
 import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../controller/admin/customer.controller.js";
 import { createCustomerAddress, deleteCustomerAddress, getCustomerAddresses, updateCustomerAddress } from "../controller/admin/customerAddress.controller.js";
 import { createCustomerLedgerEntry, getCustomerLedger } from "../controller/admin/ledger.controller.js";
+import { getBookingDetail, getBookings } from "../controller/admin/booking.controller.js";
 import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider } from "../controller/admin/serviceProvider.controller.js";
 import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServiceProviderPhoto, reorderServiceProviderPhotos } from "../controller/admin/serviceProviderPhoto.controller.js";
 import { createProviderService, deleteProviderService, getProviderServices, updateProviderService } from "../controller/admin/providerService.controller.js";
@@ -42,6 +43,10 @@ router.use(requireAdminAuth);
 
 // Dashboard
 router.get("/dashboard-stats", getDashboardStats);
+
+// Bookings
+router.get("/bookings/:id", getBookingDetail);
+router.get("/bookings", getBookings);
 
 // Profile
 router.get("/profile", adminProfile);

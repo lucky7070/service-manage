@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, Testimonial, CmsPage } from "../models/index.js";
+import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, Testimonial, CmsPage } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
 
 
@@ -201,7 +201,7 @@ export const getPublicServiceProvider = async (req, res) => {
         }
 
         if (!filter._id && !filter.slug) return res.noRecords();
-    
+
         const [doc] = await ServiceProvider.aggregate([
             { $match: filter },
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
@@ -246,6 +246,27 @@ export const getPublicServiceProvider = async (req, res) => {
         ]);
 
         if (!doc) return res.noRecords();
+
+        doc.providerServices = await ProviderService.aggregate([
+            { $match: { providerId: doc._id, isActive: true } },
+            { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceType" } },
+            { $unwind: "$serviceType" },
+            { $match: { "serviceType.deletedAt": null, "serviceType.isActive": true, "serviceType.categoryId": doc.serviceCategoryId } },
+            {
+                $project: {
+                    _id: 1,
+                    serviceTypeId: "$serviceType._id",
+                    name: "$serviceType.name",
+                    nameHi: "$serviceType.nameHi",
+                    description: "$serviceType.description",
+                    estimatedTimeMinutes: "$serviceType.estimatedTimeMinutes",
+                    basePrice: "$serviceType.basePrice",
+                    price: { $ifNull: ["$price", "$serviceType.basePrice"] }
+                }
+            },
+            { $sort: { name: 1 } }
+        ]);
+
         return res.success(doc);
     } catch (error) {
         return res.someThingWentWrong(error);

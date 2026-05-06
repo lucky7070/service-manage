@@ -122,6 +122,16 @@ export type PublicServiceProvider = {
     serviceCategoryName: string;
     serviceCategorySlug: string;
     photos: Array<string>;
+    providerServices: Array<{
+        _id: string;
+        serviceTypeId: string;
+        name: string;
+        nameHi?: string | null;
+        description?: string | null;
+        estimatedTimeMinutes?: number | null;
+        basePrice?: number | null;
+        price?: number | null;
+    }>;
 };
 
 export async function getPublicServiceProvider(id: string): Promise<PublicServiceProvider | null> {

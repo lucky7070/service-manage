@@ -1,4 +1,4 @@
-import { Building2, CircleHelp, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
+import { Building2, CalendarCheck, CircleHelp, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -101,6 +101,12 @@ export const PERMISSIONS = [
             { id: 338, label: "View Customer Addresses" },
             { id: 339, label: "Create Customer Ledger Entry" },
             { id: 3310, label: "View Customer Ledger" },
+        ]
+    },
+    {
+        name: "Booking Management",
+        permissions: [
+            { id: 345, label: "View Bookings" },
         ]
     },
     {
@@ -225,6 +231,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
         ]
     },
     { href: "/admin/enquiries", label: "Enquiries", icon: MailQuestionMark, permission_id: 401 },
+    { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, permission_id: 345 },
     {
         label: "Master",
         icon: Tags,
@@ -312,6 +319,16 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/customers/:slug/ledger",
         permission_id: 3310,
         items: [{ label: "Customers", href: "/admin/customers" }, { label: "Customer Ledger" }]
+    },
+    {
+        path: "/admin/bookings",
+        permission_id: 345,
+        items: [{ label: "Bookings" }]
+    },
+    {
+        path: "/admin/bookings/:slug",
+        permission_id: 345,
+        items: [{ label: "Bookings", href: "/admin/bookings" }, { label: "Booking Detail" }]
     },
     {
         path: "/admin/service-providers",
