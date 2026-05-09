@@ -18,4 +18,5 @@ export const config = {
     smsApiKey: String(process.env.SMS_API_KEY),
     allowDbSeed: String(process.env.ALLOW_DB_SEED || "false").toLowerCase() === "true",
     cookieDomain: String(process.env.COOKIE_DOMAIN || ""),
+    enableGoogleDns: String(process.env.ENABLE_GOOGLE_DNS || "false").toLowerCase() === "true",
 };

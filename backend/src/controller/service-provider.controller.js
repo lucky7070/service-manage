@@ -8,6 +8,58 @@ import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
 import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
 
+const bookingAggregation = (filter) => {
+    return [
+        { $match: filter },
+        { $lookup: { from: "customers", localField: "customerId", foreignField: "_id", as: "customer" } },
+        { $lookup: { from: "serviceproviders", localField: "providerId", foreignField: "_id", as: "provider" } },
+        { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+        { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceTypes" } },
+        { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+        { $unwind: "$city" },
+        { $unwind: "$provider" },
+        { $unwind: "$customer" },
+        { $unwind: "$category" },
+        {
+            $project: {
+                bookingNumber: 1,
+                customerId: 1,
+                providerId: 1,
+                serviceCategoryId: 1,
+                cityId: 1,
+                status: 1,
+                issueDescription: 1,
+                bookingTime: 1,
+                quotedPrice: 1,
+                agreedPrice: 1,
+                finalPrice: 1,
+                scheduledTime: 1,
+                startTime: 1,
+                completionTime: 1,
+                cancellationReason: 1,
+                cancelledBy: 1,
+                location: 1,
+                customerUserId: { $ifNull: ["$customer.userId", ""] },
+                customerName: { $ifNull: ["$customer.name", ""] },
+                customerMobile: { $ifNull: ["$customer.mobile", ""] },
+                customerEmail: { $ifNull: ["$customer.email", ""] },
+                customerImage: { $ifNull: ["$customer.image", ""] },
+                customerDateOfBirth: { $ifNull: ["$customer.dateOfBirth", ""] },
+                providerUserId: { $ifNull: ["$provider.userId", ""] },
+                providerName: { $ifNull: ["$provider.name", ""] },
+                providerMobile: { $ifNull: ["$provider.mobile", ""] },
+                providerEmail: { $ifNull: ["$provider.email", ""] },
+                providerImage: { $ifNull: ["$provider.image", ""] },
+                serviceCategoryName: { $ifNull: ["$category.name", ""] },
+                cityName: { $ifNull: ["$city.name", ""] },
+                serviceTypes: { $map: { input: "$serviceTypes", as: "serviceType", in: { _id: "$$serviceType._id", name: "$$serviceType.name", basePrice: "$$serviceType.basePrice", estimatedTimeMinutes: "$$serviceType.estimatedTimeMinutes" } } },
+                createdAt: 1,
+                updatedAt: 1
+            }
+        }
+    ]
+}
+
 export const sendOtp = async (req, res) => {
     try {
 
@@ -248,42 +300,7 @@ export const reorderWorkPhotos = async (req, res) => {
 
 export const getProviderBooking = async (req, res) => {
     try {
-        const [booking] = await Booking.aggregate([
-            { $match: { _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null } },
-            { $lookup: { from: "customers", localField: "customerId", foreignField: "_id", as: "customer" } },
-            { $lookup: { from: "serviceproviders", localField: "providerId", foreignField: "_id", as: "provider" } },
-            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
-            { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceTypes" } },
-            { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
-            {
-                $project: {
-                    bookingNumber: 1,
-                    customerId: 1,
-                    providerId: 1,
-                    status: 1,
-                    issueDescription: 1,
-                    bookingTime: 1,
-                    quotedPrice: 1,
-                    agreedPrice: 1,
-                    finalPrice: 1,
-                    scheduledTime: 1,
-                    startTime: 1,
-                    completionTime: 1,
-                    cancellationReason: 1,
-                    cancelledBy: 1,
-                    location: 1,
-                    customerName: { $ifNull: [{ $first: "$customer.name" }, ""] },
-                    customerMobile: { $ifNull: [{ $first: "$customer.mobile" }, ""] },
-                    providerName: { $ifNull: [{ $first: "$provider.name" }, ""] },
-                    providerMobile: { $ifNull: [{ $first: "$provider.mobile" }, ""] },
-                    serviceCategoryName: { $ifNull: [{ $first: "$category.name" }, ""] },
-                    cityName: { $ifNull: [{ $first: "$city.name" }, ""] },
-                    serviceTypes: { $map: { input: "$serviceTypes", as: "serviceType", in: { _id: "$$serviceType._id", name: "$$serviceType.name", basePrice: "$$serviceType.basePrice", estimatedTimeMinutes: "$$serviceType.estimatedTimeMinutes" } } },
-                    createdAt: 1,
-                    updatedAt: 1
-                }
-            }
-        ]);
+        const [booking] = await Booking.aggregate(bookingAggregation({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null }));
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         booking.providerFeedback = await Rating.findOne({ bookingId: booking._id, ratingType: "provider_to_customer", }).populate("quickTags", "tagName tagType tagFor").lean();
@@ -297,16 +314,25 @@ export const listProviderBookings = async (req, res) => {
     try {
         const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
         const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const sortBy = String(req.query.sortBy || "createdAt").trim();
+        const sortOrder = String(req.query.sortOrder || "desc").trim();
         const status = String(req.query.status || "").trim();
         const filter = { providerId: req.serviceProvider._id, deletedAt: null };
         if (status) filter.status = status;
 
-        const [record, countRows] = await Promise.all([
-            Booking.find(filter).sort({ createdAt: -1 }).skip((pageNo - 1) * limit).limit(limit).lean(),
-            Booking.aggregate([{ $match: filter }, { $count: "total_count" }])
-        ]);
-        const total = countRows.length > 0 ? countRows[0].total_count : 0;
-        return res.pagination(record, total, limit, pageNo);
+        const pipeline = bookingAggregation(filter);
+
+        const totalCountPipeline = [...pipeline, { $count: "total_count" }];
+        const resultsPipeline = [...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }, { $skip: (pageNo - 1) * limit }, { $limit: limit }];
+
+        const [results, totalCount] = await Promise.all([Booking.aggregate(resultsPipeline), Booking.aggregate(totalCountPipeline)]);
+        const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
+
+        if (results.length > 0) {
+            return res.pagination(results, total_count, limit, pageNo);
+        } else {
+            return res.datatableNoRecords();
+        }
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -355,7 +381,7 @@ export const startProviderBooking = async (req, res) => {
 
 export const sendBookingCompletionOtp = async (req, res) => {
     try {
-        
+
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
@@ -460,7 +486,7 @@ export const submitProviderBookingFeedback = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null, });
         if (!booking) return res.noRecords(false, "Booking not found.");
-        
+
         if (booking.status !== "completed") {
             return res.someThingWentWrong({ message: "You can rate the customer only after the booking is completed." });
         }

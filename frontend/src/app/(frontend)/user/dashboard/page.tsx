@@ -97,12 +97,21 @@ export default function CustomerDashboardPage() {
                                         {dashboard?.recentBookings?.length ? (
                                             <div className="divide-y divide-border">
                                                 {dashboard.recentBookings.map((booking) => (
-                                                    <div key={booking._id} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
-                                                        <div>
-                                                            <p className="font-medium">{booking.bookingNumber}</p>
-                                                            <p className="text-sm text-muted-foreground">{booking.serviceCategoryName || "Service"} with {booking.providerName || "provider"}</p>
+                                                    <div key={booking._id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between">
+                                                        <div className="min-w-0">
+                                                            <p className="font-semibold text-primary">{booking.bookingNumber}</p>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {booking.serviceCategoryName || "Service"} booking with {booking.providerName || "provider"}
+                                                            </p>
                                                         </div>
-                                                        <div className="text-sm text-muted-foreground">{booking.bookingTime ? moment(booking.bookingTime).format("DD MMM YYYY") : ""}</div>
+                                                        <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                                                            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold capitalize text-primary">
+                                                                {booking.status.replaceAll("_", " ")}
+                                                            </span>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                {booking.bookingTime ? moment(booking.bookingTime).format("DD MMM YYYY") : ""}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>

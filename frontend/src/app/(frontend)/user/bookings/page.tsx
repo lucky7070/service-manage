@@ -65,9 +65,9 @@ export default function CustomerBookingsPage() {
                                 <h1 className="text-2xl font-bold">My Bookings</h1>
                                 <p className="mt-1 text-sm text-muted-foreground">Track your service requests and booking status.</p>
                             </div>
-                            <Select value={status} onChange={(event) => { setStatus(event.target.value); setPageNo(1); }} className="max-w-xs">
-                                <option value="">All statuses</option>
-                                {statuses.map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}
+                            <Select value={status} onChange={(event) => { setStatus(event.target.value); setPageNo(1); }} className="max-w-xs capitalize">
+                                <option value="">All Statuses</option>
+                                {statuses.map((item) => <option key={item} value={item} className="capitalize">{item.replaceAll("_", " ")}</option>)}
                             </Select>
                         </div>
 

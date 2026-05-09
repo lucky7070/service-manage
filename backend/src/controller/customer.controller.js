@@ -223,14 +223,14 @@ export const listCustomerBookings = async (req, res) => {
         const filter = { customerId, deletedAt: null };
         if (status) filter.status = status;
 
-        const [record, countRows] = await Promise.all([
+        const [record, totalCount] = await Promise.all([
             Booking.aggregate(bookingListPipeline({ customerId, status, limit, pageNo })),
             Booking.aggregate([{ $match: filter }, { $count: "total_count" }])
         ]);
 
-        const total = countRows.length > 0 ? countRows[0].total_count : 0;
+        const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
         if (record.length === 0) return res.datatableNoRecords();
-        return res.pagination(record, total, limit, pageNo);
+        return res.pagination(record, total_count, limit, pageNo);
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -423,7 +423,7 @@ export const listCustomerLedger = async (req, res) => {
             ];
         }
 
-        const [record, countRows] = await Promise.all([
+        const [record, totalCount] = await Promise.all([
             Ledger.aggregate([
                 { $match: filter },
                 { $project: { voucherNo: 1, amount: 1, currentBalance: 1, updatedBalance: 1, paymentType: 1, paymentMethod: 1, requestId: 1, particulars: 1, createdAt: 1 } },
@@ -434,8 +434,8 @@ export const listCustomerLedger = async (req, res) => {
             Ledger.aggregate([{ $match: filter }, { $count: "total_count" }])
         ]);
 
-        const total = countRows.length > 0 ? countRows[0].total_count : 0;
-        return res.pagination(record, total, limit, pageNo);
+        const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
+        return res.pagination(record, total_count, limit, pageNo);
     } catch (error) {
         return res.someThingWentWrong(error);
     }
