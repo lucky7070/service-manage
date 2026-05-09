@@ -990,10 +990,23 @@
                 "key": "x-api-key",
                 "value": "{{xApiKey}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
             "url": "{{baseUrl}}/service-provider/bookings/507f1f77bcf86cd799439011/start",
-            "description": "Requires **confirmed** booking with **agreedPrice** set. Moves to **in_progress** and sets **startTime**."
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 26.2389,\n  \"longitude\": 73.0243\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Requires **confirmed** + **agreedPrice**. Body: device **latitude** / **longitude** (WGS84). Must be within **`job_start_geofence_meters`** (General Settings, default 50 m) of **booking.location** from the customer's address. Moves to **in_progress**."
           }
         },
         {

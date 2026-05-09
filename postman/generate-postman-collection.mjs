@@ -362,7 +362,9 @@ const serviceProvider = [
     req("Booking messages list (auth)", "GET", `/service-provider/bookings/${OID}/messages`),
     req("Send booking message (auth)", "POST", `/service-provider/bookings/${OID}/messages`, { body: { message: "We can reach you by 11 AM." } }),
     req("Start job — capture startTime (auth)", "POST", `/service-provider/bookings/${OID}/start`, {
-        description: "Requires **confirmed** booking with **agreedPrice** set. Moves to **in_progress** and sets **startTime**.",
+        body: { latitude: 26.2389, longitude: 73.0243 },
+        description:
+            "Requires **confirmed** + **agreedPrice**. Body: device **latitude** / **longitude** (WGS84). Must be within **`job_start_geofence_meters`** (General Settings, default 50 m) of **booking.location** from the customer's address. Moves to **in_progress**.",
     }),
     req("Send completion OTP to customer (auth)", "POST", `/service-provider/bookings/${OID}/complete/send-otp`, {
         description: "Booking must be **in_progress** with **startTime**. Rate-limited. **Development:** OTP may appear in response.",

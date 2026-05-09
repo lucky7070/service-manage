@@ -2,11 +2,12 @@ import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
-import { ObjectId, generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
+import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../helpers/utils.js";
 import { Booking, ChatMessage, Customer, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
 import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
+import { getSettings } from "../helpers/database.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -416,6 +417,30 @@ export const startProviderBooking = async (req, res) => {
 
         if (booking.startTime != null || booking.status === "in_progress") {
             return res.someThingWentWrong({ message: "Job has already been started." });
+        }
+
+        const jobLat = booking.location?.latitude || null;
+        const jobLon = booking.location?.longitude || null;
+        if (jobLat == null || jobLon == null || !Number.isFinite(Number(jobLat)) || !Number.isFinite(Number(jobLon))) {
+            return res.someThingWentWrong({
+                message: "Service address has no map coordinates. Location check cannot be performed. Update the booking address or contact support."
+            });
+        }
+
+        const providerLat = Number(req.body.latitude);
+        const providerLon = Number(req.body.longitude);
+
+        const settings = await getSettings(["job_start_geofence_meters"]);
+        let radiusM = Number(settings.job_start_geofence_meters);
+        if (!Number.isFinite(radiusM) || radiusM <= 0) {
+            radiusM = 50;
+        }
+
+        const metersApart = distanceMeters(providerLat, providerLon, Number(jobLat), Number(jobLon));
+        if (!Number.isFinite(metersApart) || metersApart > radiusM) {
+            return res.someThingWentWrong({
+                message: `You must be within ${radiusM} m of the customer's service address to start the job (device is about ${Math.round(metersApart)} m away).`
+            });
         }
 
         booking.startTime = now();

@@ -20,7 +20,7 @@ router.get("/bookings", listProviderBookings);
 router.get("/bookings/:bookingId", validator("customer-booking-id"), getProviderBooking);
 router.put("/bookings/:bookingId/quote", validator("booking-quote"), setBookingQuote);
 router.put("/bookings/:bookingId/cancel", validator("customer-booking-id"), cancelProviderBooking);
-router.post("/bookings/:bookingId/start", validator("customer-booking-id"), startProviderBooking);
+router.post("/bookings/:bookingId/start", validator("provider-booking-start"), startProviderBooking);
 router.post("/bookings/:bookingId/complete/send-otp", otpRateLimiter, validator("customer-booking-id"), sendBookingCompletionOtp);
 router.post("/bookings/:bookingId/complete", validator("booking-completion-verify"), completeProviderBooking);
 router.get("/bookings/:bookingId/messages", validator("customer-booking-id"), listProviderBookingMessages);

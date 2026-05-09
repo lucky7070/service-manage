@@ -104,6 +104,8 @@ const addressCity = check("city", "City is required.").trim().notEmpty().isMongo
 const pincode = check("pincode", "Pincode must be 6 digits.").trim().notEmpty().matches(/^\d{6}$/);
 const latitude = check("latitude", "Latitude must be numeric.").optional({ values: "falsy" }).isFloat({ min: -90, max: 90 }).withMessage("Latitude must be between -90 and 90.");
 const longitude = check("longitude", "Longitude must be numeric.").optional({ values: "falsy" }).isFloat({ min: -180, max: 180 }).withMessage("Longitude must be between -180 and 180.");
+const latitudeRequired = check("latitude", "Latitude is required.").exists().isFloat({ min: -90, max: 90 }).withMessage("Latitude must be between -90 and 90.");
+const longitudeRequired = check("longitude", "Longitude is required.").exists().isFloat({ min: -180, max: 180 }).withMessage("Longitude must be between -180 and 180.");
 const locationType = check("locationType", "Invalid location type.").optional({ values: "falsy" }).isIn(["home", "office", "other"]);
 const isDefault = check("isDefault", "Default address must be 0 or 1.").optional({ values: "falsy" }).isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const preferredLanguage = check("preferredLanguage", "Preferred language must be en or hi.").optional({ values: "falsy" }).isIn(["en", "hi"]);
@@ -185,6 +187,9 @@ export const validator = (method) => {
             break;
         case "booking-completion-verify":
             output = [bookingId, otp];
+            break;
+        case "provider-booking-start":
+            output = [bookingId, latitudeRequired, longitudeRequired];
             break;
         case "booking-feedback":
             output = [bookingId, starRatingFeedback, feedbackReviewText, quickTagsFeedback];

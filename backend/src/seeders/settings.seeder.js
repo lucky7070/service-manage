@@ -39,7 +39,8 @@ export const SETTINGS_SEED_ROWS = [
     [6, "information_banner", "Information Banner", "file", ""],
     [6, "information_banner_toggle", "Information Banner Toggle", "check", "0"],
     [7, "refer_amount", "Refer amount on Register", "number", "0"],
-    [7, "signup_rewards", "Signup Rewards", "number", "0"]
+    [7, "signup_rewards", "Signup Rewards", "number", "0"],
+    [7, "job_start_geofence_meters", "Job start geofence (meters)", "number", "50"]
 ];
 
 /**

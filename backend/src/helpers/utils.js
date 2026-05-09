@@ -42,6 +42,27 @@ export const optionalNumber = (value) => {
     return Number.isFinite(parsed) ? parsed : Number.NaN;
 };
 
+/** Haversine distance between two WGS84 points (degrees). @returns {number} meters */
+export const distanceMeters = (lat1, lon1, lat2, lon2) => {
+    const a1 = Number(lat1);
+    const o1 = Number(lon1);
+    const a2 = Number(lat2);
+    const o2 = Number(lon2);
+    if (![a1, o1, a2, o2].every((n) => Number.isFinite(n))) return Number.POSITIVE_INFINITY;
+
+    const R = 6371000;
+    const toRad = (d) => (d * Math.PI) / 180;
+    const φ1 = toRad(a1);
+    const φ2 = toRad(a2);
+    const Δφ = toRad(a2 - a1);
+    const Δλ = toRad(o2 - o1);
+    const sΔφ = Math.sin(Δφ / 2);
+    const sΔλ = Math.sin(Δλ / 2);
+    const h = sΔφ * sΔφ + Math.cos(φ1) * Math.cos(φ2) * sΔλ * sΔλ;
+    const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return R * c;
+};
+
 export const escapeHtml = (value = "") => {
     return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
 }
