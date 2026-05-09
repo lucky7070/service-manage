@@ -10,6 +10,7 @@ import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import { BookingChatThread } from "@/components/chat/BookingChatThread";
 import { ChatTypingIndicator } from "@/components/chat/ChatTypingIndicator";
+import BookingProviderRatingSection, { type CustomerBookingFeedback } from "@/components/front/user/BookingProviderRatingSection";
 import AccountNav from "@/components/front/user/AccountNav";
 import { Button, Textarea } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
@@ -29,6 +30,7 @@ type BookingDetail = {
     finalPrice?: number | null;
     scheduledTime?: string;
     location?: { addressLine1?: string; addressLine2?: string; landmark?: string; city?: string; state?: string; pincode?: string };
+    customerFeedback?: CustomerBookingFeedback | null;
 };
 
 type ChatMessage = {
@@ -61,6 +63,7 @@ export default function CustomerBookingDetailPage() {
             state: "",
             pincode: "",
         },
+        customerFeedback: null,
     });
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [message, setMessage] = useState("");
@@ -323,6 +326,15 @@ export default function CustomerBookingDetailPage() {
                                     </div>
                                 ) : null}
                             </div>
+
+                            <BookingProviderRatingSection
+                                key={id}
+                                bookingId={id}
+                                providerName={booking.providerName}
+                                status={booking.status}
+                                customerFeedback={booking.customerFeedback ?? null}
+                                onFeedbackSaved={() => void getBooking()}
+                            />
 
                             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                                 <div className="flex flex-wrap items-center justify-between gap-2">

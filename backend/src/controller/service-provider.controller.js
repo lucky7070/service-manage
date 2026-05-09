@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../config/index.js";
-import { PHONE_REGEXP } from "../config/constants.js";
+import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
 import { Booking, ChatMessage, Customer, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
@@ -10,8 +10,6 @@ import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/boo
 
 export const sendOtp = async (req, res) => {
     try {
-
-        const environment = process.env.NODE_ENV || "production";
 
         let { mobile, purpose = "login" } = req.body;
         if (!mobile) return res.someThingWentWrong({ message: "Mobile is required" });
@@ -28,7 +26,7 @@ export const sendOtp = async (req, res) => {
         await OtpVerification.deleteMany({ phoneNumber: mobile });
         await OtpVerification.create({ phoneNumber: mobile, otpCode: otp, purpose, expiresAt: nowPlusMinutes(config.otpExpiryMinutes) });
 
-        return res.success(environment === "development" ? otp : "", "OTP sent");
+        return res.success(config.isDevelopment ? otp : "", "OTP sent");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -49,7 +47,7 @@ export const login = async (req, res) => {
         await user.updateOne({ lastLogin: now() });
         await verify.deleteOne();
 
-        const token = jwt.sign({ id: user._id, role: "service-provider" }, config.serviceProviderJwtSecret, { expiresIn: "7d" });
+        const token = jwt.sign({ id: user._id, role: "service-provider" }, config.serviceProviderJwtSecret, JWT_CONFIG);
         res.setCookie("service-provider-token", token);
 
         return res.success(user, "Success..!!");
@@ -357,7 +355,7 @@ export const startProviderBooking = async (req, res) => {
 
 export const sendBookingCompletionOtp = async (req, res) => {
     try {
-        const environment = process.env.NODE_ENV || "production";
+        
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
@@ -387,7 +385,7 @@ export const sendBookingCompletionOtp = async (req, res) => {
             expiresAt: nowPlusMinutes(config.otpExpiryMinutes),
         });
 
-        return res.success(environment === "development" ? otp : "", "OTP sent to customer.");
+        return res.success(config.isDevelopment ? otp : "", "OTP sent to customer.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

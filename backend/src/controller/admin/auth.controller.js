@@ -5,7 +5,7 @@ import { config } from "../../config/index.js";
 import { Admin, OtpVerification, Notification } from "../../models/index.js";
 import { generateOtp, nowPlusMinutes } from "../../helpers/utils.js";
 import { passwordResetMail, sendSmtpMail } from "../../libraries/mail.js";
-import { COOKIE_OPTIONS } from "../../config/constants.js";
+import { JWT_CONFIG } from "../../config/constants.js";
 
 export const adminLogin = async (req, res) => {
     try {
@@ -22,10 +22,10 @@ export const adminLogin = async (req, res) => {
         const ok = await bcrypt.compare(password, admin.password);
         if (!ok) return res.someThingWentWrong({ message: "Invalid credentials" });
 
-        const token = jwt.sign({ id: admin._id, role: "admin" }, config.jwtSecret, { expiresIn: "7d" });
+        const token = jwt.sign({ id: admin._id, role: "admin" }, config.jwtSecret, JWT_CONFIG);
         res.setCookie("admin_token", token);
 
-        return res.success({ admin }, "Admin login successful");
+        return res.success([], "Admin login successful");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

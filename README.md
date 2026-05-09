@@ -1,20 +1,21 @@
 # Service Manage (Admin Panel + API)
 
-Production-style admin management project using Next.js (frontend) and Express + MongoDB (backend).
-
-Current scope is focused on admin operations, permissions, settings, and location master data.
+Production-style platform using Next.js (frontend) and Express + MongoDB (backend): public marketing pages, customer and service-provider accounts, booking lifecycle, and a full admin panel (permissions, settings, master data, and content).
 
 ## Tech Stack
 
 - Frontend: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4
 - Frontend libs: Redux Toolkit, Axios, Formik, Yup, React Select, SweetAlert2, React Toastify, Moment
-- Backend: Node.js, Express, Mongoose, Express Validator, Multer
+- Backend: Node.js, Express, Mongoose, Express Validator, Multer, Socket.io (booking room chat / typing)
 - Database: MongoDB
-- Auth: JWT + cookie-based admin auth
+- Auth: JWT + cookie-based admin auth; JWT for customer / service-provider APIs as applicable
 
 ## Project Structure
 
 ```text
+postman/
+  Service-Manage.postman_collection.json   # API collection (import into Postman)
+  Local.postman_environment.json           # example environment vars
 backend/
   scripts/
     seed.mjs          # CLI entry (npm run seed)
@@ -26,7 +27,10 @@ backend/
     middlewares/
     models/
     routes/
+      admin/         # modular admin routers (dashboard, bookings, geography, etc.)
+      ...
     seeders/
+    socket/          # Socket.io booking rooms (join/leave, messages, typing)
 frontend/
   src/
     app/
@@ -34,6 +38,8 @@ frontend/
     helpers/
     store/
 ```
+
+Authenticated admin HTTP routes are composed in `backend/src/routes/admin/index.js` (one file per area under `routes/admin/*.routes.js`). Public, customer, and service-provider routes live alongside under `backend/src/routes/`.
 
 ## Run Locally
 
@@ -98,6 +104,10 @@ npm run dev
 
 Frontend default: `http://localhost:3000`
 
+## Postman
+
+Import `postman/Service-Manage.postman_collection.json` and optionally `postman/Local.postman_environment.json`. Open the **collection** description (or folder descriptions under Customer / Service provider) for **mobile app auth, booking lifecycle, cookies, and Socket.IO** notes. **Admin (authenticated)** requests are grouped into folders (dashboard, bookings, geography, etc.) for easier navigation. Keep the collection in sync with the code when you add or change APIs.
+
 ## Current Implemented Modules
 
 ### Admin Access and Profile
@@ -139,6 +149,17 @@ Frontend default: `http://localhost:3000`
   - Cities
 - Clickable cards with permission-based visibility
 
+### Bookings, customers, and service providers
+
+- Customer-facing booking flow (service selection, scheduling) and account area (`/user/...`)
+- Service-provider APIs for assigned bookings (start job, completion with customer OTP, etc.)
+- Admin booking list and detail (includes chat history where applicable)
+- Post-service feedback: star ratings and quick tags on booking detail payloads (customer ↔ provider)
+
+### CMS and marketing content (admin)
+
+- FAQs, banners, enquiries, testimonials, CMS pages, “our values” / milestones, and related CRUD where implemented
+
 ### Route Guarding
 
 - Admin route auth checks using Next.js `proxy` convention
@@ -157,6 +178,11 @@ Frontend default: `http://localhost:3000`
 ### Dashboard
 
 - `GET /api/admin/dashboard-stats`
+
+### Bookings
+
+- `GET /api/admin/bookings`
+- `GET /api/admin/bookings/:id`
 
 ### Roles
 
@@ -212,3 +238,4 @@ Frontend default: `http://localhost:3000`
 - Date formatting uses `moment`
 - Central model exports from `backend/src/models/index.js`
 - Permission-aware UI and route-level protection in admin module
+- New admin endpoints: add a route file under `backend/src/routes/admin/` and register it in `backend/src/routes/admin/index.js`; mirror calls in the Postman collection when useful for QA

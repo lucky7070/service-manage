@@ -2,11 +2,12 @@ import mongoose from "mongoose";
 import moment from "moment";
 import { CmsPage } from "../../models/index.js";
 import { escapeRegex } from "../../helpers/utils.js";
+import { config } from "../../config/index.js";
 
 export const createCmsPage = async (req, res) => {
     try {
         
-        if (process.env.NODE_ENV === "production") {
+        if (config.isProduction) {
             return res.someThingWentWrong({ message: "CMS page creation is not available in production." });
         }
 
@@ -60,7 +61,7 @@ export const updateCmsPage = async (req, res) => {
 export const deleteCmsPage = async (req, res) => {
     try {
 
-        if (process.env.NODE_ENV === "production") {
+        if (config.isProduction) {
             return res.someThingWentWrong({ message: "CMS page creation is not available in production." });
         }
 

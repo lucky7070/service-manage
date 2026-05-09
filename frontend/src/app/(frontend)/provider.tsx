@@ -3,8 +3,7 @@
 import AxiosHelper from '@/helpers/AxiosHelper';
 import { useAppDispatch } from '@/store/hooks';
 import { updateUser, UserState } from '@/store/slices/userSlice';
-import React, { useEffect } from 'react'
-import { toast } from 'react-toastify';
+import React, { useEffect } from 'react';
 
 const Provider = ({ children }: { children: React.ReactNode }) => {
 
@@ -15,8 +14,6 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
             const { data } = await AxiosHelper.getData("/customer/profile");
             if (data.status) {
                 dispatch(updateUser(data.data as UserState));
-            } else {
-                toast.error(data.message || "Could not load profile.");
             }
         }, 0);
 

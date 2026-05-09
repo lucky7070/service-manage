@@ -11,8 +11,13 @@ export const PHONE_REGEXP = /^(?:(?:\+|0{0,2})91(\s*|[-])?|[0]?)?([6789]\d{2}([ 
 export const COOKIE_OPTIONS = {
     path: "/",
     httpOnly: true,
-    domain: config.crossOrigin ? config.frontendUrl[0] : undefined,
+    domain: config.crossOrigin && config.cookieDomain ? config.cookieDomain : undefined,
     sameSite: config.crossOrigin ? "none" : "lax",
     secure: config.crossOrigin ? true : config.isProduction,
     maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
+export const JWT_CONFIG = {
+    expiresIn: "7d",
+    algorithm: "HS256"
 };

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import customerRoutes from "./customer.routes.js";
-import adminRoutes from "./admin.routes.js";
+import adminRoutes from "./admin/index.js";
 import adminAuthRoutes from "./adminAuth.routes.js";
 import openRoutes from "./open.routes.js";
 import serviceProviderRoutes from "./service-provider.routes.js";

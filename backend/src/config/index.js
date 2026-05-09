@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const config = {
+    baseUrl: String(process.env.BASEURL || ""),
     port: Number(process.env.PORT || 5000),
     mongoUri: String(process.env.MONGO_URI),
     jwtSecret: String(process.env.JWT_SECRET),
@@ -13,4 +14,8 @@ export const config = {
     isDevelopment: String(process.env.NODE_ENV || "development").toLowerCase() === "development",
     crossOrigin: String(process.env.CROSS_ORIGIN_COOKIES || "false").toLowerCase() === "true",
     showError: String(process.env.SHOW_ERROR || "false").toLowerCase() === "true",
+    xApiKey: String(process.env.X_API_KEY),
+    smsApiKey: String(process.env.SMS_API_KEY),
+    allowDbSeed: String(process.env.ALLOW_DB_SEED || "false").toLowerCase() === "true",
+    cookieDomain: String(process.env.COOKIE_DOMAIN || ""),
 };

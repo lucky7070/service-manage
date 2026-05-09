@@ -5,7 +5,7 @@ import { config } from "../config/index.js";
 const normalizeMobile = (value) => String(value ?? "").replace(/\+/g, "").trim();
 const SMS_URL = "https://api.bulksmsadmin.com/BulkSMSapi/keyApiSendSMS/sendSMS";
 const SENDER = "AYTech";
-const HEADERS = { apikey: String(process.env.SMS_API_KEY) };
+const HEADERS = { apikey: config.smsApiKey };
 
 const sendOTP = async (mobile, otp) => {
     try {

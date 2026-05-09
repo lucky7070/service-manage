@@ -13,6 +13,7 @@ import "dotenv/config";
 import { connectDb } from "../src/libraries/db.js";
 import mongoose from "mongoose";
 import { runDatabaseSeeder, SEEDER_NAMES } from "../src/seeders/databaseSeeder.js";
+import { config } from "../src/config/index.js";
 
 const args = process.argv.slice(2);
 let only = null;
@@ -36,7 +37,7 @@ if (only?.length) {
     }
 }
 
-if (process.env.NODE_ENV === "production" && process.env.ALLOW_DB_SEED !== "true") {
+if (config.isProduction && !config.allowDbSeed) {
     console.error("[seed] Refusing to run in NODE_ENV=production. Set ALLOW_DB_SEED=true to run (e.g. staging deploy or one-off migration).");
     process.exit(1);
 }

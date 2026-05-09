@@ -1,10 +1,18 @@
 import type { LucideIcon } from "lucide-react";
-import { Calendar, IndianRupee, Shield, Smartphone, TrendingUp, Users, } from "lucide-react";
+import { Calendar, CreditCard, FileCheck, IndianRupee, Shield, Smartphone, Star, TrendingUp, User, UserCheck, Users, } from "lucide-react";
 
 export type JoinProBenefit = {
     icon: LucideIcon;
     title: string;
     description: string;
+};
+
+export type JoinProTestimonial = {
+    name: string;
+    service: string;
+    earnings: string;
+    text: string;
+    rating: number;
 };
 
 export const JOIN_PRO_BENEFITS: JoinProBenefit[] = [
@@ -39,14 +47,6 @@ export const JOIN_PRO_BENEFITS: JoinProBenefit[] = [
         description: "Free training programs and 24/7 partner support"
     }
 ];
-
-export type JoinProTestimonial = {
-    name: string;
-    service: string;
-    earnings: string;
-    text: string;
-    rating: number;
-};
 
 export const JOIN_PRO_TESTIMONIALS: JoinProTestimonial[] = [
     {
@@ -97,7 +97,7 @@ export const FRONTEND_LOGIN_FORM = {
     backToHome: "Back to home"
 } as const;
 
-export const FOOTER_LINKS = [
+export const FOOTER_LINKS: Array<{ label: string, list: Array<{ name: string, href: string }> }> = [
     {
         label: "Services",
         list: [
@@ -127,3 +127,67 @@ export const FOOTER_LINKS = [
         ]
     },
 ]
+
+export const VERIFICATION_STEPS: Array<{ icon: LucideIcon, title: string, description: string }> = [
+    {
+        icon: FileCheck,
+        title: "Document Verification",
+        description: "We verify government-issued IDs, address proof, and professional certifications of all service providers.",
+    },
+    {
+        icon: UserCheck,
+        title: "Background Check",
+        description: "Comprehensive criminal background checks are conducted through authorized agencies before onboarding.",
+    },
+    {
+        icon: Star,
+        title: "Skill Assessment",
+        description: "Professionals undergo skill tests and training to ensure they meet our quality standards.",
+    },
+    {
+        icon: Shield,
+        title: "Insurance Coverage",
+        description: "All professionals are covered by liability insurance to protect you and your property.",
+    },
+]
+
+export const SAFETY_FEATURES: string[] = [
+    "Real-time GPS tracking of service visits",
+    "OTP verification before service begins",
+    "In-app emergency SOS button",
+    "Live photo capture during service",
+    "24/7 customer support hotline",
+]
+
+export const ARTICLE_CATEGORIES: Array<{ icon: LucideIcon, title: string, description: string, articles: number, href: string }> = [
+    {
+        icon: Calendar,
+        title: "Booking & Scheduling",
+        description: "How to book, reschedule, or cancel services",
+        articles: 12,
+        href: "#",
+    },
+    {
+        icon: CreditCard,
+        title: "Payments & Refunds",
+        description: "Payment methods, invoices, and refund policies",
+        articles: 8,
+        href: "#",
+    },
+    {
+        icon: Shield,
+        title: "Safety & Trust",
+        description: "Background checks, insurance, and guarantees",
+        articles: 6,
+        href: "#",
+    },
+    {
+        icon: User,
+        title: "Account Settings",
+        description: "Profile, notifications, and preferences",
+        articles: 10,
+        href: "#",
+    },
+]
+
+export const POPULAR_ARTICLES: Array<{ title: string, href: string }> = [];

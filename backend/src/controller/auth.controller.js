@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../config/index.js";
-import { PHONE_REGEXP } from "../config/constants.js";
+import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
 import { generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
 import { OtpVerification, Customer } from "../models/index.js";
 import { sendOTP } from "../libraries/sms.js";
@@ -9,8 +9,6 @@ import { getSettings } from "../helpers/database.js";
 
 export const sendOtp = async (req, res) => {
     try {
-
-        const environment = process.env.NODE_ENV || "production";
 
         let { mobile, purpose = "login", bookingId } = req.body;
         if (!mobile) return res.someThingWentWrong({ message: "Mobile is required" });
@@ -27,7 +25,7 @@ export const sendOtp = async (req, res) => {
         await OtpVerification.deleteMany({ phoneNumber: mobile });
         await OtpVerification.create({ phoneNumber: mobile, otpCode: otp, purpose, bookingId, expiresAt: nowPlusMinutes(config.otpExpiryMinutes) });
 
-        return res.success(environment === "development" ? otp : "", "OTP sent");
+        return res.success(config.isDevelopment ? otp : "", "OTP sent");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -80,7 +78,7 @@ export const register = async (req, res) => {
         await user.updateOne({ lastLogin: now() });
         await verify.deleteOne();
 
-        const token = jwt.sign({ id: user._id, role: "customer" }, config.customerJwtSecret, { expiresIn: "7d" });
+        const token = jwt.sign({ id: user._id, role: "customer" }, config.customerJwtSecret, JWT_CONFIG);
         res.setCookie("customer_token", token);
 
         return res.success({ _id: user._id, name: user.name, mobile: user.mobile, email: user.email, image: user.image, balance: user.balance, referralCode: user.referralCode }, "Success..!!");
