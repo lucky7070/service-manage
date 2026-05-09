@@ -346,11 +346,18 @@ const serviceProvider = [
         description: "Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF).",
     }),
     req("Profile (auth)", "GET", "/service-provider/profile"),
+    req("Dashboard (auth)", "GET", "/service-provider/dashboard", {
+        description: "Returns **profile**, **workPhotoCount**, **bookingStats** (counts per status + total), **recentBookings** (5 most recent).",
+    }),
     req("Bookings (auth)", "GET", "/service-provider/bookings?pageNo=1&limit=10&status="),
     req("Booking detail (auth)", "GET", `/service-provider/bookings/${OID}`),
     req("Set booking quote (auth)", "PUT", `/service-provider/bookings/${OID}/quote`, {
         body: { quotedPrice: 1299.5 },
         description: "Sets **quotedPrice** (customer sees **price_pending**). Customer must **`PUT /customer/bookings/:id/accept-quote`** before **start**.",
+    }),
+    req("Cancel booking (auth)", "PUT", `/service-provider/bookings/${OID}/cancel`, {
+        body: { cancellationReason: "Unable to attend this slot" },
+        description: "Blocked for **completed** or **cancelled**. Sets **cancelledBy** to **provider**.",
     }),
     req("Booking messages list (auth)", "GET", `/service-provider/bookings/${OID}/messages`),
     req("Send booking message (auth)", "POST", `/service-provider/bookings/${OID}/messages`, { body: { message: "We can reach you by 11 AM." } }),

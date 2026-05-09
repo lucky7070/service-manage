@@ -192,6 +192,35 @@ export const profile = async (req, res) => {
     }
 };
 
+export const getServiceProviderDashboard = async (req, res) => {
+    try {
+        const providerId = req.serviceProvider._id;
+
+        const pipeline = bookingAggregation({ providerId, deletedAt: null });
+        const [workPhotoCount, statusRows, recentBookings] = await Promise.all([
+            ServiceProviderPhoto.countDocuments({ providerId }),
+            Booking.aggregate([{ $match: { providerId, deletedAt: null } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
+            Booking.aggregate(pipeline.concat({ $sort: { createdAt: -1 } }, { $limit: 5 }))
+        ]);
+
+        const bookingStats = {
+            total: statusRows.reduce((sum, row) => sum + row.count, 0),
+            pending: 0,
+            confirmed: 0,
+            in_progress: 0,
+            completed: 0,
+            cancelled: 0
+        };
+        statusRows.forEach((row) => {
+            bookingStats[row._id] = row.count;
+        });
+
+        return res.success({ workPhotoCount, bookingStats, recentBookings });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
 export const logout = async (req, res) => {
     try {
         res.deleteCookie("service-provider-token");
@@ -333,6 +362,25 @@ export const listProviderBookings = async (req, res) => {
         } else {
             return res.datatableNoRecords();
         }
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const cancelProviderBooking = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+        if (["completed", "cancelled"].includes(booking.status)) {
+            return res.someThingWentWrong({ message: "This booking cannot be cancelled." });
+        }
+
+        booking.status = "cancelled";
+        booking.cancelledBy = "provider";
+        booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by service provider").trim();
+        await booking.save();
+
+        return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

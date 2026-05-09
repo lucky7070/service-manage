@@ -842,6 +842,21 @@
           }
         },
         {
+          "name": "Dashboard (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/dashboard",
+            "description": "Returns **profile**, **workPhotoCount**, **bookingStats** (counts per status + total), **recentBookings** (5 most recent)."
+          }
+        },
+        {
           "name": "Bookings (auth)",
           "request": {
             "method": "GET",
@@ -895,6 +910,34 @@
               }
             },
             "description": "Sets **quotedPrice** (customer sees **price_pending**). Customer must **`PUT /customer/bookings/:id/accept-quote`** before **start**."
+          }
+        },
+        {
+          "name": "Cancel booking (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/bookings/507f1f77bcf86cd799439011/cancel",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancellationReason\": \"Unable to attend this slot\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Blocked for **completed** or **cancelled**. Sets **cancelledBy** to **provider**."
           }
         },
         {

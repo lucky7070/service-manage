@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sendOtp, register, login, profile, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback } from "../controller/service-provider.controller.js";
+import { sendOtp, register, login, profile, getServiceProviderDashboard, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback } from "../controller/service-provider.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
@@ -14,10 +14,12 @@ router.post("/login", login);
 router.post("/register", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider-register"), register);
 
 router.use(requireServiceProviderAuth);
+router.get("/dashboard", getServiceProviderDashboard);
 router.get("/profile", profile);
 router.get("/bookings", listProviderBookings);
 router.get("/bookings/:bookingId", validator("customer-booking-id"), getProviderBooking);
 router.put("/bookings/:bookingId/quote", validator("booking-quote"), setBookingQuote);
+router.put("/bookings/:bookingId/cancel", validator("customer-booking-id"), cancelProviderBooking);
 router.post("/bookings/:bookingId/start", validator("customer-booking-id"), startProviderBooking);
 router.post("/bookings/:bookingId/complete/send-otp", otpRateLimiter, validator("customer-booking-id"), sendBookingCompletionOtp);
 router.post("/bookings/:bookingId/complete", validator("booking-completion-verify"), completeProviderBooking);
