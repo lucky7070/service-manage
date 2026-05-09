@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { sendOtp, register, profile, updateProfile, logout } from "../controller/auth.controller.js";
-import { acceptCustomerBookingQuote, cancelCustomerBooking, createCustomerAddress, createCustomerBooking, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, sendCustomerBookingMessage } from "../controller/customer.controller.js";
+import { acceptCustomerBookingQuote, cancelCustomerBooking, createCustomerAddress, createCustomerBooking, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { validator } from "../libraries/validator.js";
@@ -21,6 +21,7 @@ router.put("/bookings/:bookingId/accept-quote", validator("customer-booking-id")
 router.put("/bookings/:bookingId/cancel", validator("customer-booking-id"), cancelCustomerBooking);
 router.get("/bookings/:bookingId/messages", validator("customer-booking-id"), listCustomerBookingMessages);
 router.post("/bookings/:bookingId/messages", validator("booking-message"), sendCustomerBookingMessage);
+router.post("/bookings/:bookingId/feedback", validator("booking-feedback"), submitCustomerBookingFeedback);
 router.get("/ledger", listCustomerLedger);
 router.get("/addresses", listCustomerAddresses);
 router.post("/addresses", validator("customer-self-address"), createCustomerAddress);

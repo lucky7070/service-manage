@@ -88,8 +88,19 @@ const collection = {
 const open = [
     req("General settings", "GET", "/general-settings"),
     req("Service categories list", "GET", "/service-categories-list?query=&limit=20"),
-    req("Cities list", "GET", "/cities-with-state?query=&limit=20"),
+    req("Service categories (home)", "GET", "/service-categories-home"),
+    req("Service category by slug", "GET", "/service-categories/plumbing"),
+    req("List providers by city + category slug", "GET", "/service-providers/jodhpur/electrician?pageNo=1&limit=12&query=", {
+        description: "Path segments are **city slug** and **service category slug** (lowercase). Adjust to match your seeded data.",
+    }),
+    req("Public provider by id or slug", "GET", `/service-provider/${OID}`),
+    req("States list", "GET", "/states-list?query=&limit=20"),
+    req("Cities list", "GET", `/cities-list?stateId=${OID}&query=&limit=20`),
+    req("Cities with state (combined)", "GET", "/cities-with-state?query=&limit=20"),
     req("Testimonials (public)", "GET", "/testimonials?limit=6&form="),
+    req("About content", "GET", "/about-content"),
+    req("Privacy policy", "GET", "/privacy-policy"),
+    req("Terms and conditions", "GET", "/terms-and-conditions"),
     req(
         "Submit enquiry (contact)",
         "POST",
@@ -108,13 +119,32 @@ const open = [
 
 const customer = [
     req("Send OTP", "POST", "/customer/send-otp", { body: { mobile: "9876543210", purpose: "register" } }),
-    req("Register", "POST", "/customer/register", { body: { mobile: "9876543210", otp: "123456", name: "Test User" } }),
+    req("Register", "POST", "/customer/register", {
+        body: { mobile: "9876543210", otp: "123456", name: "Test User", referralCode: "" },
+        description: "`referralCode` optional. `purpose` for OTP can be `register` or `login`.",
+    }),
     req("Profile (auth)", "GET", "/customer/profile", { description: "Requires customer cookie after register/login flow." }),
     req("Update profile (auth)", "PUT", "/customer/profile", { body: { name: "Test User", email: "customer@example.com", dateOfBirth: "1990-01-15", preferredLanguage: "en" } }),
     req("Dashboard (auth)", "GET", "/customer/dashboard"),
     req("Bookings (auth)", "GET", "/customer/bookings?pageNo=1&limit=10&status="),
-    req("States for address (auth)", "GET", "/customer/states?query=&limit=20"),
-    req("Cities for address (auth)", "GET", `/customer/cities?stateId=${OID}&query=&limit=20`),
+    req("Create booking (auth)", "POST", "/customer/bookings", {
+        body: {
+            providerId: OID,
+            serviceTypeId: [OID],
+            addressId: OID,
+            scheduledTime: "2026-12-15T10:30:00.000Z",
+            issueDescription: "Please bring required tools.",
+        },
+        description: "`serviceTypeId` is an array of ServiceType ids for that provider/category. `addressId` = customer's saved address.",
+    }),
+    req("Booking detail (auth)", "GET", `/customer/bookings/${OID}`),
+    req("Accept quote (auth)", "PUT", `/customer/bookings/${OID}/accept-quote`, { body: {} }),
+    req("Cancel booking (auth)", "PUT", `/customer/bookings/${OID}/cancel`, {
+        body: { cancellationReason: "Need to reschedule" },
+    }),
+    req("Booking messages list (auth)", "GET", `/customer/bookings/${OID}/messages`),
+    req("Send booking message (auth)", "POST", `/customer/bookings/${OID}/messages`, { body: { message: "Hello, confirming the time works for me." } }),
+    req("Ledger (auth)", "GET", "/customer/ledger?pageNo=1&limit=10&paymentType=&query="),
     req("Addresses (auth)", "GET", "/customer/addresses"),
     req("Create address (auth)", "POST", "/customer/addresses", {
         body: {
@@ -170,6 +200,21 @@ const serviceProvider = [
         description: "Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF).",
     }),
     req("Profile (auth)", "GET", "/service-provider/profile"),
+    req("Bookings (auth)", "GET", "/service-provider/bookings?pageNo=1&limit=10&status="),
+    req("Booking detail (auth)", "GET", `/service-provider/bookings/${OID}`),
+    req("Set booking quote (auth)", "PUT", `/service-provider/bookings/${OID}/quote`, { body: { quotedPrice: 1299.5 } }),
+    req("Booking messages list (auth)", "GET", `/service-provider/bookings/${OID}/messages`),
+    req("Send booking message (auth)", "POST", `/service-provider/bookings/${OID}/messages`, { body: { message: "We can reach you by 11 AM." } }),
+    req("Work photos (auth)", "GET", "/service-provider/work-photos"),
+    req("Upload work photos (auth)", "POST", "/service-provider/work-photos", {
+        formdata: [fd.file("photos")],
+        description: "Form field `photos` — multiple files allowed (max 20). Image files.",
+    }),
+    req("Reorder work photos (auth)", "PUT", "/service-provider/work-photos/reorder", {
+        body: { orderedIds: [OID] },
+        description: "Replace orderedIds with all work photo `_id` values in display order.",
+    }),
+    req("Delete work photo (auth)", "DELETE", `/service-provider/work-photos/${OID}`),
 ];
 
 const adminAuth = [
@@ -190,6 +235,8 @@ const adminAuth = [
 
 const admin = [
     req("Dashboard stats", "GET", "/admin/dashboard-stats"),
+    req("Bookings list", "GET", "/admin/bookings?pageNo=1&limit=10&status=&query="),
+    req("Booking detail", "GET", `/admin/bookings/${OID}`),
     req("Admin profile", "GET", "/admin/profile"),
     req("Notifications read all", "PUT", "/admin/notifications/read-all"),
     req("Update profile", "PUT", "/admin/profile", { body: { name: "Admin User", mobile: "9876543210", email: "admin@example.com" } }),

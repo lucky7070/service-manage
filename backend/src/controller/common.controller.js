@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, Testimonial, CmsPage } from "../models/index.js";
+import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, Testimonial, CmsPage, PredefinedRatingTag } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
 
 
@@ -343,6 +343,20 @@ export const getTermsAndConditions = async (req, res) => {
             metaDescription: data.metaDescription,
             updatedAt: data.updatedAt,
         });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listFeedbackRatingTags = async (req, res) => {
+    try {
+        const tagFor = String(req.query.tagFor || "").trim();
+        if (!["customer", "provider"].includes(tagFor)) {
+            return res.someThingWentWrong({ message: "Query tagFor must be customer or provider." });
+        }
+
+        const rows = await PredefinedRatingTag.find({ deletedAt: null, isActive: true, tagFor }, { tagName: 1, tagType: 1 }).sort({ tagName: 1 }).lean();
+        return res.success(rows);
     } catch (error) {
         return res.someThingWentWrong(error);
     }

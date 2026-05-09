@@ -1,9 +1,10 @@
 import moment from "moment";
-import { Address, Booking, ChatMessage, City, Customer, Ledger, ProviderService, ServiceProvider, State } from "../models/index.js";
+import { Address, Booking, ChatMessage, City, Customer, Ledger, ProviderService, Rating, ServiceProvider, State } from "../models/index.js";
 import { ObjectId, escapeRegex, optionalNumber, toBoolean } from "../helpers/utils.js";
+import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
-    const match = { customerId };
+    const match = { customerId, deletedAt: null };
     if (status) match.status = status;
 
     return [
@@ -190,7 +191,7 @@ export const getCustomerDashboard = async (req, res) => {
         const [profile, addressCount, statusRows, recentBookings] = await Promise.all([
             Customer.findById(customerId, "_id userId name mobile email image dateOfBirth preferredLanguage balance referralCode").lean(),
             Address.countDocuments({ customerId, deletedAt: null }),
-            Booking.aggregate([{ $match: { customerId } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
+            Booking.aggregate([{ $match: { customerId, deletedAt: null } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
             Booking.aggregate(bookingListPipeline({ customerId, limit: 5, pageNo: 1 }))
         ]);
 
@@ -219,7 +220,7 @@ export const listCustomerBookings = async (req, res) => {
         const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
         const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
         const status = String(req.query.status || "").trim();
-        const filter = { customerId };
+        const filter = { customerId, deletedAt: null };
         if (status) filter.status = status;
 
         const [record, countRows] = await Promise.all([
@@ -280,7 +281,7 @@ export const createCustomerBooking = async (req, res) => {
             }
         });
 
-        const [detail] = await Booking.aggregate(bookingDetailPipeline({ _id: booking._id, customerId }));
+        const [detail] = await Booking.aggregate(bookingDetailPipeline({ _id: booking._id, customerId, deletedAt: null }));
         return res.successInsert(detail, "Booking created successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -289,10 +290,15 @@ export const createCustomerBooking = async (req, res) => {
 
 export const getCustomerBooking = async (req, res) => {
     try {
-        const [booking] = await Booking.aggregate(bookingDetailPipeline({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id }));
+
+        const [booking] = await Booking.aggregate(bookingDetailPipeline({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null }));
         if (!booking) return res.noRecords(false, "Booking not found.");
 
-        return res.success(booking);
+        const customerFeedback = await Rating.findOne({ bookingId: booking._id, ratingType: "customer_to_provider", })
+            .populate("quickTags", "tagName tagType tagFor")
+            .lean();
+
+        return res.success({ ...booking, customerFeedback: customerFeedback || null });
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -300,7 +306,7 @@ export const getCustomerBooking = async (req, res) => {
 
 export const acceptCustomerBookingQuote = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (!booking.quotedPrice || booking.status !== "price_pending") return res.someThingWentWrong({ message: "No pending quote found for this booking." });
 
@@ -316,7 +322,7 @@ export const acceptCustomerBookingQuote = async (req, res) => {
 
 export const cancelCustomerBooking = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (["completed", "cancelled"].includes(booking.status)) return res.someThingWentWrong({ message: "This booking cannot be cancelled." });
 
@@ -324,7 +330,7 @@ export const cancelCustomerBooking = async (req, res) => {
         booking.cancelledBy = "customer";
         booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by customer").trim();
         await booking.save();
-        
+
         return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -333,10 +339,10 @@ export const cancelCustomerBooking = async (req, res) => {
 
 export const listCustomerBookingMessages = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id }, { _id: 1 });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null }, { _id: 1 });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
-        const messages = await ChatMessage.find({ bookingId: booking._id }).sort({ createdAt: 1 }).lean();
+        const messages = await ChatMessage.find({ bookingId: booking._id }, 'senderId senderType message attachmentUrl isRead readAt createdAt').sort({ createdAt: 1 }).lean();
         return res.success(messages);
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -345,13 +351,56 @@ export const listCustomerBookingMessages = async (req, res) => {
 
 export const sendCustomerBookingMessage = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id }, { _id: 1 });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null }, { _id: 1 });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         const message = await ChatMessage.create({ bookingId: booking._id, senderId: req.customer._id, senderType: "customer", message: String(req.body.message || "").trim() });
-        req.app.locals.io?.to(`booking:${booking._id}`).emit("booking:message", message);
+        req.app.io?.to(`booking:${booking._id}`).emit("booking:message", message);
         return res.successInsert(message, "Message sent.");
     } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const submitCustomerBookingFeedback = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null, });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+        if (booking.status !== "completed") {
+            return res.someThingWentWrong({ message: "You can rate the provider only after the booking is completed." });
+        }
+
+        const existing = await Rating.findOne({ bookingId: booking._id, ratingType: "customer_to_provider" }).lean();
+        if (existing) return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+
+        let tagIds;
+        try {
+            tagIds = await resolveQuickTagIds(req.body.quickTags, "provider");
+        } catch (e) {
+            return res.someThingWentWrong({ message: e.message || "Invalid quick tags." });
+        }
+
+        const star = Number.parseInt(String(req.body.starRating), 5);
+        const reviewText = String(req.body.reviewText ?? "").trim() || null;
+
+        const doc = await Rating.create({
+            bookingId: booking._id,
+            ratedBy: req.customer._id,
+            ratedTo: booking.providerId,
+            ratingType: "customer_to_provider",
+            starRating: star,
+            reviewText,
+            quickTags: tagIds,
+        });
+
+        await incrementProviderRatingTotals(booking.providerId, star);
+
+        const populated = await Rating.findById(doc._id).populate("quickTags", "tagName tagType tagFor").lean();
+        return res.successInsert(populated, "Thank you for your feedback.");
+    } catch (error) {
+        if (error?.code === 11000) {
+            return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+        }
         return res.someThingWentWrong(error);
     }
 };

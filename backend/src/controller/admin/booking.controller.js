@@ -45,7 +45,7 @@ export const getBookings = async (req, res) => {
         const status = String(req.query.status || "").trim();
         const query = String(req.query.query || "").trim();
 
-        const filter = {};
+        const filter = { deletedAt: null };
         if (status) filter.status = status;
 
         const pipeline = [
@@ -101,7 +101,7 @@ export const getBookings = async (req, res) => {
 
 export const getBookingDetail = async (req, res) => {
     try {
-        const [booking] = await Booking.aggregate(bookingDetailPipeline({ _id: ObjectId(req.params.id) }));
+        const [booking] = await Booking.aggregate(bookingDetailPipeline({ _id: ObjectId(req.params.id), deletedAt: null }));
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         const messages = await ChatMessage.find({ bookingId: booking._id }).sort({ createdAt: 1 }).lean();

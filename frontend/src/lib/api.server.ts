@@ -135,7 +135,7 @@ export type PublicServiceProvider = {
 };
 
 export async function getPublicServiceProvider(id: string): Promise<PublicServiceProvider | null> {
-    const { data } = await AxiosHelper.getData(`/service-provider/${id}`);
+    const { data } = await AxiosHelper.getData(`/service-provider-details/${id}`);
     if (data.status && data.data && !Array.isArray(data.data)) {
         return data.data as PublicServiceProvider;
     }

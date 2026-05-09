@@ -119,6 +119,14 @@ const scheduledTime = check("scheduledTime", "Scheduled date and time is require
 const issueDescription = check("issueDescription").optional({ values: "falsy" }).trim().isLength({ max: 5000 });
 const quotedPrice = check("quotedPrice", "Quoted price must be greater than 0.").exists().notEmpty().isFloat({ min: 0.01 });
 const chatMessage = check("message", "Message is required.").trim().notEmpty().isLength({ min: 1, max: 5000 });
+const starRatingFeedback = check("starRating", "Star rating must be between 1 and 5.").exists().notEmpty().isInt({ min: 1, max: 5 });
+const feedbackReviewText = check("reviewText").optional({ values: "falsy" }).trim().isLength({ max: 2000 });
+const quickTagsFeedback = check("quickTags").optional().custom((value) => {
+    if (value == null) return true;
+    if (!Array.isArray(value)) throw new Error("quickTags must be an array.");
+    if (value.length > 10) throw new Error("At most 10 quick tags are allowed.");
+    return true;
+});
 
 export const validator = (method) => {
 
@@ -161,7 +169,7 @@ export const validator = (method) => {
             output = [addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
             break;
         case "customer-ledger":
-            output = [id, paymentType,  amount, particulars];
+            output = [id, paymentType, amount, particulars];
             break;
         case "customer-booking-create":
             output = [providerId, serviceTypeIds, serviceTypeIdItems, bookingAddressId, scheduledTime, issueDescription];
@@ -174,6 +182,12 @@ export const validator = (method) => {
             break;
         case "booking-message":
             output = [bookingId, chatMessage];
+            break;
+        case "booking-completion-verify":
+            output = [bookingId, otp];
+            break;
+        case "booking-feedback":
+            output = [bookingId, starRatingFeedback, feedbackReviewText, quickTagsFeedback];
             break;
         case "rating-tag":
             output = [tagFor, tagName, tagType, status];

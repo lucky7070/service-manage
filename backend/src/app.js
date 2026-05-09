@@ -30,7 +30,7 @@ const uploadsDir = path.resolve("./public/uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 app.use("/uploads", express.static(uploadsDir));
-app.all('/uploads/*', (req, res) => res.sendFile(path.resolve(__dirname, '../public/uploads/img-not-found.jpg')));
+app.all("/uploads/*", (req, res) => res.sendFile(path.resolve(__dirname, '../public/uploads/img-not-found.jpg')));
 
 app.use("/api", routes);
 app.use(notFound);

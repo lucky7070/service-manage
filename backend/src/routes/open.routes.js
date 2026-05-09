@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getGeneralSettings } from "../controller/admin/setting.controller.js";
-import { listServiceCategories, listServiceCategoriesForHome, getServiceCategoryBySlug, listCities, listStates, listCitiesWithState, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions, getAboutContent, listServiceProviders, getPublicServiceProvider } from "../controller/common.controller.js";
+import { listServiceCategories, listServiceCategoriesForHome, getServiceCategoryBySlug, listCities, listStates, listCitiesWithState, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions, getAboutContent, listServiceProviders, getPublicServiceProvider, listFeedbackRatingTags } from "../controller/common.controller.js";
 import { validator } from "../libraries/validator.js";
 
 const router = Router();
@@ -11,7 +11,7 @@ router.get("/service-categories-list", listServiceCategories);
 router.get("/service-categories-home", listServiceCategoriesForHome);
 router.get("/service-categories/:slug", getServiceCategoryBySlug);
 router.get("/service-providers/:city/:serviceCategory", listServiceProviders);
-router.get("/service-provider/:id", getPublicServiceProvider);
+router.get("/service-provider-details/:id", getPublicServiceProvider);
 router.get("/states-list", listStates);
 router.get("/cities-list", listCities);
 router.get("/cities-with-state", listCitiesWithState);
@@ -20,5 +20,6 @@ router.get("/about-content", getAboutContent);
 router.post("/enquiries", validator("enquiry-submit"), submitEnquiry);
 router.get("/privacy-policy", getPrivacyPolicy);
 router.get("/terms-and-conditions", getTermsAndConditions);
+router.get("/feedback-rating-tags", listFeedbackRatingTags);
 
 export default router;

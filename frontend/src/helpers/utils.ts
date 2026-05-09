@@ -83,6 +83,73 @@ export function getSweetAlertConfig({
     };
 }
 
+export function getSweetAlertConfigFront({
+    title = 'Are you sure?',
+    text = "This action cannot be undone.!",
+    icon = 'warning',
+    confirmButtonText = 'Yes, Delete',
+    customClass = {},
+    ...other
+}: SweetAlertOptions): SweetAlertOptions {
+    const { input: inputClassExtra, ...restCustomClass } = customClass;
+    const isDanger = ["warning", "error"].includes(String(icon));
+    const iconConfig = getIconConfig(icon);
+    const iconColor =
+        icon === "error"
+            ? "text-destructive"
+            : icon === "success"
+              ? "text-emerald-600 dark:text-emerald-400"
+              : icon === "info"
+                ? "text-primary"
+                : "text-amber-600 dark:text-amber-500";
+
+    const confirmButtonClass = isDanger
+        ? "inline-flex min-w-40 items-center justify-center rounded-md bg-destructive px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-destructive/90 focus:outline-none focus-visible:ring-[3px] focus-visible:ring-destructive/25 disabled:opacity-50 dark:bg-destructive/80 dark:hover:bg-destructive/90"
+        : "inline-flex min-w-40 items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 transition hover:bg-primary/90 focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50";
+
+    return {
+        title,
+        text,
+        iconHtml: iconConfig.html,
+        confirmButtonText,
+        buttonsStyling: false,
+        showCancelButton: true,
+        reverseButtons: true,
+        customClass: {
+            container:
+                "fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-3 backdrop-blur-sm dark:bg-black/55",
+            popup:
+                "mx-4 flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-center overflow-y-auto rounded-3xl border border-border bg-card p-6 text-center text-card-foreground shadow-lg sm:mx-auto",
+            icon: `mt-1 mb-2 flex items-center justify-center mx-auto text-5xl ${iconColor}`,
+            title: "text-2xl font-semibold leading-tight text-foreground",
+            htmlContainer: "mt-1 text-sm leading-6 text-muted-foreground",
+            actions: "mt-6 flex w-full flex-row-reverse gap-2 sm:justify-end",
+            confirmButton: confirmButtonClass,
+            cancelButton:
+                "inline-flex h-10 min-w-[130px] items-center justify-center gap-2 rounded-md bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground transition hover:bg-secondary/80 focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0",
+            input: cn(
+                "min-h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-foreground shadow-xs outline-none transition [color-scheme:light] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                inputClassExtra == null
+                    ? undefined
+                    : Array.isArray(inputClassExtra)
+                      ? inputClassExtra.join(" ")
+                      : String(inputClassExtra)
+            ),
+            inputLabel: "mb-1 block text-left text-sm font-medium text-foreground",
+            validationMessage: "mt-2 text-left text-xs text-destructive",
+            denyButton:
+                "inline-flex min-w-[110px] items-center justify-center rounded-md border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground shadow-xs transition hover:bg-muted focus:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50",
+            closeButton:
+                "absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted",
+            footer: "mt-2 text-sm text-muted-foreground",
+            timerProgressBar: isDanger ? "bg-destructive" : "bg-primary",
+            image: "my-3 rounded-lg",
+            ...restCustomClass
+        },
+        ...other
+    };
+}
+
 export const titleCaseSegment = (value: string) => value.replace(/[-_]/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
 
 export const compareRoute = (currentRoute: string, definedPattern: string): boolean => {

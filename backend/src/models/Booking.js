@@ -44,7 +44,8 @@ const Schema = new mongoose.Schema({
         latitude: { type: Number, default: null },
         longitude: { type: Number, default: null },
         locationType: { type: String, enum: ["home", "office", "other"], default: "home" }
-    }
+    },
+    deletedAt: { type: Date, default: null },
 }, { timestamps: true });
 
 Schema.pre("save", async function onSave(next) {

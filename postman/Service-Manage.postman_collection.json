@@ -64,7 +64,92 @@
           }
         },
         {
+          "name": "Service categories (home)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-categories-home"
+          }
+        },
+        {
+          "name": "Service category by slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-categories/plumbing"
+          }
+        },
+        {
+          "name": "List providers by city + category slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-providers/jodhpur/electrician?pageNo=1&limit=12&query=",
+            "description": "Path segments are **city slug** and **service category slug** (lowercase). Adjust to match your seeded data."
+          }
+        },
+        {
+          "name": "Public provider by id or slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/507f1f77bcf86cd799439011"
+          }
+        },
+        {
+          "name": "States list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/states-list?query=&limit=20"
+          }
+        },
+        {
           "name": "Cities list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/cities-list?stateId=507f1f77bcf86cd799439011&query=&limit=20"
+          }
+        },
+        {
+          "name": "Cities with state (combined)",
           "request": {
             "method": "GET",
             "header": [
@@ -89,6 +174,48 @@
               }
             ],
             "url": "{{baseUrl}}/testimonials?limit=6&form="
+          }
+        },
+        {
+          "name": "About content",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/about-content"
+          }
+        },
+        {
+          "name": "Privacy policy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/privacy-policy"
+          }
+        },
+        {
+          "name": "Terms and conditions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/terms-and-conditions"
           }
         },
         {
@@ -168,13 +295,14 @@
             "url": "{{baseUrl}}/customer/register",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Test User\"\n}",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Test User\",\n  \"referralCode\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
-            }
+            },
+            "description": "`referralCode` optional. `purpose` for OTP can be `register` or `login`."
           }
         },
         {
@@ -248,21 +376,35 @@
           }
         },
         {
-          "name": "States for address (auth)",
+          "name": "Create booking (auth)",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
               {
                 "key": "x-api-key",
                 "value": "{{xApiKey}}",
                 "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
               }
             ],
-            "url": "{{baseUrl}}/customer/states?query=&limit=20"
+            "url": "{{baseUrl}}/customer/bookings",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerId\": \"507f1f77bcf86cd799439011\",\n  \"serviceTypeId\": [\n    \"507f1f77bcf86cd799439011\"\n  ],\n  \"addressId\": \"507f1f77bcf86cd799439011\",\n  \"scheduledTime\": \"2026-12-15T10:30:00.000Z\",\n  \"issueDescription\": \"Please bring required tools.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "`serviceTypeId` is an array of ServiceType ids for that provider/category. `addressId` = customer's saved address."
           }
         },
         {
-          "name": "Cities for address (auth)",
+          "name": "Booking detail (auth)",
           "request": {
             "method": "GET",
             "header": [
@@ -272,7 +414,116 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/customer/cities?stateId=507f1f77bcf86cd799439011&query=&limit=20"
+            "url": "{{baseUrl}}/customer/bookings/507f1f77bcf86cd799439011"
+          }
+        },
+        {
+          "name": "Accept quote (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/bookings/507f1f77bcf86cd799439011/accept-quote",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancel booking (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/bookings/507f1f77bcf86cd799439011/cancel",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancellationReason\": \"Need to reschedule\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Booking messages list (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/bookings/507f1f77bcf86cd799439011/messages"
+          }
+        },
+        {
+          "name": "Send booking message (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/bookings/507f1f77bcf86cd799439011/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello, confirming the time works for me.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ledger (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/ledger?pageNo=1&limit=10&paymentType=&query="
           }
         },
         {
@@ -538,6 +789,183 @@
             ],
             "url": "{{baseUrl}}/service-provider/profile"
           }
+        },
+        {
+          "name": "Bookings (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/bookings?pageNo=1&limit=10&status="
+          }
+        },
+        {
+          "name": "Booking detail (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/bookings/507f1f77bcf86cd799439011"
+          }
+        },
+        {
+          "name": "Set booking quote (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/bookings/507f1f77bcf86cd799439011/quote",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quotedPrice\": 1299.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Booking messages list (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/bookings/507f1f77bcf86cd799439011/messages"
+          }
+        },
+        {
+          "name": "Send booking message (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/bookings/507f1f77bcf86cd799439011/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"We can reach you by 11 AM.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Work photos (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos"
+          }
+        },
+        {
+          "name": "Upload work photos (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Form field `photos` — multiple files allowed (max 20). Image files."
+          }
+        },
+        {
+          "name": "Reorder work photos (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos/reorder",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderedIds\": [\n    \"507f1f77bcf86cd799439011\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Replace orderedIds with all work photo `_id` values in display order."
+          }
+        },
+        {
+          "name": "Delete work photo (auth)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/work-photos/507f1f77bcf86cd799439011"
+          }
         }
       ]
     },
@@ -643,6 +1071,34 @@
               }
             ],
             "url": "{{baseUrl}}/admin/dashboard-stats"
+          }
+        },
+        {
+          "name": "Bookings list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/bookings?pageNo=1&limit=10&status=&query="
+          }
+        },
+        {
+          "name": "Booking detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/bookings/507f1f77bcf86cd799439011"
           }
         },
         {

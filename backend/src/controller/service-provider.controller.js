@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../config/index.js";
-import { COOKIE_OPTIONS, PHONE_REGEXP } from "../config/constants.js";
+import { PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
-import { Booking, ChatMessage, OtpVerification, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
+import { Booking, ChatMessage, Customer, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
+import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
 
 export const sendOtp = async (req, res) => {
     try {
@@ -247,12 +248,59 @@ export const reorderWorkPhotos = async (req, res) => {
     }
 };
 
+export const getProviderBooking = async (req, res) => {
+    try {
+        const [booking] = await Booking.aggregate([
+            { $match: { _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null } },
+            { $lookup: { from: "customers", localField: "customerId", foreignField: "_id", as: "customer" } },
+            { $lookup: { from: "serviceproviders", localField: "providerId", foreignField: "_id", as: "provider" } },
+            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+            { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceTypes" } },
+            { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+            {
+                $project: {
+                    bookingNumber: 1,
+                    customerId: 1,
+                    providerId: 1,
+                    status: 1,
+                    issueDescription: 1,
+                    bookingTime: 1,
+                    quotedPrice: 1,
+                    agreedPrice: 1,
+                    finalPrice: 1,
+                    scheduledTime: 1,
+                    startTime: 1,
+                    completionTime: 1,
+                    cancellationReason: 1,
+                    cancelledBy: 1,
+                    location: 1,
+                    customerName: { $ifNull: [{ $first: "$customer.name" }, ""] },
+                    customerMobile: { $ifNull: [{ $first: "$customer.mobile" }, ""] },
+                    providerName: { $ifNull: [{ $first: "$provider.name" }, ""] },
+                    providerMobile: { $ifNull: [{ $first: "$provider.mobile" }, ""] },
+                    serviceCategoryName: { $ifNull: [{ $first: "$category.name" }, ""] },
+                    cityName: { $ifNull: [{ $first: "$city.name" }, ""] },
+                    serviceTypes: { $map: { input: "$serviceTypes", as: "serviceType", in: { _id: "$$serviceType._id", name: "$$serviceType.name", basePrice: "$$serviceType.basePrice", estimatedTimeMinutes: "$$serviceType.estimatedTimeMinutes" } } },
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]);
+        if (!booking) return res.noRecords(false, "Booking not found.");
+
+        booking.providerFeedback = await Rating.findOne({ bookingId: booking._id, ratingType: "provider_to_customer", }).populate("quickTags", "tagName tagType tagFor").lean();
+        return res.success(booking);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
 export const listProviderBookings = async (req, res) => {
     try {
         const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
         const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
         const status = String(req.query.status || "").trim();
-        const filter = { providerId: req.serviceProvider._id };
+        const filter = { providerId: req.serviceProvider._id, deletedAt: null };
         if (status) filter.status = status;
 
         const [record, countRows] = await Promise.all([
@@ -268,7 +316,7 @@ export const listProviderBookings = async (req, res) => {
 
 export const setBookingQuote = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (["completed", "cancelled"].includes(booking.status)) return res.someThingWentWrong({ message: "This booking cannot be quoted." });
 
@@ -281,12 +329,116 @@ export const setBookingQuote = async (req, res) => {
     }
 };
 
-export const listProviderBookingMessages = async (req, res) => {
+export const startProviderBooking = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id }, { _id: 1 });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
-        const messages = await ChatMessage.find({ bookingId: booking._id }).sort({ createdAt: 1 }).lean();
+        if (["completed", "cancelled"].includes(booking.status)) {
+            return res.someThingWentWrong({ message: "This booking cannot be started." });
+        }
+
+        if (booking.status !== "confirmed" || booking.agreedPrice == null || Number(booking.agreedPrice) <= 0) {
+            return res.someThingWentWrong({ message: "Price must be confirmed by the customer before starting the job." });
+        }
+
+        if (booking.startTime != null || booking.status === "in_progress") {
+            return res.someThingWentWrong({ message: "Job has already been started." });
+        }
+
+        booking.startTime = now();
+        booking.status = "in_progress";
+        await booking.save();
+        return res.successUpdate(booking, "Job started.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const sendBookingCompletionOtp = async (req, res) => {
+    try {
+        const environment = process.env.NODE_ENV || "production";
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+
+        if (booking.status !== "in_progress" || !booking.startTime) {
+            return res.someThingWentWrong({ message: "Job must be in progress to request completion verification." });
+        }
+
+        if (booking.completionTime) {
+            return res.someThingWentWrong({ message: "This booking is already completed." });
+        }
+
+        const customer = await Customer.findById(booking.customerId, "mobile").lean();
+        if (!customer?.mobile) {
+            return res.someThingWentWrong({ message: "Customer mobile not found." });
+        }
+
+        const otp = generateOtp();
+        const isSent = await sendOTP(customer.mobile, otp);
+        if (!isSent) return res.someThingWentWrong({ message: "Failed to send OTP" });
+
+        await OtpVerification.deleteMany({ purpose: "booking_completion", bookingId: booking._id });
+        await OtpVerification.create({
+            phoneNumber: customer.mobile,
+            otpCode: otp,
+            purpose: "booking_completion",
+            bookingId: booking._id,
+            expiresAt: nowPlusMinutes(config.otpExpiryMinutes),
+        });
+
+        return res.success(environment === "development" ? otp : "", "OTP sent to customer.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const completeProviderBooking = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+
+        if (booking.status !== "in_progress" || !booking.startTime) {
+            return res.someThingWentWrong({ message: "Job is not in progress." });
+        }
+
+        if (booking.completionTime) {
+            return res.someThingWentWrong({ message: "This booking is already completed." });
+        }
+
+        const customer = await Customer.findById(booking.customerId, "mobile").lean();
+        if (!customer?.mobile) {
+            return res.someThingWentWrong({ message: "Customer not found." });
+        }
+
+        const verify = await OtpVerification.findOne({
+            phoneNumber: customer.mobile,
+            otpCode: String(req.body.otp || "").trim(),
+            purpose: "booking_completion",
+            bookingId: booking._id,
+        }).sort({ createdAt: -1 });
+
+        if (!verify || moment(verify.expiresAt).isBefore(moment())) {
+            return res.someThingWentWrong({ message: "Invalid or expired OTP." });
+        }
+
+        await verify.deleteOne();
+        booking.completionTime = now();
+        booking.status = "completed";
+        await booking.save();
+
+        return res.successUpdate(booking, "Booking completed successfully.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listProviderBookingMessages = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null }, { _id: 1 });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+
+        const messages = await ChatMessage.find({ bookingId: booking._id }, '-_id senderId senderType message attachmentUrl isRead readAt createdAt').sort({ createdAt: 1 }).lean();
         return res.success(messages);
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -295,13 +447,57 @@ export const listProviderBookingMessages = async (req, res) => {
 
 export const sendProviderBookingMessage = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id }, { _id: 1 });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null }, { _id: 1 });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         const message = await ChatMessage.create({ bookingId: booking._id, senderId: req.serviceProvider._id, senderType: "provider", message: String(req.body.message || "").trim() });
-        req.app.locals.io?.to(`booking:${booking._id}`).emit("booking:message", message);
+        req.app.io?.to(`booking:${booking._id}`).emit("booking:message", message);
         return res.successInsert(message, "Message sent.");
     } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const submitProviderBookingFeedback = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null, });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+        
+        if (booking.status !== "completed") {
+            return res.someThingWentWrong({ message: "You can rate the customer only after the booking is completed." });
+        }
+
+        const existing = await Rating.findOne({ bookingId: booking._id, ratingType: "provider_to_customer" }).lean();
+        if (existing) return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+
+        let tagIds;
+        try {
+            tagIds = await resolveQuickTagIds(req.body.quickTags, "customer");
+        } catch (e) {
+            return res.someThingWentWrong({ message: e.message || "Invalid quick tags." });
+        }
+
+        const star = Number.parseInt(String(req.body.starRating), 10);
+        const reviewText = String(req.body.reviewText ?? "").trim() || null;
+
+        const doc = await Rating.create({
+            bookingId: booking._id,
+            ratedBy: req.serviceProvider._id,
+            ratedTo: booking.customerId,
+            ratingType: "provider_to_customer",
+            starRating: star,
+            reviewText,
+            quickTags: tagIds,
+        });
+
+        await refreshCustomerAverageRating(booking.customerId);
+
+        const populated = await Rating.findById(doc._id).populate("quickTags", "tagName tagType tagFor").lean();
+        return res.successInsert(populated, "Thank you for your feedback.");
+    } catch (error) {
+        if (error?.code === 11000) {
+            return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+        }
         return res.someThingWentWrong(error);
     }
 };

@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import moment from "moment";
+import type { KeyboardEvent } from "react";
 import { ArrowLeft, CalendarClock, CheckCircle2, Loader2, MapPin, Send, XCircle } from "lucide-react";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import { BookingChatThread } from "@/components/chat/BookingChatThread";
+import { ChatTypingIndicator } from "@/components/chat/ChatTypingIndicator";
 import AccountNav from "@/components/front/user/AccountNav";
-import { Button, Input, Textarea } from "@/components/front/ui";
+import { Button, Textarea } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
+import { cn, getSweetAlertConfigFront } from "@/helpers/utils";
 import { socket } from "@/lib/socket";
 
 type BookingDetail = {
@@ -60,9 +64,47 @@ export default function CustomerBookingDetailPage() {
     });
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [message, setMessage] = useState("");
-    const [cancelReason, setCancelReason] = useState("");
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
+    const [providerOnline, setProviderOnline] = useState(false);
+    const [providerTyping, setProviderTyping] = useState(false);
+    const chatScrollRef = useRef<HTMLDivElement>(null);
+    const stickToBottomRef = useRef(true);
+    const typingIdleRef = useRef<number | null>(null);
+
+    const scrollChatToBottom = useCallback(() => {
+        const el = chatScrollRef.current;
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
+    }, []);
+
+    const onChatScroll = useCallback(() => {
+        const el = chatScrollRef.current;
+        if (!el) return;
+        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+        stickToBottomRef.current = nearBottom;
+    }, []);
+
+    useLayoutEffect(() => {
+        if (!stickToBottomRef.current) return;
+        scrollChatToBottom();
+    }, [messages, providerTyping, scrollChatToBottom]);
+
+    const emitTyping = useCallback((typing: boolean) => {
+        if (id) socket.emit("booking:typing", { bookingId: id, typing });
+    }, [id]);
+
+    const clearTypingEmitTimers = useCallback(() => {
+        if (typingIdleRef.current !== null) {
+            clearTimeout(typingIdleRef.current);
+            typingIdleRef.current = null;
+        }
+    }, []);
+
+    const stopLocalTypingSignal = useCallback(() => {
+        clearTypingEmitTimers();
+        emitTyping(false);
+    }, [clearTypingEmitTimers, emitTyping]);
 
     const getBooking = useCallback(async () => {
         const { data } = await AxiosHelper.getData(`/customer/bookings/${id}`);
@@ -93,13 +135,31 @@ export default function CustomerBookingDetailPage() {
     useEffect(() => {
         if (!id) return;
         socket.connect();
-        socket.emit("booking:join", id);
+        socket.emit("booking:join", { bookingId: id, role: "customer" });
+
         const onMessage = (next: ChatMessage) => {
-            if (String(next?._id || "")) setMessages((prev) => prev.some((row) => row._id === next._id) ? prev : [...prev, next]);
+            if (!String(next?._id || "")) return;
+            if (next.senderType === "provider") setProviderTyping(false);
+            setMessages((prev) => prev.some((row) => row._id === next._id) ? prev : [...prev, next]);
         };
+
+        const onPresence = (snap: { customerOnline: boolean; providerOnline: boolean; }) => {
+            setProviderOnline(Boolean(snap.providerOnline));
+        };
+
+        const onPeerTyping = (payload: { role?: string; typing?: boolean }) => {
+            if (payload?.role === "provider") setProviderTyping(Boolean(payload.typing));
+        };
+
         socket.on("booking:message", onMessage);
+        socket.on("booking:presence", onPresence);
+        socket.on("booking:typing", onPeerTyping);
         return () => {
+            socket.emit("booking:typing", { bookingId: id, typing: false });
+            socket.emit("booking:leave", id);
             socket.off("booking:message", onMessage);
+            socket.off("booking:presence", onPresence);
+            socket.off("booking:typing", onPeerTyping);
         };
     }, [id]);
 
@@ -115,23 +175,49 @@ export default function CustomerBookingDetailPage() {
         setSubmitting(false);
     };
 
-    const cancelBooking = async () => {
-        setSubmitting(true);
-        const { data } = await AxiosHelper.putData(`/customer/bookings/${id}/cancel`, { cancellationReason: cancelReason });
-        if (data.status) {
-            toast.success(data.message || "Booking cancelled.");
+    const openCancelBookingDialog = useCallback(async () => {
+        if (!id || submitting) return;
+        const result = await Swal.fire(getSweetAlertConfigFront({
+            title: "Cancel this booking?",
+            text: "This action cannot be undone. You can leave an optional note for the provider.",
+            icon: "warning",
+            confirmButtonText: "Yes, Cancel Booking",
+            cancelButtonText: "Keep Booking",
+            showCancelButton: true,
+            input: "textarea",
+            inputLabel: "Cancellation reason (optional)",
+            inputPlaceholder: "Why are you cancelling?",
+            showLoaderOnConfirm: true,
+            allowOutsideClick: () => !Swal.isLoading(),
+            customClass: {
+                input: "min-h-[120px]",
+            },
+            preConfirm: async (value) => {
+                const cancellationReason = String(value ?? "").trim();
+                const { data } = await AxiosHelper.putData(`/customer/bookings/${id}/cancel`, {
+                    cancellationReason,
+                });
+                if (!data.status) {
+                    throw new Error(data.message || "Could not cancel booking.");
+                }
+                return data as { status?: boolean; message?: string };
+            },
+        }));
+
+        if (result.isConfirmed && result.value?.status) {
+            toast.success(result.value.message || "Booking cancelled.");
             await getBooking();
-        } else {
-            toast.error(data.message || "Could not cancel booking.");
         }
-        setSubmitting(false);
-    };
+    }, [id, submitting, getBooking]);
 
-    const sendMessage = async () => {
-        if (!message.trim() || submitting || !id) return;
+    const sendMessage = useCallback(async () => {
+        const text = message.trim();
+        if (!text || submitting || !id) return;
 
+        stickToBottomRef.current = true;
+        stopLocalTypingSignal();
         setSubmitting(true);
-        const { data } = await AxiosHelper.postData(`/customer/bookings/${id}/messages`, { message });
+        const { data } = await AxiosHelper.postData(`/customer/bookings/${id}/messages`, { message: text });
         if (data.status) {
             setMessage("");
             setMessages((prev) => prev.some((row) => row._id === data.data?._id) ? prev : [...prev, data.data as ChatMessage]);
@@ -139,6 +225,33 @@ export default function CustomerBookingDetailPage() {
             toast.error(data.message || "Could not send message.");
         }
         setSubmitting(false);
+    }, [message, submitting, id, stopLocalTypingSignal]);
+
+    const onMessageChange = (value: string) => {
+        setMessage(value);
+        if (!id) return;
+        const trimmed = value.trim();
+        if (!trimmed) {
+            stopLocalTypingSignal();
+            return;
+        }
+        emitTyping(true);
+        clearTypingEmitTimers();
+        typingIdleRef.current = window.setTimeout(() => {
+            typingIdleRef.current = null;
+            emitTyping(false);
+        }, 1600);
+    };
+
+    useEffect(() => () => {
+        clearTypingEmitTimers();
+    }, [clearTypingEmitTimers]);
+
+    const onComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (event.nativeEvent.isComposing) return;
+        if (event.key !== "Enter" || event.shiftKey) return;
+        event.preventDefault();
+        void sendMessage();
     };
 
     return (
@@ -184,7 +297,20 @@ export default function CustomerBookingDetailPage() {
                             </div>
 
                             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                                <h2 className="text-xl font-bold">Quote & Price</h2>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <h2 className="text-xl font-bold">Quote & Price</h2>
+                                    {!["completed", "cancelled"].includes(booking.status) ? (
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => void openCancelBookingDialog()}
+                                            disabled={submitting}
+                                        >
+                                            <XCircle className="h-4 w-4" /> Cancel booking
+                                        </Button>
+                                    ) : null}
+                                </div>
                                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                                     <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Quoted Price</p><p className="text-xl font-bold">₹{Number(booking.quotedPrice || 0).toFixed(2)}</p></div>
                                     <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Agreed Price</p><p className="text-xl font-bold">₹{Number(booking.agreedPrice || 0).toFixed(2)}</p></div>
@@ -196,18 +322,21 @@ export default function CustomerBookingDetailPage() {
                                         <Button type="button" onClick={acceptQuote} disabled={submitting}><CheckCircle2 className="h-4 w-4" /> Accept Quote</Button>
                                     </div>
                                 ) : null}
-
-                                {!["completed", "cancelled"].includes(booking.status) ? (
-                                    <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
-                                        <Input value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} placeholder="Cancellation reason (optional)" />
-                                        <Button type="button" variant="outline" onClick={cancelBooking} disabled={submitting}><XCircle className="h-4 w-4" /> Cancel Booking</Button>
-                                    </div>
-                                ) : null}
                             </div>
 
                             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                                <h2 className="text-xl font-bold">Chat with Provider</h2>
-                                <div className="mt-4 max-h-96 overflow-y-auto rounded-2xl bg-muted/40 px-4 py-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <h2 className="text-xl font-bold">Chat with Provider</h2>
+                                    <span className="inline-flex items-center gap-2 text-sm text-muted-foreground" title={providerOnline ? "Provider has this chat open in the app." : "Provider is not connected to this chat right now."}>
+                                        <span className={cn("h-2 w-2 shrink-0 rounded-full", providerOnline ? "bg-emerald-500 shadow-[0_0_0_3px_rgba(16,185,129,0.35)]" : "bg-slate-400 dark:bg-slate-500")} aria-hidden />
+                                        <span>{providerOnline ? "Provider online" : "Provider offline"}</span>
+                                    </span>
+                                </div>
+                                <div
+                                    ref={chatScrollRef}
+                                    onScroll={onChatScroll}
+                                    className="mt-4 max-h-96 overflow-y-auto overflow-x-hidden rounded-2xl bg-muted/40 px-4 py-4"
+                                >
                                     <BookingChatThread
                                         messages={messages}
                                         customerMessagesOnLeft={false}
@@ -215,10 +344,20 @@ export default function CustomerBookingDetailPage() {
                                         emptyLabel="No messages yet."
                                     />
                                 </div>
-                                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-                                    <Textarea value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Type your message..." className="min-h-12" />
-                                    <Button type="button" onClick={sendMessage} disabled={submitting || !message.trim()}>{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send</Button>
+                                {providerTyping ? <ChatTypingIndicator label="Provider is typing" className="mt-3 px-0.5" /> : null}
+                                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                                    <Textarea
+                                        value={message}
+                                        onChange={(event) => onMessageChange(event.target.value)}
+                                        onKeyDown={onComposerKeyDown}
+                                        onBlur={() => stopLocalTypingSignal()}
+                                        placeholder="Type your message…"
+                                        className="min-h-20 resize-y py-2 leading-normal md:text-sm"
+                                        rows={3}
+                                    />
+                                    <Button type="button" onClick={() => void sendMessage()} disabled={submitting || !message.trim()}>{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send</Button>
                                 </div>
+                                <p className="mt-1.5 text-xs text-muted-foreground">Press Enter to send · Shift+Enter for a new line</p>
                             </div>
                         </>}
                     </div>
