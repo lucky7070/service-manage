@@ -8,7 +8,7 @@ export const createCmsPage = async (req, res) => {
     try {
         
         if (config.isProduction) {
-            return res.someThingWentWrong({ message: "CMS page creation is not available in production." });
+            return res.clientError("CMS page creation is not available in production.", 403);
         }
 
         const { pageSlug, pageTitle, pageTitleHi = "", metaDescription = "", metaKeywords = "", content = "", contentHi = "", viewCount = 0 } = req.body;
@@ -26,7 +26,7 @@ export const createCmsPage = async (req, res) => {
         });
         return res.successInsert(doc);
     } catch (error) {
-        if (error?.code === 11000) return res.someThingWentWrong({ message: "Page slug already exists." });
+        if (error?.code === 11000) return res.clientError("Page slug already exists.", 409, [{ field: "pageSlug", message: "Page slug already exists." }]);
         return res.someThingWentWrong(error);
     }
 };
@@ -53,7 +53,7 @@ export const updateCmsPage = async (req, res) => {
         );
         return res.successUpdate(doc);
     } catch (error) {
-        if (error?.code === 11000) return res.someThingWentWrong({ message: "Page slug already exists." });
+        if (error?.code === 11000) return res.clientError("Page slug already exists.", 409, [{ field: "pageSlug", message: "Page slug already exists." }]);
         return res.someThingWentWrong(error);
     }
 };
@@ -62,7 +62,7 @@ export const deleteCmsPage = async (req, res) => {
     try {
 
         if (config.isProduction) {
-            return res.someThingWentWrong({ message: "CMS page creation is not available in production." });
+            return res.clientError("CMS page creation is not available in production.", 403);
         }
 
         const doc = await CmsPage.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });

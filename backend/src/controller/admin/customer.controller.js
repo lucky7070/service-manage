@@ -7,10 +7,10 @@ import { deleteFile } from "../../libraries/storage.js";
 export const createCustomer = async (req, res) => {
     try {
         const { name, mobile, email, dateOfBirth, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Name is required." });
-        if (!mobile?.trim()) return res.someThingWentWrong({ message: "Mobile is required." });
-        if (!email?.trim()) return res.someThingWentWrong({ message: "Email is required." });
-        if (!dateOfBirth) return res.someThingWentWrong({ message: "Date of birth is required." });
+        if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
+        if (!mobile?.trim()) return res.clientError("Mobile is required.", 422, [{ field: "mobile", message: "Required." }]);
+        if (!email?.trim()) return res.clientError("Email is required.", 422, [{ field: "email", message: "Required." }]);
+        if (!dateOfBirth) return res.clientError("Date of birth is required.", 422, [{ field: "dateOfBirth", message: "Required." }]);
 
         const normalizedEmail = email.trim().toLowerCase();
         const normalizedMobile = mobile.trim();
@@ -25,7 +25,7 @@ export const createCustomer = async (req, res) => {
         }
 
         const dob = new Date(dateOfBirth);
-        if (Number.isNaN(dob.getTime())) return res.someThingWentWrong({ message: "Invalid date of birth." });
+        if (Number.isNaN(dob.getTime())) return res.clientError("Invalid date of birth.", 422, [{ field: "dateOfBirth", message: "Invalid date of birth." }]);
 
         const payload = {
             name: name.trim(),
@@ -50,10 +50,10 @@ export const updateCustomer = async (req, res) => {
         if (!customer) return res.noRecords();
 
         const { name, mobile, email, dateOfBirth, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Name is required." });
-        if (!mobile?.trim()) return res.someThingWentWrong({ message: "Mobile is required." });
-        if (!email?.trim()) return res.someThingWentWrong({ message: "Email is required." });
-        if (!dateOfBirth) return res.someThingWentWrong({ message: "Date of birth is required." });
+        if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
+        if (!mobile?.trim()) return res.clientError("Mobile is required.", 422, [{ field: "mobile", message: "Required." }]);
+        if (!email?.trim()) return res.clientError("Email is required.", 422, [{ field: "email", message: "Required." }]);
+        if (!dateOfBirth) return res.clientError("Date of birth is required.", 422, [{ field: "dateOfBirth", message: "Required." }]);
 
         const normalizedEmail = email.trim().toLowerCase();
         const normalizedMobile = mobile.trim();
@@ -69,7 +69,7 @@ export const updateCustomer = async (req, res) => {
         }
 
         const dob = new Date(dateOfBirth);
-        if (Number.isNaN(dob.getTime())) return res.someThingWentWrong({ message: "Invalid date of birth." });
+        if (Number.isNaN(dob.getTime())) return res.clientError("Invalid date of birth.", 422, [{ field: "dateOfBirth", message: "Invalid date of birth." }]);
 
         let image = customer.image;
         if (req.file) {

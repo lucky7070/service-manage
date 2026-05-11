@@ -17,10 +17,10 @@ export const listServiceCategoriesForSelect = async (req, res) => {
 export const createServiceCategory = async (req, res) => {
     try {
         const { slug: slugIn, name, nameHi, description, displayOrder = 0, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Name is required." });
+        if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const slug = slugify(slugIn || name);
-        if (!slug) return res.someThingWentWrong({ message: "Valid slug is required (letters, numbers, hyphens)." });
+        if (!slug) return res.clientError("Valid slug is required (letters, numbers, hyphens).", 422, [{ field: "slug", message: "Valid slug is required." }]);
 
         const exists = await ServiceCategory.findOne({ slug, deletedAt: null });
         if (exists) throw new Error(`Category with slug "${slug}" already exists.`);
@@ -46,10 +46,10 @@ export const updateServiceCategory = async (req, res) => {
         if (!doc) return res.noRecords();
 
         const { slug: slugIn, name, nameHi, description, displayOrder = 0, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Name is required." });
+        if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const slug = slugify(slugIn || name);
-        if (!slug) return res.someThingWentWrong({ message: "Valid slug is required." });
+        if (!slug) return res.clientError("Valid slug is required.", 422, [{ field: "slug", message: "Valid slug is required." }]);
 
         const dup = await ServiceCategory.findOne({ _id: { $ne: doc._id }, slug, deletedAt: null });
         if (dup) throw new Error(`Category with slug "${slug}" already exists.`);

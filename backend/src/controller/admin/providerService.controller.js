@@ -47,17 +47,17 @@ export const createProviderService = async (req, res) => {
         if (!provider) return res.noRecords();
 
         const serviceTypeId = ObjectId(req.body.serviceTypeId);
-        if (!serviceTypeId) return res.someThingWentWrong({ message: "Service type is required." });
+        if (!serviceTypeId) return res.clientError("Service type is required.", 422, [{ field: "serviceTypeId", message: "Required." }]);
 
         const serviceType = await ServiceType.findOne({ _id: serviceTypeId, deletedAt: null });
-        if (!serviceType) return res.someThingWentWrong({ message: "Service type not found." });
+        if (!serviceType) return res.clientError("Service type not found.", 404);
 
         if (String(serviceType.categoryId) !== String(provider.serviceCategoryId)) {
-            return res.someThingWentWrong({ message: "Service type must belong to provider service category." });
+            return res.clientError("Service type must belong to provider service category.", 422, [{ field: "serviceTypeId", message: "Must belong to provider service category." }]);
         }
 
         const price = parsePrice(req.body.price);
-        if (price === null) return res.someThingWentWrong({ message: "Valid price is required." });
+        if (price === null) return res.clientError("Valid price is required.", 422, [{ field: "price", message: "Valid price is required." }]);
 
         const exists = await ProviderService.findOne({ providerId: provider._id, serviceTypeId });
         if (exists) throw new Error("This service type is already added for the provider.");
@@ -71,7 +71,7 @@ export const createProviderService = async (req, res) => {
 
         return res.successInsert(doc, "Provider service added.");
     } catch (error) {
-        if (error.code === 11000) return res.someThingWentWrong({ message: "This service type is already added for the provider." });
+        if (error.code === 11000) return res.clientError("This service type is already added for the provider.", 409);
         return res.someThingWentWrong(error);
     }
 };
@@ -85,24 +85,24 @@ export const updateProviderService = async (req, res) => {
         if (!doc) return res.noRecords();
 
         const serviceTypeId = ObjectId(req.body.serviceTypeId);
-        if (!serviceTypeId) return res.someThingWentWrong({ message: "Service type is required." });
+        if (!serviceTypeId) return res.clientError("Service type is required.", 422, [{ field: "serviceTypeId", message: "Required." }]);
 
         const serviceType = await ServiceType.findOne({ _id: serviceTypeId, deletedAt: null });
-        if (!serviceType) return res.someThingWentWrong({ message: "Service type not found." });
+        if (!serviceType) return res.clientError("Service type not found.", 404);
         if (String(serviceType.categoryId) !== String(provider.serviceCategoryId)) {
-            return res.someThingWentWrong({ message: "Service type must belong to provider service category." });
+            return res.clientError("Service type must belong to provider service category.", 422, [{ field: "serviceTypeId", message: "Must belong to provider service category." }]);
         }
 
         const dup = await ProviderService.findOne({ _id: { $ne: doc._id }, providerId: provider._id, serviceTypeId });
         if (dup) throw new Error("This service type is already added for the provider.");
 
         const price = parsePrice(req.body.price);
-        if (price === null) return res.someThingWentWrong({ message: "Valid price is required." });
+        if (price === null) return res.clientError("Valid price is required.", 422, [{ field: "price", message: "Valid price is required." }]);
 
         await doc.updateOne({ serviceTypeId, price, isActive: Number(req.body.status ?? 1) === 1 });
         return res.successUpdate(doc, "Provider service updated.");
     } catch (error) {
-        if (error.code === 11000) return res.someThingWentWrong({ message: "This service type is already added for the provider." });
+        if (error.code === 11000) return res.clientError("This service type is already added for the provider.", 409);
         return res.someThingWentWrong(error);
     }
 };

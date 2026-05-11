@@ -43,7 +43,7 @@ export const createServiceProvider = async (req, res) => {
         return res.successInsert(record);
     } catch (error) {
         if (error.code === 11000) {
-            return res.someThingWentWrong({ message: "Duplicate mobile, email, PAN, or Aadhar." });
+            return res.clientError("Duplicate mobile, email, PAN, or Aadhar.", 409);
         }
         return res.someThingWentWrong(error);
     }
@@ -86,7 +86,7 @@ export const updateServiceProvider = async (req, res) => {
         return res.successUpdate(record);
     } catch (error) {
         if (error.code === 11000) {
-            return res.someThingWentWrong({ message: "Duplicate mobile, email, PAN, or Aadhar." });
+            return res.clientError("Duplicate mobile, email, PAN, or Aadhar.", 409);
         }
         return res.someThingWentWrong(error);
     }
@@ -101,7 +101,7 @@ export const updateServiceProviderStatus = async (req, res) => {
         const nextIsVerified = [1, "1", true, "true"].includes(req.body.isVerified);
 
         if (!SERVICE_PROVIDER_PROFILE_STATUSES.includes(nextProfileStatus))
-            return res.someThingWentWrong({ message: "Invalid profile status." });
+            return res.clientError("Invalid profile status.", 422, [{ field: "profileStatus", message: "Invalid profile status." }]);
 
         const updateDoc = { profileStatus: nextProfileStatus, isVerified: nextIsVerified };
         if (nextProfileStatus === "approved") {

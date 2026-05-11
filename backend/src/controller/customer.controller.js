@@ -243,7 +243,7 @@ export const createCustomerBooking = async (req, res) => {
         if (!provider) return res.noRecords(false, "Service provider not found.");
 
         const selectedServiceTypeIds = [...new Set((req.body.serviceTypeId || []).map((value) => String(value)))].map((value) => ObjectId(value)).filter(Boolean);
-        if (!selectedServiceTypeIds.length) return res.someThingWentWrong({ message: "At least one service type is required." });
+        if (!selectedServiceTypeIds.length) return res.clientError("At least one service type is required.", 422, [{ field: "serviceTypeId", message: "At least one service type is required." }]);
 
         const providerServices = await ProviderService.aggregate([
             { $match: { providerId: provider._id, serviceTypeId: { $in: selectedServiceTypeIds }, isActive: true } },
@@ -253,7 +253,7 @@ export const createCustomerBooking = async (req, res) => {
             { $project: { serviceTypeId: 1 } }
         ]);
 
-        if (providerServices.length !== selectedServiceTypeIds.length) return res.someThingWentWrong({ message: "One or more selected services are not available for this provider." });
+        if (providerServices.length !== selectedServiceTypeIds.length) return res.clientError("One or more selected services are not available for this provider.", 422, [{ field: "serviceTypeId", message: "One or more selected services are not available for this provider." }]);
 
         const address = await Address.findOne({ _id: ObjectId(req.body.addressId), customerId, deletedAt: null }).populate("city", "name").populate("state", "name");
         if (!address) return res.noRecords(false, "Address not found.");
@@ -308,7 +308,7 @@ export const acceptCustomerBookingQuote = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
-        if (!booking.quotedPrice || booking.status !== "price_pending") return res.someThingWentWrong({ message: "No pending quote found for this booking." });
+        if (!booking.quotedPrice || booking.status !== "price_pending") return res.clientError("No pending quote found for this booking.", 400);
 
         booking.agreedPrice = booking.quotedPrice;
         booking.finalPrice = booking.quotedPrice;
@@ -324,7 +324,7 @@ export const cancelCustomerBooking = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
-        if (["completed", "cancelled"].includes(booking.status)) return res.someThingWentWrong({ message: "This booking cannot be cancelled." });
+        if (["completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be cancelled.", 400);
 
         booking.status = "cancelled";
         booking.cancelledBy = "customer";
@@ -367,17 +367,17 @@ export const submitCustomerBookingFeedback = async (req, res) => {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null, });
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (booking.status !== "completed") {
-            return res.someThingWentWrong({ message: "You can rate the provider only after the booking is completed." });
+            return res.clientError("You can rate the provider only after the booking is completed.", 400);
         }
 
         const existing = await Rating.findOne({ bookingId: booking._id, ratingType: "customer_to_provider" }).lean();
-        if (existing) return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+        if (existing) return res.clientError("Feedback has already been submitted for this booking.", 409);
 
         let tagIds;
         try {
             tagIds = await resolveQuickTagIds(req.body.quickTags, "provider");
         } catch (e) {
-            return res.someThingWentWrong({ message: e.message || "Invalid quick tags." });
+            return res.clientError(e.message || "Invalid quick tags.", 422, [{ field: "quickTags", message: e.message || "Invalid quick tags." }]);
         }
 
         const star = Number.parseInt(String(req.body.starRating), 5);
@@ -399,7 +399,7 @@ export const submitCustomerBookingFeedback = async (req, res) => {
         return res.successInsert(populated, "Thank you for your feedback.");
     } catch (error) {
         if (error?.code === 11000) {
-            return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+            return res.clientError("Feedback has already been submitted for this booking.", 409);
         }
         return res.someThingWentWrong(error);
     }

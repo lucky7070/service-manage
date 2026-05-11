@@ -7,7 +7,7 @@ import { deleteFile } from "../../libraries/storage.js";
 export const createBanner = async (req, res) => {
     try {
 
-        if (!req.file) return res.someThingWentWrong({ message: "Banner image is required." });
+        if (!req.file) return res.clientError("Banner image is required.", 422, [{ field: "image", message: "Banner image is required." }]);
 
         const { bannerTitle = "", bannerTitleHi = "", bannerSubtitle = "", bannerSubtitleHi = "", bannerType = "homepage", link = "", displayOrder = 0 } = req.body;
         const doc = await Banner.create({

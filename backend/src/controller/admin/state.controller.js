@@ -6,8 +6,8 @@ import { escapeRegex } from "../../helpers/utils.js";
 export const createState = async (req, res) => {
     try {
         const { countryId, name, status = 1 } = req.body;
-        if (!countryId) return res.someThingWentWrong({ message: "Country is required." });
-        if (!name?.trim()) return res.someThingWentWrong({ message: "State name is required." });
+        if (!countryId) return res.clientError("Country is required.", 422, [{ field: "countryId", message: "Required." }]);
+        if (!name?.trim()) return res.clientError("State name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(`${countryId}`), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });
@@ -33,8 +33,8 @@ export const updateState = async (req, res) => {
         if (!state) return res.noRecords();
 
         const { countryId, name, status = 1 } = req.body;
-        if (!countryId) return res.someThingWentWrong({ message: "Country is required." });
-        if (!name?.trim()) return res.someThingWentWrong({ message: "State name is required." });
+        if (!countryId) return res.clientError("Country is required.", 422, [{ field: "countryId", message: "Required." }]);
+        if (!name?.trim()) return res.clientError("State name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(`${countryId}`), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });

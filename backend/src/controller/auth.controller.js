@@ -11,16 +11,16 @@ export const sendOtp = async (req, res) => {
     try {
 
         let { mobile, purpose = "login", bookingId } = req.body;
-        if (!mobile) return res.someThingWentWrong({ message: "Mobile is required" });
-        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.someThingWentWrong({ message: "Enter a valid Indian mobile number." });
+        if (!mobile) return res.clientError("Mobile is required.", 422, [{ field: "mobile", message: "Required" }]);
+        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.clientError("Enter a valid Indian mobile number.", 422, [{ field: "mobile", message: "Enter a valid Indian mobile number." }]);
 
         let user = await Customer.findOne({ mobile, deletedAt: null });
-        if (!user && purpose === "login") return res.someThingWentWrong({ message: "User not registered..!!" });
-        if (user && purpose === "register") return res.someThingWentWrong({ message: "User already registered..!!" });
+        if (!user && purpose === "login") return res.clientError("User not registered..!!", 404);
+        if (user && purpose === "register") return res.clientError("User already registered..!!", 409);
 
         const otp = generateOtp();
         const isSent = await sendOTP(mobile, otp);
-        if (!isSent) return res.someThingWentWrong({ message: "Failed to send OTP" });
+        if (!isSent) return res.clientError("Failed to send OTP", 502);
 
         await OtpVerification.deleteMany({ phoneNumber: mobile });
         await OtpVerification.create({ phoneNumber: mobile, otpCode: otp, purpose, bookingId, expiresAt: nowPlusMinutes(config.otpExpiryMinutes) });
@@ -34,23 +34,24 @@ export const sendOtp = async (req, res) => {
 export const register = async (req, res) => {
     try {
         const { name = "New Customer", mobile, otp, referralCode = "" } = req.body;
-        if (!name || !mobile) return res.someThingWentWrong({ message: "Name and mobile are required" });
-        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.someThingWentWrong({ message: "Enter a valid Indian mobile number." });
+        if (!String(name ?? "").trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required" }]);
+        if (!mobile) return res.clientError("Mobile is required.", 422, [{ field: "mobile", message: "Required" }]);
+        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.clientError("Enter a valid Indian mobile number.", 422, [{ field: "mobile", message: "Enter a valid Indian mobile number." }]);
 
         const verify = await OtpVerification.findOne({ phoneNumber: mobile, otpCode: otp, purpose: { $in: ["register", "login"] } }).sort({ createdAt: -1 });
-        if (!verify || moment(verify.expiresAt).isBefore(moment())) return res.someThingWentWrong({ message: "Invalid or expired OTP" });
+        if (!verify || moment(verify.expiresAt).isBefore(moment())) return res.clientError("Invalid or expired OTP", 422, [{ field: "otp", message: "Invalid or expired OTP" }]);
 
         let user = await Customer.findOne({ mobile: verify.phoneNumber, deletedAt: null });
         if (!user) {
 
-            if (verify.purpose === "login") return res.someThingWentWrong({ message: "User not registered..!!" });
+            if (verify.purpose === "login") return res.clientError("User not registered..!!", 404);
 
             let referrer = null;
             let referredBy = null;
             const normalizedReferralCode = String(referralCode || "").trim().toUpperCase();
             if (normalizedReferralCode) {
                 referrer = await Customer.findOne({ referralCode: normalizedReferralCode, deletedAt: null, isActive: true });
-                if (!referrer) return res.someThingWentWrong({ message: "Invalid referral code" });
+                if (!referrer) return res.clientError("Invalid referral code", 422, [{ field: "referralCode", message: "Invalid referral code" }]);
 
                 referredBy = referrer._id;
             }
@@ -118,11 +119,11 @@ export const updateProfile = async (req, res) => {
         const normalizedEmail = String(email || "").trim().toLowerCase();
         if (normalizedEmail) {
             const duplicate = await Customer.findOne({ _id: { $ne: customer._id }, email: normalizedEmail, deletedAt: null });
-            if (duplicate) return res.someThingWentWrong({ message: "Customer with this email already exists." });
+            if (duplicate) return res.clientError("Customer with this email already exists.", 409, [{ field: "email", message: "Customer with this email already exists." }]);
         }
 
         const dob = dateOfBirth ? new Date(dateOfBirth) : null;
-        if (dateOfBirth && Number.isNaN(dob.getTime())) return res.someThingWentWrong({ message: "Invalid date of birth." });
+        if (dateOfBirth && Number.isNaN(dob.getTime())) return res.clientError("Invalid date of birth.", 422, [{ field: "dateOfBirth", message: "Invalid date of birth." }]);
 
         customer.name = String(name).trim();
         customer.email = normalizedEmail;

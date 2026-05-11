@@ -6,7 +6,7 @@ import { escapeRegex } from "../../helpers/utils.js";
 export const createRole = async (req, res) => {
     try {
         const { name, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Role name is required." });
+        if (!name?.trim()) return res.clientError("Role name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const exists = await Role.findOne({ name: name.trim(), deletedAt: null });
         if (exists) throw new Error(`Role with name "${name}" already exists.`);
@@ -24,7 +24,7 @@ export const updateRole = async (req, res) => {
         if (!role) return res.noRecords();
 
         const { name, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Role name is required." });
+        if (!name?.trim()) return res.clientError("Role name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const exists = await Role.findOne({ _id: { $ne: role._id }, name: name.trim(), deletedAt: null });
         if (exists) throw new Error(`Role with name "${name}" already exists.`);

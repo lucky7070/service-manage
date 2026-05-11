@@ -21,7 +21,7 @@ export const uploadServiceProviderPhotos = async (req, res) => {
 
         const files = req.files || [];
         if (!Array.isArray(files) || files.length === 0) {
-            return res.someThingWentWrong({ message: "No image files were uploaded." });
+            return res.clientError("No image files were uploaded.", 422, [{ field: "files", message: "No image files were uploaded." }]);
         }
 
         const last = await ServiceProviderPhoto.findOne({ providerId: provider._id }, 'displayOrder').sort({ displayOrder: -1 }).lean();
@@ -40,7 +40,7 @@ export const uploadServiceProviderPhotos = async (req, res) => {
             created.push(doc.toObject());
         }
 
-        if (!created.length) return res.someThingWentWrong({ message: "No valid images were saved." });
+        if (!created.length) return res.clientError("No valid images were saved.", 422);
 
         return res.successInsert({ record: created }, "Photos uploaded.");
     } catch (error) {
@@ -72,23 +72,23 @@ export const reorderServiceProviderPhotos = async (req, res) => {
 
         const { orderedIds } = req.body || {};
         if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
-            return res.someThingWentWrong({ message: "orderedIds must be a non-empty array." });
+            return res.clientError("orderedIds must be a non-empty array.", 422, [{ field: "orderedIds", message: "Must be a non-empty array." }]);
         }
 
         const ids = orderedIds.map((x) => ObjectId(x)).filter(Boolean);
         if (ids.length !== orderedIds.length) {
-            return res.someThingWentWrong({ message: "Invalid photo id in orderedIds." });
+            return res.clientError("Invalid photo id in orderedIds.", 422, [{ field: "orderedIds", message: "Invalid photo id in orderedIds." }]);
         }
 
         const existing = await ServiceProviderPhoto.find({ providerId: provider._id }, '_id').lean();
         if (existing.length !== ids.length) {
-            return res.someThingWentWrong({ message: "Photo list does not match server state." });
+            return res.clientError("Photo list does not match server state.", 409);
         }
 
         const idSet = new Set(existing.map((r) => String(r._id)));
         for (const id of ids) {
             if (!idSet.has(String(id))) {
-                return res.someThingWentWrong({ message: "Unknown photo id in orderedIds." });
+                return res.clientError("Unknown photo id in orderedIds.", 422, [{ field: "orderedIds", message: "Unknown photo id." }]);
             }
         }
 

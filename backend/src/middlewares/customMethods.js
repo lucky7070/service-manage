@@ -84,6 +84,15 @@ export const customMethods = (req, res, next) => {
         });
     };
 
+    res.clientError = function clientError(message = language.SOMETHING_WENT_WRONG, statusCode = 400, data = []) {
+        const code = Number.isFinite(Number(statusCode)) && Number(statusCode) >= 400 && Number(statusCode) < 600 ? Math.trunc(Number(statusCode)) : 400;
+        return this.status(code).json({
+            status: false,
+            message,
+            data: Array.isArray(data) ? data : []
+        });
+    };
+
     res.successInsert = function successInsert(data = [], message = null) {
         return this.status(201).json({
             status: true,

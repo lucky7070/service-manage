@@ -65,16 +65,16 @@ export const sendOtp = async (req, res) => {
     try {
 
         let { mobile, purpose = "login" } = req.body;
-        if (!mobile) return res.someThingWentWrong({ message: "Mobile is required" });
-        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.someThingWentWrong({ message: "Enter a valid Indian mobile number." });
+        if (!mobile) return res.clientError("Mobile is required.", 422, [{ field: "mobile", message: "Required" }]);
+        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.clientError("Enter a valid Indian mobile number.", 422, [{ field: "mobile", message: "Enter a valid Indian mobile number." }]);
 
         let user = await ServiceProvider.findOne({ mobile, deletedAt: null });
-        if (!user && purpose === "login") return res.someThingWentWrong({ message: "Service Provider not registered..!!" });
-        if (user && purpose === "register") return res.someThingWentWrong({ message: "Service Provider already registered..!!" });
+        if (!user && purpose === "login") return res.clientError("Service Provider not registered..!!", 404);
+        if (user && purpose === "register") return res.clientError("Service Provider already registered..!!", 409);
 
         const otp = generateOtp();
         const isSent = await sendOTP(mobile, otp);
-        if (!isSent) return res.someThingWentWrong({ message: "Failed to send OTP" });
+        if (!isSent) return res.clientError("Failed to send OTP", 502);
 
         await OtpVerification.deleteMany({ phoneNumber: mobile });
         await OtpVerification.create({ phoneNumber: mobile, otpCode: otp, purpose, expiresAt: nowPlusMinutes(config.otpExpiryMinutes) });
@@ -88,14 +88,15 @@ export const sendOtp = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { mobile, otp } = req.body;
-        if (!otp || !mobile) return res.someThingWentWrong({ message: "Mobile and otp are required" });
-        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.someThingWentWrong({ message: "Enter a valid Indian mobile number." });
+        if (!mobile) return res.clientError("Mobile is required.", 422, [{ field: "mobile", message: "Required" }]);
+        if (!otp) return res.clientError("OTP is required.", 422, [{ field: "otp", message: "Required" }]);
+        if (!PHONE_REGEXP.test(String(mobile).trim())) return res.clientError("Enter a valid Indian mobile number.", 422, [{ field: "mobile", message: "Enter a valid Indian mobile number." }]);
 
         const verify = await OtpVerification.findOne({ phoneNumber: mobile, otpCode: otp, purpose: "login" }).sort({ createdAt: -1 });
-        if (!verify || moment(verify.expiresAt).isBefore(moment())) return res.someThingWentWrong({ message: "Invalid or expired OTP" });
+        if (!verify || moment(verify.expiresAt).isBefore(moment())) return res.clientError("Invalid or expired OTP", 422, [{ field: "otp", message: "Invalid or expired OTP" }]);
 
         const user = await ServiceProvider.findOne({ mobile: verify.phoneNumber, deletedAt: null }, "_id userId name mobile email image cityId serviceCategoryId panCardNumber aadharNumber panCardDocument aadharDocument experienceYears experienceDescription registerFrom profileStatus rejectionReason approvedAt isAvailable currentLatitude currentLongitude totalCompletedServices totalRating ratingCount isActive isVerified lastLogin");
-        if (!user) return res.someThingWentWrong({ message: "User not registered..!!" });
+        if (!user) return res.clientError("User not registered..!!", 404);
 
         await user.updateOne({ lastLogin: now() });
         await verify.deleteOne();
@@ -119,7 +120,7 @@ export const register = async (req, res) => {
             purpose: "register"
         }).sort({ createdAt: -1 });
         if (!verify || moment(verify.expiresAt).isBefore(moment())) {
-            return res.someThingWentWrong({ message: "Invalid or expired OTP" });
+            return res.clientError("Invalid or expired OTP", 422, [{ field: "otp", message: "Invalid or expired OTP" }]);
         }
 
         const existing = await ServiceProvider.findOne({
@@ -133,18 +134,18 @@ export const register = async (req, res) => {
         });
         if (existing) {
             if (existing.mobile === String(mobile).trim()) {
-                return res.someThingWentWrong({ message: "Service provider with this mobile already exists." });
+                return res.clientError("Service provider with this mobile already exists.", 409, [{ field: "mobile", message: "Mobile already registered." }]);
             }
 
             if (existing.email === String(email).trim().toLowerCase()) {
-                return res.someThingWentWrong({ message: "Service provider with this email already exists." });
+                return res.clientError("Service provider with this email already exists.", 409, [{ field: "email", message: "Email already registered." }]);
             }
 
             if (existing.panCardNumber === String(panCardNumber).trim().toUpperCase()) {
-                return res.someThingWentWrong({ message: "This PAN is already registered." });
+                return res.clientError("This PAN is already registered.", 409, [{ field: "panCardNumber", message: "PAN already registered." }]);
             }
 
-            return res.someThingWentWrong({ message: "This Aadhar number is already registered." });
+            return res.clientError("This Aadhar number is already registered.", 409, [{ field: "aadharNumber", message: "Aadhar already registered." }]);
         }
 
         const files = req.files || {};
@@ -176,7 +177,7 @@ export const register = async (req, res) => {
         return res.successInsert({}, "Registration submitted successfully. Our team will contact you soon.");
     } catch (error) {
         if (error?.code === 11000) {
-            return res.someThingWentWrong({ message: "Duplicate mobile, email, PAN, or Aadhar." });
+            return res.clientError("Duplicate mobile, email, PAN, or Aadhar.", 409);
         }
         return res.someThingWentWrong(error);
     }
@@ -247,7 +248,7 @@ export const uploadWorkPhotos = async (req, res) => {
 
         const files = req.files || [];
         if (!Array.isArray(files) || files.length === 0) {
-            return res.someThingWentWrong({ message: "No image files were uploaded." });
+            return res.clientError("No image files were uploaded.", 422, [{ field: "files", message: "No image files were uploaded." }]);
         }
 
         const { id } = req.serviceProvider;
@@ -266,7 +267,7 @@ export const uploadWorkPhotos = async (req, res) => {
             created.push(doc.toObject());
         }
 
-        if (!created.length) return res.someThingWentWrong({ message: "No valid images were saved." });
+        if (!created.length) return res.clientError("No valid images were saved.", 422);
         return res.successInsert({ record: created }, "Photos uploaded.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -277,7 +278,7 @@ export const deleteWorkPhoto = async (req, res) => {
     try {
 
         const photoId = ObjectId(req.params.photoId);
-        if (!photoId) return res.someThingWentWrong({ message: "Invalid photo id." });
+        if (!photoId) return res.clientError("Invalid photo id.", 422, [{ field: "photoId", message: "Invalid photo id." }]);
 
         const { id } = req.serviceProvider;
         const doc = await ServiceProviderPhoto.findOne({ _id: photoId, providerId: id });
@@ -297,23 +298,23 @@ export const reorderWorkPhotos = async (req, res) => {
         const { orderedIds } = req.body || {};
         const { id } = req.serviceProvider;
         if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
-            return res.someThingWentWrong({ message: "orderedIds must be a non-empty array." });
+            return res.clientError("orderedIds must be a non-empty array.", 422, [{ field: "orderedIds", message: "Must be a non-empty array." }]);
         }
 
         const ids = orderedIds.map((x) => ObjectId(x)).filter(Boolean);
         if (ids.length !== orderedIds.length) {
-            return res.someThingWentWrong({ message: "Invalid photo id in orderedIds." });
+            return res.clientError("Invalid photo id in orderedIds.", 422, [{ field: "orderedIds", message: "Invalid photo id in orderedIds." }]);
         }
 
         const existing = await ServiceProviderPhoto.find({ providerId: id }, "_id").lean();
         if (existing.length !== ids.length) {
-            return res.someThingWentWrong({ message: "Photo list does not match server state." });
+            return res.clientError("Photo list does not match server state.", 409);
         }
 
         const idSet = new Set(existing.map((row) => String(row._id)));
         for (const id of ids) {
             if (!idSet.has(String(id))) {
-                return res.someThingWentWrong({ message: "Unknown photo id in orderedIds." });
+                return res.clientError("Unknown photo id in orderedIds.", 422, [{ field: "orderedIds", message: "Unknown photo id." }]);
             }
         }
 
@@ -373,7 +374,7 @@ export const cancelProviderBooking = async (req, res) => {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (["completed", "cancelled"].includes(booking.status)) {
-            return res.someThingWentWrong({ message: "This booking cannot be cancelled." });
+            return res.clientError("This booking cannot be cancelled.", 400);
         }
 
         booking.status = "cancelled";
@@ -391,7 +392,7 @@ export const setBookingQuote = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
-        if (["completed", "cancelled"].includes(booking.status)) return res.someThingWentWrong({ message: "This booking cannot be quoted." });
+        if (["completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be quoted.", 400);
 
         booking.quotedPrice = Number(req.body.quotedPrice);
         booking.status = "price_pending";
@@ -408,27 +409,38 @@ export const startProviderBooking = async (req, res) => {
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         if (["completed", "cancelled"].includes(booking.status)) {
-            return res.someThingWentWrong({ message: "This booking cannot be started." });
+            return res.clientError("This booking cannot be started.", 400);
         }
 
         if (booking.status !== "confirmed" || booking.agreedPrice == null || Number(booking.agreedPrice) <= 0) {
-            return res.someThingWentWrong({ message: "Price must be confirmed by the customer before starting the job." });
+            return res.clientError("Price must be confirmed by the customer before starting the job.", 400);
         }
 
         if (booking.startTime != null || booking.status === "in_progress") {
-            return res.someThingWentWrong({ message: "Job has already been started." });
+            return res.clientError("Job has already been started.", 409);
         }
 
         const jobLat = booking.location?.latitude || null;
         const jobLon = booking.location?.longitude || null;
         if (jobLat == null || jobLon == null || !Number.isFinite(Number(jobLat)) || !Number.isFinite(Number(jobLon))) {
-            return res.someThingWentWrong({
-                message: "Service address has no map coordinates. Location check cannot be performed. Update the booking address or contact support."
-            });
+            return res.clientError("Service address has no map coordinates. Location check cannot be performed. Update the booking address or contact support.", 422);
         }
 
-        const providerLat = Number(req.body.latitude);
-        const providerLon = Number(req.body.longitude);
+        const rawLat = req.body.latitude;
+        const rawLon = req.body.longitude;
+        const coordErrors = [];
+        if (rawLat == null || rawLat === "" || !Number.isFinite(Number(rawLat))) {
+            coordErrors.push({ field: "latitude", message: "Required" });
+        }
+        if (rawLon == null || rawLon === "" || !Number.isFinite(Number(rawLon))) {
+            coordErrors.push({ field: "longitude", message: "Required" });
+        }
+        if (coordErrors.length) {
+            return res.clientError("Valid device coordinates are required to start the job.", 422, coordErrors);
+        }
+
+        const providerLat = Number(rawLat);
+        const providerLon = Number(rawLon);
 
         const settings = await getSettings(["job_start_geofence_meters"]);
         let radiusM = Number(settings.job_start_geofence_meters);
@@ -438,9 +450,7 @@ export const startProviderBooking = async (req, res) => {
 
         const metersApart = distanceMeters(providerLat, providerLon, Number(jobLat), Number(jobLon));
         if (!Number.isFinite(metersApart) || metersApart > radiusM) {
-            return res.someThingWentWrong({
-                message: `You must be within ${radiusM} m of the customer's service address to start the job (device is about ${Math.round(metersApart)} m away).`
-            });
+            return res.clientError(`You must be within ${radiusM} m of the customer's service address to start the job (device is about ${Math.round(metersApart)} m away).`, 400);
         }
 
         booking.startTime = now();
@@ -459,21 +469,21 @@ export const sendBookingCompletionOtp = async (req, res) => {
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         if (booking.status !== "in_progress" || !booking.startTime) {
-            return res.someThingWentWrong({ message: "Job must be in progress to request completion verification." });
+            return res.clientError("Job must be in progress to request completion verification.", 400);
         }
 
         if (booking.completionTime) {
-            return res.someThingWentWrong({ message: "This booking is already completed." });
+            return res.clientError("This booking is already completed.", 409);
         }
 
         const customer = await Customer.findById(booking.customerId, "mobile").lean();
         if (!customer?.mobile) {
-            return res.someThingWentWrong({ message: "Customer mobile not found." });
+            return res.clientError("Customer mobile not found.", 422);
         }
 
         const otp = generateOtp();
         const isSent = await sendOTP(customer.mobile, otp);
-        if (!isSent) return res.someThingWentWrong({ message: "Failed to send OTP" });
+        if (!isSent) return res.clientError("Failed to send OTP", 502);
 
         await OtpVerification.deleteMany({ purpose: "booking_completion", bookingId: booking._id });
         await OtpVerification.create({
@@ -496,16 +506,16 @@ export const completeProviderBooking = async (req, res) => {
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         if (booking.status !== "in_progress" || !booking.startTime) {
-            return res.someThingWentWrong({ message: "Job is not in progress." });
+            return res.clientError("Job is not in progress.", 400);
         }
 
         if (booking.completionTime) {
-            return res.someThingWentWrong({ message: "This booking is already completed." });
+            return res.clientError("This booking is already completed.", 409);
         }
 
         const customer = await Customer.findById(booking.customerId, "mobile").lean();
         if (!customer?.mobile) {
-            return res.someThingWentWrong({ message: "Customer not found." });
+            return res.clientError("Customer not found.", 404);
         }
 
         const verify = await OtpVerification.findOne({
@@ -516,7 +526,7 @@ export const completeProviderBooking = async (req, res) => {
         }).sort({ createdAt: -1 });
 
         if (!verify || moment(verify.expiresAt).isBefore(moment())) {
-            return res.someThingWentWrong({ message: "Invalid or expired OTP." });
+            return res.clientError("Invalid or expired OTP.", 422, [{ field: "otp", message: "Invalid or expired OTP." }]);
         }
 
         await verify.deleteOne();
@@ -561,17 +571,17 @@ export const submitProviderBookingFeedback = async (req, res) => {
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         if (booking.status !== "completed") {
-            return res.someThingWentWrong({ message: "You can rate the customer only after the booking is completed." });
+            return res.clientError("You can rate the customer only after the booking is completed.", 400);
         }
 
         const existing = await Rating.findOne({ bookingId: booking._id, ratingType: "provider_to_customer" }).lean();
-        if (existing) return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+        if (existing) return res.clientError("Feedback has already been submitted for this booking.", 409);
 
         let tagIds;
         try {
             tagIds = await resolveQuickTagIds(req.body.quickTags, "customer");
         } catch (e) {
-            return res.someThingWentWrong({ message: e.message || "Invalid quick tags." });
+            return res.clientError(e.message || "Invalid quick tags.", 422, [{ field: "quickTags", message: e.message || "Invalid quick tags." }]);
         }
 
         const star = Number.parseInt(String(req.body.starRating), 10);
@@ -593,7 +603,7 @@ export const submitProviderBookingFeedback = async (req, res) => {
         return res.successInsert(populated, "Thank you for your feedback.");
     } catch (error) {
         if (error?.code === 11000) {
-            return res.someThingWentWrong({ message: "Feedback has already been submitted for this booking." });
+            return res.clientError("Feedback has already been submitted for this booking.", 409);
         }
         return res.someThingWentWrong(error);
     }

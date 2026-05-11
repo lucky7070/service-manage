@@ -6,7 +6,7 @@ import { escapeRegex } from "../../helpers/utils.js";
 export const createOurValue = async (req, res) => {
     try {
         const { title, description, displayOrder = 0, status = 1 } = req.body;
-        if (!req.file?.filename) return res.someThingWentWrong({ message: "Icon image is required." });
+        if (!req.file?.filename) return res.clientError("Icon image is required.", 422, [{ field: "icon", message: "Icon image is required." }]);
         const icon = `/our-values/${req.file.filename}`;
         const doc = await OurValue.create({
             icon,

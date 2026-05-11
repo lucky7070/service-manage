@@ -6,7 +6,7 @@ import { escapeRegex } from "../../helpers/utils.js";
 export const createCountry = async (req, res) => {
     try {
         const { name, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Country name is required." });
+        if (!name?.trim()) return res.clientError("Country name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const normalizedName = name.trim();
         const exists = await Country.findOne({ name: { $regex: `^${escapeRegex(normalizedName)}$`, $options: "i" }, deletedAt: null });
@@ -25,7 +25,7 @@ export const updateCountry = async (req, res) => {
         if (!country) return res.noRecords();
 
         const { name, status = 1 } = req.body;
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Country name is required." });
+        if (!name?.trim()) return res.clientError("Country name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const normalizedName = name.trim();
         const exists = await Country.findOne({

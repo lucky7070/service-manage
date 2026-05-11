@@ -6,10 +6,10 @@ import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 export const createCity = async (req, res) => {
     try {
         const { countryId, stateId, name, slug, status = 1 } = req.body;
-        if (!countryId) return res.someThingWentWrong({ message: "Country is required." });
-        if (!stateId) return res.someThingWentWrong({ message: "State is required." });
-        if (!name) return res.someThingWentWrong({ message: "City name is required." });
-        if (!slug) return res.someThingWentWrong({ message: "Valid slug is required (lowercase letters, numbers, hyphens, underscores only)." });
+        if (!countryId) return res.clientError("Country is required.", 422, [{ field: "countryId", message: "Required." }]);
+        if (!stateId) return res.clientError("State is required.", 422, [{ field: "stateId", message: "Required." }]);
+        if (!name) return res.clientError("City name is required.", 422, [{ field: "name", message: "Required." }]);
+        if (!slug) return res.clientError("Valid slug is required (lowercase letters, numbers, hyphens, underscores only).", 422, [{ field: "slug", message: "Valid slug is required." }]);
 
         const country = await Country.findOne({ _id: ObjectId(countryId), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });
@@ -27,7 +27,7 @@ export const createCity = async (req, res) => {
         return res.successInsert(city);
     } catch (error) {
         if (error.code === 11000) {
-            return res.someThingWentWrong({ message: "That city slug is already in use." });
+            return res.clientError("That city slug is already in use.", 409, [{ field: "slug", message: "Slug already in use." }]);
         }
         return res.someThingWentWrong(error);
     }
@@ -39,10 +39,10 @@ export const updateCity = async (req, res) => {
         if (!city) return res.noRecords();
 
         const { countryId, stateId, name, slug, status = 1 } = req.body;
-        if (!countryId) return res.someThingWentWrong({ message: "Country is required." });
-        if (!stateId) return res.someThingWentWrong({ message: "State is required." });
-        if (!name) return res.someThingWentWrong({ message: "City name is required." });
-        if (!slug) return res.someThingWentWrong({ message: "Valid slug is required (lowercase letters, numbers, hyphens, underscores only)." });
+        if (!countryId) return res.clientError("Country is required.", 422, [{ field: "countryId", message: "Required." }]);
+        if (!stateId) return res.clientError("State is required.", 422, [{ field: "stateId", message: "Required." }]);
+        if (!name) return res.clientError("City name is required.", 422, [{ field: "name", message: "Required." }]);
+        if (!slug) return res.clientError("Valid slug is required (lowercase letters, numbers, hyphens, underscores only).", 422, [{ field: "slug", message: "Valid slug is required." }]);
 
         const country = await Country.findOne({ _id: ObjectId(countryId), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });
@@ -60,7 +60,7 @@ export const updateCity = async (req, res) => {
         return res.successUpdate(city);
     } catch (error) {
         if (error.code === 11000) {
-            return res.someThingWentWrong({ message: "That city slug is already in use." });
+            return res.clientError("That city slug is already in use.", 409, [{ field: "slug", message: "Slug already in use." }]);
         }
         return res.someThingWentWrong(error);
     }

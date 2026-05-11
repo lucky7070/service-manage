@@ -10,17 +10,18 @@ import { JWT_CONFIG } from "../../config/constants.js";
 export const adminLogin = async (req, res) => {
     try {
         const { identifier, password } = req.body;
-        if (!identifier || !password) return res.someThingWentWrong({ message: "Identifier and password are required" });
+        if (!identifier) return res.clientError("Identifier is required.", 422, [{ field: "identifier", message: "Required" }]);
+        if (!password) return res.clientError("Password is required.", 422, [{ field: "password", message: "Required" }]);
 
         const admin = await Admin.findOne({
             $or: [{ email: identifier }, { mobile: identifier }],
             deletedAt: null,
             isActive: true
         }).select("+password");
-        if (!admin) return res.someThingWentWrong({ message: "Invalid credentials" });
+        if (!admin) return res.clientError("Invalid credentials", 401);
 
         const ok = await bcrypt.compare(password, admin.password);
-        if (!ok) return res.someThingWentWrong({ message: "Invalid credentials" });
+        if (!ok) return res.clientError("Invalid credentials", 401);
 
         const token = jwt.sign({ id: admin._id, role: "admin" }, config.jwtSecret, JWT_CONFIG);
         res.setCookie("admin_token", token);
@@ -120,7 +121,7 @@ export const updateAdminPassword = async (req, res) => {
         if (!admin) return res.noRecords(false, "Admin not found");
 
         const ok = await bcrypt.compare(String(current_password), admin.password);
-        if (!ok) return res.someThingWentWrong({ message: "Current password is incorrect." });
+        if (!ok) return res.clientError("Current password is incorrect.", 400, [{ field: "current_password", message: "Current password is incorrect." }]);
 
         admin.password = await bcrypt.hash(String(new_password), 10);
         await admin.save();
@@ -134,7 +135,7 @@ export const updateAdminPassword = async (req, res) => {
 export const requestAdminForgotPassword = async (req, res) => {
     try {
         const email = String(req.body.email || "").trim().toLowerCase();
-        if (!email) return res.someThingWentWrong({ message: "Email is required" });
+        if (!email) return res.clientError("Email is required.", 422, [{ field: "email", message: "Required" }]);
 
         const admin = await Admin.findOne({ email, deletedAt: null, isActive: true }).select("_id email name");
         if (!admin) return res.success({}, "If an account exists for this email, a verification code has been sent.!");
@@ -157,11 +158,11 @@ export const resetAdminPasswordWithToken = async (req, res) => {
 
         const record = await OtpVerification.findOne({ phoneNumber: email.trim().toLowerCase(), otpCode: otp, purpose: "password_reset" }).sort({ createdAt: -1 });
         if (!record || moment(record.expiresAt).isBefore(moment())) {
-            return res.someThingWentWrong({ message: "Invalid or expired code." });
+            return res.clientError("Invalid or expired code.", 422, [{ field: "otp", message: "Invalid or expired code." }]);
         }
 
         const admin = await Admin.findOne({ email: record.phoneNumber.trim().toLowerCase(), deletedAt: null, isActive: true }).select("+password");
-        if (!admin) return res.someThingWentWrong({ message: "Invalid or expired reset session. Please start again." });
+        if (!admin) return res.clientError("Invalid or expired reset session. Please start again.", 400);
 
         admin.password = await bcrypt.hash(String(new_password), 10);
         await admin.save();

@@ -9,9 +9,9 @@ const ALLOWED_TAG_TYPE = ["positive", "negative", "neutral"];
 export const createPredefinedRatingTag = async (req, res) => {
     try {
         const { tagFor, tagName, tagType = "positive", status = 1 } = req.body;
-        if (!tagFor || !ALLOWED_TAG_FOR.includes(tagFor)) return res.someThingWentWrong({ message: "Invalid tag for." });
-        if (!tagName?.trim()) return res.someThingWentWrong({ message: "Tag name is required." });
-        if (!ALLOWED_TAG_TYPE.includes(tagType)) return res.someThingWentWrong({ message: "Invalid tag type." });
+        if (!tagFor || !ALLOWED_TAG_FOR.includes(tagFor)) return res.clientError("Invalid tag for.", 422, [{ field: "tagFor", message: "Invalid tag for." }]);
+        if (!tagName?.trim()) return res.clientError("Tag name is required.", 422, [{ field: "tagName", message: "Required." }]);
+        if (!ALLOWED_TAG_TYPE.includes(tagType)) return res.clientError("Invalid tag type.", 422, [{ field: "tagType", message: "Invalid tag type." }]);
 
         const normalized = tagName.trim();
         const exists = await PredefinedRatingTag.findOne({
@@ -39,9 +39,9 @@ export const updatePredefinedRatingTag = async (req, res) => {
         if (!doc) return res.noRecords();
 
         const { tagFor, tagName, tagType = "positive", status = 1 } = req.body;
-        if (!tagFor || !ALLOWED_TAG_FOR.includes(tagFor)) return res.someThingWentWrong({ message: "Invalid tag for." });
-        if (!tagName?.trim()) return res.someThingWentWrong({ message: "Tag name is required." });
-        if (!ALLOWED_TAG_TYPE.includes(tagType)) return res.someThingWentWrong({ message: "Invalid tag type." });
+        if (!tagFor || !ALLOWED_TAG_FOR.includes(tagFor)) return res.clientError("Invalid tag for.", 422, [{ field: "tagFor", message: "Invalid tag for." }]);
+        if (!tagName?.trim()) return res.clientError("Tag name is required.", 422, [{ field: "tagName", message: "Required." }]);
+        if (!ALLOWED_TAG_TYPE.includes(tagType)) return res.clientError("Invalid tag type.", 422, [{ field: "tagType", message: "Invalid tag type." }]);
 
         const normalized = tagName.trim();
         const exists = await PredefinedRatingTag.findOne({

@@ -352,7 +352,7 @@ export const listFeedbackRatingTags = async (req, res) => {
     try {
         const tagFor = String(req.query.tagFor || "").trim();
         if (!["customer", "provider"].includes(tagFor)) {
-            return res.someThingWentWrong({ message: "Query tagFor must be customer or provider." });
+            return res.clientError("Query tagFor must be customer or provider.", 422, [{ field: "tagFor", message: "Must be customer or provider." }]);
         }
 
         const rows = await PredefinedRatingTag.find({ deletedAt: null, isActive: true, tagFor }, { tagName: 1, tagType: 1 }).sort({ tagName: 1 }).lean();

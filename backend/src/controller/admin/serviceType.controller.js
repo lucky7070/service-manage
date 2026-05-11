@@ -12,11 +12,11 @@ const parseOptionalNumber = (v) => {
 export const createServiceType = async (req, res) => {
     try {
         const { categoryId, name, nameHi, estimatedTimeMinutes, basePrice, description, status = 1 } = req.body;
-        if (!categoryId) return res.someThingWentWrong({ message: "Category is required." });
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Name is required." });
+        if (!categoryId) return res.clientError("Category is required.", 422, [{ field: "categoryId", message: "Required." }]);
+        if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const category = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(`${categoryId}`), deletedAt: null });
-        if (!category) return res.someThingWentWrong({ message: "Category not found." });
+        if (!category) return res.clientError("Category not found.", 404);
 
         const normalizedName = name.trim();
         const exists = await ServiceType.findOne({
@@ -47,11 +47,11 @@ export const updateServiceType = async (req, res) => {
         if (!doc) return res.noRecords();
 
         const { categoryId, name, nameHi, estimatedTimeMinutes, basePrice, description, status = 1 } = req.body;
-        if (!categoryId) return res.someThingWentWrong({ message: "Category is required." });
-        if (!name?.trim()) return res.someThingWentWrong({ message: "Name is required." });
+        if (!categoryId) return res.clientError("Category is required.", 422, [{ field: "categoryId", message: "Required." }]);
+        if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
 
         const category = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(`${categoryId}`), deletedAt: null });
-        if (!category) return res.someThingWentWrong({ message: "Category not found." });
+        if (!category) return res.clientError("Category not found.", 404);
 
         const normalizedName = name.trim();
         const exists = await ServiceType.findOne({
