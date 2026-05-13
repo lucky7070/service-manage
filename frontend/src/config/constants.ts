@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Calendar, CreditCard, FileCheck, IndianRupee, Shield, Smartphone, Star, TrendingUp, User, UserCheck, Users, } from "lucide-react";
+import { Calendar, CreditCard, FileCheck, IndianRupee, Shield, Smartphone, Star, TrendingUp, User, UserCheck, Users, Clock3, Search, ShieldCheck, ThumbsUp } from "lucide-react";
 
 export type JoinProBenefit = {
     icon: LucideIcon;
@@ -15,11 +15,33 @@ export type JoinProTestimonial = {
     rating: number;
 };
 
+export const PLATFORM_MARKETING = {
+    happyCustomersFormatted: "50,000+",
+    happyCustomersShort: "50K+",
+
+    /** Hero badge copy */
+    happyCustomersTrustedByHomeowners: "Trusted by 50,000+ homeowners",
+    verifiedProfessionalsFormatted: "10,000+",
+    verifiedProfessionalsShort: "10K+",
+    averageRating: 4.8,
+    averageRatingOutOfFive: "4.8/5",
+
+    /** Numeric headline (floating cards, login, safety trust score) */
+    averageRatingHeadline: "4.8",
+    reviewsSubtitle: "50K+ Reviews",
+    verifiedProsCaption: "Verified Pros",
+    verifiedProsBadgePercent: "100%",
+    avgResponseFormatted: "30 min",
+
+    /** safety / trust secondary stat */
+    safeServiceVisitsFormatted: "500K+",
+} as const;
+
 export const JOIN_PRO_BENEFITS: JoinProBenefit[] = [
     {
         icon: TrendingUp,
         title: "Grow Your Business",
-        description: "Access thousands of customers looking for your services every day"
+        description: `Access ${PLATFORM_MARKETING.happyCustomersShort} homeowners looking for your services every day`
     },
     {
         icon: Calendar,
@@ -48,22 +70,6 @@ export const JOIN_PRO_BENEFITS: JoinProBenefit[] = [
     }
 ];
 
-export const JOIN_PRO_TESTIMONIALS: JoinProTestimonial[] = [
-    {
-        name: "Suresh Electricals",
-        service: "Electrician",
-        earnings: "Rs. 65,000/month",
-        text: "Joining HomeServe Pro was the best decision. I get consistent work and my income has doubled.",
-        rating: 4.9
-    },
-    {
-        name: "Neha Cleaning Services",
-        service: "House Cleaning",
-        earnings: "Rs. 45,000/month",
-        text: "The platform is so easy to use. I manage my own schedule and the payments are always on time.",
-        rating: 4.8
-    }
-];
 
 // --- Frontend login ---
 export const FRONTEND_LOGIN_BRAND = {
@@ -73,14 +79,14 @@ export const FRONTEND_LOGIN_BRAND = {
 
 export const FRONTEND_LOGIN_HERO = {
     headline: "Your trusted partner for all home services",
-    subline: "Join thousands of happy customers who trust us with their homes",
-    footer: "Trusted by homeowners across India"
+    subline: `Join ${PLATFORM_MARKETING.happyCustomersShort} happy customers who trust us with their homes`,
+    footer: `Trusted by ${PLATFORM_MARKETING.happyCustomersFormatted} homeowners across India`,
 } as const;
 
 export const FRONTEND_LOGIN_STATS = [
-    { value: "50K+", label: "Happy Customers" },
-    { value: "10K+", label: "Verified Pros" },
-    { value: "4.8", label: "Average Rating" }
+    { value: PLATFORM_MARKETING.happyCustomersShort, label: "Happy Customers" },
+    { value: PLATFORM_MARKETING.verifiedProfessionalsShort, label: "Verified Pros" },
+    { value: PLATFORM_MARKETING.averageRatingHeadline, label: "Average Rating" },
 ] as const;
 
 export const FRONTEND_LOGIN_FORM = {
@@ -191,3 +197,131 @@ export const ARTICLE_CATEGORIES: Array<{ icon: LucideIcon, title: string, descri
 ]
 
 export const POPULAR_ARTICLES: Array<{ title: string, href: string }> = [];
+
+
+
+export const JOIN_PRO_HERO_SECONDARY_LEAD = `Join ${PLATFORM_MARKETING.verifiedProfessionalsFormatted} professionals earning more with HomeServe Pro.`;
+export const JOIN_PRO_CTA_SUBLINE = `Join ${PLATFORM_MARKETING.verifiedProfessionalsFormatted} professionals who are growing their business with HomeServe Pro`;
+
+export type FeaturedProviderPersona = {
+    name: string;
+    specialty: string;
+    rating: number;
+    reviews: number;
+    experience: string;
+    initials: string;
+    jobs: string;
+    color: string;
+};
+
+/** Canonical static provider personas — use everywhere (home grid, fallback copy, join-pro samples). */
+export const FEATURED_PROVIDERS: FeaturedProviderPersona[] = [
+    {
+        name: "Rajesh Kumar",
+        specialty: "Electrician",
+        rating: 4.9,
+        reviews: 234,
+        experience: "8 years",
+        initials: "RK",
+        jobs: "1.2K+",
+        color: "bg-amber-500",
+    },
+    {
+        name: "Priya Sharma",
+        specialty: "House Cleaning",
+        rating: 4.8,
+        reviews: 189,
+        experience: "5 years",
+        initials: "PS",
+        jobs: "890+",
+        color: "bg-blue-500",
+    },
+    {
+        name: "Mohammed Ali",
+        specialty: "Plumber",
+        rating: 4.9,
+        reviews: 312,
+        experience: "10 years",
+        initials: "MA",
+        jobs: "2.1K+",
+        color: "bg-cyan-500",
+    },
+    {
+        name: "Anita Desai",
+        specialty: "Painter",
+        rating: 4.7,
+        reviews: 156,
+        experience: "6 years",
+        initials: "AD",
+        jobs: "650+",
+        color: "bg-rose-500",
+    },
+];
+
+export type HomeHeroStat = {
+    icon: LucideIcon;
+    value: string;
+    label: string;
+};
+
+export const HOME_HERO_STATS: HomeHeroStat[] = [
+    { icon: Users, value: PLATFORM_MARKETING.happyCustomersFormatted, label: "Happy Customers" },
+    { icon: ShieldCheck, value: PLATFORM_MARKETING.verifiedProfessionalsFormatted, label: "Verified Pros" },
+    { icon: Star, value: PLATFORM_MARKETING.averageRatingOutOfFive, label: "Average Rating" },
+    { icon: Clock3, value: PLATFORM_MARKETING.avgResponseFormatted, label: "Avg Response" },
+];
+
+export const HOME_CTA_BENEFITS = [
+    `${PLATFORM_MARKETING.verifiedProfessionalsFormatted} Verified Professionals`,
+    "100% Satisfaction Guarantee",
+    "Best Price Assurance",
+    "24/7 Customer Support",
+] as const;
+
+export const HOME_CTA_SOCIAL_PROOF = `${PLATFORM_MARKETING.happyCustomersFormatted} homeowners trust HomeServe Pro for their home service needs`;
+
+export type HomeHowItWorksStep = {
+    icon: LucideIcon;
+    title: string;
+    description: string;
+    step: number;
+    color: string;
+};
+
+export const HOME_HOW_IT_WORKS_STEPS: HomeHowItWorksStep[] = [
+    {
+        icon: Search,
+        title: "Search Service Provider",
+        description:
+            "Browse our wide range of home services and find exactly what you need",
+        step: 1,
+        color: "bg-blue-500",
+    },
+    {
+        icon: UserCheck,
+        title: "Choose a Pro",
+        description:
+            "Compare verified professionals, read reviews and select the best fit",
+        step: 2,
+        color: "bg-emerald-500",
+    },
+    {
+        icon: Calendar,
+        title: "Book Appointment",
+        description:
+            "Schedule at your convenience with flexible timing options",
+        step: 3,
+        color: "bg-primary",
+    },
+    {
+        icon: ThumbsUp,
+        title: "Relax & Rate",
+        description:
+            "Our experts complete the job, then share your experience",
+        step: 4,
+        color: "bg-rose-500",
+    },
+];
+
+export const CUSTOMER_TESTIMONIAL_SECTION_TRUST_LINE = `Trusted by over ${PLATFORM_MARKETING.happyCustomersFormatted} happy customers across India`;
+

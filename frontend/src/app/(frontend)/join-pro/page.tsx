@@ -1,5 +1,6 @@
 
 import { JOIN_PRO_BENEFITS } from "@/config/constants";
+import { JOIN_PRO_CTA_SUBLINE, JOIN_PRO_HERO_SECONDARY_LEAD } from "@/config/constants";
 import { CheckCircle, ArrowRight, Quote, Star } from "lucide-react"
 import ProRegistrationForm from "@/components/front/forms/ProRegistrationForm";
 import { Button } from "@/components/front/ui";
@@ -24,7 +25,7 @@ export default async function JoinProPage() {
                                 <span className="text-primary">Thriving Business</span>
                             </h1>
                             <p className="mb-8 text-lg text-background/70">
-                                Join 10,000+ professionals earning more with HomeServe Pro.
+                                {JOIN_PRO_HERO_SECONDARY_LEAD}{" "}
                                 Get consistent work, flexible hours, and secure payments.
                             </p>
                             <div className="flex flex-wrap gap-6">
@@ -126,7 +127,7 @@ export default async function JoinProPage() {
                     <div className="rounded-2xl bg-linear-to-r from-primary to-orange-400 p-12 text-center text-white">
                         <h2 className="mb-4 text-3xl font-bold md:text-4xl">Ready to Start Earning?</h2>
                         <p className="mx-auto mb-8 max-w-xl text-white/80">
-                            Join thousands of professionals who are growing their business with HomeServe Pro
+                            {JOIN_PRO_CTA_SUBLINE}
                         </p>
                         <Button size="lg" className="bg-white text-primary hover:bg-white/90">
                             Register Now - It&apos;s Free

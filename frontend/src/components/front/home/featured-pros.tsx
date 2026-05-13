@@ -1,48 +1,6 @@
 import { Star, Shield, Clock, BadgeCheck } from "lucide-react"
 import { Button } from "@/components/front/ui"
-
-const professionals = [
-    {
-        name: "Rajesh Kumar",
-        specialty: "Electrician",
-        rating: 4.9,
-        reviews: 234,
-        experience: "8 years",
-        initials: "RK",
-        jobs: "1.2K+",
-        color: "bg-amber-500",
-    },
-    {
-        name: "Priya Sharma",
-        specialty: "House Cleaning",
-        rating: 4.8,
-        reviews: 189,
-        experience: "5 years",
-        initials: "PS",
-        jobs: "890+",
-        color: "bg-blue-500",
-    },
-    {
-        name: "Mohammed Ali",
-        specialty: "Plumber",
-        rating: 4.9,
-        reviews: 312,
-        experience: "10 years",
-        initials: "MA",
-        jobs: "2.1K+",
-        color: "bg-cyan-500",
-    },
-    {
-        name: "Anita Desai",
-        specialty: "Painter",
-        rating: 4.7,
-        reviews: 156,
-        experience: "6 years",
-        initials: "AD",
-        jobs: "650+",
-        color: "bg-rose-500",
-    },
-]
+import { FEATURED_PROVIDERS } from "@/config/constants"
 
 export function FeaturedPros() {
     return (
@@ -63,7 +21,7 @@ export function FeaturedPros() {
 
                 {/* Professionals Grid */}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    {professionals.map((pro) => (
+                    {FEATURED_PROVIDERS.map((pro) => (
                         <div
                             key={pro.name}
                             className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"

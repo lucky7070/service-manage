@@ -1,35 +1,4 @@
-import { Search, UserCheck, Calendar, ThumbsUp } from "lucide-react"
-
-const steps = [
-    {
-        icon: Search,
-        title: "Search Service",
-        description: "Browse our wide range of home services and find exactly what you need",
-        step: 1,
-        color: "bg-blue-500",
-    },
-    {
-        icon: UserCheck,
-        title: "Choose a Pro",
-        description: "Compare verified professionals, read reviews and select the best fit",
-        step: 2,
-        color: "bg-emerald-500",
-    },
-    {
-        icon: Calendar,
-        title: "Book Appointment",
-        description: "Schedule at your convenience with flexible timing options",
-        step: 3,
-        color: "bg-primary",
-    },
-    {
-        icon: ThumbsUp,
-        title: "Relax & Rate",
-        description: "Our experts complete the job, then share your experience",
-        step: 4,
-        color: "bg-rose-500",
-    },
-]
+import { HOME_HOW_IT_WORKS_STEPS } from "@/config/constants"
 
 export function HowItWorks() {
     return (
@@ -54,7 +23,7 @@ export function HowItWorks() {
                     <div className="absolute left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] top-14 hidden h-1 rounded-full bg-linear-to-r from-blue-200 via-emerald-200 via-orange-200 to-rose-200 md:block" />
 
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-4 md:gap-6">
-                        {steps.map((step, index) => (
+                        {HOME_HOW_IT_WORKS_STEPS.map((step, index) => (
                             <div key={step.title} className="relative text-center">
                                 {/* Step circle */}
                                 <div className="relative mx-auto mb-6">
@@ -73,7 +42,7 @@ export function HowItWorks() {
                                 <p className="mx-auto max-w-[200px] text-sm text-gray-500 leading-relaxed">{step.description}</p>
 
                                 {/* Arrow for mobile */}
-                                {index < steps.length - 1 && (
+                                {index < HOME_HOW_IT_WORKS_STEPS.length - 1 && (
                                     <div className="mt-6 flex justify-center md:hidden">
                                         <div className="h-8 w-0.5 bg-gray-200" />
                                     </div>

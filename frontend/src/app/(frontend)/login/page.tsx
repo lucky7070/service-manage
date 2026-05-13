@@ -5,12 +5,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import LoginOtpForm from "@/components/front/forms/LoginForm"
 import RegisterOtpForm from "@/components/front/forms/RegisterForm"
-import {
-    FRONTEND_LOGIN_BRAND,
-    FRONTEND_LOGIN_FORM,
-    FRONTEND_LOGIN_HERO,
-    FRONTEND_LOGIN_STATS
-} from "@/config/constants"
+import { FRONTEND_LOGIN_FORM, FRONTEND_LOGIN_HERO, FRONTEND_LOGIN_STATS } from "@/config/constants";
 
 export default function LoginPage() {
     const [isLogin, setIsLogin] = useState(true)
@@ -25,14 +20,7 @@ export default function LoginPage() {
 
     return (
         <div className="flex min-h-screen">
-            <div className="hidden w-1/2 bg-linear-to-br from-primary/90 to-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
-                <Link href="/" className="flex items-center gap-2 text-primary-foreground">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/20">
-                        <span className="text-lg font-bold">{FRONTEND_LOGIN_BRAND.mark}</span>
-                    </div>
-                    <span className="text-2xl font-bold">{FRONTEND_LOGIN_BRAND.name}</span>
-                </Link>
-
+            <div className="hidden w-1/2 bg-linear-to-br from-primary/90 to-primary lg:flex lg:flex-col lg:justify-center lg:p-12">
                 <div className="space-y-6">
                     <h1 className="text-4xl font-bold leading-tight text-primary-foreground">
                         {FRONTEND_LOGIN_HERO.headline}
@@ -49,10 +37,6 @@ export default function LoginPage() {
                         ))}
                     </div>
                 </div>
-
-                <p className="text-sm text-primary-foreground/60">
-                    {FRONTEND_LOGIN_HERO.footer}
-                </p>
             </div>
 
             <div className="flex w-full flex-col justify-center px-8 lg:w-1/2 lg:px-16">

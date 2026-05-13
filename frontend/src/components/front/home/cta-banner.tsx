@@ -1,13 +1,7 @@
 import Link from "next/link"
 import { ArrowRight, CheckCircle } from "lucide-react"
 import { Button } from "@/components/front/ui"
-
-const benefits = [
-    "10,000+ Verified Professionals",
-    "100% Satisfaction Guarantee",
-    "Best Price Assurance",
-    "24/7 Customer Support",
-]
+import { HOME_CTA_BENEFITS, HOME_CTA_SOCIAL_PROOF } from "@/config/constants"
 
 export function CTABanner() {
     return (
@@ -19,10 +13,10 @@ export function CTABanner() {
                             Ready to get started?
                         </h2>
                         <p className="mb-6 text-lg text-white/90">
-                            Join thousands of homeowners who trust HomeServe Pro for their home service needs
+                            {HOME_CTA_SOCIAL_PROOF}
                         </p>
                         <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 lg:justify-start">
-                            {benefits.map((benefit) => (
+                            {HOME_CTA_BENEFITS.map((benefit) => (
                                 <div key={benefit} className="flex items-center gap-2 text-sm text-white/90">
                                     <CheckCircle className="h-4 w-4" />
                                     <span>{benefit}</span>

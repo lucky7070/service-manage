@@ -3,7 +3,7 @@ import Providers from "@/app/providers";
 import { getServerSettings } from "@/lib/api.server";
 
 export const metadata: Metadata = {
-    title: "Service Manage",
+    title: "Service Management Platform",
     description: "Book trusted plumbers, electricians, salon and cleaning services."
 };
 

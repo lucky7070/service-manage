@@ -2,6 +2,7 @@ import { Shield, Lock, AlertTriangle, CheckCircle, Phone } from "lucide-react"
 import { Button } from "@/components/ui/Button"
 import Setting from "@/components/front/setting"
 import { VERIFICATION_STEPS, SAFETY_FEATURES } from "@/config/constants"
+import { PLATFORM_MARKETING } from "@/config/constants"
 
 export default function SafetyPage() {
     return (
@@ -107,19 +108,19 @@ export default function SafetyPage() {
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
                         <div>
-                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">100%</p>
+                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">{PLATFORM_MARKETING.verifiedProsBadgePercent}</p>
                             <p className="text-sm text-muted-foreground">Background Verified</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">10,000+</p>
+                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">{PLATFORM_MARKETING.verifiedProfessionalsFormatted}</p>
                             <p className="text-sm text-muted-foreground">Vetted Professionals</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">500K+</p>
+                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">{PLATFORM_MARKETING.safeServiceVisitsFormatted}</p>
                             <p className="text-sm text-muted-foreground">Safe Service Visits</p>
                         </div>
                         <div>
-                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">4.8</p>
+                            <p className="mb-1 text-3xl font-bold text-primary md:text-4xl">{PLATFORM_MARKETING.averageRatingHeadline}</p>
                             <p className="text-sm text-muted-foreground">Trust Score</p>
                         </div>
                     </div>

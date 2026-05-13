@@ -2,6 +2,7 @@ import Image from "@/components/ui/Image"
 import { resolveFileUrl } from "@/helpers/utils"
 import { getTestimonials } from "@/lib/api.server"
 import { Star, Quote } from "lucide-react"
+import { CUSTOMER_TESTIMONIAL_SECTION_TRUST_LINE } from "@/config/constants"
 
 export async function Testimonials() {
     const testimonials = await getTestimonials("customer")
@@ -17,7 +18,7 @@ export async function Testimonials() {
                         What Our Customers Say
                     </h2>
                     <p className="mx-auto max-w-xl text-gray-600">
-                        Trusted by over 50,000+ happy customers across India
+                        {CUSTOMER_TESTIMONIAL_SECTION_TRUST_LINE}
                     </p>
                 </div>
 

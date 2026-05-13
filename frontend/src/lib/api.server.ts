@@ -1,3 +1,5 @@
+import { unstable_noStore as noStore } from "next/cache";
+import { cache } from "react";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import type { SettingsState } from "@/store/slices/settingSlice";
 
@@ -10,10 +12,11 @@ type TestimonialRow = {
     image: string
 }
 
-export async function getServerSettings(): Promise<Partial<SettingsState>> {
+export const getServerSettings = cache(async (): Promise<Partial<SettingsState>> => {
+    noStore();
     const { data } = await AxiosHelper.getData("/general-settings");
     return (data.status && data.data) ? data.data : {};
-}
+});
 
 export async function getTestimonials(from: "customer" | "provider" | "" = ""): Promise<TestimonialRow[]> {
     const { data } = await AxiosHelper.getData(`/testimonials?limit=3&from=${from || ""}`);

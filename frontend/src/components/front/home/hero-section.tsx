@@ -2,23 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
-import { Search, ShieldCheck, Clock3, Star, Users } from "lucide-react"
+import { Search, ShieldCheck, Star } from "lucide-react"
 import { Button, FrontAsyncSelect, Label } from "@/components/front/ui"
 import AxiosHelper from "@/helpers/AxiosHelper"
 import { useRouter } from "next/navigation"
 import { Formik, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { slugify } from "@/helpers/utils"
+import { HOME_HERO_STATS, PLATFORM_MARKETING } from "@/config/constants"
 
 type CityOption = { value: string; label: string; slug: string }
 type CategoryOption = { value: string; label: string; slug: string }
-
-const stats = [
-    { icon: Users, value: "50,000+", label: "Happy Customers" },
-    { icon: ShieldCheck, value: "10,000+", label: "Verified Pros" },
-    { icon: Star, value: "4.8/5", label: "Average Rating" },
-    { icon: Clock3, value: "30 min", label: "Avg Response" },
-]
 
 const validationSchema = Yup.object().shape({
     city: Yup.string().required('City is required'),
@@ -82,7 +76,7 @@ export function HeroSection() {
                         {/* Badge */}
                         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-white/90 px-4 py-1.5 shadow-sm backdrop-blur">
                             <span className="flex h-2 w-2 rounded-full bg-green-500" />
-                            <span className="text-sm font-medium text-orange-800">Trusted by 50,000+ homeowners</span>
+                            <span className="text-sm font-medium text-orange-800">{PLATFORM_MARKETING.happyCustomersTrustedByHomeowners}</span>
                         </div>
 
                         <h1 className="mb-5 text-balance text-4xl font-bold leading-tight tracking-tight text-gray-900 md:text-5xl lg:text-[56px]">
@@ -202,8 +196,8 @@ export function HeroSection() {
                                         <ShieldCheck className="h-6 w-6 text-green-600" />
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold text-gray-900">100%</p>
-                                        <p className="text-sm text-gray-500">Verified Pros</p>
+                                        <p className="text-2xl font-bold text-gray-900">{PLATFORM_MARKETING.verifiedProsBadgePercent}</p>
+                                        <p className="text-sm text-gray-500">{PLATFORM_MARKETING.verifiedProsCaption}</p>
                                     </div>
                                 </div>
                             </div>
@@ -216,14 +210,14 @@ export function HeroSection() {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-1">
-                                            <span className="text-2xl font-bold text-gray-900">4.8</span>
+                                            <span className="text-2xl font-bold text-gray-900">{PLATFORM_MARKETING.averageRatingHeadline}</span>
                                             <div className="flex">
                                                 {[...Array(5)].map((_, i) => (
                                                     <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                                                 ))}
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-500">50K+ Reviews</p>
+                                        <p className="text-sm text-gray-500">{PLATFORM_MARKETING.reviewsSubtitle}</p>
                                     </div>
                                 </div>
                             </div>
@@ -233,7 +227,7 @@ export function HeroSection() {
 
                 {/* Stats Bar */}
                 <div className="mt-14 grid grid-cols-2 gap-4 rounded-2xl border border-white/70 bg-white/90 p-5 shadow-lg backdrop-blur md:grid-cols-4 lg:mt-16">
-                    {stats.map((stat) => (
+                    {HOME_HERO_STATS.map((stat) => (
                         <div key={stat.label} className="flex items-center gap-3 rounded-xl bg-white px-3 py-3 shadow-sm">
                             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-100">
                                 <stat.icon className="h-5 w-5 text-primary" />
