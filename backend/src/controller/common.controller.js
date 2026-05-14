@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, Testimonial, CmsPage, PredefinedRatingTag } from "../models/index.js";
+import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
 
 
@@ -343,6 +343,21 @@ export const getTermsAndConditions = async (req, res) => {
             metaDescription: data.metaDescription,
             updatedAt: data.updatedAt,
         });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listServiceTypesByCategorySlug = async (req, res) => {
+    try {
+        const slug = String(req.params.categorySlug || "").trim().toLowerCase();
+        if (!slug) return res.noRecords();
+
+        const category = await ServiceCategory.findOne({ slug, deletedAt: null, isActive: true }, { _id: 1 }).lean();
+        if (!category) return res.noRecords();
+
+        const rows = await ServiceType.find({ categoryId: category._id, deletedAt: null, isActive: true }, { name: 1, nameHi: 1, description: 1, estimatedTimeMinutes: 1, basePrice: 1 }).sort({ name: 1 }).lean();
+        return res.success(rows);
     } catch (error) {
         return res.someThingWentWrong(error);
     }

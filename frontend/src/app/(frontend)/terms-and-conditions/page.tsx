@@ -7,7 +7,6 @@ import ContactBox from "@/components/front/contact-box";
 const getData = cache(async () => {
     try {
         const { data } = await AxiosHelper.getData("/terms-and-conditions");
-        console.log(data);
         if (!data.status || !data.data) return notFound();
 
         return data.data;

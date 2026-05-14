@@ -65,7 +65,7 @@ export function getSweetAlertConfig({
             icon: `mt-1 mb-2 flex items-center justify-center mx-auto text-5xl ${iconConfig.color}`,
             title: "text-2xl font-semibold leading-tight text-slate-900 dark:text-slate-100",
             htmlContainer: "mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300",
-            actions: "mt-6 flex w-full flex-row-reverse gap-2 sm:justify-end",
+            actions: "mt-6 flex w-full flex-row-reverse gap-2 sm:justify-center",
             confirmButton: confirmButtonClass,
             cancelButton: "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 bg-secondary-200 text-secondary-900 hover:bg-secondary-300 focus:ring-secondary-500 dark:bg-secondary-700 dark:text-white dark:hover:bg-secondary-600 h-10 px-4 py-2.5 text-sm min-w-[130px]",
             input: "h-10 w-full rounded-md border border-indigo-100 bg-white px-3 text-sm text-slate-900 shadow-xs outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-black dark:text-slate-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-400/30",
@@ -98,10 +98,10 @@ export function getSweetAlertConfigFront({
         icon === "error"
             ? "text-destructive"
             : icon === "success"
-              ? "text-emerald-600 dark:text-emerald-400"
-              : icon === "info"
-                ? "text-primary"
-                : "text-amber-600 dark:text-amber-500";
+                ? "text-emerald-600 dark:text-emerald-400"
+                : icon === "info"
+                    ? "text-primary"
+                    : "text-amber-600 dark:text-amber-500";
 
     const confirmButtonClass = isDanger
         ? "inline-flex min-w-40 items-center justify-center rounded-md bg-destructive px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-destructive/90 focus:outline-none focus-visible:ring-[3px] focus-visible:ring-destructive/25 disabled:opacity-50 dark:bg-destructive/80 dark:hover:bg-destructive/90"
@@ -132,8 +132,8 @@ export function getSweetAlertConfigFront({
                 inputClassExtra == null
                     ? undefined
                     : Array.isArray(inputClassExtra)
-                      ? inputClassExtra.join(" ")
-                      : String(inputClassExtra)
+                        ? inputClassExtra.join(" ")
+                        : String(inputClassExtra)
             ),
             inputLabel: "mb-1 block text-left text-sm font-medium text-foreground",
             validationMessage: "mt-2 text-left text-xs text-destructive",

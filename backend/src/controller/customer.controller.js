@@ -1,5 +1,5 @@
 import moment from "moment";
-import { Address, Booking, ChatMessage, City, Customer, Ledger, OtpVerification, ProviderService, Rating, ServiceProvider, State } from "../models/index.js";
+import { Address, Booking, ChatMessage, City, Customer, Ledger, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../models/index.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
 
@@ -466,3 +466,82 @@ export const listCustomerLedger = async (req, res) => {
     }
 };
 
+export const createCustomerServiceLead = async (req, res) => {
+    try {
+        const customerId = req.customer._id;
+        const city = await City.findOne({ _id: ObjectId(req.body.cityId), deletedAt: null, isActive: true });
+        if (!city) return res.noRecords(false, "City not found.");
+
+        const category = await ServiceCategory.findOne({ _id: ObjectId(req.body.serviceCategoryId), deletedAt: null, isActive: true });
+        if (!category) return res.noRecords(false, "Service category not found.");
+
+        const selectedServiceTypeIds = [...new Set((req.body.serviceTypeId || []).map((value) => String(value)))].map((value) => ObjectId(value)).filter(Boolean);
+        if (!selectedServiceTypeIds.length) return res.clientError("At least one service type is required.", 422, [{ field: "serviceTypeId", message: "At least one service type is required." }]);
+
+        const typeCount = await ServiceType.countDocuments({ _id: { $in: selectedServiceTypeIds }, categoryId: category._id, deletedAt: null, isActive: true });
+        if (typeCount !== selectedServiceTypeIds.length) {
+            return res.clientError("One or more selected services are invalid for this category.", 422, [{ field: "serviceTypeId", message: "Invalid service type selection." }]);
+        }
+
+        const address = await Address.findOne({ _id: ObjectId(req.body.addressId), customerId, deletedAt: null }).populate("city", "name").populate("state", "name");
+        if (!address) return res.noRecords(false, "Address not found.");
+
+        const lead = await ServiceLead.create({
+            customerId,
+            cityId: city._id,
+            serviceCategoryId: category._id,
+            serviceTypeId: selectedServiceTypeIds,
+            addressId: address._id,
+            scheduledTime: req.body.scheduledTime,
+            issueDescription: req.body.issueDescription || null,
+            status: "open"
+        });
+
+        return res.successInsert({ _id: lead._id, leadNumber: lead.leadNumber, status: lead.status, scheduledTime: lead.scheduledTime, createdAt: lead.createdAt }, "Request submitted. Our team will assign a professional and notify you.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listCustomerServiceLeads = async (req, res) => {
+    try {
+        const customerId = req.customer._id;
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 20;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const status = String(req.query.status || "").trim();
+
+        const match = { customerId, deletedAt: null };
+        if (status && ["open", "assigned", "cancelled"].includes(status)) match.status = status;
+
+        const pipeline = [
+            { $match: match },
+            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+            { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+            { $unwind: "$category" },
+            { $unwind: "$city" },
+            {
+                $project: {
+                    leadNumber: 1,
+                    status: 1,
+                    scheduledTime: 1,
+                    issueDescription: 1,
+                    bookingId: 1,
+                    createdAt: 1,
+                    serviceCategoryName: { $ifNull: ["$category.name", ""] },
+                    cityName: { $ifNull: ["$city.name", ""] }
+                }
+            },
+        ];
+
+        const [record, totalCount] = await Promise.all([
+            ServiceLead.aggregate([...pipeline, { $sort: { createdAt: -1 } }, { $skip: (pageNo - 1) * limit }, { $limit: limit }]),
+            ServiceLead.aggregate([...pipeline, { $count: "total_count" }])
+        ]);
+
+        const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
+        if (record.length === 0) return res.datatableNoRecords();
+        return res.pagination(record, total_count, limit, pageNo);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};

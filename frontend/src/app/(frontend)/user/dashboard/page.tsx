@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, CheckCircle2, Clock3, Home, LogOut, UserRound, XCircle } from "lucide-react";
+import { CalendarCheck, CheckCircle2, ClipboardList, Clock3, Home, LogOut, UserRound, XCircle } from "lucide-react";
 import moment from "moment";
 import { toast } from "react-toastify";
 import AccountNav from "@/components/front/user/AccountNav";
@@ -131,6 +131,13 @@ export default function CustomerDashboardPage() {
                                             <div>
                                                 <p className="font-semibold">Saved Addresses</p>
                                                 <p className="text-sm text-muted-foreground">{dashboard?.addressCount ?? 0} address saved.</p>
+                                            </div>
+                                        </Link>
+                                        <Link href="/user/service-leads" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-primary">
+                                            <ClipboardList className="h-6 w-6 text-primary" />
+                                            <div>
+                                                <p className="font-semibold">Booking requests</p>
+                                                <p className="text-sm text-muted-foreground">Track leads submitted from search without a provider.</p>
                                             </div>
                                         </Link>
                                     </div>

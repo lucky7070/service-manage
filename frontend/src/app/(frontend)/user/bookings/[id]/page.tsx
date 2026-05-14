@@ -231,7 +231,7 @@ export default function CustomerBookingDetailPage() {
                 if (!data.status) {
                     throw new Error(data.message || "Could not complete booking.");
                 }
-                
+
                 return data as { status?: boolean; message?: string };
             },
         }));
@@ -347,9 +347,15 @@ export default function CustomerBookingDetailPage() {
                                     ) : null}
                                 </div>
                                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                                    <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Quoted Price</p><p className="text-xl font-bold">₹{Number(booking.quotedPrice || 0).toFixed(2)}</p></div>
-                                    <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Agreed Price</p><p className="text-xl font-bold">₹{Number(booking.agreedPrice || 0).toFixed(2)}</p></div>
-                                    <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Final Price</p><p className="text-xl font-bold">₹{Number(booking.finalPrice || 0).toFixed(2)}</p></div>
+                                    <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Quoted Price</p><p className="text-xl font-bold">
+                                        {booking.quotedPrice ? `₹ ${Number(booking.quotedPrice).toFixed(2)}` : "—"}
+                                    </p></div>
+                                    <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Agreed Price</p><p className="text-xl font-bold">
+                                        {booking.agreedPrice ? `₹ ${Number(booking.agreedPrice).toFixed(2)}` : "—"}
+                                    </p></div>
+                                    <div className="rounded-2xl bg-muted/60 p-4"><p className="text-xs text-muted-foreground">Final Price</p><p className="text-xl font-bold">
+                                        {booking.finalPrice ? `₹ ${Number(booking.finalPrice).toFixed(2)}` : "—"}
+                                    </p></div>
                                 </div>
 
                                 {booking.status === "price_pending" && booking.quotedPrice ? (

@@ -13,7 +13,10 @@ export default function ReactSelect({
     onChange,
     placeholder = "Select...",
     isDisabled = false,
-    isLoading = false
+    isLoading = false,
+    menuPortalTarget,
+    menuPosition,
+    isClearable = false
 }: AsyncFormSelectProps) {
     return (
         <Select<SelectOption, false>
@@ -25,9 +28,13 @@ export default function ReactSelect({
             isSearchable={isSearchable}
             isDisabled={isDisabled}
             isLoading={isLoading}
+            isClearable={isClearable}
             placeholder={placeholder}
             value={value}
             onChange={(option) => onChange(option as SelectOption | null)}
+            menuPortalTarget={menuPortalTarget ?? undefined}
+            menuPosition={menuPosition}
+            styles={menuPortalTarget ? { menuPortal: (base) => ({ ...base, zIndex: 10000 }) } : undefined}
         />
     );
 }

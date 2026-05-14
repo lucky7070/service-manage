@@ -176,6 +176,15 @@ export const validator = (method) => {
         case "customer-booking-create":
             output = [providerId, serviceTypeIds, serviceTypeIdItems, bookingAddressId, scheduledTime, issueDescription];
             break;
+        case "customer-service-lead-create":
+            output = [cityId, serviceCategoryId, serviceTypeIds, serviceTypeIdItems, bookingAddressId, scheduledTime, issueDescription];
+            break;
+        case "admin-service-lead-assign":
+            output = [id, providerId];
+            break;
+        case "admin-service-lead-id":
+            output = [id];
+            break;
         case "customer-booking-id":
             output = [bookingId];
             break;

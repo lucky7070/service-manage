@@ -5,6 +5,7 @@ import Image from "@/components/ui/Image";
 import { getServiceProvidersBySlugs } from "@/lib/api.server";
 import { resolveFileUrl } from "@/helpers/utils";
 import { Button } from "@/components/front/ui";
+import ServiceLeadRequestSection from "@/components/front/ServiceLeadRequestSection";
 
 export default async function ProviderSearchPage({
     params,
@@ -28,15 +29,23 @@ export default async function ProviderSearchPage({
     return (
         <section className="bg-white py-14 md:py-20">
             <div className="container mx-auto px-4">
-                <div className="mb-8 flex items-start justify-between gap-3">
+                <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">{data.serviceCategory.name} in {data.city.name}</h1>
                         <p className="mt-2 text-sm text-gray-600">{data.count} service providers found • Page {data.pageNo} of {Math.max(data.totalPages, 1)}</p>
                     </div>
-                    <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-primary hover:bg-orange-50 hover:text-primary">
-                        <ArrowLeft className="h-4 w-4" />
-                        Back
-                    </Link>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                        <ServiceLeadRequestSection
+                            cityId={String(data.city._id)}
+                            serviceCategoryId={String(data.serviceCategory._id)}
+                            categorySlug={data.serviceCategory.slug}
+                            categoryName={data.serviceCategory.name}
+                        />
+                        <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:border-primary hover:bg-orange-50 hover:text-primary">
+                            <ArrowLeft className="h-4 w-4" />
+                            Back
+                        </Link>
+                    </div>
                 </div>
 
                 {data.record.length === 0 ? (
@@ -81,7 +90,7 @@ export default async function ProviderSearchPage({
 
                         <div className="mt-8 flex items-center justify-center gap-3">
                             <Link
-                                href={prevPage ? `/${city}/${service}?pageNo=${prevPage}` : "#"}
+                                href={prevPage ? `/service/${city}/${service}?pageNo=${prevPage}` : "#"}
                                 className={`inline-flex items-center rounded-md border px-4 py-2 text-sm ${prevPage ? "border-gray-300 text-gray-700 hover:bg-gray-50" : "cursor-not-allowed border-gray-200 text-gray-400"}`}
                                 aria-disabled={!prevPage}
                             >
@@ -89,7 +98,7 @@ export default async function ProviderSearchPage({
                             </Link>
                             <span className="text-sm text-gray-600">Page {data.pageNo}</span>
                             <Link
-                                href={nextPage ? `/${city}/${service}?pageNo=${nextPage}` : "#"}
+                                href={nextPage ? `/service/${city}/${service}?pageNo=${nextPage}` : "#"}
                                 className={`inline-flex items-center rounded-md border px-4 py-2 text-sm ${nextPage ? "border-gray-300 text-gray-700 hover:bg-gray-50" : "cursor-not-allowed border-gray-200 text-gray-400"}`}
                                 aria-disabled={!nextPage}
                             >

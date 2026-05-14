@@ -21,6 +21,9 @@ export type AsyncFormSelectProps = {
     instanceId?: string;
     unstyled?: boolean;
     isLoading?: boolean;
+    menuPortalTarget?: HTMLElement | null;
+    menuPosition?: "absolute" | "fixed";
+    isClearable?: boolean;
 };
 
 export const selectClassNames = {

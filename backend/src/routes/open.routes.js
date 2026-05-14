@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getGeneralSettings } from "../controller/admin/setting.controller.js";
-import { listServiceCategories, listServiceCategoriesForHome, getServiceCategoryBySlug, listCities, listStates, listCitiesWithState, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions, getAboutContent, listServiceProviders, getPublicServiceProvider, listFeedbackRatingTags } from "../controller/common.controller.js";
+import { listServiceCategories, listServiceCategoriesForHome, getServiceCategoryBySlug, listCities, listStates, listCitiesWithState, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions, getAboutContent, listServiceProviders, getPublicServiceProvider, listServiceTypesByCategorySlug, listFeedbackRatingTags } from "../controller/common.controller.js";
 import { validator } from "../libraries/validator.js";
 
 const router = Router();
@@ -10,6 +10,7 @@ router.get("/general-settings", getGeneralSettings);
 router.get("/service-categories-list", listServiceCategories);
 router.get("/service-categories-home", listServiceCategoriesForHome);
 router.get("/service-categories/:slug", getServiceCategoryBySlug);
+router.get("/service-types-by-category/:categorySlug", listServiceTypesByCategorySlug);
 router.get("/service-providers/:city/:serviceCategory", listServiceProviders);
 router.get("/service-provider-details/:id", getPublicServiceProvider);
 router.get("/states-list", listStates);

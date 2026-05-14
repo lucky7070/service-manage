@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarCheck, Gift, Home, LayoutDashboard, UserRound, WalletCards } from "lucide-react";
+import { CalendarCheck, ClipboardList, Gift, Home, LayoutDashboard, UserRound, WalletCards } from "lucide-react";
 import { cn } from "@/helpers/utils";
 
 const links = [
     { href: "/user/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/user/bookings", label: "Bookings", icon: CalendarCheck },
+    { href: "/user/service-leads", label: "Booking requests", icon: ClipboardList },
     { href: "/user/ledger", label: "Ledger", icon: WalletCards },
     { href: "/user/refer-earn", label: "Refer and Earn", icon: Gift, highlight: true },
     { href: "/user/addresses", label: "Addresses", icon: Home },

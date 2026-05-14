@@ -77,8 +77,8 @@ export async function getServiceCategoryBySlug(slug: string): Promise<ServiceCat
 }
 
 export type ProviderSearchResult = {
-    city: { name: string; slug: string };
-    serviceCategory: { name: string; slug: string };
+    city: { _id: string; name: string; slug: string };
+    serviceCategory: { _id: string; name: string; slug: string };
     record: Array<{
         _id: string;
         name: string;

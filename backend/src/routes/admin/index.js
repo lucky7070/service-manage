@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAdminAuth } from "../../middlewares/adminAuth.js";
 import dashboardRoutes from "./dashboard.routes.js";
 import bookingRoutes from "./booking.routes.js";
+import serviceLeadRoutes from "./serviceLead.routes.js";
 import profileRoutes from "./profile.routes.js";
 import settingsRoutes from "./settings.routes.js";
 import rolesRoutes from "./roles.routes.js";
@@ -25,6 +26,7 @@ router.use(requireAdminAuth);
 
 router.use(dashboardRoutes);
 router.use(bookingRoutes);
+router.use(serviceLeadRoutes);
 router.use(profileRoutes);
 router.use(settingsRoutes);
 router.use(rolesRoutes);

@@ -93,7 +93,7 @@ export default function Modal({
                 {showHeader ? <div className={cn("flex flex-col space-y-1.5 p-6", modalHeaderClass)}>
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <h3 className="font-semibold leading-none tracking-tight">{title}</h3>
+                            {title ? <h3 className="font-semibold leading-none tracking-tight mb-1.5 text-lg">{title}</h3> : null}
                             {subTitle ? <p className="text-sm text-muted-foreground">{subTitle}</p> : null}
                         </div>
                         <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose}>

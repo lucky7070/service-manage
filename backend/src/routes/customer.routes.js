@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { sendOtp, register, profile, updateProfile, logout } from "../controller/auth.controller.js";
-import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
+import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, createCustomerServiceLead, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, listCustomerServiceLeads, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { validator } from "../libraries/validator.js";
@@ -16,6 +16,8 @@ router.put("/profile", validator("customer-profile-update"), updateProfile);
 router.get("/dashboard", getCustomerDashboard);
 router.get("/bookings", listCustomerBookings);
 router.post("/bookings", validator("customer-booking-create"), createCustomerBooking);
+router.get("/service-leads", listCustomerServiceLeads);
+router.post("/service-leads", validator("customer-service-lead-create"), createCustomerServiceLead);
 router.get("/bookings/:bookingId", validator("customer-booking-id"), getCustomerBooking);
 router.put("/bookings/:bookingId/accept-quote", validator("customer-booking-id"), acceptCustomerBookingQuote);
 router.put("/bookings/:bookingId/cancel", validator("customer-booking-id"), cancelCustomerBooking);
