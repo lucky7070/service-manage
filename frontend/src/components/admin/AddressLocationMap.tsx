@@ -47,8 +47,9 @@ export default function AddressLocationMap({ latitude, longitude, onChange }: Ad
     return (
         <MapContainer center={center} zoom={hasPosition ? 14 : 5} className="h-72 w-full rounded-xl border border-indigo-100 dark:border-slate-700" scrollWheelZoom>
             <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
+                subdomains="abcd"
             />
             <MapSync center={center} />
             <ClickHandler onChange={onChange} />

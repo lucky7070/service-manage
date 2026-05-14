@@ -4,15 +4,15 @@ import { Bell, CheckCheck, ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftO
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import AxiosHelper from "@/helpers/AxiosHelper";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
+import { deleteAuthCookie } from "@/app/admin/actions";
 import { Button, Input } from "@/components/ui";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resolveFileUrl } from "@/helpers/utils";
 import Image from "@/components/ui/Image";
 import Link from "next/link";
 import { toggleMobileSidebarOpen, toggleSidebarCollapsed } from "@/store/slices/appSlice";
-import { updateAdmin } from "@/store/slices/adminSlice";
+import { resetAdmin, updateAdmin } from "@/store/slices/adminSlice";
 import moment from "moment";
 import ThemeToggle from "@/components/admin/ThemeToggle";
 
@@ -31,8 +31,10 @@ export default function AdminTopbar() {
     const unreadCount = notifications.filter((n) => !n.isRead).length;
 
     const handleLogout = async () => {
-        const { data } = await AxiosHelper.postData("/admin/logout", {});
+        const { data } = await AxiosHelperAdmin.postData("/logout", {});
         if (data.status) {
+            await deleteAuthCookie();
+            dispatch(resetAdmin());
             toast.success("Logged out successfully");
             router.push("/admin/login");
             router.refresh();

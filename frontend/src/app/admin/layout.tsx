@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 dispatch(updateAdmin(data.data));
                 dispatch(setLoading(false));
             } else {
-                deleteAuthCookie();
+                await deleteAuthCookie();
                 if (!isAuthPage) router.push("/admin/login");
                 dispatch(setLoading(false));
             }

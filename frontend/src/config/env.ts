@@ -1,4 +1,5 @@
 const envConfig = {
+    authCookieDomain: String(process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN || "").trim(),
     apiUrlAdmin: String(process.env.NEXT_PUBLIC_API_URL_ADMIN),
     apiUrl: String(process.env.NEXT_PUBLIC_API_URL),
     uploadUrl: String(process.env.NEXT_PUBLIC_UPLOAD_URL),

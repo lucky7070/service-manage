@@ -104,8 +104,8 @@ const addressCity = check("city", "City is required.").trim().notEmpty().isMongo
 const pincode = check("pincode", "Pincode must be 6 digits.").trim().notEmpty().matches(/^\d{6}$/);
 const latitude = check("latitude", "Latitude must be numeric.").optional({ values: "falsy" }).isFloat({ min: -90, max: 90 }).withMessage("Latitude must be between -90 and 90.");
 const longitude = check("longitude", "Longitude must be numeric.").optional({ values: "falsy" }).isFloat({ min: -180, max: 180 }).withMessage("Longitude must be between -180 and 180.");
-const latitudeRequired = check("latitude", "Latitude is required.").exists().isFloat({ min: -90, max: 90 }).withMessage("Latitude must be between -90 and 90.");
-const longitudeRequired = check("longitude", "Longitude is required.").exists().isFloat({ min: -180, max: 180 }).withMessage("Longitude must be between -180 and 180.");
+const latitudeRequired = check("latitude", "Latitude is required.").exists().withMessage("Latitude is required.").bail().notEmpty().withMessage("Latitude is required.").isFloat({ min: -90, max: 90 }).withMessage("Latitude must be between -90 and 90.");
+const longitudeRequired = check("longitude", "Longitude is required.").exists().withMessage("Longitude is required.").bail().notEmpty().withMessage("Longitude is required.").isFloat({ min: -180, max: 180 }).withMessage("Longitude must be between -180 and 180.");
 const locationType = check("locationType", "Invalid location type.").optional({ values: "falsy" }).isIn(["home", "office", "other"]);
 const isDefault = check("isDefault", "Default address must be 0 or 1.").optional({ values: "falsy" }).isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const preferredLanguage = check("preferredLanguage", "Preferred language must be en or hi.").optional({ values: "falsy" }).isIn(["en", "hi"]);
@@ -165,10 +165,10 @@ export const validator = (method) => {
             output = [id, addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
             break;
         case "customer-self-address":
-            output = [addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
+            output = [addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitudeRequired, longitudeRequired, locationType, isDefault];
             break;
         case "customer-self-address-update":
-            output = [addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
+            output = [addressId, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitudeRequired, longitudeRequired, locationType, isDefault];
             break;
         case "customer-ledger":
             output = [id, paymentType, amount, particulars];

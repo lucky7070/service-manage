@@ -49,8 +49,8 @@ const validationSchema = Yup.object().shape({
     state: Yup.string().required("State is required."),
     city: Yup.string().required("City is required."),
     pincode: Yup.string().trim().matches(/^\d{6}$/, "Pincode must be 6 digits.").required("Pincode is required."),
-    latitude: Yup.number().transform((value, originalValue) => originalValue === "" ? null : value).typeError("Latitude must be numeric.").min(-90).max(90).nullable(),
-    longitude: Yup.number().transform((value, originalValue) => originalValue === "" ? null : value).typeError("Longitude must be numeric.").min(-180).max(180).nullable(),
+    latitude: Yup.number().transform((value, originalValue) => (originalValue === "" ? null : value)).typeError("Latitude must be a valid number.").required("Latitude is required for job location. Use the map or enter coordinates.").min(-90, "Latitude must be at least -90.").max(90, "Latitude must be at most 90."),
+    longitude: Yup.number().transform((value, originalValue) => (originalValue === "" ? null : value)).typeError("Longitude must be a valid number.").required("Longitude is required for job location. Use the map or enter coordinates.").min(-180, "Longitude must be at least -180.").max(180, "Longitude must be at most 180."),
     isDefault: Yup.number().oneOf([0, 1]).required(),
     locationType: Yup.string().oneOf(["home", "office", "other"]).required()
 });
@@ -127,7 +127,7 @@ export default function CustomerAddressesPage() {
                         <div className="mb-6 flex flex-col justify-between gap-4 rounded-3xl border border-border bg-card p-6 shadow-sm sm:flex-row sm:items-center">
                             <div>
                                 <h1 className="text-2xl font-bold">My Addresses</h1>
-                                <p className="mt-1 text-sm text-muted-foreground">Manage saved service addresses and map coordinates.</p>
+                                <p className="mt-1 text-sm text-muted-foreground">Manage saved service addresses. Map coordinates are required so your provider can verify location when starting the job.</p>
                             </div>
                             <Button type="button" onClick={openAdd}>
                                 <Plus className="h-4 w-4" /> Add Address
@@ -142,7 +142,11 @@ export default function CustomerAddressesPage() {
                                     enableReinitialize
                                     validationSchema={validationSchema}
                                     onSubmit={async (values, { setSubmitting, setErrors }) => {
-                                        const payload = { ...values, latitude: values.latitude === "" ? null : Number(values.latitude), longitude: values.longitude === "" ? null : Number(values.longitude) };
+                                        const payload = {
+                                            ...values,
+                                            latitude: Number(values.latitude),
+                                            longitude: Number(values.longitude),
+                                        };
                                         const { data } = open === "edit" ? await AxiosHelper.putData(`/customer/addresses/${values._id}`, payload) : await AxiosHelper.postData("/customer/addresses", payload);
                                         if (data.status) {
                                             toast.success(data.message || "Address saved.");
@@ -241,13 +245,13 @@ export default function CustomerAddressesPage() {
 
                                             <div className="grid gap-4 sm:grid-cols-2">
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="address-latitude">Latitude</Label>
-                                                    <Field as={Input} id="address-latitude" name="latitude" placeholder="Optional" />
+                                                    <Label htmlFor="address-latitude" required>Latitude</Label>
+                                                    <Field as={Input} id="address-latitude" name="latitude" type="text" inputMode="decimal" placeholder="e.g. 26.9124" />
                                                     <ErrorMessage className="text-xs text-rose-600" name="latitude" component="small" />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="address-longitude">Longitude</Label>
-                                                    <Field as={Input} id="address-longitude" name="longitude" placeholder="Optional" />
+                                                    <Label htmlFor="address-longitude" required>Longitude</Label>
+                                                    <Field as={Input} id="address-longitude" name="longitude" type="text" inputMode="decimal" placeholder="e.g. 75.7873" />
                                                     <ErrorMessage className="text-xs text-rose-600" name="longitude" component="small" />
                                                 </div>
                                             </div>

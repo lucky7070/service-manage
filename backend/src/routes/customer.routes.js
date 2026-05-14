@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { sendOtp, register, profile, updateProfile, logout } from "../controller/auth.controller.js";
-import { acceptCustomerBookingQuote, cancelCustomerBooking, createCustomerAddress, createCustomerBooking, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
+import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { validator } from "../libraries/validator.js";
@@ -19,6 +19,7 @@ router.post("/bookings", validator("customer-booking-create"), createCustomerBoo
 router.get("/bookings/:bookingId", validator("customer-booking-id"), getCustomerBooking);
 router.put("/bookings/:bookingId/accept-quote", validator("customer-booking-id"), acceptCustomerBookingQuote);
 router.put("/bookings/:bookingId/cancel", validator("customer-booking-id"), cancelCustomerBooking);
+router.put("/bookings/:bookingId/complete", validator("customer-booking-id"), completeCustomerBooking);
 router.get("/bookings/:bookingId/messages", validator("customer-booking-id"), listCustomerBookingMessages);
 router.post("/bookings/:bookingId/messages", validator("booking-message"), sendCustomerBookingMessage);
 router.post("/bookings/:bookingId/feedback", validator("booking-feedback"), submitCustomerBookingFeedback);

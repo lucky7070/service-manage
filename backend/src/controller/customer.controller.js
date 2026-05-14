@@ -1,6 +1,6 @@
 import moment from "moment";
-import { Address, Booking, ChatMessage, City, Customer, Ledger, ProviderService, Rating, ServiceProvider, State } from "../models/index.js";
-import { ObjectId, escapeRegex, optionalNumber, toBoolean } from "../helpers/utils.js";
+import { Address, Booking, ChatMessage, City, Customer, Ledger, OtpVerification, ProviderService, Rating, ServiceProvider, State } from "../models/index.js";
+import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
@@ -332,6 +332,31 @@ export const cancelCustomerBooking = async (req, res) => {
         await booking.save();
 
         return res.successUpdate(booking, "Booking cancelled successfully.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const completeCustomerBooking = async (req, res) => {
+    try {
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null, });
+        if (!booking) return res.noRecords(false, "Booking not found.");
+
+        if (booking.status !== "in_progress" || !booking.startTime) {
+            return res.clientError("You can only mark the job complete while it is in progress and after the provider has started.", 400);
+        }
+
+        if (booking.completionTime) {
+            return res.clientError("This booking is already completed.", 409);
+        }
+
+        await OtpVerification.deleteMany({ purpose: "booking_completion", bookingId: booking._id });
+
+        booking.completionTime = now();
+        booking.status = "completed";
+        await booking.save();
+
+        return res.successUpdate(booking, "Job marked complete.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

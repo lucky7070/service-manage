@@ -29,6 +29,7 @@ type BookingDetail = {
     agreedPrice?: number | null;
     finalPrice?: number | null;
     scheduledTime?: string;
+    startTime?: string | null;
     location?: { addressLine1?: string; addressLine2?: string; landmark?: string; city?: string; state?: string; pincode?: string };
     customerFeedback?: CustomerBookingFeedback | null;
 };
@@ -55,6 +56,7 @@ export default function CustomerBookingDetailPage() {
         agreedPrice: null,
         finalPrice: null,
         scheduledTime: "",
+        startTime: null,
         location: {
             addressLine1: "",
             addressLine2: "",
@@ -213,6 +215,33 @@ export default function CustomerBookingDetailPage() {
         }
     }, [id, submitting, getBooking]);
 
+    const openMarkCompleteDialog = useCallback(async () => {
+        if (!id || submitting) return;
+        const result = await Swal.fire(getSweetAlertConfigFront({
+            title: "Mark this job complete?",
+            html: "<p class=\"text-left text-sm\">Use this if the work is finished and you do not want to share the completion OTP with your provider. You can only do this while the job is <strong>in progress</strong> (after the provider has started).</p>",
+            icon: "question",
+            confirmButtonText: "Yes, mark complete",
+            cancelButtonText: "Not yet",
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            allowOutsideClick: () => !Swal.isLoading(),
+            preConfirm: async () => {
+                const { data } = await AxiosHelper.putData(`/customer/bookings/${id}/complete`, {});
+                if (!data.status) {
+                    throw new Error(data.message || "Could not complete booking.");
+                }
+                
+                return data as { status?: boolean; message?: string };
+            },
+        }));
+
+        if (result.isConfirmed && result.value?.status) {
+            toast.success(result.value.message || "Job marked complete.");
+            await getBooking();
+        }
+    }, [id, submitting, getBooking]);
+
     const sendMessage = useCallback(async () => {
         const text = message.trim();
         if (!text || submitting || !id) return;
@@ -282,6 +311,9 @@ export default function CustomerBookingDetailPage() {
                                     <div className="rounded-2xl border border-border p-4">
                                         <div className="mb-2 flex items-center gap-2 font-semibold"><CalendarClock className="h-4 w-4 text-primary" /> Schedule</div>
                                         <p className="text-sm text-muted-foreground">{booking.scheduledTime ? moment(booking.scheduledTime).format("DD MMM YYYY, hh:mm A") : "Not scheduled"}</p>
+                                        {booking.status === "in_progress" && booking.startTime ? (
+                                            <p className="mt-2 text-xs text-muted-foreground">Job started: {moment(booking.startTime).format("DD MMM YYYY, hh:mm A")}</p>
+                                        ) : null}
                                     </div>
                                     <div className="rounded-2xl border border-border p-4">
                                         <div className="mb-2 flex items-center gap-2 font-semibold"><MapPin className="h-4 w-4 text-primary" /> Address</div>
@@ -326,6 +358,27 @@ export default function CustomerBookingDetailPage() {
                                     </div>
                                 ) : null}
                             </div>
+
+                            {booking.status === "in_progress" && booking.startTime ? (
+                                <div className="rounded-3xl border border-emerald-200/80 bg-emerald-50/60 p-6 shadow-sm dark:border-emerald-900/40 dark:bg-emerald-950/25">
+                                    <h2 className="text-lg font-bold text-emerald-950 dark:text-emerald-100">Job in progress</h2>
+                                    <p className="mt-2 text-sm text-emerald-900/90 dark:text-emerald-200/90">
+                                        If the work is done, you can mark this booking complete here without sharing an OTP with your provider. Your provider can still complete the job from their app if needed.
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        className="mt-4 bg-emerald-700 text-white hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                                        onClick={() => void openMarkCompleteDialog()}
+                                        disabled={submitting}
+                                    >
+                                        <CheckCircle2 className="h-4 w-4" /> Mark job as complete
+                                    </Button>
+                                </div>
+                            ) : booking.status === "in_progress" && !booking.startTime ? (
+                                <div className="rounded-3xl border border-amber-200/80 bg-amber-50/60 p-6 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/25 dark:text-amber-100">
+                                    Your provider has not started the job on the app yet. Once they start, you can mark the job complete from here if you prefer not to use an OTP.
+                                </div>
+                            ) : null}
 
                             <BookingProviderRatingSection
                                 key={id}
