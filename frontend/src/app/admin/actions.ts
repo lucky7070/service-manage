@@ -13,3 +13,15 @@ export async function deleteAuthCookie() {
         cookieStore.delete('admin_token')
     }
 }
+
+export async function deleteCustomerAuthCookie() {
+    const cookieStore = await cookies()
+    if (!cookieStore.get('customer_token')) return
+
+    const domain = envConfig.authCookieDomain
+    if (domain) {
+        cookieStore.delete({ name: 'customer_token', path: '/', domain })
+    } else {
+        cookieStore.delete('customer_token')
+    }
+}
