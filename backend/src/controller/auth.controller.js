@@ -6,6 +6,7 @@ import { generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
 import { OtpVerification, Customer } from "../models/index.js";
 import { sendOTP } from "../libraries/sms.js";
 import { getSettings } from "../helpers/database.js";
+import { deleteFile } from "../libraries/storage.js";
 
 export const sendOtp = async (req, res) => {
     try {
@@ -141,6 +142,37 @@ export const updateProfile = async (req, res) => {
             dateOfBirth: customer.dateOfBirth ? moment(customer.dateOfBirth).format("YYYY-MM-DD") : "",
             preferredLanguage: customer.preferredLanguage || "en"
         }, "Profile updated successfully.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const updateCustomerProfileImage = async (req, res) => {
+    try {
+        const customer = await Customer.findOne({ _id: req.customer._id, deletedAt: null, isActive: true });
+        if (!customer) return res.noRecords();
+
+        if (!req.file) return res.clientError("Profile image is required.", 422, [{ field: "image", message: "Profile image is required." }]);
+
+        const previous = customer.image;
+        const relativePath = `/customers/${req.file.filename}`;
+        if (previous && previous !== "/customers/default.png" && previous !== relativePath) {
+            deleteFile(previous);
+        }
+
+        customer.image = relativePath;
+        await customer.save();
+
+        return res.successUpdate({
+            _id: customer._id,
+            userId: customer.userId,
+            name: customer.name,
+            mobile: customer.mobile,
+            email: customer.email,
+            image: customer.image,
+            dateOfBirth: customer.dateOfBirth ? moment(customer.dateOfBirth).format("YYYY-MM-DD") : "",
+            preferredLanguage: customer.preferredLanguage || "en"
+        }, "Profile photo updated successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

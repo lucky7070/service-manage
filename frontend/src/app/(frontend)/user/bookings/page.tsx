@@ -7,6 +7,7 @@ import { Briefcase, CalendarClock, ChevronRight, IndianRupee, MapPin } from "luc
 import AccountNav from "@/components/front/user/AccountNav";
 import { Button, Select } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
+import { bookingAccentStripeClass, bookingStatusBadgeClass } from "@/helpers/customerBookingStatus";
 import { cn } from "@/helpers/utils";
 import { toast } from "react-toastify";
 
@@ -31,24 +32,6 @@ type BookingData = {
 };
 
 const statuses = ["pending", "price_pending", "price_agreed", "confirmed", "in_progress", "completed", "cancelled"];
-
-function bookingStatusBadgeClass(status: string) {
-    switch (status) {
-        case "completed":
-            return "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80 dark:bg-emerald-950/50 dark:text-emerald-100 dark:ring-emerald-800";
-        case "cancelled":
-            return "bg-slate-200 text-slate-800 ring-1 ring-slate-300/80 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600";
-        case "in_progress":
-            return "bg-sky-100 text-sky-900 ring-1 ring-sky-200/80 dark:bg-sky-950/50 dark:text-sky-100 dark:ring-sky-800";
-        case "confirmed":
-        case "price_agreed":
-            return "bg-indigo-100 text-indigo-900 ring-1 ring-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-100 dark:ring-indigo-800";
-        case "price_pending":
-            return "bg-amber-100 text-amber-950 ring-1 ring-amber-200/90 dark:bg-amber-950/40 dark:text-amber-100 dark:ring-amber-800";
-        default:
-            return "bg-primary/12 text-primary ring-1 ring-primary/20";
-    }
-}
 
 export default function CustomerBookingsPage() {
     const [data, setData] = useState<BookingData>({ record: [], count: 0, totalPages: 0, current_page: 1 });
@@ -94,101 +77,66 @@ export default function CustomerBookingsPage() {
                         {loading ? <p className="py-8 text-center text-muted-foreground">Loading bookings...</p> : null}
                         {!loading && data.record.length === 0 ? <p className="py-8 text-center text-muted-foreground">No bookings found.</p> : null}
 
-                        <div className="space-y-4">
+                        <div className="space-y-2.5">
                             {data.record.map((booking) => (
-                                <article
-                                    key={booking._id}
-                                    className="group relative overflow-hidden rounded-2xl border border-border/90 bg-card p-5 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md"
-                                >
-                                    <div
-                                        className={cn(
-                                            "pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-primary to-primary/60 opacity-90 transition-opacity group-hover:opacity-100",
-                                            booking.status === "cancelled" && "from-slate-400 to-slate-500",
-                                            booking.status === "completed" && "from-emerald-500 to-emerald-600"
-                                        )}
-                                        aria-hidden
-                                    />
-                                    <div className="pl-3 sm:pl-4">
-                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                            <div className="min-w-0 flex-1 space-y-2">
-                                                <div>
-                                                    <p className="mt-0.5 font-mono text-lg font-bold tracking-tight text-foreground sm:text-xl">{booking.bookingNumber}</p>
-                                                </div>
-                                                <div className="flex items-start gap-2.5 text-sm leading-snug text-muted-foreground">
-                                                    <Briefcase className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                                                    <p>
-                                                        <span className="font-medium text-foreground">{booking.serviceCategoryName || "Service"}</span>
-                                                        <span className="text-muted-foreground"> · </span>
-                                                        <span>with {booking.providerName || "your professional"}</span>
-                                                    </p>
-                                                </div>
+                                <article key={booking._id} className="group relative overflow-hidden rounded-xl border border-border/80 bg-card px-3 py-2.5 pl-3 shadow-sm transition-colors hover:border-primary/25 sm:pl-3.5">
+                                    <div className={cn("pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-linear-to-b opacity-90 group-hover:opacity-100", bookingAccentStripeClass(booking.status))} aria-hidden />
+                                    <div className="pl-2">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0 flex-1 space-y-1">
+                                                <p className="text-sm font-semibold text-primary">{booking.bookingNumber}</p>
+                                                <p className="truncate text-xs leading-snug text-muted-foreground">
+                                                    <Briefcase className="mr-1 inline h-3 w-3 align-text-bottom text-primary/80" aria-hidden />
+                                                    <span className="font-medium text-foreground/90">{booking.serviceCategoryName || "Service"}</span>
+                                                    <span className="text-muted-foreground"> · </span>
+                                                    <span>with {booking.providerName || "your professional"}</span>
+                                                </p>
                                                 {booking.serviceTypeNames?.length ? (
-                                                    <ul className="flex flex-wrap gap-1.5 pt-0.5" aria-label="Service types">
+                                                    <ul className="flex flex-wrap gap-1 pt-0.5" aria-label="Service types">
                                                         {booking.serviceTypeNames.map((name, i) => (
-                                                            <li
-                                                                key={`${booking._id}-st-${i}-${name}`}
-                                                                className="rounded-lg border border-border/80 bg-muted/40 px-2.5 py-1 text-xs font-medium text-foreground/90 dark:bg-muted/25"
-                                                            >
+                                                            <li key={`${booking._id}-st-${i}-${name}`} className="rounded-md border border-border/70 bg-muted/50 px-1.5 py-0.5 text-xs font-medium text-foreground/85 dark:bg-muted/30">
                                                                 {name}
                                                             </li>
                                                         ))}
                                                     </ul>
                                                 ) : null}
                                             </div>
-                                            <span
-                                                className={cn(
-                                                    "inline-flex shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-semibold capitalize tracking-wide",
-                                                    bookingStatusBadgeClass(booking.status)
-                                                )}
-                                            >
+                                            <span className={cn("inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold capitalize leading-none", bookingStatusBadgeClass(booking.status))}>
                                                 {booking.status.replaceAll("_", " ")}
                                             </span>
                                         </div>
 
-                                        <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                                            <div className="flex gap-3 rounded-xl border border-border/60 bg-muted/35 px-3 py-3 dark:bg-muted/15">
-                                                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                                                <div className="min-w-0">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">City</p>
-                                                    <p className="truncate text-sm font-medium text-foreground">{booking.cityName || "—"}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-3 rounded-xl border border-border/60 bg-muted/35 px-3 py-3 dark:bg-muted/15">
-                                                <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                                                <div className="min-w-0">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                                                        {booking.scheduledTime ? "Scheduled" : "Booked on"}
-                                                    </p>
-                                                    <p className="text-sm font-medium text-foreground">
-                                                        {booking.scheduledTime
-                                                            ? moment(booking.scheduledTime).format("DD MMM YYYY, hh:mm A")
-                                                            : booking.bookingTime
-                                                                ? moment(booking.bookingTime).format("DD MMM YYYY")
-                                                                : "—"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-3 rounded-xl border border-border/60 bg-muted/35 px-3 py-3 dark:bg-muted/15">
-                                                <IndianRupee className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                                                <div className="min-w-0">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Amount</p>
-                                                    <p className="text-sm font-medium text-foreground">
-                                                        {booking.finalPrice != null ? `₹${Number(booking.finalPrice).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}` : "—"}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-border/60 pt-2 text-xs text-muted-foreground">
+                                            <span className="inline-flex max-w-[40%] items-center gap-1 truncate sm:max-w-none">
+                                                <MapPin className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+                                                <span className="truncate">{booking.cityName || "—"}</span>
+                                            </span>
+                                            <span className="text-border">|</span>
+                                            <span className="inline-flex items-center gap-1">
+                                                <CalendarClock className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+                                                <span className="whitespace-nowrap">
+                                                    {booking.scheduledTime
+                                                        ? moment(booking.scheduledTime).format("DD MMM, hh:mm A")
+                                                        : booking.bookingTime
+                                                            ? moment(booking.bookingTime).format("DD MMM YYYY")
+                                                            : "—"}
+                                                </span>
+                                            </span>
+                                            <span className="hidden text-border sm:inline">|</span>
+                                            <span className="inline-flex w-full items-center gap-1 sm:w-auto">
+                                                <IndianRupee className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+                                                <span className="font-medium text-foreground/90">
+                                                    {booking.finalPrice != null
+                                                        ? `₹${Number(booking.finalPrice).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+                                                        : "—"}
+                                                </span>
+                                            </span>
                                         </div>
 
-                                        <div className="mt-5 flex justify-end border-t border-border/70 pt-4">
-                                            <Link
-                                                href={`/user/bookings/${booking._id}`}
-                                                className={cn(
-                                                    "inline-flex h-9 w-full items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all",
-                                                    "bg-primary hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:h-8 sm:px-3 sm:text-sm sm:w-auto"
-                                                )}
-                                            >
-                                                View details
-                                                <ChevronRight className="h-4 w-4 opacity-90" aria-hidden />
+                                        <div className="mt-2 flex justify-end border-t border-border/60 pt-2">
+                                            <Link href={`/user/bookings/${booking._id}`} className={"inline-flex shrink-0 items-center gap-0.5 rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"}>
+                                                Details
+                                                <ChevronRight className="h-3.5 w-3.5" aria-hidden />
                                             </Link>
                                         </div>
                                     </div>

@@ -39,13 +39,13 @@ const statuses: Array<{ value: ""; label: string } | { value: "open" | "assigned
 function leadStatusBadgeClass(status: string) {
     switch (status) {
         case "assigned":
-            return "bg-indigo-100 text-indigo-900 ring-1 ring-indigo-200/80 dark:bg-indigo-950/50 dark:text-indigo-100 dark:ring-indigo-800";
+            return "border border-primary/20 bg-primary/10 text-primary dark:border-primary/25 dark:bg-primary/15 dark:text-primary";
         case "cancelled":
-            return "bg-slate-200 text-slate-800 ring-1 ring-slate-300/80 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-600";
+            return "border border-border bg-muted/90 text-muted-foreground";
         case "open":
-            return "bg-amber-100 text-amber-950 ring-1 ring-amber-200/90 dark:bg-amber-950/40 dark:text-amber-100 dark:ring-amber-800";
+            return "border border-border bg-muted/70 text-foreground/75 dark:bg-muted/50 dark:text-foreground/80";
         default:
-            return "bg-primary/12 text-primary ring-1 ring-primary/20";
+            return "border border-border bg-muted text-muted-foreground";
     }
 }
 
@@ -85,7 +85,7 @@ export default function CustomerServiceLeadsPage() {
                     <div className="min-w-0 rounded-3xl border border-border bg-card p-6 shadow-sm">
                         <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                             <div>
-                                <h1 className="text-2xl font-bold">Booking requests</h1>
+                                <h1 className="text-2xl font-bold">Booking Requests</h1>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     Requests submitted without choosing a provider. When we assign one, you can open the booking here.
                                 </p>
@@ -93,7 +93,7 @@ export default function CustomerServiceLeadsPage() {
                             <Select
                                 value={params.status}
                                 onChange={(event) => {
-                                    setParams({ ...params, status: event.target.value as "" | "open" | "assigned" | "cancelled" });
+                                    setParams({ ...params, status: event.target.value as "" | "open" | "assigned" | "cancelled", pageNo: 1 });
                                 }}
                                 className="max-w-xs capitalize"
                             >
@@ -110,99 +110,72 @@ export default function CustomerServiceLeadsPage() {
                             <p className="py-8 text-center text-muted-foreground">No booking requests yet.</p>
                         ) : null}
 
-                        <div className="space-y-4">
+                        <div className="space-y-2.5">
                             {data.record.map((lead) => {
                                 const bookingHref = lead.status === "assigned" ? bookingIdHref(lead.bookingId) : null;
+                                const hint =
+                                    lead.status === "open"
+                                        ? "Finding a provider."
+                                        : lead.status === "assigned"
+                                            ? "Open your booking to confirm pricing."
+                                            : "Cancelled.";
                                 return (
-                                    <article
-                                        key={lead._id}
-                                        className="group relative overflow-hidden rounded-2xl border border-border/90 bg-card p-5 shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md"
-                                    >
+                                    <article key={lead._id} className="group relative overflow-hidden rounded-xl border border-border/80 bg-card px-3 py-2.5 pl-3 shadow-sm transition-colors hover:border-primary/25 sm:pl-3.5">
                                         <div
                                             className={cn(
-                                                "pointer-events-none absolute inset-y-0 left-0 w-1 bg-linear-to-b from-primary to-primary/60 opacity-90 transition-opacity group-hover:opacity-100",
-                                                lead.status === "cancelled" && "from-slate-400 to-slate-500",
-                                                lead.status === "assigned" && "from-indigo-500 to-indigo-600",
-                                                lead.status === "open" && "from-amber-500 to-amber-600"
+                                                "pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-linear-to-b from-primary to-primary/60 opacity-90 group-hover:opacity-100",
+                                                lead.status === "cancelled" && "from-muted-foreground/35 to-muted-foreground/15",
+                                                lead.status === "assigned" && "from-primary to-primary/70",
+                                                lead.status === "open" && "from-muted-foreground/45 to-muted-foreground/20"
                                             )}
                                             aria-hidden
                                         />
-                                        <div className="pl-3 sm:pl-4">
-                                            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                                <div className="min-w-0 flex-1 space-y-2">
-                                                    <div className="flex items-start gap-2">
-                                                        <ClipboardList className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-                                                        <div className="min-w-0">
-                                                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Request ref</p>
-                                                            <p className="font-mono text-lg font-bold tracking-tight text-foreground sm:text-xl">{lead.leadNumber}</p>
-                                                        </div>
+                                        <div className="pl-2">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                                            <ClipboardList className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+                                                        </span>
+                                                        <span className="text-sm font-semibold text-primary">{lead.leadNumber}</span>
                                                     </div>
-                                                    <div className="flex items-start gap-2.5 text-sm leading-snug text-muted-foreground">
-                                                        <Briefcase className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                                                        <p>
-                                                            <span className="font-medium text-foreground">{lead.serviceCategoryName || "Service"}</span>
-                                                            <span className="text-muted-foreground"> · </span>
-                                                            <span>{lead.cityName || "—"}</span>
-                                                        </p>
-                                                    </div>
-                                                    {lead.issueDescription ? (
-                                                        <p className="line-clamp-2 text-sm text-muted-foreground">{lead.issueDescription}</p>
-                                                    ) : null}
+                                                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                                                        <Briefcase className="mr-1 inline h-3 w-3 align-text-bottom text-primary/80" aria-hidden />
+                                                        <span className="font-medium text-foreground/90">{lead.serviceCategoryName || "Service"}</span>
+                                                        <span className="text-muted-foreground"> · </span>
+                                                        <span>{lead.cityName || "—"}</span>
+                                                    </p>
+                                                    {lead.issueDescription ? <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{lead.issueDescription}</p> : null}
                                                 </div>
-                                                <span
-                                                    className={cn(
-                                                        "inline-flex shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-semibold capitalize tracking-wide",
-                                                        leadStatusBadgeClass(lead.status)
-                                                    )}
-                                                >
+                                                <span className={cn("inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold capitalize leading-none", leadStatusBadgeClass(lead.status))}>
                                                     {lead.status}
                                                 </span>
                                             </div>
 
-                                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                                                <div className="flex gap-3 rounded-xl border border-border/60 bg-muted/35 px-3 py-3 dark:bg-muted/15">
-                                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                                                    <div className="min-w-0">
-                                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">City</p>
-                                                        <p className="truncate text-sm font-medium text-foreground">{lead.cityName || "—"}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-3 rounded-xl border border-border/60 bg-muted/35 px-3 py-3 dark:bg-muted/15">
-                                                    <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                                                    <div className="min-w-0">
-                                                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Preferred time</p>
-                                                        <p className="text-sm font-medium text-foreground">
-                                                            {lead.scheduledTime ? moment(lead.scheduledTime).format("DD MMM YYYY, hh:mm A") : "—"}
-                                                        </p>
-                                                        {lead.createdAt ? (
-                                                            <p className="mt-0.5 text-xs text-muted-foreground">
-                                                                Submitted {moment(lead.createdAt).format("DD MMM YYYY")}
-                                                            </p>
-                                                        ) : null}
-                                                    </div>
-                                                </div>
+                                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-border/60 pt-2 text-xs text-muted-foreground">
+                                                <span className="inline-flex max-w-[45%] items-center gap-1 truncate sm:max-w-none">
+                                                    <MapPin className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+                                                    <span className="truncate">{lead.cityName || "—"}</span>
+                                                </span>
+                                                <span className="text-border">|</span>
+                                                <span className="inline-flex items-center gap-1">
+                                                    <CalendarClock className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+                                                    <span className="whitespace-nowrap">
+                                                        {lead.scheduledTime ? moment(lead.scheduledTime).format("DD MMM, hh:mm A") : "—"}
+                                                    </span>
+                                                </span>
+                                                {lead.createdAt ? <>
+                                                    <span className="hidden text-border sm:inline">|</span>
+                                                    <span className="w-full text-xs sm:w-auto">Submitted : {moment(lead.createdAt).format("DD MMM YY")}</span>
+                                                </> : null}
                                             </div>
 
-                                            <div className="mt-5 flex flex-col gap-3 border-t border-border/70 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                                                <p className="text-xs text-muted-foreground">
-                                                    {lead.status === "open"
-                                                        ? "We are finding a provider for you."
-                                                        : lead.status === "assigned"
-                                                            ? "A provider has been assigned. Open your booking to confirm details and pricing."
-                                                            : "This request was cancelled."}
-                                                </p>
-                                                {bookingHref ? (
-                                                    <Link
-                                                        href={bookingHref}
-                                                        className={cn(
-                                                            "inline-flex h-9 w-full items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all",
-                                                            "bg-primary hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:h-8 sm:w-auto sm:px-3"
-                                                        )}
-                                                    >
-                                                        View booking
-                                                        <ChevronRight className="h-4 w-4 opacity-90" aria-hidden />
-                                                    </Link>
-                                                ) : null}
+                                            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                                                <p className="min-w-0 flex-1 text-xs leading-snug text-muted-foreground">{hint}</p>
+                                                {bookingHref ? <Link href={bookingHref} className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
+                                                    Booking
+                                                    <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                                                </Link> : null}
                                             </div>
                                         </div>
                                     </article>

@@ -116,17 +116,14 @@ export function getSweetAlertConfigFront({
         showCancelButton: true,
         reverseButtons: true,
         customClass: {
-            container:
-                "fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-3 backdrop-blur-sm dark:bg-black/55",
-            popup:
-                "mx-4 flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-center overflow-y-auto rounded-3xl border border-border bg-card p-6 text-center text-card-foreground shadow-lg sm:mx-auto",
+            container: "fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-3 backdrop-blur-sm dark:bg-black/55",
+            popup: "mx-4 flex max-h-[90vh] w-full max-w-lg flex-col items-center justify-center overflow-y-auto rounded-3xl border border-border bg-card p-6 text-center text-card-foreground shadow-lg sm:mx-auto",
             icon: `mt-1 mb-2 flex items-center justify-center mx-auto text-5xl ${iconColor}`,
             title: "text-2xl font-semibold leading-tight text-foreground",
             htmlContainer: "mt-1 text-sm leading-6 text-muted-foreground",
             actions: "mt-6 flex w-full flex-row-reverse gap-2 sm:justify-end",
             confirmButton: confirmButtonClass,
-            cancelButton:
-                "inline-flex h-10 min-w-[130px] items-center justify-center gap-2 rounded-md bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground transition hover:bg-secondary/80 focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0",
+            cancelButton: "inline-flex h-10 min-w-[130px] items-center justify-center gap-2 rounded-md bg-secondary px-4 py-2.5 text-sm font-medium text-secondary-foreground transition hover:bg-secondary/80 focus:outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0",
             input: cn(
                 "min-h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm text-foreground shadow-xs outline-none transition [color-scheme:light] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
                 inputClassExtra == null

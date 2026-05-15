@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, CheckCircle2, ClipboardList, Clock3, Home, LogOut, UserRound, XCircle } from "lucide-react";
+import { CalendarCheck, CheckCircle2, ClipboardList, Clock3, Home, LogOut, UserRound, XCircle, CalendarClock } from "lucide-react";
 import moment from "moment";
 import { toast } from "react-toastify";
 import AccountNav from "@/components/front/user/AccountNav";
@@ -97,22 +97,27 @@ export default function CustomerDashboardPage() {
                                         {dashboard?.recentBookings?.length ? (
                                             <div className="divide-y divide-border">
                                                 {dashboard.recentBookings.map((booking) => (
-                                                    <div key={booking._id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between">
+                                                    <Link key={booking._id} href={`/user/bookings/${booking._id}`} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between border border-border/70 bg-muted/20 px-2.5 overflow-hidden rounded-xl">
                                                         <div className="min-w-0">
                                                             <p className="font-semibold text-primary">{booking.bookingNumber}</p>
                                                             <p className="text-sm text-muted-foreground">
                                                                 {booking.serviceCategoryName || "Service"} booking with {booking.providerName || "provider"}
                                                             </p>
                                                         </div>
-                                                        <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-                                                            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold capitalize text-primary">
-                                                                {booking.status.replaceAll("_", " ")}
-                                                            </span>
-                                                            <div className="text-sm text-muted-foreground">
-                                                                {booking.bookingTime ? moment(booking.bookingTime).format("DD MMM YYYY") : ""}
+                                                        <div className="">
+                                                            <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                                                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold capitalize text-primary">
+                                                                    {booking.status.replaceAll("_", " ")}
+                                                                </span>
+                                                            </div>
+                                                            <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                                                                <span className="inline-flex items-center gap-1">
+                                                                    <CalendarClock className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+                                                                    {booking.bookingTime ? moment(booking.bookingTime).format("DD MMM YYYY") : "—"}
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </Link>
                                                 ))}
                                             </div>
                                         ) : <p className="py-8 text-center text-muted-foreground">No bookings yet.</p>}
@@ -134,7 +139,7 @@ export default function CustomerDashboardPage() {
                                             </div>
                                         </Link>
                                         <Link href="/user/service-leads" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-primary">
-                                            <ClipboardList className="h-6 w-6 text-primary" />
+                                            <ClipboardList className="h-8 w-8 text-primary" />
                                             <div>
                                                 <p className="font-semibold">Booking requests</p>
                                                 <p className="text-sm text-muted-foreground">Track leads submitted from search without a provider.</p>

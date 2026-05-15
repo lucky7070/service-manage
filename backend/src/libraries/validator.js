@@ -158,6 +158,9 @@ export const validator = (method) => {
         case "customer-profile-update":
             output = [name, email, dateOfBirth, preferredLanguage];
             break;
+        case "customer-profile-image":
+            output = [imageRequired];
+            break;
         case "customer-address":
             output = [id, addressLine1, addressLine2, landmark, addressState, addressCity, pincode, latitude, longitude, locationType, isDefault];
             break;
