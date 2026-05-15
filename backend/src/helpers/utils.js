@@ -38,7 +38,7 @@ export const ObjectId = (id) => {
     }
 };
 
-export const toBoolean = (value) => value === true || value === "true" || Number(value) === 1;
+export const toBoolean = (value) => value === true || String(value).toLowerCase() === "true" || Number(value) === 1 || String(value).toLowerCase() === "on";
 
 export const optionalNumber = (value) => {
     if (value === null || value === undefined || value === "") return null;

@@ -45,6 +45,28 @@ export async function getHomeServiceCategories(limit = 8): Promise<ServiceCatego
     return [];
 }
 
+export type FeaturedProvider = {
+    _id: string;
+    name: string;
+    slug: string;
+    image: string | null;
+    experienceYears: number;
+    totalCompletedServices: number;
+    ratingCount: number;
+    averageRating: number | null;
+    serviceCategoryName: string;
+    serviceCategorySlug: string;
+};
+
+export async function getFeaturedProviders(limit = 8): Promise<FeaturedProvider[]> {
+    const { data } = await AxiosHelper.getData(`/featured-service-providers?limit=${limit}`);
+    if (data.status && Array.isArray(data.data)) {
+        return data.data as FeaturedProvider[];
+    }
+
+    return [];
+}
+
 export type OurValue = {
     icon: string;
     title: string;

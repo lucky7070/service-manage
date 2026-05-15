@@ -36,6 +36,7 @@ const Schema = new mongoose.Schema(
         totalRating: { type: Number, default: 0 },
         ratingCount: { type: Number, default: 0 },
         isActive: { type: Boolean, default: true },
+        isFeatured: { type: Boolean, default: false, index: true },
         isVerified: { type: Boolean, default: false },
         lastLogin: { type: Date, default: null },
         deletedAt: { type: Date, default: null }

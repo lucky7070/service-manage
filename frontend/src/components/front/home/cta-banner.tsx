@@ -26,7 +26,7 @@ export function CTABanner() {
                     </div>
                     <div className="flex flex-col gap-3 sm:flex-row">
                         <Link href="/login">
-                            <Button size="lg" className="bg-white px-8 text-primary shadow-lg hover:bg-gray-100">
+                            <Button size="lg" className="px-8 text-orange-500 shadow-lg hover:bg-gray-100">
                                 Get Started
                                 <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>

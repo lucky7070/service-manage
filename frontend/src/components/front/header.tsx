@@ -55,8 +55,8 @@ export function Header() {
                 <div className="container mx-auto flex h-16 items-center justify-between px-4">
                     <div className="flex items-center gap-6">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-                                <Image src={String(resolveFileUrl(settings.logo))} alt="logo" className="h-9 w-9 rounded-xl object-cover" />
+                            <div className="flex h-9 w-9 items-center justify-center">
+                                <Image src={String(resolveFileUrl(settings.logo))} alt="logo" className="h-9 w-9 object-cover" />
                             </div>
                             <span className="text-xl font-bold text-orange-600">{settings.application_name || ""}</span>
                         </Link>

@@ -129,7 +129,7 @@ export default async function JoinProPage() {
                         <p className="mx-auto mb-8 max-w-xl text-white/80">
                             {JOIN_PRO_CTA_SUBLINE}
                         </p>
-                        <Button size="lg" className="bg-white text-primary hover:bg-white/90">
+                        <Button size="lg" className="text-primary hover:bg-white/90">
                             Register Now - It&apos;s Free
                             <ArrowRight className="ml-2 h-5 w-5" />
                         </Button>

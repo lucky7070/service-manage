@@ -1,6 +1,6 @@
 import moment from "moment";
 import { City, ServiceProvider, ServiceCategory, ServiceProviderPhoto } from "../../models/index.js";
-import { escapeRegex, ObjectId } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId, toBoolean } from "../../helpers/utils.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 
 export const createServiceProvider = async (req, res) => {
@@ -38,6 +38,7 @@ export const createServiceProvider = async (req, res) => {
             profileStatus: "approved",
             isActive: true,
             isVerified: true,
+            isFeatured: toBoolean(req.body.isFeatured),
         });
         return res.successInsert(record);
     } catch (error) {
@@ -80,7 +81,7 @@ export const updateServiceProvider = async (req, res) => {
 
         await ServiceProvider.updateOne(
             { _id: record._id },
-            { name: name.trim(), cityId, serviceCategoryId, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, }
+            { name: name.trim(), cityId, serviceCategoryId, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, isFeatured: toBoolean(req.body.isFeatured) }
         );
         return res.successUpdate(record);
     } catch (error) {
@@ -176,7 +177,7 @@ export const getServiceProvider = async (req, res) => {
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
             { $unwind: { path: "$city" } },
             { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, isVerified: 1, isActive: 1, experienceYears: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
+            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];
@@ -226,6 +227,7 @@ export const getSingleServiceProvider = async (req, res) => {
             totalRating: doc.totalRating,
             ratingCount: doc.ratingCount,
             isActive: doc.isActive,
+            isFeatured: Boolean(doc.isFeatured),
             isVerified: doc.isVerified,
             lastLogin: doc.lastLogin,
             createdAt: doc.createdAt,

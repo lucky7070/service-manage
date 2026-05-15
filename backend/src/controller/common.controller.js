@@ -135,6 +135,46 @@ export const getServiceCategoryBySlug = async (req, res) => {
     }
 };
 
+export const listFeaturedServiceProviders = async (req, res) => {
+    try {
+        const limitRaw = Number(req.query.limit);
+        const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 12) : 8;
+
+        const rows = await ServiceProvider.aggregate([
+            { $match: { deletedAt: null, isActive: true, isFeatured: true, profileStatus: "approved", isVerified: true }},
+            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+            { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    slug: 1,
+                    image: 1,
+                    experienceYears: { $ifNull: ["$experienceYears", 0] },
+                    totalCompletedServices: { $ifNull: ["$totalCompletedServices", 0] },
+                    totalRating: { $ifNull: ["$totalRating", 0] },
+                    ratingCount: { $ifNull: ["$ratingCount", 0] },
+                    serviceCategoryName: { $ifNull: ["$category.name", ""] },
+                    serviceCategorySlug: { $ifNull: ["$category.slug", ""] }
+                }
+            },
+            { $sort: { ratingCount: -1, totalCompletedServices: -1, name: 1 } },
+            { $limit: limit }
+        ]);
+
+        const record = rows.map((row) => {
+            const ratingCount = Number(row.ratingCount) || 0;
+            const totalRating = Number(row.totalRating) || 0;
+            const averageRating = ratingCount > 0 ? Math.round((totalRating / ratingCount) * 10) / 10 : null;
+            return { ...row, averageRating };
+        });
+
+        return res.success(record);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
 export const listServiceProviders = async (req, res) => {
     try {
         const citySlug = String(req.params.city || "").trim().toLowerCase();

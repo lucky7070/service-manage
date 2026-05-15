@@ -38,6 +38,7 @@ type ServiceProvider = {
     experienceYears: number | "";
     experienceDescription: string;
     profileStatus: ProfileStatus;
+    isFeatured?: boolean;
 
     cityName?: string;
     serviceCategoryName?: string;
@@ -58,7 +59,7 @@ type ServiceProviderRecord = {
 type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending" };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending", isFeatured: false };
 
 const statusValidationSchema = Yup.object().shape({
     profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
@@ -165,6 +166,7 @@ export default function AdminServiceProvidersPage() {
             experienceYears: data.experienceYears ?? 0,
             experienceDescription: String(data.experienceDescription ?? ""),
             profileStatus: data.profileStatus || "pending",
+            isFeatured: Boolean(data.isFeatured),
             image: data.image || null,
             panCardDocument: data.panCardDocument || null,
             aadharDocument: data.aadharDocument || null,
@@ -250,6 +252,7 @@ export default function AdminServiceProvidersPage() {
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("profileStatus")} name="Profile status" active={param.sortBy === "profileStatus"} sortOrder={param.sortOrder} />
                                 </th>
+                                <th className="px-3 py-2">Featured</th>
                                 <th className="px-3 py-2">Verified</th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("createdAt")} name="Created" active={param.sortBy === "createdAt"} sortOrder={param.sortOrder} />
@@ -291,6 +294,11 @@ export default function AdminServiceProvidersPage() {
                                             size="sm"
                                         >
                                             {row.profileStatus}
+                                        </Badge>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                        <Badge variant={row.isFeatured ? "success" : "secondary"} size="sm">
+                                            {row.isFeatured ? "Yes" : "No"}
                                         </Badge>
                                     </td>
                                     <td className="px-3 py-2">
@@ -504,6 +512,10 @@ export default function AdminServiceProvidersPage() {
                                     <Field as={Textarea} id="sp-exp-d" name="experienceDescription" rows={3} />
                                     <ErrorMessage className="text-xs text-rose-600" name="experienceDescription" component="small" />
                                 </div>
+                                <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                    <Field id="sp-isFeatured" name="isFeatured" type="checkbox" className="h-4 w-4 rounded border-slate-300" />
+                                    Show on homepage (featured professional)
+                                </label>
                                 <div className="flex justify-end gap-2 pt-2">
                                     <Button type="button" variant="secondary" onClick={() => { setOpen(null); }}>
                                         Cancel
