@@ -113,6 +113,10 @@ const paymentType = check("paymentType", "Payment type must be Credit or Debit."
 const amount = check("amount", "Amount must be greater than 0.").exists().notEmpty().isFloat({ min: 0.01 });
 const particulars = check("particulars").optional({ values: "falsy" }).trim().isLength({ max: 5000 });
 const bookingId = param("bookingId", "Invalid booking ID.").exists().notEmpty().isMongoId();
+const providerServiceId = param("serviceId", "Invalid service ID.").exists().notEmpty().isMongoId();
+const providerServiceTypeId = check("serviceTypeId", "Service type is required.").exists().notEmpty().isMongoId();
+const providerServicePrice = check("price", "Valid price is required.").exists().notEmpty().isFloat({ min: 0 });
+const providerServiceStatus = check("status", "Status must be 0 or 1.").optional({ values: "falsy" }).isIn([0, 1, "0", "1"]);
 const providerId = check("providerId", "Provider is required.").exists().notEmpty().isMongoId();
 const serviceTypeIds = check("serviceTypeId", "At least one service type is required.").exists().isArray({ min: 1 });
 const serviceTypeIdItems = check("serviceTypeId.*", "Invalid service type.").isMongoId();
@@ -265,6 +269,15 @@ export const validator = (method) => {
             break;
         case "service-provider-register":
             output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument];
+            break;
+        case "provider-service-create":
+            output = [providerServiceTypeId, providerServicePrice, providerServiceStatus];
+            break;
+        case "provider-service-update":
+            output = [providerServiceId, providerServiceTypeId, providerServicePrice, providerServiceStatus];
+            break;
+        case "provider-service-delete":
+            output = [providerServiceId];
             break;
         case "our-value-create":
             output = [ourValueIconRequired, title, description, displayOrder, status];

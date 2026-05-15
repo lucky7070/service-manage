@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { sendOtp, register, login, profile, getServiceProviderDashboard, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback } from "../controller/service-provider.controller.js";
+import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/service-provider-services.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
@@ -16,6 +17,11 @@ router.post("/register", serviceProviderStorage.fields([{ name: "image", maxCoun
 router.use(requireServiceProviderAuth);
 router.get("/dashboard", getServiceProviderDashboard);
 router.get("/profile", profile);
+router.get("/services", listMyProviderServices);
+router.get("/service-types", listMyServiceTypeOptions);
+router.post("/services", validator("provider-service-create"), createMyProviderService);
+router.put("/services/:serviceId", validator("provider-service-update"), updateMyProviderService);
+router.delete("/services/:serviceId", validator("provider-service-delete"), deleteMyProviderService);
 router.get("/bookings", listProviderBookings);
 router.get("/bookings/:bookingId", validator("customer-booking-id"), getProviderBooking);
 router.put("/bookings/:bookingId/quote", validator("booking-quote"), setBookingQuote);
