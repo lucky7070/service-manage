@@ -28,6 +28,10 @@ export const escapeRegex = (str = "") => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$
 
 export const ObjectId = (id) => {
     try {
+
+        if (id instanceof mongoose.Types.ObjectId) return id;
+        if (!mongoose.Types.ObjectId.isValid(id)) return null;
+
         return new mongoose.Types.ObjectId(String(id));
     } catch {
         return null;

@@ -6,7 +6,6 @@ import { updateUser, UserState } from '@/store/slices/userSlice';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect, useMemo } from 'react';
 import { deleteCustomerAuthCookie } from '../admin/actions';
-import { AUTH_PAGES_USER } from '@/config';
 import { setLoading } from '@/store/slices/appSlice';
 
 const Provider = ({ children }: { children: React.ReactNode }) => {
@@ -15,7 +14,7 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
 
-    const isAuthPage = useMemo(() => AUTH_PAGES_USER.includes(pathname), [pathname]);
+    const isProtectedRoute = useMemo(() => pathname.startsWith("/user"), [pathname]);
 
     useEffect(() => {
         const timer = window.setTimeout(async () => {
@@ -24,13 +23,13 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
                 dispatch(updateUser(data.data as UserState));
             } else {
                 await deleteCustomerAuthCookie();
-                if (!isAuthPage) router.push("/login");
-                dispatch(setLoading(false));
+                if (isProtectedRoute) router.push("/login");
             }
+            dispatch(setLoading(false));
         }, 0);
 
         return () => window.clearTimeout(timer);
-    }, [dispatch, isAuthPage, router]);
+    }, [dispatch, isProtectedRoute, router]);
 
     return children
 }

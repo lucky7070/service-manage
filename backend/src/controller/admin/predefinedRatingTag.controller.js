@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { PredefinedRatingTag } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 const ALLOWED_TAG_FOR = ["customer", "provider"];
 const ALLOWED_TAG_TYPE = ["positive", "negative", "neutral"];
@@ -35,7 +34,7 @@ export const createPredefinedRatingTag = async (req, res) => {
 
 export const updatePredefinedRatingTag = async (req, res) => {
     try {
-        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await PredefinedRatingTag.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { tagFor, tagName, tagType = "positive", status = 1 } = req.body;
@@ -64,7 +63,7 @@ export const updatePredefinedRatingTag = async (req, res) => {
 
 export const deletePredefinedRatingTag = async (req, res) => {
     try {
-        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await PredefinedRatingTag.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString() });
@@ -126,7 +125,7 @@ export const getPredefinedRatingTag = async (req, res) => {
 
 export const getSinglePredefinedRatingTag = async (req, res) => {
     try {
-        const doc = await PredefinedRatingTag.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await PredefinedRatingTag.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({

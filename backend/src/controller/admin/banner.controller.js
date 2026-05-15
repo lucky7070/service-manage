@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { Banner } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 import { deleteFile } from "../../libraries/storage.js";
 
 export const createBanner = async (req, res) => {
@@ -30,7 +29,7 @@ export const createBanner = async (req, res) => {
 
 export const updateBanner = async (req, res) => {
     try {
-        const doc = await Banner.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Banner.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { bannerTitle = "", bannerTitleHi = "", bannerSubtitle = "", bannerSubtitleHi = "", bannerType = "homepage", link = "", displayOrder = 0 } = req.body;
@@ -62,7 +61,7 @@ export const updateBanner = async (req, res) => {
 
 export const deleteBanner = async (req, res) => {
     try {
-        const doc = await Banner.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Banner.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });

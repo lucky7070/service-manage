@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { City, Country, State } from "../../models/index.js";
 import { escapeRegex, ObjectId } from "../../helpers/utils.js";

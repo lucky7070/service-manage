@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ObjectId } from "./utils.js";
 import { Customer, PredefinedRatingTag, Rating, ServiceProvider } from "../models/index.js";
 
 /**
@@ -30,7 +31,7 @@ export async function resolveQuickTagIds(rawQuickTags, expectedTagFor) {
         }
     }
 
-    const objectIds = unique.map((id) => new mongoose.Types.ObjectId(id));
+    const objectIds = unique.map((id) => ObjectId(id));
     const found = await PredefinedRatingTag.find({ _id: { $in: objectIds }, tagFor: expectedTagFor, isActive: true, deletedAt: null }).select("_id").lean();
     if (found.length !== unique.length) {
         const err = new Error("One or more quick tags are invalid or not allowed for this feedback.");
@@ -48,7 +49,7 @@ export async function incrementProviderRatingTotals(providerId, starRating) {
 }
 
 export async function refreshCustomerAverageRating(customerId) {
-    const id = new mongoose.Types.ObjectId(String(customerId));
+    const id = ObjectId(customerId);
     const [row] = await Rating.aggregate([
         { $match: { ratedTo: id, ratingType: "provider_to_customer" } },
         { $group: { _id: null, sum: { $sum: "$starRating" }, n: { $sum: 1 } } },

@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { OurValue } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const createOurValue = async (req, res) => {
     try {
@@ -25,7 +24,7 @@ export const createOurValue = async (req, res) => {
 
 export const updateOurValue = async (req, res) => {
     try {
-        const doc = await OurValue.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await OurValue.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { title, description, displayOrder = 0, status = 1 } = req.body;
@@ -49,7 +48,7 @@ export const updateOurValue = async (req, res) => {
 
 export const deleteOurValue = async (req, res) => {
     try {
-        const doc = await OurValue.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await OurValue.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
         await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });
         return res.successDelete(doc);

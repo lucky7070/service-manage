@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { Country, State } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const createState = async (req, res) => {
     try {
@@ -9,7 +8,7 @@ export const createState = async (req, res) => {
         if (!countryId) return res.clientError("Country is required.", 422, [{ field: "countryId", message: "Required." }]);
         if (!name?.trim()) return res.clientError("State name is required.", 422, [{ field: "name", message: "Required." }]);
 
-        const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(`${countryId}`), deletedAt: null });
+        const country = await Country.findOne({ _id: ObjectId(countryId), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });
 
         const normalizedName = name.trim();
@@ -29,14 +28,14 @@ export const createState = async (req, res) => {
 
 export const updateState = async (req, res) => {
     try {
-        const state = await State.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const state = await State.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!state) return res.noRecords();
 
         const { countryId, name, status = 1 } = req.body;
         if (!countryId) return res.clientError("Country is required.", 422, [{ field: "countryId", message: "Required." }]);
         if (!name?.trim()) return res.clientError("State name is required.", 422, [{ field: "name", message: "Required." }]);
 
-        const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(`${countryId}`), deletedAt: null });
+        const country = await Country.findOne({ _id: ObjectId(countryId), deletedAt: null });
         if (!country) return res.noRecords({ message: "Country not found." });
 
         const normalizedName = name.trim();
@@ -57,7 +56,7 @@ export const updateState = async (req, res) => {
 
 export const deleteState = async (req, res) => {
     try {
-        const state = await State.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const state = await State.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!state) return res.noRecords();
 
         await state.updateOne({ deletedAt: moment().toISOString() });
@@ -79,7 +78,7 @@ export const getState = async (req, res) => {
         const filter = { deletedAt: null };
         if (query) filter.name = { $regex: escapeRegex(String(query)), $options: "i" };
         if (status !== null && status !== undefined && status !== "") filter.isActive = Number(status) === 1;
-        if (countryId) filter.countryId = new mongoose.Types.ObjectId(`${countryId}`);
+        if (countryId) filter.countryId = ObjectId(countryId);
 
         const pipeline = [
             { $match: filter },
@@ -111,7 +110,7 @@ export const getState = async (req, res) => {
 
 export const getSingleState = async (req, res) => {
     try {
-        const state = await State.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const state = await State.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!state) return res.noRecords();
 
         return res.success({

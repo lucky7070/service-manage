@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { City, ServiceProvider, ServiceCategory, ServiceProviderPhoto } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 
 export const createServiceProvider = async (req, res) => {
@@ -16,10 +15,10 @@ export const createServiceProvider = async (req, res) => {
             throw new Error("This Aadhar number is already registered.");
         }
 
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(cityId)), deletedAt: null });
+        const city = await City.findOne({ _id: ObjectId(cityId), deletedAt: null });
         if (!city) throw new Error("City not found.");
 
-        const serviceCategory = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(String(serviceCategoryId)), deletedAt: null });
+        const serviceCategory = await ServiceCategory.findOne({ _id: ObjectId(serviceCategoryId), deletedAt: null });
         if (!serviceCategory) throw new Error("Service category not found.");
 
         const files = req.files || {};
@@ -51,7 +50,7 @@ export const createServiceProvider = async (req, res) => {
 
 export const updateServiceProvider = async (req, res) => {
     try {
-        const record = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const record = await ServiceProvider.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!record) return res.noRecords();
 
         const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
@@ -64,10 +63,10 @@ export const updateServiceProvider = async (req, res) => {
             throw new Error("This Aadhar number is already registered.");
         }
 
-        const city = await City.findOne({ _id: new mongoose.Types.ObjectId(String(cityId)), deletedAt: null });
+        const city = await City.findOne({ _id: ObjectId(cityId), deletedAt: null });
         if (!city) throw new Error("City not found.");
 
-        const serviceCategory = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(String(serviceCategoryId)), deletedAt: null });
+        const serviceCategory = await ServiceCategory.findOne({ _id: ObjectId(serviceCategoryId), deletedAt: null });
         if (!serviceCategory) throw new Error("Service category not found.");
 
         const files = req.files || {};
@@ -94,7 +93,7 @@ export const updateServiceProvider = async (req, res) => {
 
 export const updateServiceProviderStatus = async (req, res) => {
     try {
-        const record = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const record = await ServiceProvider.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!record) return res.noRecords();
 
         const nextProfileStatus = String(req.body.profileStatus);
@@ -122,7 +121,7 @@ export const updateServiceProviderStatus = async (req, res) => {
 
 export const deleteServiceProvider = async (req, res) => {
     try {
-        const doc = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await ServiceProvider.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         // if (doc.image) deleteFile(doc.image);
@@ -164,11 +163,11 @@ export const getServiceProvider = async (req, res) => {
         }
 
         if (cityId !== null && cityId !== undefined && cityId !== "") {
-            filter.cityId = new mongoose.Types.ObjectId(String(cityId));
+            filter.cityId = ObjectId(cityId);
         }
 
         if (serviceCategoryId !== null && serviceCategoryId !== undefined && serviceCategoryId !== "") {
-            filter.serviceCategoryId = new mongoose.Types.ObjectId(String(serviceCategoryId));
+            filter.serviceCategoryId = ObjectId(serviceCategoryId);
         }
 
         const pipeline = [
@@ -197,7 +196,7 @@ export const getServiceProvider = async (req, res) => {
 
 export const getSingleServiceProvider = async (req, res) => {
     try {
-        const doc = await ServiceProvider.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null }).lean();
+        const doc = await ServiceProvider.findOne({ _id: ObjectId(req.params.id), deletedAt: null }).lean();
         if (!doc) return res.noRecords();
 
         doc.photos = await ServiceProviderPhoto.find({ providerId: doc._id }, '_id photoUrl displayOrder').sort({ displayOrder: 1 }).lean();

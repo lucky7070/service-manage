@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { Testimonial } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const createTestimonial = async (req, res) => {
     try {
@@ -25,7 +24,7 @@ export const createTestimonial = async (req, res) => {
 
 export const updateTestimonial = async (req, res) => {
     try {
-        const doc = await Testimonial.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Testimonial.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { from = "customer", name, designation, rating = 5, review, status = 1 } = req.body;
@@ -50,7 +49,7 @@ export const updateTestimonial = async (req, res) => {
 
 export const deleteTestimonial = async (req, res) => {
     try {
-        const doc = await Testimonial.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Testimonial.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString() });
@@ -111,7 +110,7 @@ export const getTestimonial = async (req, res) => {
 
 export const getSingleTestimonial = async (req, res) => {
     try {
-        const doc = await Testimonial.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Testimonial.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({

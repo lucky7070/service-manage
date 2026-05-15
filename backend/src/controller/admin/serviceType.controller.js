@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { ServiceCategory, ServiceType } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 const parseOptionalNumber = (v) => {
     if (v === undefined || v === null || v === "") return null;
@@ -15,7 +14,7 @@ export const createServiceType = async (req, res) => {
         if (!categoryId) return res.clientError("Category is required.", 422, [{ field: "categoryId", message: "Required." }]);
         if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
 
-        const category = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(`${categoryId}`), deletedAt: null });
+        const category = await ServiceCategory.findOne({ _id: ObjectId(categoryId), deletedAt: null });
         if (!category) return res.clientError("Category not found.", 404);
 
         const normalizedName = name.trim();
@@ -43,14 +42,14 @@ export const createServiceType = async (req, res) => {
 
 export const updateServiceType = async (req, res) => {
     try {
-        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await ServiceType.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { categoryId, name, nameHi, estimatedTimeMinutes, basePrice, description, status = 1 } = req.body;
         if (!categoryId) return res.clientError("Category is required.", 422, [{ field: "categoryId", message: "Required." }]);
         if (!name?.trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required." }]);
 
-        const category = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(`${categoryId}`), deletedAt: null });
+        const category = await ServiceCategory.findOne({ _id: ObjectId(categoryId), deletedAt: null });
         if (!category) return res.clientError("Category not found.", 404);
 
         const normalizedName = name.trim();
@@ -82,7 +81,7 @@ export const updateServiceType = async (req, res) => {
 
 export const deleteServiceType = async (req, res) => {
     try {
-        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await ServiceType.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString() });
@@ -109,7 +108,7 @@ export const getServiceType = async (req, res) => {
             filter.isActive = Number(status) === 1;
         }
         if (categoryId) {
-            filter.categoryId = new mongoose.Types.ObjectId(`${categoryId}`);
+            filter.categoryId = ObjectId(categoryId);
         }
 
         const pipeline = [
@@ -148,7 +147,7 @@ export const getServiceType = async (req, res) => {
 
 export const getSingleServiceType = async (req, res) => {
     try {
-        const doc = await ServiceType.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await ServiceType.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({

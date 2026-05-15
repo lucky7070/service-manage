@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { Faq } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const createFaq = async (req, res) => {
     try {
@@ -23,7 +22,7 @@ export const createFaq = async (req, res) => {
 
 export const updateFaq = async (req, res) => {
     try {
-        const doc = await Faq.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Faq.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { question, answer, displayOrder = 0, status = 1 } = req.body;
@@ -45,7 +44,7 @@ export const updateFaq = async (req, res) => {
 
 export const deleteFaq = async (req, res) => {
     try {
-        const doc = await Faq.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Faq.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });
@@ -95,7 +94,7 @@ export const getFaq = async (req, res) => {
 
 export const getSingleFaq = async (req, res) => {
     try {
-        const doc = await Faq.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Faq.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({ _id: doc._id, question: doc.question, answer: doc.answer, displayOrder: doc.displayOrder || 0, status: doc.isActive ? 1 : 0, createdAt: doc.createdAt });

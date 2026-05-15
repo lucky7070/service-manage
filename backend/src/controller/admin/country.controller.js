@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { Country } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const createCountry = async (req, res) => {
     try {
@@ -21,7 +20,7 @@ export const createCountry = async (req, res) => {
 
 export const updateCountry = async (req, res) => {
     try {
-        const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const country = await Country.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!country) return res.noRecords();
 
         const { name, status = 1 } = req.body;
@@ -44,7 +43,7 @@ export const updateCountry = async (req, res) => {
 
 export const deleteCountry = async (req, res) => {
     try {
-        const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const country = await Country.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!country) return res.noRecords();
 
         await country.updateOne({ deletedAt: moment().toISOString() });
@@ -91,7 +90,7 @@ export const getCountry = async (req, res) => {
 
 export const getSingleCountry = async (req, res) => {
     try {
-        const country = await Country.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const country = await Country.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!country) return res.noRecords();
 
         return res.success({ _id: country._id, name: country.name, status: country.isActive ? 1 : 0, createdAt: country.createdAt });

@@ -1,8 +1,7 @@
 import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
 import moment from "moment";
 import { Admin, Role } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const listAdmins = async (req, res) => {
     try {
@@ -15,35 +14,35 @@ export const listAdmins = async (req, res) => {
         sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
 
         const filter = { deletedAt: null };
-        if (query) {
-            const q = escapeRegex(String(query));
-            filter.$or = [
-                { userId: { $regex: q, $options: "i" } },
-                { name: { $regex: q, $options: "i" } },
-                { mobile: { $regex: q, $options: "i" } },
-                { email: { $regex: q, $options: "i" } },
-                { roleName: { $regex: q, $options: "i" } }
-            ];
-        }
-
         if (status !== null && status !== undefined && status !== "") {
             filter.isActive = Number(status) === 1;
         }
 
         const pipeline = [
+            { $match: filter },
             { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, roleId: 1, isActive: 1, createdAt: 1 } },
-            { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleName" } },
-            {
-                $addFields: {
-                    roleName: { $ifNull: [{ $first: "$roleName.name" }, '--'] },
-                    status: { $cond: [{ $eq: ['$isActive', true] }, 1, 0] },
-                }
-            },
-            { $match: filter }
+            { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleName", pipeline: [{ $match: { deletedAt: null } }, { $project: { _id: 1, name: 1 } }] } },
+            { $unwind: { path: "$roleName", preserveNullAndEmptyArrays: true } },
+            { $addFields: { roleName: { $ifNull: ["$roleName.name", "--"] }, status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] } } },
         ];
 
+        if (query) {
+            const q = escapeRegex(String(query));
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { userId: { $regex: q, $options: "i" } },
+                        { name: { $regex: q, $options: "i" } },
+                        { mobile: { $regex: q, $options: "i" } },
+                        { email: { $regex: q, $options: "i" } },
+                        { roleName: { $regex: q, $options: "i" } }
+                    ]
+                }
+            });
+        }
+
         // Clone the pipeline and append `$count` for total count
-        const totalCountPipeline = [...pipeline, { $count: 'total_count' }];
+        const totalCountPipeline = [...pipeline, { $count: "total_count" }];
 
         // Query to get paginated results
         const resultsPipeline = [...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }, { $skip: (pageNo - 1) * limit }, { $limit: limit }];
@@ -64,7 +63,7 @@ export const listAdmins = async (req, res) => {
 
 export const getSingleAdmin = async (req, res) => {
     try {
-        const admin = await Admin.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const admin = await Admin.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!admin) return res.noRecords();
 
         return res.success(admin);
@@ -95,7 +94,7 @@ export const createAdmin = async (req, res) => {
 
 export const updateAdmin = async (req, res) => {
     try {
-        const admin = await Admin.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const admin = await Admin.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!admin) return res.noRecords();
 
         const { name, mobile, email = null, password = null, roleId, status = 1 } = req.body;
@@ -123,7 +122,7 @@ export const updateAdmin = async (req, res) => {
 
 export const addAdminPermission = async (req, res) => {
     try {
-        const admin = await Admin.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const admin = await Admin.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!admin) return res.noRecords();
 
         if (req.body.permissions === undefined || !Array.isArray(req.body.permissions)) {
@@ -141,7 +140,7 @@ export const addAdminPermission = async (req, res) => {
 
 export const deleteAdmin = async (req, res) => {
     try {
-        const admin = await Admin.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const admin = await Admin.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!admin) return res.noRecords();
 
         await admin.updateOne({ deletedAt: moment().toISOString() });

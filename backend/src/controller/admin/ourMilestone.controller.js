@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { OurMilestone } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 
 export const createOurMilestone = async (req, res) => {
     try {
@@ -22,7 +21,7 @@ export const createOurMilestone = async (req, res) => {
 
 export const updateOurMilestone = async (req, res) => {
     try {
-        const doc = await OurMilestone.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await OurMilestone.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
         const { year, event, displayOrder = 0, status = 1 } = req.body;
         await OurMilestone.updateOne(
@@ -43,7 +42,7 @@ export const updateOurMilestone = async (req, res) => {
 
 export const deleteOurMilestone = async (req, res) => {
     try {
-        const doc = await OurMilestone.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await OurMilestone.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
         await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });
         return res.successDelete(doc);

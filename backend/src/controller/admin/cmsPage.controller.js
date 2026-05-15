@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { CmsPage } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 import { config } from "../../config/index.js";
 
 export const createCmsPage = async (req, res) => {
@@ -33,7 +32,7 @@ export const createCmsPage = async (req, res) => {
 
 export const updateCmsPage = async (req, res) => {
     try {
-        const doc = await CmsPage.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await CmsPage.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { pageTitle, pageTitleHi = "", metaDescription = "", metaKeywords = "", content = "", contentHi = "", viewCount = 0 } = req.body;
@@ -65,7 +64,7 @@ export const deleteCmsPage = async (req, res) => {
             return res.clientError("CMS page creation is not available in production.", 403);
         }
 
-        const doc = await CmsPage.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await CmsPage.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString(), updatedBy: req.admin._id });
@@ -108,7 +107,7 @@ export const getCmsPages = async (req, res) => {
 
 export const getSingleCmsPage = async (req, res) => {
     try {
-        const doc = await CmsPage.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await CmsPage.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({ _id: doc._id, pageSlug: doc.pageSlug, pageTitle: doc.pageTitle, pageTitleHi: doc.pageTitleHi || "", metaDescription: doc.metaDescription || "", metaKeywords: doc.metaKeywords || "", content: doc.content || "", contentHi: doc.contentHi || "", viewCount: doc.viewCount || 0, createdAt: doc.createdAt, updatedAt: doc.updatedAt });

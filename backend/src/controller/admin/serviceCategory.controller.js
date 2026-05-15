@@ -1,7 +1,6 @@
-import mongoose from "mongoose";
 import moment from "moment";
 import { ServiceCategory } from "../../models/index.js";
-import { escapeRegex, slugify } from "../../helpers/utils.js";
+import { escapeRegex, slugify, ObjectId } from "../../helpers/utils.js";
 import { deleteFile } from "../../libraries/storage.js";
 
 export const listServiceCategoriesForSelect = async (req, res) => {
@@ -42,7 +41,7 @@ export const createServiceCategory = async (req, res) => {
 
 export const updateServiceCategory = async (req, res) => {
     try {
-        const doc = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await ServiceCategory.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const { slug: slugIn, name, nameHi, description, displayOrder = 0, status = 1 } = req.body;
@@ -80,7 +79,7 @@ export const updateServiceCategory = async (req, res) => {
 
 export const deleteServiceCategory = async (req, res) => {
     try {
-        const doc = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await ServiceCategory.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         if (doc.image) deleteFile(doc.image);
@@ -146,7 +145,7 @@ export const getServiceCategory = async (req, res) => {
 
 export const getSingleServiceCategory = async (req, res) => {
     try {
-        const doc = await ServiceCategory.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await ServiceCategory.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         return res.success({

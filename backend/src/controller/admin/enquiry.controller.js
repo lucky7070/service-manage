@@ -1,6 +1,5 @@
 import { Enquiry } from "../../models/index.js";
-import { escapeRegex } from "../../helpers/utils.js";
-import mongoose from "mongoose";
+import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 import moment from "moment";
 
 export const getEnquiry = async (req, res) => {
@@ -55,7 +54,7 @@ export const getEnquiry = async (req, res) => {
 
 export const resolveEnquiry = async (req, res) => {
     try {
-        const doc = await Enquiry.findById(new mongoose.Types.ObjectId(String(req.params.id)));
+        const doc = await Enquiry.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         const nextResolved = [1, "1", true, "true"].includes(req.body.isResolved);
@@ -73,7 +72,7 @@ export const resolveEnquiry = async (req, res) => {
 
 export const deleteEnquiry = async (req, res) => {
     try {
-        const doc = await Enquiry.findOne({ _id: new mongoose.Types.ObjectId(String(req.params.id)), deletedAt: null });
+        const doc = await Enquiry.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
         await doc.updateOne({ deletedAt: moment().toISOString() });
