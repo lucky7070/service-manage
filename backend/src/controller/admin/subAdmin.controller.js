@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import moment from "moment";
 import { Admin, Role } from "../../models/index.js";
 import { escapeRegex, ObjectId } from "../../helpers/utils.js";
+import { deleteFile } from "../../libraries/storage.js";
 
 export const listAdmins = async (req, res) => {
     try {
@@ -83,7 +84,10 @@ export const createAdmin = async (req, res) => {
         if (!role) throw new Error("Selected role not found.");
 
         const hashed = await bcrypt.hash(password, 10);
-        const admin = await Admin.create({ name, mobile, email, roleId, password: hashed, permissions: [], isActive: Number(status) === 1 });
+        let image = "/admins/default.png";
+        if (req.file?.filename) image = `/admins/${req.file.filename}`;
+
+        const admin = await Admin.create({ name, mobile, email, roleId, password: hashed, permissions: [], isActive: Number(status) === 1, image });
 
         admin.password = undefined;
         return res.successInsert(admin);
@@ -111,6 +115,15 @@ export const updateAdmin = async (req, res) => {
         admin.roleId = roleId;
         admin.isActive = Number(status) === 1;
         if (password) admin.password = await bcrypt.hash(password, 10);
+
+        if (req.file?.filename) {
+            const previous = admin.image;
+            const nextImage = `/admins/${req.file.filename}`;
+            if (previous && previous !== nextImage) {
+                deleteFile(previous);
+            }
+            admin.image = nextImage;
+        }
 
         await admin.save();
         admin.password = undefined;

@@ -37,10 +37,21 @@ const experienceYears = check("experienceYears").optional().custom((value) => {
 
 const experienceDescription = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).trim();
 const profileStatus = check("profileStatus", "Profile status is required.").exists().notEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
+const rejectionReason = check("rejectionReason").optional({ values: "falsy" }).trim().isLength({ max: 2000 }).custom((value, { req }) => {
+    const status = String(req.body.profileStatus);
+    if (status === "rejected" || status === "suspended") {
+        const text = String(value || "").trim();
+        if (text.length < 10) {
+            throw new Error(`${status === "suspended" ? "Suspension" : "Rejection"} reason must be at least 10 characters.`);
+        }
+    }
+
+    return true;
+});
 const isVerified = check("isVerified", "isVerified must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const isResolved = check("isResolved", "isResolved must be 0 or 1.").exists().notEmpty().isIn([0, 1, "0", "1", true, false, "true", "false"]);
 const id = param("id", "Invalid ID.").exists().notEmpty().isMongoId();
-const passwordOptional = check("password", "Password must be greater then 5 digit.!!").optional({ nullable: true }).isLength({ min: 5, max: 50 });
+const passwordOptional = check("password", "Password must be greater then 5 digit.!!").optional({ values: "falsy", nullable: true }).isLength({ min: 5, max: 50 });
 const imageRequired = check("image", "Profile image is required.").custom((value, { req }) => {
     if (!req.file) throw new Error("Profile image is required.");
     return true;
@@ -223,7 +234,7 @@ export const validator = (method) => {
             output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, image, panCardDocument, aadharDocument];
             break;
         case "service-provider-status":
-            output = [id, profileStatus, isVerified];
+            output = [id, profileStatus, isVerified, rejectionReason];
             break;
         case "admin":
             output = [name, mobile, roleId, email, password, status];

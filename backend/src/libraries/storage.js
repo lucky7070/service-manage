@@ -85,7 +85,9 @@ export const deleteFile = (deleteFile) => {
         if (![
             '/customers/default.png',
             '/admins/default.png',
-            'img-not-found.jpg'
+            '/service-provider/default.png',
+            '/testimonials/default.png',
+            '/img-not-found.jpg'
         ].includes(deleteFile)) {
             deleteFile = `public/uploads/` + deleteFile;
             if (fs.existsSync(deleteFile)) {

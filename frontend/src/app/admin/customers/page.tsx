@@ -13,7 +13,7 @@ import { ImageIcon, MapPin, Pencil, Plus, Trash2, WalletCards } from "lucide-rea
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, InputFile, Label, Modal, Select, Option } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, ToggleSwitch } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -30,6 +30,7 @@ type Customer = {
     dateOfBirth: string;
     image?: string | null;
     status: number;
+    signupReward?: boolean;
     createdAt?: string;
 };
 
@@ -51,17 +52,6 @@ const validationSchema = Yup.object().shape({
     status: Yup.number().required("Status is required.")
 });
 
-function buildFormData(values: Customer, imageFile: File | null) {
-    const fd = new FormData();
-    fd.append("name", values.name.trim());
-    fd.append("mobile", values.mobile.trim());
-    fd.append("email", values.email.trim());
-    fd.append("dateOfBirth", values.dateOfBirth);
-    fd.append("status", String(values.status));
-    if (imageFile) fd.append("image", imageFile);
-    return fd;
-}
-
 export default function AdminCustomersPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit">(null);
@@ -82,9 +72,9 @@ export default function AdminCustomersPage() {
         email: "",
         dateOfBirth: "",
         image: null,
-        status: 1
+        status: 1,
+        signupReward: false
     });
-    const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const fetchCustomers = useCallback(async () => {
@@ -105,11 +95,6 @@ export default function AdminCustomersPage() {
         debouncedFetchRef.current();
         return () => { debouncedFetchRef.current.cancel(); };
     }, [param]);
-
-    const resetImageState = () => {
-        setImageFile(null);
-        setImagePreview(null);
-    };
 
     const handleDelete = async (id: string) => {
         const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
@@ -132,13 +117,12 @@ export default function AdminCustomersPage() {
     };
 
     const openAdd = () => {
-        resetImageState();
-        setInitialValues({ _id: "", userId: "", name: "", mobile: "", email: "", dateOfBirth: "", image: null, status: 1 });
+        setInitialValues({ _id: "", userId: "", name: "", mobile: "", email: "", dateOfBirth: "", image: null, status: 1, signupReward: false });
+        setImagePreview(null);
         setOpen("add");
     };
 
     const openEdit = async (id: string) => {
-        resetImageState();
         const { data } = await AxiosHelperAdmin.getData(`/customers/${id}`);
         if (data?.status && data?.data) {
             const c = data.data as Customer;
@@ -303,7 +287,7 @@ export default function AdminCustomersPage() {
                 show={!!open}
                 onClose={() => {
                     setOpen(null);
-                    resetImageState();
+                    setImagePreview(null);
                 }}
                 title={open === "add" ? "Create Customer" : "Update Customer"}
                 subTitle="Name, mobile, email, and date of birth are required. Image is optional."
@@ -316,13 +300,12 @@ export default function AdminCustomersPage() {
                         enableReinitialize
                         validationSchema={validationSchema}
                         onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
-                            const fd = buildFormData(values, imageFile);
                             if (open === "add") {
-                                const { data } = await AxiosHelperAdmin.postData("/customers", fd, true);
+                                const { data } = await AxiosHelperAdmin.postData("/customers", values, true);
                                 if (data?.status) {
                                     toast.success(data.message);
                                     setOpen(null);
-                                    resetImageState();
+                                    setImagePreview(null);
                                     fetchCustomers();
                                     resetForm();
                                 } else {
@@ -330,11 +313,11 @@ export default function AdminCustomersPage() {
                                     setErrors(data.data);
                                 }
                             } else {
-                                const { data } = await AxiosHelperAdmin.putData(`/customers/${values._id}`, fd, true);
+                                const { data } = await AxiosHelperAdmin.putData(`/customers/${values._id}`, values, true);
                                 if (data?.status) {
                                     toast.success(data.message);
                                     setOpen(null);
-                                    resetImageState();
+                                    setImagePreview(null);
                                     fetchCustomers();
                                     resetForm();
                                 } else {
@@ -345,69 +328,79 @@ export default function AdminCustomersPage() {
                             setSubmitting(false);
                         }}
                     >
-                        {({ isSubmitting }) => (
+                        {({ isSubmitting, values, setFieldValue }) => (
                             <Form className="space-y-3">
                                 <div className="space-y-2">
-                                    <Label htmlFor="customer-image">
-                                        Profile image <span className="font-normal text-slate-500">(optional)</span>
-                                    </Label>
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
-                                            {(imagePreview || resolveFileUrl(initialValues.image)) ? <Image
-                                                src={imagePreview || resolveFileUrl(initialValues.image) || ""}
-                                                alt=""
-                                                className="h-full w-full object-cover"
-                                            /> : <div className="flex h-full w-full items-center justify-center text-slate-400">
-                                                <ImageIcon className="h-8 w-8" />
-                                            </div>}
+                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                            {imagePreview && typeof imagePreview === 'string' ? (
+                                                <Image src={imagePreview || ""} alt={imagePreview} className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">No image</div>
+                                            )}
                                         </div>
-                                        <InputFile
-                                            id="customer-image"
-                                            name="image"
-                                            accept="image/*"
-                                            onChange={(e) => {
-                                                const f = e.target.files?.[0];
-                                                setImageFile(f ?? null);
-                                                if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
-                                                if (f) setImagePreview(URL.createObjectURL(f));
-                                                else setImagePreview(resolveFileUrl(initialValues.image));
-                                            }}
-                                        />
+                                        <div className="space-y-2">
+                                            <Label>Profile Photo <span className="font-normal text-slate-500">(optional)</span></Label>
+                                            <InputFile
+                                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                                onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) {
+                                                        setFieldValue('image', f);
+                                                        setImagePreview(URL.createObjectURL(f));
+                                                    }
+                                                }}
+                                            />
+                                            <ErrorMessage className="text-xs text-rose-600" name="image" component="small" />
+                                        </div>
                                     </div>
                                 </div>
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 space-y-3">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="customer-name">Name</Label>
+                                        <Field as={Input} id="customer-name" name="name" placeholder="Full name" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="customer-mobile">Mobile</Label>
+                                        <Field as={Input} id="customer-mobile" name="mobile" placeholder="10–15 digits" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="customer-name">Name</Label>
-                                    <Field as={Input} id="customer-name" name="name" placeholder="Full name" />
-                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="customer-mobile">Mobile</Label>
-                                    <Field as={Input} id="customer-mobile" name="mobile" placeholder="10–15 digits" />
-                                    <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="customer-email">Email</Label>
-                                    <Field as={Input} id="customer-email" name="email" type="email" placeholder="email@example.com" />
-                                    <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="customer-dob">Date of birth</Label>
-                                    <Field as={Input} id="customer-dob" name="dateOfBirth" type="date" />
-                                    <ErrorMessage className="text-xs text-rose-600" name="dateOfBirth" component="small" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="customer-status">Status</Label>
-                                    <Field as={Select} id="customer-status" name="status">
-                                        <Option value={1}>Active</Option>
-                                        <Option value={0}>Inactive</Option>
-                                    </Field>
-                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                    <div className="space-y-2">
+                                        <Label htmlFor="customer-email">Email</Label>
+                                        <Field as={Input} id="customer-email" name="email" type="email" placeholder="email@example.com" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="customer-dob">Date of birth</Label>
+                                        <Field as={Input} id="customer-dob" name="dateOfBirth" type="date" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="dateOfBirth" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="customer-status">Status</Label>
+                                        <Field as={Select} id="customer-status" name="status">
+                                            <Option value={1}>Active</Option>
+                                            <Option value={0}>Inactive</Option>
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                    </div>
+                                    {open === "add" ? (
+                                        <div className="space-y-2">
+                                            <Label htmlFor="customer-signupReward">Add Signup Reward</Label>
+                                            <div className="flex items-center gap-2">
+                                                <ToggleSwitch className="min-w-11" checked={values.signupReward ?? false} onCheckedChange={(checked) => setFieldValue("signupReward", checked)} />
+                                                <span className="mt-0.5 block text-xs font-normal text-slate-500 dark:text-slate-400">
+                                                    Credits wallet using the signup reward amount.
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ) : null}
                                 </div>
                                 <div className="flex justify-end gap-2">
                                     <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => {
                                         setOpen(null);
-                                        resetImageState();
+                                        setImagePreview(null);
                                     }}>
                                         Cancel
                                     </Button>

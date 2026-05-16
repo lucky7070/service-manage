@@ -12,7 +12,7 @@ import { Fingerprint, ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Modal, Select, Option } from "@/components/ui";
+import { Badge, Button, Input, Label, Modal, Select, Option, InputFile } from "@/components/ui";
 import AdminPagination from "@/components/admin/AdminPagination";
 import { Role } from "@/app/admin/roles/page";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
@@ -75,7 +75,8 @@ export default function AdminUsersPage() {
 
     const [roles, setRoles] = useState<Role[]>([]);
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", status: "" });
-    const [initialValues, setInitialValues] = useState<AdminRecord & { password?: string }>({ _id: "", name: "", mobile: "", email: "", roleId: "", roleName: null, status: 1, createdAt: "", permissionsCount: 0, password: "" });
+    const [initialValues, setInitialValues] = useState<AdminRecord & { password?: string }>({ _id: "", name: "", mobile: "", email: "", roleId: "", roleName: null, status: 1, createdAt: "", permissionsCount: 0, password: "", image: null });
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const fetchAdmins = useCallback(async () => {
         const { data } = await AxiosHelperAdmin.getData("/admins", param);
@@ -137,7 +138,8 @@ export default function AdminUsersPage() {
                             variant="primary"
                             size="md"
                             onClick={() => {
-                                setInitialValues({ _id: "", name: "", mobile: "", email: "", roleId: "", roleName: null, permissionsCount: 0, status: 1, createdAt: "", password: "" });
+                                setImagePreview(null);
+                                setInitialValues({ _id: "", name: "", mobile: "", email: "", roleId: "", roleName: null, permissionsCount: 0, status: 1, createdAt: "", password: "", image: null });
                                 setOpen("add");
                             }}
                         >
@@ -248,8 +250,10 @@ export default function AdminUsersPage() {
                                                             ...row,
                                                             email: row.email || "",
                                                             roleId: row.roleId || "",
-                                                            password: ""
+                                                            password: "",
+                                                            image: row.image || null
                                                         });
+                                                        setImagePreview(resolveFileUrl(row.image) || null);
                                                         setOpen("edit");
                                                     }}
                                                     title="Edit sub admin"
@@ -281,7 +285,7 @@ export default function AdminUsersPage() {
                 onClose={() => setOpen(null)}
                 title={open === "add" ? "Create Sub Admin" : "Update Sub Admin"}
                 subTitle="Pick a role; permissions will be assigned automatically."
-                size="md"
+                size="lg"
             >
                 <div className="space-y-4">
                     <Formik
@@ -290,7 +294,7 @@ export default function AdminUsersPage() {
                         validationSchema={validationSchema}
                         onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
                             if (open === "add") {
-                                const { data } = await AxiosHelperAdmin.postData("/admins", values);
+                                const { data } = await AxiosHelperAdmin.postData("/admins", values, true);
                                 if (data.status) {
                                     toast.success(data.message);
                                     setOpen(null);
@@ -301,7 +305,7 @@ export default function AdminUsersPage() {
                                     setErrors(data.data || {});
                                 }
                             } else {
-                                const { data: data } = await AxiosHelperAdmin.putData(`/admins/${values._id}`, values);
+                                const { data } = await AxiosHelperAdmin.putData(`/admins/${values._id}`, values, true);
                                 if (data.status) {
                                     toast.success(data.message);
                                     setOpen(null);
@@ -316,73 +320,95 @@ export default function AdminUsersPage() {
                             setSubmitting(false);
                         }}
                     >
-                        {({ isSubmitting }) => (
+                        {({ isSubmitting, setFieldValue }) => (
                             <Form className="space-y-3">
                                 <div className="space-y-2">
-                                    <Label htmlFor="admin-role">Role</Label>
-                                    <Field as={Select} id="admin-role" name="roleId">
-                                        <Option value="">Select Role</Option>
-                                        {roles.map((r) => (
-                                            <Option key={r._id} value={r._id}>
-                                                {r.name}
-                                            </Option>
-                                        ))}
-                                    </Field>
-                                    <ErrorMessage className="text-xs text-rose-600" name="roleId" component="small" />
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                            {(imagePreview || resolveFileUrl(typeof initialValues.image === "string" ? initialValues.image : null)) ? (
+                                                <Image src={imagePreview || resolveFileUrl(typeof initialValues.image === "string" ? initialValues.image : null) || ""} alt="Profile photo" className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                    <ImageIcon className="h-8 w-8" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="admin-image">Profile photo <span className="font-normal text-slate-500">(optional)</span></Label>
+                                            <InputFile
+                                                id="admin-image"
+                                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                                onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) {
+                                                        setFieldValue("image", f);
+                                                        setImagePreview(URL.createObjectURL(f));
+                                                    } else {
+                                                        setFieldValue("image", null);
+                                                        setImagePreview(resolveFileUrl(typeof initialValues.image === "string" ? initialValues.image : null));
+                                                    }
+                                                }}
+                                            />
+                                            <ErrorMessage className="text-xs text-rose-600" name="image" component="small" />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="admin-name">Name</Label>
-                                    <Field as={Input} id="admin-name" name="name" placeholder="e.g. Sub Admin" />
-                                    <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
-                                </div>
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 space-y-3">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="admin-role">Role</Label>
+                                        <Field as={Select} id="admin-role" name="roleId">
+                                            <Option value="">Select Role</Option>
+                                            {roles.map((r) => <Option key={r._id} value={r._id}>{r.name}</Option>)}
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="roleId" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="admin-name">Name</Label>
+                                        <Field as={Input} id="admin-name" name="name" placeholder="e.g. Sub Admin" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="admin-mobile">Mobile</Label>
-                                    <Field as={Input} id="admin-mobile" name="mobile" placeholder="e.g. 9876543210" />
-                                    <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
-                                </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="admin-mobile">Mobile</Label>
+                                        <Field as={Input} id="admin-mobile" name="mobile" placeholder="e.g. 9876543210" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
+                                    </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="admin-email">Email</Label>
-                                    <Field
-                                        as={Input}
-                                        id="admin-email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="off"
-                                        placeholder="e.g. subadmin@email.com"
-                                    />
-                                    <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
+                                    <div className="space-y-2">
+                                        <Label htmlFor="admin-email">Email</Label>
+                                        <Field
+                                            as={Input}
+                                            id="admin-email"
+                                            name="email"
+                                            type="email"
+                                            autoComplete="off"
+                                            placeholder="e.g. subadmin@email.com"
+                                        />
+                                        <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="admin-password">Password</Label>
+                                        <Field
+                                            as={Input}
+                                            id="admin-password"
+                                            name="password"
+                                            type="password"
+                                            autoComplete="new-password"
+                                            placeholder="Create password"
+                                        />
+                                        <ErrorMessage className="text-xs text-rose-600" name="password" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="admin-status">Status</Label>
+                                        <Field as={Select} id="admin-status" name="status">
+                                            <Option value={1}>Active</Option>
+                                            <Option value={0}>Inactive</Option>
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="admin-password">Password</Label>
-                                    <Field
-                                        as={Input}
-                                        id="admin-password"
-                                        name="password"
-                                        type="password"
-                                        autoComplete="new-password"
-                                        placeholder="Create password"
-                                    />
-                                    <ErrorMessage className="text-xs text-rose-600" name="password" component="small" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="admin-status">Status</Label>
-                                    <Field as={Select} id="admin-status" name="status">
-                                        <Option value={1}>Active</Option>
-                                        <Option value={0}>Inactive</Option>
-                                    </Field>
-                                    <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
-                                </div>
-
                                 <div className="flex justify-end gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="md"
-                                        className="border border-indigo-100 dark:border-indigo-100"
-                                        onClick={() => setOpen(null)}
-                                    >
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
                                         Cancel
                                     </Button>
                                     <Button disabled={isSubmitting} type="submit" variant="primary" size="md">

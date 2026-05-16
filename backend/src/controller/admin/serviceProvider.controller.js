@@ -103,14 +103,15 @@ export const updateServiceProviderStatus = async (req, res) => {
         if (!SERVICE_PROVIDER_PROFILE_STATUSES.includes(nextProfileStatus))
             return res.clientError("Invalid profile status.", 422, [{ field: "profileStatus", message: "Invalid profile status." }]);
 
-        const updateDoc = { profileStatus: nextProfileStatus, isVerified: nextIsVerified };
-        if (nextProfileStatus === "approved") {
-            updateDoc.approvedBy = req.admin._id;
-            updateDoc.approvedAt = moment().toISOString();
-            updateDoc.rejectionReason = null;
-        } else if (nextProfileStatus === "rejected") {
-            updateDoc.approvedBy = null;
-            updateDoc.approvedAt = null;
+        const updateDoc = { profileStatus: nextProfileStatus, isVerified: nextIsVerified, approvedBy: req.admin._id, approvedAt: moment().toISOString(), rejectionReason: null };
+        if (nextProfileStatus === "rejected" || nextProfileStatus === "suspended") {
+            const rejectionReason = String(req.body.rejectionReason || "").trim();
+            if (!rejectionReason) {
+                const label = nextProfileStatus === "suspended" ? "Suspension" : "Rejection";
+                return res.clientError(`${label} reason is required.`, 422, [{ field: "rejectionReason", message: `${label} reason is required.` }]);
+            }
+            
+            updateDoc.rejectionReason = rejectionReason;
         }
 
         await record.updateOne(updateDoc);
@@ -177,7 +178,7 @@ export const getServiceProvider = async (req, res) => {
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
             { $unwind: { path: "$city" } },
             { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
+            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];

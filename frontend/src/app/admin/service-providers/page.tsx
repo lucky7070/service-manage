@@ -22,6 +22,7 @@ import { PHONE_ERROR_MESSAGE, PHONE_REGEXP, ProfileStatus, SERVICE_PROVIDER_PROF
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import AxiosHelper from "@/helpers/AxiosHelper";
+import RegistrationDocument from "@/components/admin/RegistrationDocument";
 
 type ServiceProvider = {
     _id: string;
@@ -38,6 +39,8 @@ type ServiceProvider = {
     experienceYears: number | "";
     experienceDescription: string;
     profileStatus: ProfileStatus;
+    rejectionReason?: string;
+    registerFrom?: "front" | "admin";
     isFeatured?: boolean;
 
     cityName?: string;
@@ -59,12 +62,29 @@ type ServiceProviderRecord = {
 type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending", isFeatured: false };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending", rejectionReason: "", isFeatured: false };
 
 const statusValidationSchema = Yup.object().shape({
     profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
-    isVerified: Yup.boolean().required("Verification status is required.")
+    isVerified: Yup.boolean().required("Verification status is required."),
+    rejectionReason: Yup.string().when("profileStatus", {
+        is: (status: string) => status === "rejected" || status === "suspended",
+        then: (schema) => schema.trim().required("Reason is required.").min(10, "At least 10 characters.").max(2000, "Too long."),
+        otherwise: (schema) => schema.optional()
+    })
 });
+
+const statusReasonLabel = (status: ProfileStatus) => {
+    if (status === "suspended") return "Suspension reason";
+    if (status === "rejected") return "Rejection reason";
+    return "Reason";
+};
+
+const registerFromLabel = (value?: string) => {
+    if (value === "front") return <Badge variant="success" size="sm">Website</Badge>;
+    if (value === "admin") return <Badge variant="primary" size="sm">Admin</Badge>;
+    return <Badge variant="secondary" size="sm">—</Badge>;
+};
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().min(2, "Too short.").max(100, "Too long.").required("Name is required.").trim(),
@@ -179,7 +199,11 @@ export default function AdminServiceProvidersPage() {
     };
 
     const openStatusModal = (row: ServiceProvider) => {
-        setInitialValues(row);
+        setInitialValues({
+            ...row,
+            rejectionReason: row.rejectionReason ?? "",
+            isVerified: Boolean(row.isVerified),
+        });
         setCity({ value: String(row.cityId ?? ""), label: String(row.cityName ?? "") });
         setServiceCategory({ value: String(row.serviceCategoryId ?? ""), label: String(row.serviceCategoryName ?? "") });
         setOpen("status");
@@ -514,7 +538,7 @@ export default function AdminServiceProvidersPage() {
                                 </div>
                                 <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                                     <Field id="sp-isFeatured" name="isFeatured" type="checkbox" className="h-4 w-4 rounded border-slate-300" />
-                                    Show on homepage (featured professional)
+                                    Show on Homepage (Featured Professional)
                                 </label>
                                 <div className="flex justify-end gap-2 pt-2">
                                     <Button type="button" variant="secondary" onClick={() => { setOpen(null); }}>
@@ -534,28 +558,54 @@ export default function AdminServiceProvidersPage() {
                 show={open === "status"}
                 onClose={() => setOpen(null)}
                 title="Update provider status"
-                subTitle="Update profile and verification status."
-                size="md"
+                subTitle="Review registration details, documents, and set profile status."
+                size="xxl"
+                scrollable
             >
                 <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-2 rounded-lg border border-indigo-100 p-3 text-sm dark:border-slate-700">
-                        <p><span className="font-medium">User ID:</span> {initialValues.userId}</p>
-                        <p><span className="font-medium">Name:</span> {initialValues.name}</p>
-                        <p><span className="font-medium">Mobile:</span> {initialValues.mobile}</p>
-                        <p><span className="font-medium">Email:</span> {initialValues.email}</p>
-                        <p><span className="font-medium">City:</span> {initialValues.cityName || "—"}</p>
-                        <p><span className="font-medium">Service category:</span> {initialValues.serviceCategoryName || "—"}</p>
+                    <div className="grid grid-cols-1 gap-2 rounded-lg border border-indigo-100 p-3 text-sm dark:border-slate-700 sm:grid-cols-2">
+                        <p><span className="font-semibold">User ID :</span> {initialValues.userId || "—"}</p>
+                        <p><span className="font-semibold">Registered via :</span> {registerFromLabel(initialValues.registerFrom)}</p>
+                        <p><span className="font-semibold">Name :</span> {initialValues.name}</p>
+                        <p><span className="font-semibold">Mobile :</span> {initialValues.mobile}</p>
+                        <p><span className="font-semibold">Email :</span> {initialValues.email}</p>
+                        <p><span className="font-semibold">City :</span> {initialValues.cityName || "—"}</p>
+                        <p><span className="font-semibold">Service category :</span> {initialValues.serviceCategoryName || "—"}</p>
+                        <p><span className="font-semibold">PAN :</span> {initialValues.panCardNumber || "—"}</p>
+                        <p><span className="font-semibold">Aadhar :</span> {initialValues.aadharNumber || "—"}</p>
+                        <p><span className="font-semibold">Experience :</span> {initialValues.experienceYears !== "" && initialValues.experienceYears != null ? `${initialValues.experienceYears} years` : "—"}</p>
+                        <p><span className="font-semibold">Submitted :</span> {initialValues.createdAt ? moment(initialValues.createdAt).format("DD-MM-YYYY HH:mm") : "—"}</p>
+                        {initialValues.experienceDescription ? (
+                            <p className="sm:col-span-2"><span className="font-medium">Experience description:</span> {initialValues.experienceDescription}</p>
+                        ) : null}
+                        {initialValues.rejectionReason && (initialValues.profileStatus === "rejected" || initialValues.profileStatus === "suspended") ? (
+                            <p className={`sm:col-span-2 ${initialValues.profileStatus === "suspended" ? "text-amber-700 dark:text-amber-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                <span className="font-medium">Previous {statusReasonLabel(initialValues.profileStatus).toLowerCase()}:</span> {initialValues.rejectionReason}
+                            </p>
+                        ) : null}
+                    </div>
+
+                    <div>
+                        <p className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Registration documents</p>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            <RegistrationDocument label="Profile photo" path={initialValues.image} />
+                            <RegistrationDocument label="PAN document" path={initialValues.panCardDocument} />
+                            <RegistrationDocument label="Aadhar document" path={initialValues.aadharDocument} />
+                        </div>
                     </div>
 
                     <Formik
                         initialValues={initialValues}
                         enableReinitialize
                         validationSchema={statusValidationSchema}
-                        onSubmit={async (values, { setSubmitting }) => {
-                            const payload = {
+                        onSubmit={async (values, { setSubmitting, setErrors }) => {
+                            const payload: Record<string, unknown> = {
                                 profileStatus: values.profileStatus,
                                 isVerified: values.isVerified ? 1 : 0
                             };
+                            if (values.profileStatus === "rejected" || values.profileStatus === "suspended") {
+                                payload.rejectionReason = String(values.rejectionReason || "").trim();
+                            }
                             const { data } = await AxiosHelperAdmin.putData(`/service-providers/${values._id}/status`, payload);
                             if (data?.status) {
                                 toast.success(data.message || "Provider status updated.");
@@ -563,36 +613,53 @@ export default function AdminServiceProvidersPage() {
                                 fetchRows();
                             } else {
                                 toast.error(data?.message || "Unable to update status.");
+                                if (data?.data && typeof data.data === "object") setErrors(data.data);
                             }
                             setSubmitting(false);
                         }}
                     >
                         {({ isSubmitting, values, setFieldValue }) => (
                             <Form className="space-y-3">
-                                <div className="space-y-2">
-                                    <Label htmlFor="status-profileStatus">Profile status</Label>
-                                    <Field as={Select} id="status-profileStatus" name="profileStatus">
-                                        {SERVICE_PROVIDER_PROFILE_STATUSES.map((status) => (
-                                            <Option key={status} value={status} className="capitalize">
-                                                {status}
-                                            </Option>
-                                        ))}
-                                    </Field>
-                                    <ErrorMessage className="text-xs text-rose-600" name="profileStatus" component="small" />
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="status-profileStatus">Profile status</Label>
+                                        <Field as={Select} id="status-profileStatus" name="profileStatus">
+                                            {SERVICE_PROVIDER_PROFILE_STATUSES.map((status) => (
+                                                <Option key={status} value={status} className="capitalize">
+                                                    {status}
+                                                </Option>
+                                            ))}
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="profileStatus" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="status-isVerified">Verification</Label>
+                                        <Select
+                                            id="status-isVerified"
+                                            value={values.isVerified ? "1" : "0"}
+                                            onChange={(e) => setFieldValue("isVerified", e.target.value === "1")}
+                                        >
+                                            <Option value="1">Verified</Option>
+                                            <Option value="0">Not Verified</Option>
+                                        </Select>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="status-isVerified">Verification</Label>
-                                    <Select
-                                        id="status-isVerified"
-                                        value={values.isVerified ? "1" : "0"}
-                                        onChange={(e) => setFieldValue("isVerified", e.target.value === "1")}
-                                    >
-                                        <Option value="1">Verified</Option>
-                                        <Option value="0">Not Verified</Option>
-                                    </Select>
-                                </div>
-
+                                {values.profileStatus === "rejected" || values.profileStatus === "suspended" ? (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="status-rejectionReason">
+                                            {statusReasonLabel(values.profileStatus)} <span className="text-red-500">*</span>
+                                        </Label>
+                                        <Field
+                                            as={Textarea}
+                                            id="status-rejectionReason"
+                                            name="rejectionReason"
+                                            rows={4}
+                                            placeholder={values.profileStatus === "suspended" ? "Explain why this provider is being suspended." : "Explain why this application was rejected."}
+                                        />
+                                        <ErrorMessage className="text-xs text-rose-600" name="rejectionReason" component="small" />
+                                    </div>
+                                ) : null}
                                 <div className="flex justify-end gap-2 pt-1">
                                     <Button type="button" variant="secondary" onClick={() => setOpen(null)}>
                                         Cancel

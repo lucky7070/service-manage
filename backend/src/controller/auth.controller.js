@@ -72,7 +72,7 @@ export const register = async (req, res) => {
                 referredBy = referrer._id;
             }
 
-            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy });
+            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy, registerFrom: "website" });
 
             const settings = await getSettings(["signup_rewards", "refer_amount"]);
             const signupReward = Number(settings.signup_rewards || 0);

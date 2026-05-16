@@ -1,7 +1,8 @@
 import moment from "moment";
 import { Customer } from "../../models/index.js";
-import { escapeRegex, ObjectId } from "../../helpers/utils.js";
+import { escapeRegex, ObjectId, toBoolean } from "../../helpers/utils.js";
 import { deleteFile } from "../../libraries/storage.js";
+import { getSettings } from "../../helpers/database.js";
 
 export const createCustomer = async (req, res) => {
     try {
@@ -33,10 +34,25 @@ export const createCustomer = async (req, res) => {
             dateOfBirth: dob,
             image: '/customers/default.png',
             isActive: Number(status) === 1,
+            registerFrom: "admin",
         };
         if (req.file) payload.image = `/customers/${req.file.filename}`;
 
         const customer = await Customer.create(payload);
+
+        if (toBoolean(req.body.signupReward)) {
+            const settings = await getSettings(["signup_rewards"]);
+            const signupReward = Number(settings.signup_rewards || 0);
+            if (signupReward > 0) {
+                await customer.addLedger({
+                    amount: signupReward,
+                    paymentType: 1,
+                    paymentMethod: 6,
+                    particulars: "Signup reward"
+                });
+            }
+        }
+
         return res.successInsert(customer);
     } catch (error) {
         return res.someThingWentWrong(error);
