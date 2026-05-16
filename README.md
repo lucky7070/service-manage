@@ -14,8 +14,9 @@ Production-style platform using Next.js (frontend) and Express + MongoDB (backen
 
 ```text
 postman/
-  Service-Manage.postman_collection.json   # API collection (import into Postman)
-  Local.postman_environment.json           # example environment vars
+  Service-Manage.postman_collection.json   # Generated — run `node postman/generate-postman-collection.mjs`
+  Local.postman_environment.json           # example environment vars (baseUrl, xApiKey)
+  generate-postman-collection.mjs           # Source of truth for requests + descriptions
 backend/
   scripts/
     seed.mjs          # CLI entry (npm run seed)
@@ -39,7 +40,15 @@ frontend/
     store/
 ```
 
-Authenticated admin HTTP routes are composed in `backend/src/routes/admin/index.js` (one file per area under `routes/admin/*.routes.js`). Public, customer, and service-provider routes live alongside under `backend/src/routes/`.
+Authenticated admin HTTP routes are composed in `backend/src/routes/admin/index.js` (one file per area under `routes/admin/*.routes.js`). Public routes are mounted from `backend/src/routes/open.routes.js` at the API root. Customer routes: `backend/src/routes/customer.routes.js`; service-provider: `backend/src/routes/service-provider.routes.js`.
+
+**Keeping Postman accurate:** edit `postman/generate-postman-collection.mjs` (arrays `open`, `customer`, `serviceProvider`, `admin`, etc.), then regenerate:
+
+```bash
+node postman/generate-postman-collection.mjs
+```
+
+This overwrites `postman/Service-Manage.postman_collection.json` — do not hand-edit that file if you rely on the script.
 
 ## Run Locally
 
@@ -106,7 +115,15 @@ Frontend default: `http://localhost:3000`
 
 ## Postman
 
-Import `postman/Service-Manage.postman_collection.json` and optionally `postman/Local.postman_environment.json`. Open the **collection** description (or folder descriptions under Customer / Service provider) for **mobile app auth, booking lifecycle, cookies, and Socket.IO** notes. **Admin (authenticated)** requests are grouped into folders (dashboard, bookings, geography, etc.) for easier navigation. Keep the collection in sync with the code when you add or change APIs.
+Import `postman/Service-Manage.postman_collection.json` and optionally `postman/Local.postman_environment.json`. Set **`xApiKey`** to match backend **`X_API_KEY`**, and enable the cookie jar for customer / provider / admin sessions.
+
+The collection documents **cookies**, **`x-api-key`**, booking and **service-lead** flows, **featured providers**, **provider self-service** (`/service-provider/services`), profile image upload for customers, and **Socket.IO** usage in the root description plus per-folder notes. Admin routes are grouped (dashboard & bookings, **service leads**, geography, CMS, …).
+
+After API changes, update **`postman/generate-postman-collection.mjs`** and run:
+
+```bash
+node postman/generate-postman-collection.mjs
+```
 
 ## Current Implemented Modules
 
@@ -151,9 +168,12 @@ Import `postman/Service-Manage.postman_collection.json` and optionally `postman/
 
 ### Bookings, customers, and service providers
 
-- Customer-facing booking flow (service selection, scheduling) and account area (`/user/...`)
-- Service-provider APIs for assigned bookings (start job, completion with customer OTP, etc.)
-- Admin booking list and detail (includes chat history where applicable)
+- Customer-facing **bookings** and **service leads** (“open request” flows — admin assigns a provider), account area (`/user/...`)
+- **`POST /customer/service-leads`** + **`GET /customer/service-leads`**; **`PUT /customer/profile`** and **`PUT /customer/profile/image`**
+- **Public** **`GET /featured-service-providers`** — homepage grid; admins set **`isFeatured`** on a service provider (`POST`/`PUT /admin/service-providers` multipart field)
+- **`GET /service-types-by-category/:categorySlug`** — list active service types for a category slug (booking / lead UIs)
+- Service-provider bookings (quote, geofenced **start**, completion OTP, cancel) plus **self-service catalogue**: **`GET/POST/PUT/DELETE /service-provider/services`** (and **`GET /service-provider/service-types`** to search types in their category)
+- Admin booking list and detail (includes chat history where applicable); **service leads**: list, detail, assign provider (**creates booking** `price_pending`), cancel open leads
 - Post-service feedback: star ratings and quick tags on booking detail payloads (customer ↔ provider)
 
 ### CMS and marketing content (admin)
@@ -183,6 +203,20 @@ Import `postman/Service-Manage.postman_collection.json` and optionally `postman/
 
 - `GET /api/admin/bookings`
 - `GET /api/admin/bookings/:id`
+
+### Service leads (admin)
+
+Open customer requests filed via **`POST /api/customer/service-leads`**; assignment creates a **`Booking`** in **`price_pending`** when the chosen provider meets city, category, and service-type coverage.
+
+- `GET /api/admin/service-leads`
+- `GET /api/admin/service-leads/:id`
+- `PUT /api/admin/service-leads/:id/assign` (body: `providerId`)
+- `PUT /api/admin/service-leads/:id/cancel` (only while status is **`open`**)
+
+### Public (no auth cookie; `x-api-key` required)
+
+- `GET /api/featured-service-providers` — **`isFeatured`**, approved, verified, active providers (homepage / marketing)
+- `GET /api/service-types-by-category/:categorySlug` — service types for search and lead/booking flows
 
 ### Roles
 
@@ -238,4 +272,4 @@ Import `postman/Service-Manage.postman_collection.json` and optionally `postman/
 - Date formatting uses `moment`
 - Central model exports from `backend/src/models/index.js`
 - Permission-aware UI and route-level protection in admin module
-- New admin endpoints: add a route file under `backend/src/routes/admin/` and register it in `backend/src/routes/admin/index.js`; mirror calls in the Postman collection when useful for QA
+- New admin endpoints: add a route file under `backend/src/routes/admin/` and register it in `backend/src/routes/admin/index.js`; add matching entries to **`postman/generate-postman-collection.mjs`** and run **`node postman/generate-postman-collection.mjs`**

@@ -10,7 +10,7 @@ export const requireCustomerAuth = async (req, res, next) => {
         const payload = jwt.verify(token, config.customerJwtSecret);
         if (payload.role !== "customer") return res.status(403).json({ status: false, message: "Forbidden Access..!!", data: [] });
 
-        const customer = await Customer.findOne({ _id: payload.id, deletedAt: null, isActive: true }, "_id userId name mobile email image dateOfBirth preferredLanguage balance referralCode");
+        const customer = await Customer.findOne({ _id: payload.id, deletedAt: null, isActive: true });
         if (!customer) return res.status(401).json({ status: false, message: "User not found", data: [] });
 
         req.customer = customer;

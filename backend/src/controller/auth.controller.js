@@ -8,6 +8,21 @@ import { sendOTP } from "../libraries/sms.js";
 import { getSettings } from "../helpers/database.js";
 import { deleteFile } from "../libraries/storage.js";
 
+const getProfile = (user) => {
+    return {
+        _id: user._id,
+        userId: user.userId,
+        name: user.name,
+        mobile: user.mobile,
+        email: user.email,
+        image: user.image,
+        balance: user.balance || 0,
+        referralCode: user.referralCode || "",
+        dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format("YYYY-MM-DD") : "",
+        preferredLanguage: user.preferredLanguage || "en"
+    }
+}
+
 export const sendOtp = async (req, res) => {
     try {
 
@@ -83,7 +98,7 @@ export const register = async (req, res) => {
         const token = jwt.sign({ id: user._id, role: "customer" }, config.customerJwtSecret, JWT_CONFIG);
         res.setCookie("customer_token", token);
 
-        return res.success({ _id: user._id, name: user.name, mobile: user.mobile, email: user.email, image: user.image, balance: user.balance, referralCode: user.referralCode }, "Success..!!");
+        return res.success(getProfile(user), "Success..!!");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -91,21 +106,7 @@ export const register = async (req, res) => {
 
 export const profile = async (req, res) => {
     try {
-        const { id } = req.customer;
-
-        const user = await Customer.findById(id, "_id userId name mobile email image dateOfBirth preferredLanguage balance referralCode");
-        return res.success({
-            _id: user._id,
-            userId: user.userId,
-            name: user.name,
-            mobile: user.mobile,
-            email: user.email,
-            image: user.image,
-            balance: user.balance || 0,
-            referralCode: user.referralCode || "",
-            dateOfBirth: user.dateOfBirth ? moment(user.dateOfBirth).format("YYYY-MM-DD") : "",
-            preferredLanguage: user.preferredLanguage || "en"
-        }, "User profile fetched successfully");
+        return res.success(getProfile(req.customer), "User profile fetched successfully");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -114,34 +115,23 @@ export const profile = async (req, res) => {
 export const updateProfile = async (req, res) => {
     try {
         const { name, email = "", dateOfBirth = "", preferredLanguage = "en" } = req.body;
-        const customer = await Customer.findOne({ _id: req.customer._id, deletedAt: null, isActive: true });
-        if (!customer) return res.noRecords();
 
         const normalizedEmail = String(email || "").trim().toLowerCase();
         if (normalizedEmail) {
-            const duplicate = await Customer.findOne({ _id: { $ne: customer._id }, email: normalizedEmail, deletedAt: null });
+            const duplicate = await Customer.findOne({ _id: { $ne: req.customer._id }, email: normalizedEmail, deletedAt: null });
             if (duplicate) return res.clientError("Customer with this email already exists.", 409, [{ field: "email", message: "Customer with this email already exists." }]);
         }
 
         const dob = dateOfBirth ? new Date(dateOfBirth) : null;
         if (dateOfBirth && Number.isNaN(dob.getTime())) return res.clientError("Invalid date of birth.", 422, [{ field: "dateOfBirth", message: "Invalid date of birth." }]);
 
-        customer.name = String(name).trim();
-        customer.email = normalizedEmail;
-        customer.dateOfBirth = dob;
-        customer.preferredLanguage = preferredLanguage || "en";
-        await customer.save();
+        req.customer.name = String(name).trim();
+        req.customer.email = normalizedEmail;
+        req.customer.dateOfBirth = dob;
+        req.customer.preferredLanguage = preferredLanguage || "en";
+        await req.customer.save();
 
-        return res.successUpdate({
-            _id: customer._id,
-            userId: customer.userId,
-            name: customer.name,
-            mobile: customer.mobile,
-            email: customer.email,
-            image: customer.image,
-            dateOfBirth: customer.dateOfBirth ? moment(customer.dateOfBirth).format("YYYY-MM-DD") : "",
-            preferredLanguage: customer.preferredLanguage || "en"
-        }, "Profile updated successfully.");
+        return res.successUpdate(getProfile(req.customer), "Profile updated successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -149,30 +139,19 @@ export const updateProfile = async (req, res) => {
 
 export const updateCustomerProfileImage = async (req, res) => {
     try {
-        const customer = await Customer.findOne({ _id: req.customer._id, deletedAt: null, isActive: true });
-        if (!customer) return res.noRecords();
 
         if (!req.file) return res.clientError("Profile image is required.", 422, [{ field: "image", message: "Profile image is required." }]);
 
-        const previous = customer.image;
+        const previous = req.customer.image;
         const relativePath = `/customers/${req.file.filename}`;
         if (previous && previous !== "/customers/default.png" && previous !== relativePath) {
             deleteFile(previous);
         }
 
-        customer.image = relativePath;
-        await customer.save();
+        req.customer.image = relativePath;
+        await req.customer.save();
 
-        return res.successUpdate({
-            _id: customer._id,
-            userId: customer.userId,
-            name: customer.name,
-            mobile: customer.mobile,
-            email: customer.email,
-            image: customer.image,
-            dateOfBirth: customer.dateOfBirth ? moment(customer.dateOfBirth).format("YYYY-MM-DD") : "",
-            preferredLanguage: customer.preferredLanguage || "en"
-        }, "Profile photo updated successfully.");
+        return res.successUpdate(getProfile(req.customer), "Profile photo updated successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

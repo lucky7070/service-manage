@@ -7,6 +7,20 @@ import { generateOtp, nowPlusMinutes } from "../../helpers/utils.js";
 import { passwordResetMail, sendSmtpMail } from "../../libraries/mail.js";
 import { JWT_CONFIG } from "../../config/constants.js";
 
+const getProfile = async (userId) => {
+    const [admin] = await Admin.aggregate([
+        { $match: { _id: userId } },
+        { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, roleId: 1, permissions: 1, createdAt: 1 } },
+        { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleName" } },
+        { $addFields: { roleName: { $ifNull: [{ $first: "$roleName.name" }, '--'] } } },
+    ]);
+
+    if (!admin) return null;
+
+    const notifications = await Notification.find({ userType: "admin" }, '_id title message isRead readAt createdAt').sort({ createdAt: -1 }).limit(10);
+    return { ...admin, notifications };
+}
+
 export const adminLogin = async (req, res) => {
     try {
         const { identifier, password } = req.body;
@@ -26,7 +40,7 @@ export const adminLogin = async (req, res) => {
         const token = jwt.sign({ id: admin._id, role: "admin" }, config.jwtSecret, JWT_CONFIG);
         res.setCookie("admin_token", token);
 
-        return res.success([], "Admin login successful");
+        return res.success(await getProfile(admin._id), "Admin login successful");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -34,18 +48,9 @@ export const adminLogin = async (req, res) => {
 
 export const adminProfile = async (req, res) => {
     try {
-
-        const admins = await Admin.aggregate([
-            { $match: { _id: req.admin._id } },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, roleId: 1, permissions: 1, createdAt: 1 } },
-            { $lookup: { from: "roles", localField: "roleId", foreignField: "_id", as: "roleName" } },
-            { $addFields: { roleName: { $ifNull: [{ $first: "$roleName.name" }, '--'] } } },
-        ]);
-
-        if (admins.length === 0) return res.noRecords(false, "Admin not found");
-
-        const notifications = await Notification.find({ userType: "admin" }, '_id title message isRead readAt createdAt').sort({ createdAt: -1 }).limit(10);
-        return res.success({ ...admins[0], notifications });
+        const profile = await getProfile(req.admin._id);
+        if (!profile) return res.noRecords(false, "Admin not found");
+        return res.success(profile, "Admin profile fetched successfully");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -72,21 +77,17 @@ export const markAllAdminNotificationsRead = async (req, res) => {
 
 export const updateAdminProfile = async (req, res) => {
     try {
-        const admin = await Admin.findById(req.admin._id);
-        if (!admin) return res.noRecords(false, "Admin not found");
 
         const vData = req.getBody(["name", "mobile", "email"]);
-
-        const conflict = await Admin.findOne({
-            _id: { $ne: admin._id },
-            deletedAt: null,
-            $or: [{ mobile: vData.mobile }, { email: vData.email }]
-        });
+        const conflict = await Admin.findOne({ _id: { $ne: req.admin._id }, deletedAt: null, $or: [{ mobile: vData.mobile }, { email: vData.email }] });
         if (conflict) throw new Error("Admin with same mobile/email already exists.");
 
-        await Admin.updateOne({ _id: req.admin._id }, vData);
-        const updated = await Admin.findById(req.admin._id);
-        return res.successUpdate(updated, "Profile updated");
+        req.admin.name = String(vData.name).trim();
+        req.admin.mobile = String(vData.mobile).trim();
+        req.admin.email = String(vData.email).trim().toLowerCase();
+        await req.admin.save();
+
+        return res.successUpdate(await getProfile(req.admin._id), "Profile updated");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -94,15 +95,13 @@ export const updateAdminProfile = async (req, res) => {
 
 export const updateAdminProfileImage = async (req, res) => {
     try {
-        const admin = await Admin.findById(req.admin._id);
-        if (!admin) return res.noRecords(false, "Admin not found");
 
         if (!req.file) throw new Error("Profile image is required.");
 
-        admin.image = `/admins/${req.file.filename}`;
-        await admin.save();
+        req.admin.image = `/admins/${req.file.filename}`;
+        await req.admin.save();
 
-        return res.successUpdate(admin, "Profile image updated");
+        return res.successUpdate(await getProfile(req.admin._id), "Profile image updated");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

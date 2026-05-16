@@ -31,7 +31,7 @@ export function Footer() {
                             <span className="text-xl font-bold text-white">{settings.application_name || ""}</span>
                         </Link>
                         <p className="mb-6 text-sm text-gray-400 leading-relaxed">
-                           {settings.brand_tagline || ""}
+                            {settings.brand_tagline || ""}
                         </p>
                         {socialLinks.length ? <div className="flex gap-3">
                             {socialLinks.map((item) => <a
@@ -84,8 +84,8 @@ export function Footer() {
                 <div className="mt-10 flex flex-col items-center gap-4 border-t border-gray-800 pt-6 text-center text-sm md:flex-row md:justify-between">
                     <p className="text-gray-400">{settings.copyright || `Copyright © ${new Date().getFullYear()}. All rights reserved.`}</p>
                     <div className="flex gap-6">
-                        <Link href="/terms" className="text-gray-400 transition-colors hover:text-primary">Terms</Link>
-                        <Link href="/privacy" className="text-gray-400 transition-colors hover:text-primary">Privacy</Link>
+                        <Link href="/terms-and-conditions" className="text-gray-400 transition-colors hover:text-primary">Terms</Link>
+                        <Link href="/privacy-policy" className="text-gray-400 transition-colors hover:text-primary">Privacy</Link>
                         <Link href="/cookies" className="text-gray-400 transition-colors hover:text-primary">Cookies</Link>
                     </div>
                 </div>

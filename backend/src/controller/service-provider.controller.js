@@ -61,6 +61,38 @@ const bookingAggregation = (filter) => {
     ]
 }
 
+const getProfile = (user) => {
+    return {
+        _id: user._id,
+        userId: user.userId,
+        name: user.name,
+        mobile: user.mobile,
+        email: user.email,
+        image: user.image,
+        cityId: user.cityId,
+        serviceCategoryId: user.serviceCategoryId,
+        panCardNumber: user.panCardNumber,
+        aadharNumber: user.aadharNumber,
+        panCardDocument: user.panCardDocument,
+        aadharDocument: user.aadharDocument,
+        experienceYears: user.experienceYears,
+        experienceDescription: user.experienceDescription,
+        registerFrom: user.registerFrom,
+        profileStatus: user.profileStatus,
+        isVerified: user.isVerified,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+        rejectionReason: user.rejectionReason,
+        approvedAt: user.approvedAt,
+        isAvailable: user.isAvailable,
+        currentLatitude: user.currentLatitude,
+        currentLongitude: user.currentLongitude,
+        totalCompletedServices: user.totalCompletedServices,
+        totalRating: user.totalRating,
+        ratingCount: user.ratingCount,
+    }
+}
+
 export const sendOtp = async (req, res) => {
     try {
 
@@ -95,7 +127,7 @@ export const login = async (req, res) => {
         const verify = await OtpVerification.findOne({ phoneNumber: mobile, otpCode: otp, purpose: "login" }).sort({ createdAt: -1 });
         if (!verify || moment(verify.expiresAt).isBefore(moment())) return res.clientError("Invalid or expired OTP", 422, [{ field: "otp", message: "Invalid or expired OTP" }]);
 
-        const user = await ServiceProvider.findOne({ mobile: verify.phoneNumber, deletedAt: null }, "_id userId name mobile email image cityId serviceCategoryId panCardNumber aadharNumber panCardDocument aadharDocument experienceYears experienceDescription registerFrom profileStatus rejectionReason approvedAt isAvailable currentLatitude currentLongitude totalCompletedServices totalRating ratingCount isActive isVerified lastLogin");
+        const user = await ServiceProvider.findOne({ mobile: verify.phoneNumber, deletedAt: null });
         if (!user) return res.clientError("User not registered..!!", 404);
 
         await user.updateOne({ lastLogin: now() });
@@ -104,7 +136,7 @@ export const login = async (req, res) => {
         const token = jwt.sign({ id: user._id, role: "service-provider" }, config.serviceProviderJwtSecret, JWT_CONFIG);
         res.setCookie("service-provider-token", token);
 
-        return res.success(user, "Success..!!");
+        return res.success(getProfile(user), "Success..!!");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -185,10 +217,7 @@ export const register = async (req, res) => {
 
 export const profile = async (req, res) => {
     try {
-        const { id } = req.serviceProvider;
-
-        const user = await ServiceProvider.findById(id, "_id userId name mobile email image cityId serviceCategoryId panCardNumber aadharNumber panCardDocument aadharDocument experienceYears experienceDescription registerFrom profileStatus rejectionReason approvedAt isAvailable currentLatitude currentLongitude totalCompletedServices totalRating ratingCount isActive isVerified lastLogin").lean();
-        return res.success(user, "User profile fetched successfully");
+        return res.success(getProfile(req.serviceProvider), "User profile fetched successfully");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -217,7 +246,7 @@ export const getServiceProviderDashboard = async (req, res) => {
             bookingStats[row._id] = row.count;
         });
 
-        return res.success({ workPhotoCount, bookingStats, recentBookings });
+        return res.success({ profile: getProfile(req.serviceProvider), workPhotoCount, bookingStats, recentBookings });
     } catch (error) {
         return res.someThingWentWrong(error);
     }

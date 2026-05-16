@@ -141,7 +141,7 @@ export const listFeaturedServiceProviders = async (req, res) => {
         const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 12) : 8;
 
         const rows = await ServiceProvider.aggregate([
-            { $match: { deletedAt: null, isActive: true, isFeatured: true, profileStatus: "approved", isVerified: true }},
+            { $match: { deletedAt: null, isActive: true, isFeatured: true, profileStatus: "approved", isVerified: true } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
             { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
             {
@@ -373,6 +373,24 @@ export const getPrivacyPolicy = async (req, res) => {
 export const getTermsAndConditions = async (req, res) => {
     try {
         const data = await CmsPage.findOne({ pageSlug: "terms-and-conditions" });
+        if (!data) return res.noRecords();
+
+        return res.success({
+            title: data.pageTitle,
+            content: data.content,
+            contentHi: data.contentHi,
+            pageTitle: data.pageTitle,
+            metaDescription: data.metaDescription,
+            updatedAt: data.updatedAt,
+        });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const getCookies = async (req, res) => {
+    try {
+        const data = await CmsPage.findOne({ pageSlug: "cookies" });
         if (!data) return res.noRecords();
 
         return res.success({

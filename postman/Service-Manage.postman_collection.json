@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Service Manage API",
-    "description": "## Service Manage API — mobile & integrations\n\nREST base path is `{{baseUrl}}` → `{host}/api`. Server root `{{rootUrl}}/health` is outside `/api`.\n\n### Headers and security (every app)\n\n- **`x-api-key`**: required on (almost) all calls. Set collection variable `xApiKey` = backend `X_API_KEY` from `.env`.\n- **Customer session**: httpOnly cookie **`customer_token`** (JWT) after `POST /customer/register` succeeds. Middleware reads **cookies only** — there is no `Authorization: Bearer` check for customers today.\n- **Service provider session**: cookie **`service-provider-token`** after `POST /service-provider/login` or `POST /service-provider/register`.\n- **Admin session**: cookie **`admin_token`** after Admin login (web/postman cookie jar).\n\n**Native iOS/Android:** use an HTTP client with a persistent **cookie store** (same host as API), or extend the backend to accept bearer tokens if you need cookie-less mobile. Sample IDs in this collection must be replaced with real MongoDB ids from your environment.\n\n### Customer app — end-to-end flow\n\n1. **OTP:** `POST /customer/send-otp` with `purpose`: `register` (new user) or `login` (existing).\n2. **Session:** `POST /customer/register` with mobile + OTP + **name** (name is required by API). Sets `customer_token` cookie.\n3. **Profile / home:** `GET /customer/profile`, `GET /customer/dashboard`.\n4. **Addresses:** `/customer/addresses` — need at least one address to create a booking.\n5. **Discovery (no auth):** **Open (public)** — settings, categories, cities, providers, `GET /feedback-rating-tags?tagFor=provider` for post-job rating chips.\n6. **Create booking:** `POST /customer/bookings`.\n7. **Statuses** (poll `GET /customer/bookings/:id`): `pending` → `price_pending` → **`PUT .../accept-quote`** → `price_agreed` / `confirmed` → provider **`POST .../start`** → `in_progress` → provider completion OTP → **`completed`**. Terminal: `cancelled`.\n8. **Chat (REST):** booking messages endpoints.\n9. **Realtime (optional):** Socket.IO on API server — emit **`booking:join`** `{ bookingId, role: \"customer\" }`, listen for **`booking:presence`**, **`booking:typing`**, emit **`booking:leave`** with booking id when leaving chat.\n10. **After `completed`:** `POST /customer/bookings/:id/feedback`. Detail payload may include **customerFeedback**.\n11. **Logout:** `POST /customer/logout`.\n\n### Service provider app — end-to-end flow\n\n1. **OTP** → **`POST /service-provider/login`** or multipart **`POST /service-provider/register`**. Cookie **`service-provider-token`**.\n2. **Jobs:** list/detail bookings.\n3. **Quote:** `PUT .../quote` → customer **`PUT /customer/bookings/:id/accept-quote`**.\n4. **On site:** `POST .../start` (when status `confirmed` and price agreed).\n5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.\n6. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.\n7. **Sockets:** join with `role: \"provider\"`.\n\n### Admin\n\n**Admin auth** then **Admin (authenticated)** — back-office, not typical consumer mobile.\n\n### Postman\n\n- Enable cookies. **Development:** OTP may appear in send-otp response for testing.",
+    "description": "## Service Manage API — mobile & integrations\n\nREST base path is `{{baseUrl}}` → `{host}/api`. Server root `{{rootUrl}}/health` is outside `/api`.\n\n### Headers and security (every app)\n\n- **`x-api-key`**: required on (almost) all calls. Set collection variable `xApiKey` = backend `X_API_KEY` from `.env`.\n- **Customer session**: httpOnly cookie **`customer_token`** (JWT) after `POST /customer/register` succeeds. Middleware reads **cookies only** — there is no `Authorization: Bearer` check for customers today.\n- **Service provider session**: cookie **`service-provider-token`** after `POST /service-provider/login` or `POST /service-provider/register`.\n- **Admin session**: cookie **`admin_token`** after Admin login (web/postman cookie jar).\n\n**Native iOS/Android:** use an HTTP client with a persistent **cookie store** (same host as API), or extend the backend to accept bearer tokens if you need cookie-less mobile. Sample IDs in this collection must be replaced with real MongoDB ids from your environment.\n\n### Customer app — end-to-end flow\n\n1. **OTP:** `POST /customer/send-otp` with `purpose`: `register` (new user) or `login` (existing).\n2. **Session:** `POST /customer/register` with mobile + OTP + **name** (name is required by API). Sets `customer_token` cookie.\n3. **Profile / home:** `GET /customer/profile`, `GET /customer/dashboard`.\n4. **Addresses:** `/customer/addresses` — need at least one address to create a booking.\n5. **Discovery (no auth):** **Open (public)** — settings, categories, cities, **`GET /featured-service-providers`** (homepage grid; approved verified providers with **`isFeatured`**), providers by city/category, **`GET /service-types-by-category/:categorySlug`**, **`GET /feedback-rating-tags?tagFor=provider`** for rating chips.\n6. **Booking** vs **lead:** **`POST /customer/bookings`** assigns a chosen provider immediately. **`POST /customer/service-leads`** creates an open **service lead** (city + category + types + address); admin assigns a provider via **`PUT /admin/service-leads/:id/assign`**.\n7. **Statuses** (poll `GET /customer/bookings/:id`): `pending` → `price_pending` → **`PUT .../accept-quote`** → `price_agreed` / `confirmed` → provider **`POST .../start`** → `in_progress` → provider completion OTP → **`completed`**. Terminal: `cancelled`.\n8. **Chat (REST):** booking messages endpoints.\n9. **Realtime (optional):** Socket.IO on API server — emit **`booking:join`** `{ bookingId, role: \"customer\" }`, listen for **`booking:presence`**, **`booking:typing`**, emit **`booking:leave`** with booking id when leaving chat.\n10. **After `completed`:** `POST /customer/bookings/:id/feedback`. Detail payload may include **customerFeedback**.\n11. **Profile photo:** `PUT /customer/profile/image` — multipart **`image`** (auth).\n12. **Mark job done (customer):** when status **`in_progress`**, **`PUT /customer/bookings/:id/complete`** (empty body; confirms completion alongside provider OTP flow — see backend for exact lifecycle).\n13. **Logout:** `POST /customer/logout`.\n\n### Service provider app — end-to-end flow\n\n1. **OTP** → **`POST /service-provider/login`** or multipart **`POST /service-provider/register`**. Cookie **`service-provider-token`**.\n2. **Jobs:** list/detail bookings.\n3. **Quote:** `PUT .../quote` → customer **`PUT /customer/bookings/:id/accept-quote`**.\n4. **On site:** `POST .../start` (when status `confirmed` and price agreed).\n5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.\n6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.\n7. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.\n8. **Sockets:** join with `role: \"provider\"`.\n\n**Admin auth** then **Admin (authenticated)** — back-office, not typical consumer mobile.\n\n### Postman\n\n**Regenerate:** from repo root run `node postman/generate-postman-collection.mjs` after editing this script (overwrites **`postman/Service-Manage.postman_collection.json`**).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -108,6 +108,21 @@
           }
         },
         {
+          "name": "Featured providers (home)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/featured-service-providers?limit=8",
+            "description": "**Public.** Returns approved, verified, active providers with **`isFeatured: true`** (admin sets on provider). Sorted by ratings / completed jobs. Used for marketing homepage."
+          }
+        },
+        {
           "name": "Public provider by id or slug",
           "request": {
             "method": "GET",
@@ -118,7 +133,23 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/service-provider-details/507f1f77bcf86cd799439011"
+            "url": "{{baseUrl}}/service-provider-details/507f1f77bcf86cd799439011",
+            "description": "Optional query **`serviceCategorySlug`** — narrows book-page context when applicable (e.g. `?serviceCategorySlug=electrician`)."
+          }
+        },
+        {
+          "name": "Service types by category slug (public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-types-by-category/electrician",
+            "description": "**Path:** category **slug** (lowercase). Returns active **`ServiceType`** docs for that category (name, **`basePrice`**, **`estimatedTimeMinutes`**, etc.). No pagination in API."
           }
         },
         {
@@ -174,7 +205,7 @@
                 "type": "text"
               }
             ],
-            "url": "{{baseUrl}}/testimonials?limit=6&form="
+            "url": "{{baseUrl}}/testimonials?limit=6&from="
           }
         },
         {
@@ -262,7 +293,7 @@
           }
         }
       ],
-      "description": "No auth cookie — send **`x-api-key`**. Discovery: categories, cities, providers, CMS snippets, **`feedback-rating-tags`** for rating UIs."
+      "description": "No auth cookie — send **`x-api-key`**. Includes **`featured-service-providers`** (homepage), **`service-types-by-category/:slug`**, categories, cities, provider search, enquiries, **`feedback-rating-tags`**."
     },
     {
       "name": "Customer",
@@ -366,6 +397,31 @@
           }
         },
         {
+          "name": "Update profile photo (auth, multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/profile/image",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "**Field name `image`**. Validates as customer **`customer-profile-image`**. Separate from **`PUT /customer/profile`** (text fields only)."
+          }
+        },
+        {
           "name": "Dashboard (auth)",
           "request": {
             "method": "GET",
@@ -418,7 +474,7 @@
                 }
               }
             },
-            "description": "`serviceTypeId` is an array of ServiceType ids for that provider/category. `addressId` = customer's saved address."
+            "description": "**Body:** **`providerId`**, **`serviceTypeId`** = array of **ServiceType** ObjectIds offered by that provider, **`addressId`** = customer's saved **`Address`** _id (not `bookingAddressId`), **`scheduledTime`** ISO8601, optional **`issueDescription`**."
           }
         },
         {
@@ -489,6 +545,77 @@
                 }
               }
             }
+          }
+        },
+        {
+          "name": "Mark booking complete — customer confirms (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/bookings/507f1f77bcf86cd799439011/complete",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Allowed when **`in_progress`** and **`startTime`** set. Sets **`completed`** (used together with provider completion OTP pattern — verify against your **`Booking`** workflow). Empty JSON body."
+          }
+        },
+        {
+          "name": "My service leads (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/service-leads?pageNo=1&limit=10&status=",
+            "description": "Booking requests filed without a locked-in provider until admin assigns one."
+          }
+        },
+        {
+          "name": "Create service lead (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/service-leads",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cityId\": \"507f1f77bcf86cd799439011\",\n  \"serviceCategoryId\": \"507f1f77bcf86cd799439011\",\n  \"serviceTypeId\": [\n    \"507f1f77bcf86cd799439011\"\n  ],\n  \"addressId\": \"507f1f77bcf86cd799439011\",\n  \"scheduledTime\": \"2026-12-15T10:30:00.000Z\",\n  \"issueDescription\": \"Need urgent repair.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Same **`serviceTypeId`** / **`addressId`** shape as **`POST /customer/bookings`**, but **`cityId`** + **`serviceCategoryId`** instead of **`providerId`**. Admin **`PUT /admin/service-leads/:id/assign`** with **`providerId`** converts flow to provider assignment."
           }
         },
         {
@@ -671,7 +798,7 @@
           }
         }
       ],
-      "description": "Cookie **`customer_token`** after **Register**. Typical: OTP → Register → addresses → bookings → messages → accept quote → feedback after **completed**."
+      "description": "Cookie **`customer_token`** after **Register**. Addresses → **`POST /customer/bookings`** or **`POST /customer/service-leads`** → ledger, messages, accept quote → feedback after **`completed`**; **`PUT /customer/profile/image`** for photo."
     },
     {
       "name": "Service provider",
@@ -839,6 +966,106 @@
               }
             ],
             "url": "{{baseUrl}}/service-provider/profile"
+          }
+        },
+        {
+          "name": "My priced services (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/services",
+            "description": "**`ProviderService`** aggregate for logged-in SP: **`record`** rows + **`provider`** mini summary. Requires **`serviceCategoryId`** set on profile."
+          }
+        },
+        {
+          "name": "Search service types in my category (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/service-types?limit=20&query=",
+            "description": "Active types for your **`serviceCategoryId`**. **`query`** optional name filter. Use ids in **`POST /service-provider/services`**."
+          }
+        },
+        {
+          "name": "Add my service price (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceTypeId\": \"507f1f77bcf86cd799439011\",\n  \"price\": 499,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "**Type must belong to your **`serviceCategoryId`**. Duplicate **`serviceTypeId`** returns 409. **`status`** 1 = active, 0 = inactive."
+          }
+        },
+        {
+          "name": "Update my service price (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/services/507f1f77bcf86cd799439011",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceTypeId\": \"507f1f77bcf86cd799439011\",\n  \"price\": 599,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Replace **`OID`** with **`ProviderService`** _id from **My priced services** list."
+          }
+        },
+        {
+          "name": "Remove my service (auth)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/services/507f1f77bcf86cd799439011"
           }
         },
         {
@@ -1162,7 +1389,7 @@
           }
         }
       ],
-      "description": "Cookie **`service-provider-token`**. Quote → customer accepts → **start** → **complete/send-otp** + **complete** → **feedback**; optional work photos + Socket.IO."
+      "description": "Cookie **`service-provider-token`**. **`/services`** CRUD + bookings (quote → start → OTP complete) → **feedback**; work photos + Socket.IO."
     },
     {
       "name": "Admin auth",
@@ -1298,6 +1525,97 @@
                   }
                 ],
                 "url": "{{baseUrl}}/admin/bookings/507f1f77bcf86cd799439011"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Service leads",
+          "item": [
+            {
+              "name": "Service leads list",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-leads?pageNo=1&limit=10&status=&query=&sortBy=createdAt&sortOrder=desc",
+                "description": "**`status`** filter: **`open`** | **`assigned`** | **`cancelled`** (omit for all). Sort fields include **`leadNumber`**, **`customerName`**, **`scheduledTime`**, etc."
+              }
+            },
+            {
+              "name": "Service lead detail",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-leads/507f1f77bcf86cd799439011",
+                "description": "**`open`** lead: searchable provider list **`data.availableProviders`** (same city + category). **`assigned`** lead includes linked **`booking`** snippet."
+              }
+            },
+            {
+              "name": "Assign provider to lead",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-leads/507f1f77bcf86cd799439011/assign",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"providerId\": \"507f1f77bcf86cd799439011\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Only **`open`** leads. Provider must match lead **`cityId`** + **`serviceCategoryId`**, approved, verified, active, and have **every** **`ProviderService`** for the requested service types."
+              }
+            },
+            {
+              "name": "Cancel open service lead",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-leads/507f1f77bcf86cd799439011/cancel",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Only **`open`** leads (**`assigned`** must be undone via Booking cancellation / separate flow). Empty JSON `{}` acceptable."
               }
             }
           ]
@@ -2343,6 +2661,18 @@
                       "enabled": true
                     },
                     {
+                      "key": "cityId",
+                      "value": "507f1f77bcf86cd799439011",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "serviceCategoryId",
+                      "value": "507f1f77bcf86cd799439011",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
                       "key": "panCardNumber",
                       "value": "ABCDE1234F",
                       "type": "text",
@@ -2367,6 +2697,12 @@
                       "enabled": true
                     },
                     {
+                      "key": "isFeatured",
+                      "value": "0",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
                       "key": "image",
                       "type": "file",
                       "src": []
@@ -2382,7 +2718,8 @@
                       "src": []
                     }
                   ]
-                }
+                },
+                "description": "**`cityId`**, **`serviceCategoryId`** required. **`isFeatured`** `1` / `true` / `on` to show on homepage (**`GET /featured-service-providers`**). Omit checkbox in forms → send `0`."
               }
             },
             {
@@ -2419,6 +2756,18 @@
                       "enabled": true
                     },
                     {
+                      "key": "cityId",
+                      "value": "507f1f77bcf86cd799439011",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "serviceCategoryId",
+                      "value": "507f1f77bcf86cd799439011",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
                       "key": "panCardNumber",
                       "value": "ABCDE1234F",
                       "type": "text",
@@ -2439,6 +2788,12 @@
                     {
                       "key": "experienceDescription",
                       "value": "Experienced technician.",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "isFeatured",
+                      "value": "0",
                       "type": "text",
                       "enabled": true
                     },

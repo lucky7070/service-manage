@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getGeneralSettings } from "../controller/admin/setting.controller.js";
-import { listServiceCategories, listServiceCategoriesForHome, getServiceCategoryBySlug, listCities, listStates, listCitiesWithState, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions, getAboutContent, listFeaturedServiceProviders, listServiceProviders, getPublicServiceProvider, listServiceTypesByCategorySlug, listFeedbackRatingTags } from "../controller/common.controller.js";
+import { listServiceCategories, listServiceCategoriesForHome, getServiceCategoryBySlug, listCities, listStates, listCitiesWithState, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions, getAboutContent, listFeaturedServiceProviders, listServiceProviders, getPublicServiceProvider, listServiceTypesByCategorySlug, listFeedbackRatingTags, getCookies } from "../controller/common.controller.js";
 import { validator } from "../libraries/validator.js";
 
 const router = Router();
@@ -22,6 +22,7 @@ router.get("/about-content", getAboutContent);
 router.post("/enquiries", validator("enquiry-submit"), submitEnquiry);
 router.get("/privacy-policy", getPrivacyPolicy);
 router.get("/terms-and-conditions", getTermsAndConditions);
+router.get("/cookies", getCookies);
 router.get("/feedback-rating-tags", listFeedbackRatingTags);
 
 export default router;

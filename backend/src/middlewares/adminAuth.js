@@ -10,7 +10,7 @@ export const requireAdminAuth = async (req, res, next) => {
         const payload = jwt.verify(token, config.jwtSecret);
         if (payload.role !== "admin") return res.status(403).json({ status: false, message: "Forbidden Access..!!", data: [] });
 
-        const admin = await Admin.findOne({ _id: payload.id, deletedAt: null, isActive: true }, "_id name mobile email image");
+        const admin = await Admin.findOne({ _id: payload.id, deletedAt: null, isActive: true });
         if (!admin) return res.status(404).json({ status: false, message: "Admin not found", data: [] });
 
         req.admin = admin;
