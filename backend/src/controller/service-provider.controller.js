@@ -8,6 +8,7 @@ import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
 import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
 import { getSettings } from "../helpers/database.js";
+import { bookingStatusMail } from "../libraries/mail.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -410,7 +411,7 @@ export const cancelProviderBooking = async (req, res) => {
         booking.cancelledBy = "provider";
         booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by service provider").trim();
         await booking.save();
-
+        await bookingStatusMail(booking._id);
         return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -426,6 +427,7 @@ export const setBookingQuote = async (req, res) => {
         booking.quotedPrice = Number(req.body.quotedPrice);
         booking.status = "price_pending";
         await booking.save();
+        await bookingStatusMail(booking._id);
         return res.successUpdate(booking, "Quote sent successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -485,6 +487,7 @@ export const startProviderBooking = async (req, res) => {
         booking.startTime = now();
         booking.status = "in_progress";
         await booking.save();
+        await bookingStatusMail(booking._id);
         return res.successUpdate(booking, "Job started.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -563,6 +566,7 @@ export const completeProviderBooking = async (req, res) => {
         booking.status = "completed";
         await booking.save();
 
+        await bookingStatusMail(booking._id);
         return res.successUpdate(booking, "Booking completed successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);

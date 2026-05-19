@@ -316,6 +316,7 @@ export const acceptCustomerBookingQuote = async (req, res) => {
         booking.finalPrice = booking.quotedPrice;
         booking.status = "confirmed";
         await booking.save();
+        await bookingStatusMail(booking._id);
         return res.successUpdate(booking, "Quote accepted successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -333,6 +334,7 @@ export const cancelCustomerBooking = async (req, res) => {
         booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by customer").trim();
         await booking.save();
 
+        await bookingStatusMail(booking._id);
         return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -358,6 +360,7 @@ export const completeCustomerBooking = async (req, res) => {
         booking.status = "completed";
         await booking.save();
 
+        await bookingStatusMail(booking._id);
         return res.successUpdate(booking, "Job marked complete.");
     } catch (error) {
         return res.someThingWentWrong(error);
