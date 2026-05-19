@@ -8,7 +8,7 @@ export const createBanner = async (req, res) => {
 
         if (!req.file) return res.clientError("Banner image is required.", 422, [{ field: "image", message: "Banner image is required." }]);
 
-        const { bannerTitle = "", bannerTitleHi = "", bannerSubtitle = "", bannerSubtitleHi = "", bannerType = "homepage", link = "", displayOrder = 0 } = req.body;
+        const { bannerTitle = "", bannerTitleHi = "", bannerSubtitle = "", bannerSubtitleHi = "", bannerType = "homepage", link = "", displayOrder = 0, status = 1 } = req.body;
         const doc = await Banner.create({
             bannerTitle: String(bannerTitle).trim() || null,
             bannerTitleHi: String(bannerTitleHi).trim() || null,
@@ -18,6 +18,7 @@ export const createBanner = async (req, res) => {
             bannerType: String(bannerType ?? "homepage"),
             link: String(link).trim() || null,
             displayOrder: Number(displayOrder) || 0,
+            isActive: Number(status) === 1,
             createdBy: req.admin._id,
             updatedBy: req.admin._id
         });
@@ -32,7 +33,7 @@ export const updateBanner = async (req, res) => {
         const doc = await Banner.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
-        const { bannerTitle = "", bannerTitleHi = "", bannerSubtitle = "", bannerSubtitleHi = "", bannerType = "homepage", link = "", displayOrder = 0 } = req.body;
+        const { bannerTitle = "", bannerTitleHi = "", bannerSubtitle = "", bannerSubtitleHi = "", bannerType = "homepage", link = "", displayOrder = 0, status = 1 } = req.body;
         let bannerImage = doc.bannerImage;
         if (req.file) {
             if (doc.bannerImage) deleteFile(doc.bannerImage);
@@ -50,6 +51,7 @@ export const updateBanner = async (req, res) => {
                 bannerType: String(bannerType ?? "homepage"),
                 link: String(link).trim() || null,
                 displayOrder: Number(displayOrder) || 0,
+                isActive: Number(status) === 1,
                 updatedBy: req.admin._id
             }
         );
@@ -73,10 +75,10 @@ export const deleteBanner = async (req, res) => {
 
 export const getBanner = async (req, res) => {
     try {
-        let { limit, pageNo, query, bannerType, sortBy = "displayOrder", sortOrder = "asc" } = req.query;
+        let { limit, pageNo, query, bannerType, status, sortBy = "displayOrder", sortOrder = "asc" } = req.query;
         limit = limit ? parseInt(limit, 10) : 10;
         pageNo = pageNo ? parseInt(pageNo, 10) : 1;
-        sortBy = ["bannerTitle", "bannerType", "displayOrder", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "displayOrder";
+        sortBy = ["bannerTitle", "bannerType", "displayOrder", "status", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "displayOrder";
         sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "asc";
 
         const filter = { deletedAt: null };
@@ -85,10 +87,11 @@ export const getBanner = async (req, res) => {
             filter.$or = [{ bannerTitle: { $regex: q, $options: "i" } }, { bannerSubtitle: { $regex: q, $options: "i" } }];
         }
         if (bannerType && ["homepage", "category"].includes(String(bannerType))) filter.bannerType = String(bannerType);
+        if (status !== null && status !== undefined && status !== "") filter.isActive = Number(status) === 1;
 
         const pipeline = [
             { $match: filter },
-            { $project: { _id: 1, bannerTitle: 1, bannerTitleHi: 1, bannerSubtitle: 1, bannerSubtitleHi: 1, bannerImage: 1, bannerType: 1, link: 1, displayOrder: 1, createdAt: 1 } }
+            { $project: { _id: 1, bannerTitle: 1, bannerTitleHi: 1, bannerSubtitle: 1, bannerSubtitleHi: 1, bannerImage: 1, bannerType: 1, link: 1, displayOrder: 1, status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] }, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];

@@ -31,6 +31,7 @@ type BannerRow = {
     bannerType: BannerType;
     link: string;
     displayOrder: number | "";
+    status: number;
     createdAt?: string;
 };
 
@@ -41,7 +42,7 @@ type BannerRecord = {
     pagination: number[];
 };
 
-type SortBy = "bannerTitle" | "bannerType" | "displayOrder" | "createdAt";
+type SortBy = "bannerTitle" | "bannerType" | "displayOrder" | "status" | "createdAt";
 type SortOrder = "asc" | "desc";
 
 const INITIAL_VALUES: BannerRow = {
@@ -53,7 +54,8 @@ const INITIAL_VALUES: BannerRow = {
     bannerImage: null,
     bannerType: "homepage",
     link: "",
-    displayOrder: 0
+    displayOrder: 0,
+    status: 1
 };
 
 const validationSchema = Yup.object().shape({
@@ -78,6 +80,7 @@ const validationSchema = Yup.object().shape({
         const n = Number(v);
         return Number.isFinite(n) && n >= 0 && n <= 999999;
     }),
+    status: Yup.number().required("Status required."),
     bannerImage: Yup.mixed().test("bannerImage", "Banner image is required.", function (v) {
         const mode = this.options.context?.mode;
         if (mode === "edit") return true;
@@ -91,7 +94,7 @@ export default function AdminBannerPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit">(null);
     const [data, setData] = useState<BannerRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; bannerType: "" | BannerType; }>({ limit: 10, pageNo: 1, query: "", sortBy: "displayOrder", sortOrder: "asc", bannerType: "" });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; bannerType: "" | BannerType; status: "" | 0 | 1; }>({ limit: 10, pageNo: 1, query: "", sortBy: "displayOrder", sortOrder: "asc", bannerType: "", status: "" });
     const [initialValues, setInitialValues] = useState<BannerRow>(INITIAL_VALUES);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -144,7 +147,8 @@ export default function AdminBannerPage() {
             bannerImage: row.bannerImage || null,
             bannerType: row.bannerType || "homepage",
             link: row.link || "",
-            displayOrder: row.displayOrder ?? 0
+            displayOrder: row.displayOrder ?? 0,
+            status: row.status ?? 1
         });
         setImagePreview(typeof row.bannerImage === "string" ? resolveFileUrl(row.bannerImage) : null);
         setOpen("edit");
@@ -192,6 +196,18 @@ export default function AdminBannerPage() {
                             <Option value="homepage">Homepage</Option>
                             <Option value="category">Category</Option>
                         </Select>
+                        <Select
+                            value={param.status}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
+                            }}
+                            className="max-w-[180px]"
+                        >
+                            <Option value="">All status</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
+                        </Select>
                         <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
                     </div>
                 </div>
@@ -209,6 +225,9 @@ export default function AdminBannerPage() {
                                 </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("displayOrder")} name="Order" active={param.sortBy === "displayOrder"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("status")} name="Status" active={param.sortBy === "status"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">Link</th>
                                 <th className="px-3 py-2">
@@ -229,6 +248,11 @@ export default function AdminBannerPage() {
                                     <td className="max-w-[250px] px-3 py-2 text-slate-700 dark:text-slate-200">{row.bannerTitle || "—"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200"><Badge variant="secondary" size="sm" className="capitalize">{row.bannerType}</Badge></td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.displayOrder ?? 0}</td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <Badge variant={row.status === 1 ? "success" : "secondary"} size="sm">
+                                            {row.status === 1 ? "Active" : "Inactive"}
+                                        </Badge>
+                                    </td>
                                     <td className="max-w-[220px] px-3 py-2 text-slate-700 dark:text-slate-200">{row.link || "—"}</td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "—"}</td>
                                     <td className="px-3 py-2">
@@ -361,13 +385,23 @@ export default function AdminBannerPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="bannerType">Banner type</Label>
-                                    <Field as={Select} id="bannerType" name="bannerType">
-                                        <Option value="homepage">Homepage</Option>
-                                        <Option value="category">Category</Option>
-                                    </Field>
-                                    <ErrorMessage className="text-xs text-rose-600" name="bannerType" component="small" />
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bannerType">Banner type</Label>
+                                        <Field as={Select} id="bannerType" name="bannerType">
+                                            <Option value="homepage">Homepage</Option>
+                                            <Option value="category">Category</Option>
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="bannerType" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="banner-status">Status</Label>
+                                        <Field as={Select} id="banner-status" name="status">
+                                            <Option value={1}>Active</Option>
+                                            <Option value={0}>Inactive</Option>
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                    </div>
                                 </div>
 
                                 <div className="pt-1">

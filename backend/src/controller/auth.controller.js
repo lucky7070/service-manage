@@ -100,6 +100,7 @@ export const register = async (req, res) => {
 
         return res.success(getProfile(user), "Success..!!");
     } catch (error) {
+        if (error.code === 11000) return res.clientError("Mobile number already registered..!!", 409);
         return res.someThingWentWrong(error);
     }
 };

@@ -267,7 +267,7 @@ export const validator = (method) => {
             output = [testimonialFrom, name, designation, rating, review, status];
             break;
         case "banner":
-            output = [bannerType, bannerLink, displayOrder];
+            output = [bannerType, bannerLink, displayOrder, status];
             break;
         case "enquiry-resolve":
             output = [id, isResolved];

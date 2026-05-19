@@ -2,7 +2,7 @@ import { Admin, Banner, City, Country, Customer, Faq, PredefinedRatingTag, Role,
 
 export const getDashboardStats = async (req, res) => {
     try {
-        const filter = { deletedAt: null };
+        const filter = { isActive: true, deletedAt: null };
 
         const [roles, admins, countries, states, cities, customers, predefinedRatingTags, faqs, banners, serviceCategories, serviceTypes, serviceProviders, testimonials] = await Promise.all([
             Role.countDocuments(filter),
