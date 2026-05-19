@@ -143,8 +143,8 @@ export const requestAdminForgotPassword = async (req, res) => {
         await OtpVerification.deleteMany({ phoneNumber: email });
         await OtpVerification.create({ phoneNumber: email, purpose: "password_reset", expiresAt: nowPlusMinutes(config.otpExpiryMinutes), otpCode: otp });
 
-        const { subject, html } = passwordResetMail({ name: admin.name, otp });
-        await sendSmtpMail({ to: email, subject, html, subHeading: "Verify your identity to create a new password" });
+        const result = await passwordResetMail({ email, name: admin.name, otp });
+        if (!result) return res.clientError("Failed to send verification code. Please try again.", 422);
         return res.success([], "If an account exists for this email, a verification code has been sent.");
     } catch (error) {
         return res.someThingWentWrong(error);

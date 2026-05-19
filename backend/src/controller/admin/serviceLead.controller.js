@@ -1,5 +1,6 @@
 import { Address, Booking, ProviderService, ServiceLead, ServiceProvider } from "../../models/index.js";
 import { ObjectId, escapeRegex } from "../../helpers/utils.js";
+import { bookingStatusMail } from "../../libraries/mail.js";
 
 export const listServiceLeads = async (req, res) => {
     try {
@@ -179,6 +180,7 @@ export const assignServiceLead = async (req, res) => {
         lead.assignedAt = new Date();
         await lead.save();
 
+        await bookingStatusMail(booking._id);
         return res.successUpdate({ leadId: lead._id, leadNumber: lead.leadNumber, bookingId: booking._id, bookingNumber: booking.bookingNumber }, "Provider assigned and booking created.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -193,7 +195,7 @@ export const cancelServiceLead = async (req, res) => {
         if (lead.status === "assigned") {
             return res.clientError("Cannot cancel a lead that has been assigned. Cancel the booking from Bookings if needed.", 400);
         }
-        
+
         if (lead.status !== "open") return res.clientError("Only open leads can be cancelled.", 400);
 
         lead.status = "cancelled";

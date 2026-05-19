@@ -2,6 +2,7 @@ import moment from "moment";
 import { Address, Booking, ChatMessage, City, Customer, Ledger, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../models/index.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
+import { bookingStatusMail } from "../libraries/mail.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
     const match = { customerId, deletedAt: null };
@@ -282,6 +283,7 @@ export const createCustomerBooking = async (req, res) => {
         });
 
         const [detail] = await Booking.aggregate(bookingDetailPipeline({ _id: booking._id, customerId, deletedAt: null }));
+        await bookingStatusMail(booking._id);
         return res.successInsert(detail, "Booking created successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);

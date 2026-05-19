@@ -92,7 +92,7 @@ export async function FeaturedPros() {
                                         </div>
                                     </div>
 
-                                    <Button asChild className="w-full bg-primary text-white hover:bg-orange-600">
+                                    <Button className="w-full bg-primary text-white hover:bg-orange-600">
                                         <Link href={`/book/${pro.slug}`}>Book Now</Link>
                                     </Button>
                                 </div>

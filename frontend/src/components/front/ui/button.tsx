@@ -45,7 +45,6 @@ function getSizeClass(size: ButtonSize = 'default'): string {
 type ButtonProps = React.ComponentProps<'button'> & {
     variant?: ButtonVariant
     size?: ButtonSize
-    asChild?: boolean
 }
 
 function Button({ className, variant = 'default', size = 'default', ...props }: ButtonProps) {
