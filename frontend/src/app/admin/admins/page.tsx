@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
 
     useEffect(() => {
         (async () => {
-            const { data } = await AxiosHelperAdmin.getData("/roles", { limit: 100 });
+            const { data } = await AxiosHelperAdmin.getData("/roles", { status: 1, limit: 100 });
             if (data?.status && data?.data?.record && Array.isArray(data?.data?.record)) {
                 setRoles(data.data.record);
             } else {

@@ -80,7 +80,7 @@ export const createAdmin = async (req, res) => {
         const existing = await Admin.findOne({ deletedAt: null, $or: [{ mobile }, ...(email ? [{ email }] : [])] });
         if (existing) throw new Error("Admin with same mobile/email already exists.");
 
-        const role = await Role.findOne({ _id: roleId, deletedAt: null });
+        const role = await Role.findOne({ _id: roleId, isActive: true, deletedAt: null });
         if (!role) throw new Error("Selected role not found.");
 
         const hashed = await bcrypt.hash(password, 10);
@@ -106,7 +106,7 @@ export const updateAdmin = async (req, res) => {
         const conflict = await Admin.findOne({ _id: { $ne: admin._id }, deletedAt: null, $or: [{ mobile }, ...(email ? [{ email }] : [])] });
         if (conflict) throw new Error("Admin with same mobile/email already exists.");
 
-        const role = await Role.findOne({ _id: roleId, deletedAt: null });
+        const role = await Role.findOne({ _id: roleId, isActive: true, deletedAt: null });
         if (!role) throw new Error("Selected role not found.");
 
         admin.name = name;
