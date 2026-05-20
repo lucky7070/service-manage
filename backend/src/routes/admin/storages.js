@@ -9,3 +9,4 @@ export const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provi
 export const bannerStorage = new Storage({ dir: "banners", isImage: true, isDoc: false, fileSize: 5 });
 export const testimonialStorage = new Storage({ dir: "testimonials", isImage: true, isDoc: false, fileSize: 3 });
 export const ourValueStorage = new Storage({ dir: "our-values", isImage: true, isDoc: false, fileSize: 2 });
+export const bookingChatStorage = new Storage({ dir: "booking-chat", isImage: true, isDoc: false, fileSize: 5 });

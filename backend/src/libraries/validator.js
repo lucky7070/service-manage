@@ -135,7 +135,12 @@ const bookingAddressId = check("addressId", "Address is required.").exists().not
 const scheduledTime = check("scheduledTime", "Scheduled date and time is required.").exists().notEmpty().isISO8601().toDate();
 const issueDescription = check("issueDescription").optional({ values: "falsy" }).trim().isLength({ max: 5000 });
 const quotedPrice = check("quotedPrice", "Quoted price must be greater than 0.").exists().notEmpty().isFloat({ min: 0.01 });
-const chatMessage = check("message", "Message is required.").trim().notEmpty().isLength({ min: 1, max: 5000 });
+const chatMessage = check("message").optional({ values: "falsy" }).trim().isLength({ max: 5000 }).custom((value, { req }) => {
+    const text = String(value || "").trim();
+    const hasFile = Boolean(req.file?.filename);
+    if (!text && !hasFile) throw new Error("Message or image is required.");
+    return true;
+});
 const starRatingFeedback = check("starRating", "Star rating must be between 1 and 5.").exists().notEmpty().isInt({ min: 1, max: 5 });
 const feedbackReviewText = check("reviewText").optional({ values: "falsy" }).trim().isLength({ max: 2000 });
 const quickTagsFeedback = check("quickTags").optional().custom((value) => {

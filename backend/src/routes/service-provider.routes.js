@@ -5,6 +5,7 @@ import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { Storage } from "../libraries/storage.js";
+import { bookingChatStorage } from "./admin/storages.js";
 
 const router = Router();
 const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: true, isDoc: true, fileSize: 5 });
@@ -30,7 +31,7 @@ router.post("/bookings/:bookingId/start", validator("provider-booking-start"), s
 router.post("/bookings/:bookingId/complete/send-otp", otpRateLimiter, validator("customer-booking-id"), sendBookingCompletionOtp);
 router.post("/bookings/:bookingId/complete", validator("booking-completion-verify"), completeProviderBooking);
 router.get("/bookings/:bookingId/messages", validator("customer-booking-id"), listProviderBookingMessages);
-router.post("/bookings/:bookingId/messages", validator("booking-message"), sendProviderBookingMessage);
+router.post("/bookings/:bookingId/messages", bookingChatStorage.single("image"), validator("booking-message"), sendProviderBookingMessage);
 router.post("/bookings/:bookingId/feedback", validator("booking-feedback"), submitProviderBookingFeedback);
 router.get("/work-photos", getWorkPhotos);
 router.post("/work-photos", serviceProviderWorkPhotoStorage.array("photos", 20), uploadWorkPhotos);

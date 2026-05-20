@@ -7,6 +7,7 @@ import { Booking, ChatMessage, Customer, OtpVerification, Rating, ServiceProvide
 import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
 import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
+import { parseBookingChatPayload } from "../helpers/bookingChat.js";
 import { getSettings } from "../helpers/database.js";
 import { bookingStatusMail } from "../libraries/mail.js";
 
@@ -578,7 +579,7 @@ export const listProviderBookingMessages = async (req, res) => {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null }, { _id: 1 });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
-        const messages = await ChatMessage.find({ bookingId: booking._id }, '-_id senderId senderType message attachmentUrl isRead readAt createdAt').sort({ createdAt: 1 }).lean();
+        const messages = await ChatMessage.find({ bookingId: booking._id }, "senderId senderType message attachmentUrl isRead readAt createdAt").sort({ createdAt: 1 }).lean();
         return res.success(messages);
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -590,7 +591,16 @@ export const sendProviderBookingMessage = async (req, res) => {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null }, { _id: 1 });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
-        const message = await ChatMessage.create({ bookingId: booking._id, senderId: req.serviceProvider._id, senderType: "provider", message: String(req.body.message || "").trim() });
+        const payload = parseBookingChatPayload(req);
+        if (payload.error) return res.clientError(payload.error, 422, [{ field: "message", message: payload.error }]);
+
+        const message = await ChatMessage.create({
+            bookingId: booking._id,
+            senderId: req.serviceProvider._id,
+            senderType: "provider",
+            message: payload.message,
+            attachmentUrl: payload.attachmentUrl
+        });
         req.app.io?.to(`booking:${booking._id}`).emit("booking:message", message);
         return res.successInsert(message, "Message sent.");
     } catch (error) {

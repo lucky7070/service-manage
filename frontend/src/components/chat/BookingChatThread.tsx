@@ -3,11 +3,14 @@
 import { useMemo } from "react";
 import moment from "moment";
 import { CheckCheck } from "lucide-react";
+import Image from "@/components/ui/Image";
+import { resolveFileUrl } from "@/helpers/utils";
 
 export type BookingChatMessage = {
     _id: string;
     senderType: "customer" | "provider";
-    message: string;
+    message?: string | null;
+    attachmentUrl?: string | null;
     createdAt?: string;
 };
 
@@ -82,23 +85,24 @@ export function BookingChatThread({
                         {group.items.map((msg) => {
                             const isOutbound = outgoing(msg);
                             const time = msg.createdAt && moment(msg.createdAt).isValid() ? moment(msg.createdAt).format("h:mm A") : "";
-                            return (
-                                <div key={msg._id} className={`flex ${isOutbound ? "justify-end" : "justify-start"}`}>
-                                    <div className={`flex max-w-[75%] flex-col ${isOutbound ? "items-end" : "items-start"}`}>
-                                        <div className={`rounded-2xl px-3.5 py-2 ${isOutbound ? bubbleOutgoing : bubbleIncoming}`}>
-                                            <p className="wrap-break-word whitespace-pre-wrap text-sm">
-                                                {msg.message}
-                                            </p>
-                                        </div>
-                                        <div className={`mt-1 flex items-center gap-1 px-1 ${isOutbound ? "justify-end" : "justify-start"}`}>
-                                            <span className={`text-[10px] ${metaTimeClass}`}>
-                                                {time}
-                                            </span>
-                                            {isOutbound ? <CheckCheck className={`h-3 w-3 shrink-0 ${checkClass}`} aria-hidden /> : null}
-                                        </div>
+                            const imageUrl = resolveFileUrl(msg.attachmentUrl);
+                            const text = String(msg.message || "").trim();
+                            return <div key={msg._id} className={`flex ${isOutbound ? "justify-end" : "justify-start"}`}>
+                                <div className={`flex max-w-[75%] flex-col ${isOutbound ? "items-end" : "items-start"}`}>
+                                    <div className={`rounded-2xl px-3.5 py-2 ${isOutbound ? bubbleOutgoing : bubbleIncoming}`}>
+                                        {imageUrl ? <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="block">
+                                            <Image src={imageUrl} alt="Shared image" className="max-h-64 max-w-full rounded-lg object-cover" />
+                                        </a> : null}
+                                        {text ? <p className={`wrap-break-word whitespace-pre-wrap text-sm ${imageUrl ? "mt-2" : ""}`}>{text}</p> : null}
+                                    </div>
+                                    <div className={`mt-1 flex items-center gap-1 px-1 ${isOutbound ? "justify-end" : "justify-start"}`}>
+                                        <span className={`text-[10px] ${metaTimeClass}`}>
+                                            {time}
+                                        </span>
+                                        {isOutbound ? <CheckCheck className={`h-3 w-3 shrink-0 ${checkClass}`} aria-hidden /> : null}
                                     </div>
                                 </div>
-                            );
+                            </div>
                         })}
                     </div>
                 </div>

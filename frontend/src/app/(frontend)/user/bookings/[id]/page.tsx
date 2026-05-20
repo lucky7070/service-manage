@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import moment from "moment";
 import type { KeyboardEvent } from "react";
-import { ArrowLeft, CalendarClock, CheckCircle2, Loader2, MapPin, Send, XCircle } from "lucide-react";
+import { ArrowLeft, CalendarClock, CheckCircle2, ImagePlus, Loader2, MapPin, Send, X, XCircle } from "lucide-react";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import { BookingChatThread } from "@/components/chat/BookingChatThread";
@@ -37,7 +37,8 @@ type BookingDetail = {
 type ChatMessage = {
     _id: string;
     senderType: "customer" | "provider";
-    message: string;
+    message?: string | null;
+    attachmentUrl?: string | null;
     createdAt?: string;
 };
 
@@ -69,6 +70,9 @@ export default function CustomerBookingDetailPage() {
     });
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [message, setMessage] = useState("");
+    const [pendingImage, setPendingImage] = useState<File | null>(null);
+    const [pendingImagePreview, setPendingImagePreview] = useState<string | null>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [providerOnline, setProviderOnline] = useState(false);
@@ -242,22 +246,58 @@ export default function CustomerBookingDetailPage() {
         }
     }, [id, submitting, getBooking]);
 
+    const clearPendingImage = useCallback(() => {
+        setPendingImage(null);
+        setPendingImagePreview((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return null;
+        });
+        if (imageInputRef.current) imageInputRef.current.value = "";
+    }, []);
+
+    useEffect(() => () => {
+        if (pendingImagePreview) URL.revokeObjectURL(pendingImagePreview);
+    }, [pendingImagePreview]);
+
     const sendMessage = useCallback(async () => {
         const text = message.trim();
-        if (!text || submitting || !id) return;
+        if ((!text && !pendingImage) || submitting || !id) return;
 
         stickToBottomRef.current = true;
         stopLocalTypingSignal();
         setSubmitting(true);
-        const { data } = await AxiosHelper.postData(`/customer/bookings/${id}/messages`, { message: text });
+
+        let response;
+        if (pendingImage) {
+            const formData = new FormData();
+            if (text) formData.append("message", text);
+            formData.append("image", pendingImage);
+            response = await AxiosHelper.postData(`/customer/bookings/${id}/messages`, formData, true);
+        } else {
+            response = await AxiosHelper.postData(`/customer/bookings/${id}/messages`, { message: text });
+        }
+
+        const { data } = response;
         if (data.status) {
             setMessage("");
+            clearPendingImage();
             setMessages((prev) => prev.some((row) => row._id === data.data?._id) ? prev : [...prev, data.data as ChatMessage]);
         } else {
             toast.error(data.message || "Could not send message.");
         }
         setSubmitting(false);
-    }, [message, submitting, id, stopLocalTypingSignal]);
+    }, [message, pendingImage, submitting, id, stopLocalTypingSignal, clearPendingImage]);
+
+    const onImageSelected = (file: File | null) => {
+        if (!file) return;
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please select an image file.");
+            return;
+        }
+        clearPendingImage();
+        setPendingImage(file);
+        setPendingImagePreview(URL.createObjectURL(file));
+    };
 
     const onMessageChange = (value: string) => {
         setMessage(value);
@@ -416,7 +456,39 @@ export default function CustomerBookingDetailPage() {
                                     />
                                 </div>
                                 {providerTyping ? <ChatTypingIndicator label="Provider is typing" className="mt-3 px-0.5" /> : null}
-                                <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
+                                {pendingImagePreview ? (
+                                    <div className="mt-3 flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-3">
+                                        <div className="h-20 w-20 overflow-hidden rounded-lg border border-border bg-background">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={pendingImagePreview} alt="Image to send" className="h-full w-full object-cover" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-foreground">Image ready to send</p>
+                                            <p className="mt-0.5 text-xs text-muted-foreground">Add an optional caption below, then tap Send.</p>
+                                        </div>
+                                        <Button type="button" variant="ghost" size="sm" onClick={clearPendingImage} aria-label="Remove image">
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : null}
+                                <div className="mt-3 grid gap-2 sm:grid-cols-[auto_1fr_auto] sm:items-end">
+                                    <input
+                                        ref={imageInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        className="hidden"
+                                        onChange={(event) => onImageSelected(event.target.files?.[0] || null)}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => imageInputRef.current?.click()}
+                                        disabled={submitting}
+                                        aria-label="Share image"
+                                        title="Share image"
+                                    >
+                                        <ImagePlus className="h-4 w-4" />
+                                    </Button>
                                     <Textarea
                                         value={message}
                                         onChange={(event) => onMessageChange(event.target.value)}
@@ -426,9 +498,11 @@ export default function CustomerBookingDetailPage() {
                                         className="min-h-20 resize-y py-2 leading-normal md:text-sm"
                                         rows={3}
                                     />
-                                    <Button type="button" onClick={() => void sendMessage()} disabled={submitting || !message.trim()}>{submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send</Button>
+                                    <Button type="button" onClick={() => void sendMessage()} disabled={submitting || (!message.trim() && !pendingImage)}>
+                                        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send
+                                    </Button>
                                 </div>
-                                <p className="mt-1.5 text-xs text-muted-foreground">Press Enter to send · Shift+Enter for a new line</p>
+                                <p className="mt-1.5 text-xs text-muted-foreground">Press Enter to send · Shift+Enter for a new line · Share photos with the image button</p>
                             </div>
                         </>}
                     </div>

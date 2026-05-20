@@ -9,7 +9,7 @@ export function bookingStatusBadgeClass(status: string) {
         case "price_agreed":
             return "border border-primary/20 bg-primary/10 text-primary";
         case "price_pending":
-            return "border border-amber-500/12 bg-amber-500/[0.06] text-amber-950 dark:text-amber-100/85";
+            return "border border-amber-500/12 bg-amber-500/[0.06] text-amber-950 dark:text-amber-500/85";
         default:
             return "border border-border bg-muted/70 text-muted-foreground";
     }

@@ -1,5 +1,6 @@
 import moment from "moment";
 import { Address, Booking, ChatMessage, City, Customer, Ledger, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../models/index.js";
+import { parseBookingChatPayload } from "../helpers/bookingChat.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
 import { bookingStatusMail } from "../libraries/mail.js";
@@ -189,11 +190,10 @@ export const deleteCustomerAddress = async (req, res) => {
 export const getCustomerDashboard = async (req, res) => {
     try {
         const customerId = req.customer._id;
-        const [profile, addressCount, statusRows, recentBookings] = await Promise.all([
-            Customer.findById(customerId, "_id userId name mobile email image dateOfBirth preferredLanguage balance referralCode").lean(),
+        const [addressCount, statusRows, recentBookings] = await Promise.all([
             Address.countDocuments({ customerId, deletedAt: null }),
             Booking.aggregate([{ $match: { customerId, deletedAt: null } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
-            Booking.aggregate(bookingListPipeline({ customerId, limit: 5, pageNo: 1 }))
+            Booking.aggregate(bookingListPipeline({ customerId, limit: 3, pageNo: 1 }))
         ]);
 
         const bookingStats = {
@@ -209,7 +209,7 @@ export const getCustomerDashboard = async (req, res) => {
             bookingStats[row._id] = row.count;
         });
 
-        return res.success({ profile, addressCount, bookingStats, recentBookings });
+        return res.success({ addressCount, bookingStats, recentBookings });
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -384,7 +384,16 @@ export const sendCustomerBookingMessage = async (req, res) => {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null }, { _id: 1 });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
-        const message = await ChatMessage.create({ bookingId: booking._id, senderId: req.customer._id, senderType: "customer", message: String(req.body.message || "").trim() });
+        const payload = parseBookingChatPayload(req);
+        if (payload.error) return res.clientError(payload.error, 422, [{ field: "message", message: payload.error }]);
+
+        const message = await ChatMessage.create({
+            bookingId: booking._id,
+            senderId: req.customer._id,
+            senderType: "customer",
+            message: payload.message,
+            attachmentUrl: payload.attachmentUrl
+        });
         req.app.io?.to(`booking:${booking._id}`).emit("booking:message", message);
         return res.successInsert(message, "Message sent.");
     } catch (error) {

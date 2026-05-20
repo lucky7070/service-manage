@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import AccountNav from "@/components/front/user/AccountNav";
 import { Button } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
+import { useAppSelector } from "@/store/hooks";
 
 type BookingRow = {
     _id: string;
@@ -20,7 +21,6 @@ type BookingRow = {
 };
 
 type DashboardData = {
-    profile?: { name: string; mobile: string; email?: string; userId?: string };
     addressCount: number;
     bookingStats: Record<string, number>;
     recentBookings: BookingRow[];
@@ -35,14 +35,23 @@ const statCards = [
 
 export default function CustomerDashboardPage() {
     const router = useRouter();
-    const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+
+    const user = useAppSelector((state) => state.user);
+    const [dashboard, setDashboard] = useState<DashboardData>({
+        addressCount: 0,
+        bookingStats: { total: 0, pending: 0, confirmed: 0, in_progress: 0, completed: 0, cancelled: 0 },
+        recentBookings: []
+    });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const timer = window.setTimeout(async () => {
             const { data } = await AxiosHelper.getData("/customer/dashboard");
-            if (data.status) setDashboard(data.data as DashboardData);
-            else toast.error(data.message || "Could not load dashboard.");
+            if (data.status) {
+                setDashboard(data.data);
+            } else {
+                toast.error(data.message || "Could not load dashboard.");
+            }
             setLoading(false);
         }, 0);
         return () => window.clearTimeout(timer);
@@ -63,8 +72,8 @@ export default function CustomerDashboardPage() {
                         <div className="mb-6 flex flex-col justify-between gap-4 rounded-3xl bg-primary p-6 text-white shadow-lg sm:flex-row sm:items-center">
                             <div>
                                 <p className="text-sm text-white/80">Welcome back</p>
-                                <h1 className="text-3xl font-bold">{dashboard?.profile?.name || "Customer"}</h1>
-                                <p className="mt-1 text-sm text-white/80">{dashboard?.profile?.mobile || ""}</p>
+                                <h1 className="text-3xl font-bold">{user.name || "Customer"}</h1>
+                                <p className="mt-1 text-sm text-white/80">{user.mobile || ""}</p>
                             </div>
                             <Button type="button" variant="secondary" onClick={logout}>
                                 <LogOut className="h-4 w-4" /> Logout
@@ -76,12 +85,13 @@ export default function CustomerDashboardPage() {
                                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                                     {statCards.map((card) => {
                                         const Icon = card.icon;
+                                        const count = dashboard.bookingStats?.[card.key] ?? 0;
                                         return (
                                             <div key={card.key} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                                                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                                     <Icon className="h-5 w-5" />
                                                 </div>
-                                                <div className="text-2xl font-bold text-foreground">{dashboard?.bookingStats?.[card.key] ?? 0}</div>
+                                                <div className="text-2xl font-bold text-foreground">{count}</div>
                                                 <p className="text-sm text-muted-foreground">{card.label}</p>
                                             </div>
                                         );
@@ -95,7 +105,7 @@ export default function CustomerDashboardPage() {
                                             <Link href="/user/bookings" className="text-sm font-medium text-primary hover:underline">View all</Link>
                                         </div>
                                         {dashboard?.recentBookings?.length ? (
-                                            <div className="divide-y divide-border">
+                                            <div className="divide-y divide-border space-y-2">
                                                 {dashboard.recentBookings.map((booking) => (
                                                     <Link key={booking._id} href={`/user/bookings/${booking._id}`} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between border border-border/70 bg-muted/20 px-2.5 overflow-hidden rounded-xl">
                                                         <div className="min-w-0">

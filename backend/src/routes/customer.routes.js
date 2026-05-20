@@ -4,7 +4,7 @@ import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBook
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { validator } from "../libraries/validator.js";
-import { customerStorage } from "./admin/storages.js";
+import { customerStorage, bookingChatStorage } from "./admin/storages.js";
 
 const router = Router();
 
@@ -25,7 +25,7 @@ router.put("/bookings/:bookingId/accept-quote", validator("customer-booking-id")
 router.put("/bookings/:bookingId/cancel", validator("customer-booking-id"), cancelCustomerBooking);
 router.put("/bookings/:bookingId/complete", validator("customer-booking-id"), completeCustomerBooking);
 router.get("/bookings/:bookingId/messages", validator("customer-booking-id"), listCustomerBookingMessages);
-router.post("/bookings/:bookingId/messages", validator("booking-message"), sendCustomerBookingMessage);
+router.post("/bookings/:bookingId/messages", bookingChatStorage.single("image"), validator("booking-message"), sendCustomerBookingMessage);
 router.post("/bookings/:bookingId/feedback", validator("booking-feedback"), submitCustomerBookingFeedback);
 router.get("/ledger", listCustomerLedger);
 router.get("/addresses", listCustomerAddresses);
