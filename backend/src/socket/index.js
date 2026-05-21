@@ -43,7 +43,7 @@ const snapshot = (bookingId) => {
 
 export function createSocket(server) {
 
-    const io = new Server(server, { cors: { origin: config.frontendUrl } });
+    const io = new Server(server, { cors: { origin: config.isDevelopment ? true : config.frontendUrl } });
     io.on("connection", (socket) => {
         socket.data.bookingPresence = [];
 

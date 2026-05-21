@@ -3,7 +3,7 @@ import moment from "moment";
 import { config } from "../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../helpers/utils.js";
-import { Booking, ChatMessage, Customer, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
+import { Booking, ChatMessage, City, ServiceCategory, Customer, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
 import { sendOTP } from "../libraries/sms.js";
 import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
@@ -63,7 +63,8 @@ const bookingAggregation = (filter) => {
     ]
 }
 
-const getProfile = (user) => {
+const getProfile = async (user) => {
+    const [city, serviceCategory] = await Promise.all([City.findOne({ _id: user.cityId }).lean(), ServiceCategory.findOne({ _id: user.serviceCategoryId }).lean()]);
     return {
         _id: user._id,
         userId: user.userId,
@@ -73,6 +74,8 @@ const getProfile = (user) => {
         image: user.image,
         cityId: user.cityId,
         serviceCategoryId: user.serviceCategoryId,
+        cityName: city?.name || "N/A",
+        serviceCategoryName: serviceCategory?.name || "N/A",
         panCardNumber: user.panCardNumber,
         aadharNumber: user.aadharNumber,
         panCardDocument: user.panCardDocument,
@@ -138,7 +141,7 @@ export const login = async (req, res) => {
         const token = jwt.sign({ id: user._id, role: "service-provider" }, config.serviceProviderJwtSecret, JWT_CONFIG);
         res.setCookie("service-provider-token", token);
 
-        return res.success(getProfile(user), "Success..!!");
+        return res.success(await getProfile(user), "Success..!!");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -219,7 +222,7 @@ export const register = async (req, res) => {
 
 export const profile = async (req, res) => {
     try {
-        return res.success(getProfile(req.serviceProvider), "User profile fetched successfully");
+        return res.success(await getProfile(req.serviceProvider), "User profile fetched successfully");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -248,7 +251,7 @@ export const getServiceProviderDashboard = async (req, res) => {
             bookingStats[row._id] = row.count;
         });
 
-        return res.success({ profile: getProfile(req.serviceProvider), workPhotoCount, bookingStats, recentBookings });
+        return res.success({ profile: await getProfile(req.serviceProvider), workPhotoCount, bookingStats, recentBookings });
     } catch (error) {
         return res.someThingWentWrong(error);
     }
