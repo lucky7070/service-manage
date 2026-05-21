@@ -72,7 +72,7 @@ export const register = async (req, res) => {
                 referredBy = referrer._id;
             }
 
-            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy, registerFrom: "website" });
+            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy, registerFrom: String(req.body.registerFrom || "").trim().toLowerCase() === "mobile" ? "mobile" : "website" });
 
             const settings = await getSettings(["signup_rewards", "refer_amount"]);
             const signupReward = Number(settings.signup_rewards || 0);
@@ -98,7 +98,7 @@ export const register = async (req, res) => {
         const token = jwt.sign({ id: user._id, role: "customer" }, config.customerJwtSecret, JWT_CONFIG);
         res.setCookie("customer_token", token);
 
-        return res.success(getProfile(user), "Success..!!");
+        return res.success({ ...getProfile(user), token }, "Success..!!");
     } catch (error) {
         if (error.code === 11000) return res.clientError("Mobile number already registered..!!", 409);
         return res.someThingWentWrong(error);

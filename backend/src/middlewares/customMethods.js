@@ -9,7 +9,7 @@ const toInt = (value, fallback) => {
 };
 
 export const customMethods = (req, res, next) => {
-    res.header("Access-Control-Allow-Headers", "x-access-token, Origin, Content-Type, Accept");
+    res.header("Access-Control-Allow-Headers", "x-access-token, Authorization, Origin, Content-Type, Accept, x-api-key");
 
     const { limit, pageNo, query, orderBy, orderDirection } = req.query;
     req.query.limit = toInt(limit, 10);

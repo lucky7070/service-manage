@@ -25,16 +25,17 @@ const COLLECTION_DESCRIPTION = [
     "### Headers and security (every app)",
     "",
     "- **`x-api-key`**: required on (almost) all calls. Set collection variable `xApiKey` = backend `X_API_KEY` from `.env`.",
-    "- **Customer session**: httpOnly cookie **`customer_token`** (JWT) after `POST /customer/register` succeeds. Middleware reads **cookies only** — there is no `Authorization: Bearer` check for customers today.",
+    "- **Customer session (web)**: httpOnly cookie **`customer_token`** (JWT) after `POST /customer/register`. Browser clients use **`withCredentials`** / cookie jar.",
+    "- **Customer session (mobile)**: same **`POST /customer/register`** returns **`data.token`** (JWT). Send **`Authorization: Bearer <token>`** on authenticated routes. Cookie is also set but mobile can ignore it.",
     "- **Service provider session**: cookie **`service-provider-token`** after `POST /service-provider/login` or `POST /service-provider/register`.",
     "- **Admin session**: cookie **`admin_token`** after Admin login (web/postman cookie jar).",
     "",
-    "**Native iOS/Android:** use an HTTP client with a persistent **cookie store** (same host as API), or extend the backend to accept bearer tokens if you need cookie-less mobile. Sample IDs in this collection must be replaced with real MongoDB ids from your environment.",
+    "**Native iOS/Android (customer):** store **`data.token`** from register in secure storage; attach **`Authorization: Bearer {{customerToken}}`** on each request. Web keeps using cookies only.",
     "",
     "### Customer app — end-to-end flow",
     "",
     "1. **OTP:** `POST /customer/send-otp` with `purpose`: `register` (new user) or `login` (existing).",
-    "2. **Session:** `POST /customer/register` with mobile + OTP + **name** (name is required by API). Sets `customer_token` cookie.",
+    "2. **Session:** `POST /customer/register` with mobile + OTP + **name**. Web: **`customer_token`** cookie. Mobile: save **`data.token`** and use Bearer header.",
     "3. **Profile / home:** `GET /customer/profile`, `GET /customer/dashboard`.",
     "4. **Addresses:** `/customer/addresses` — need at least one address to create a booking.",
     "5. **Discovery (no auth):** **Open (public)** — settings, categories, cities, **`GET /featured-service-providers`** (homepage grid; approved verified providers with **`isFeatured`**), providers by city/category, **`GET /service-types-by-category/:categorySlug`**, **`GET /feedback-rating-tags?tagFor=provider`** for rating chips.",
@@ -268,10 +269,10 @@ const customer = [
     req("Register", "POST", "/customer/register", {
         body: { mobile: "9876543210", otp: "123456", name: "Test User", referralCode: "" },
         description:
-            "`referralCode` optional. Returns **`customer_token`** cookie — mobile clients must persist cookies for this host. **Name** required even for login.",
+            "`referralCode` optional. Optional **`registerFrom`: `\"mobile\"`** for new signups. Response **`data`** includes profile + **`token`** (JWT). Web uses **`customer_token`** cookie; mobile stores **`token`** and sends **`Authorization: Bearer <token>`**. **Name** required even for login.",
     }),
     req("Profile (auth)", "GET", "/customer/profile", {
-        description: "Requires **`customer_token`** cookie (API does not use Bearer tokens today). Always send **`x-api-key`**.",
+        description: "Auth via **`customer_token`** cookie (web) **or** **`Authorization: Bearer <token>`** (mobile). Always send **`x-api-key`**.",
     }),
     req("Update profile (auth)", "PUT", "/customer/profile", { body: { name: "Test User", email: "customer@example.com", dateOfBirth: "1990-01-15", preferredLanguage: "en" } }),
     req("Update profile photo (auth, multipart)", "PUT", "/customer/profile/image", {
@@ -866,7 +867,7 @@ collection.item.push(
 collection.item.push(
     folder(
         "Customer",
-        "Cookie **`customer_token`** after **Register**. Addresses → **`POST /customer/bookings`** or **`POST /customer/service-leads`** → ledger, messages, accept quote → feedback after **`completed`**; **`PUT /customer/profile/image`** for photo.",
+        "After **Register**: web uses cookie **`customer_token`**; mobile uses **`data.token`** with Bearer. Addresses → **`POST /customer/bookings`** or **`POST /customer/service-leads`** → ledger, messages, accept quote → feedback after **`completed`**; **`PUT /customer/profile/image`** for photo.",
         customer
     )
 );

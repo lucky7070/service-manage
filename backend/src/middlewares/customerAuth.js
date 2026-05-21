@@ -1,10 +1,11 @@
 import jwt from "jsonwebtoken";
 import { config } from "../config/index.js";
 import { Customer } from "../models/index.js";
+import { extractCustomerToken } from "../helpers/authToken.js";
 
 export const requireCustomerAuth = async (req, res, next) => {
     try {
-        const token = req.cookies?.customer_token;
+        const token = extractCustomerToken(req);
         if (!token) return res.status(401).json({ status: false, message: "Unauthorized Access..!!", data: [] });
 
         const payload = jwt.verify(token, config.customerJwtSecret);
