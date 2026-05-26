@@ -9,8 +9,9 @@ const start = async () => {
     const server = createServer(app);
     app.io = createSocket(server);
 
-    server.listen(config.port, () => {
+    server.listen(config.port, "0.0.0.0", () => {
         console.log(`Backend running on http://localhost:${config.port}`);
+        console.log(`LAN access: use your IPv4 address on port ${config.port} for mobile devices`);
     });
 };
 
