@@ -6,11 +6,11 @@ import { deleteAddress, fetchAddresses, type AddressRow } from "../api";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
-import IconBox from "../components/ui/IconBox";
 import PageHero from "../components/ui/PageHero";
 import Screen from "../components/ui/Screen";
 import { useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 export default function AddressesScreen() {
     const navigation = useRootNavigation();
@@ -58,11 +58,11 @@ export default function AddressesScreen() {
             <Button label="Add address" onPress={() => navigation.navigate("AddressForm", {})} fullWidth style={styles.addBtn} />
 
             {loading ? (
-                <View style={styles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
+                <View style={screenStyles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
             ) : rows.length === 0 ? (
                 <Card elevated><EmptyState icon="home" title="No addresses saved" message="Add your first service address to book faster." /></Card>
             ) : (
-                <View style={styles.list}>
+                <View style={screenStyles.list}>
                     {rows.map((row) => (
                         <AddressCard
                             key={row._id}
@@ -79,38 +79,41 @@ export default function AddressesScreen() {
 
 function AddressCard({ row, onEdit, onDelete }: { row: AddressRow; onEdit: () => void; onDelete: () => void }) {
     const locationLabel = row.locationType ? row.locationType.charAt(0).toUpperCase() + row.locationType.slice(1) : "Address";
+    const stripeColor = row.isDefault ? colors.primary : "#A3A3A3";
 
     return (
-        <Card elevated style={styles.addressCard}>
-            <View style={styles.addressTop}>
-                <IconBox name="home" tone="primary" />
-                <View style={styles.addressBody}>
-                    <View style={styles.titleRow}>
-                        <Text style={styles.locationType}>{locationLabel}</Text>
-                        {row.isDefault ? (
-                            <View style={styles.defaultBadge}>
-                                <Feather name="star" size={10} color={colors.primary} />
-                                <Text style={styles.defaultText}>Default</Text>
-                            </View>
-                        ) : null}
+        <View style={screenStyles.stripeRow}>
+            <View style={[screenStyles.stripe, { backgroundColor: stripeColor }]} />
+            <View style={screenStyles.stripeBody}>
+                <View style={styles.addressTop}>
+                    <View style={screenStyles.iconTile}>
+                        <Feather name="home" size={18} color={colors.primary} />
                     </View>
-                    <Text style={styles.line}>{row.addressLine1}{row.addressLine2 ? `, ${row.addressLine2}` : ""}</Text>
-                    <Text style={styles.line}>{[row.landmark, row.cityName, row.stateName, row.pincode].filter(Boolean).join(", ")}</Text>
+                    <View style={styles.addressBody}>
+                        <View style={styles.titleRow}>
+                            <Text style={styles.locationType}>{locationLabel}</Text>
+                            {row.isDefault ? (
+                                <View style={styles.defaultBadge}>
+                                    <Feather name="star" size={10} color={colors.primary} />
+                                    <Text style={styles.defaultText}>Default</Text>
+                                </View>
+                            ) : null}
+                        </View>
+                        <Text style={screenStyles.metaLine}>{row.addressLine1}{row.addressLine2 ? `, ${row.addressLine2}` : ""}</Text>
+                        <Text style={screenStyles.metaLine}>{[row.landmark, row.cityName, row.stateName, row.pincode].filter(Boolean).join(", ")}</Text>
+                    </View>
+                </View>
+                <View style={styles.actions}>
+                    <Pressable onPress={onEdit} style={styles.actionBtn}><Feather name="edit-2" size={16} color={colors.primary} /><Text style={styles.actionText}>Edit</Text></Pressable>
+                    <Pressable onPress={onDelete} style={styles.actionBtn}><Feather name="trash-2" size={16} color={colors.destructive} /><Text style={[styles.actionText, { color: colors.destructive }]}>Delete</Text></Pressable>
                 </View>
             </View>
-            <View style={styles.actions}>
-                <Pressable onPress={onEdit} style={styles.actionBtn}><Feather name="edit-2" size={16} color={colors.primary} /><Text style={styles.actionText}>Edit</Text></Pressable>
-                <Pressable onPress={onDelete} style={styles.actionBtn}><Feather name="trash-2" size={16} color={colors.destructive} /><Text style={[styles.actionText, { color: colors.destructive }]}>Delete</Text></Pressable>
-            </View>
-        </Card>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     addBtn: { marginBottom: spacing.lg },
-    loadingBox: { paddingVertical: 48, alignItems: "center" },
-    list: { gap: spacing.md },
-    addressCard: { gap: spacing.md },
     addressTop: { flexDirection: "row", gap: spacing.md },
     addressBody: { flex: 1, gap: 4 },
     titleRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
@@ -125,7 +128,6 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
     },
     defaultText: { fontSize: 11, fontWeight: "700", color: colors.primary },
-    line: { fontSize: 13, color: colors.mutedForeground, lineHeight: 20 },
     actions: { flexDirection: "row", gap: spacing.lg, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm },
     actionBtn: { flexDirection: "row", alignItems: "center", gap: 6 },
     actionText: { fontSize: 13, fontWeight: "700", color: colors.primary },

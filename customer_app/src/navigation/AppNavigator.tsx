@@ -18,7 +18,7 @@ export default function AppNavigator() {
     }
 
     return <NavigationContainer>
-        {user ? <MainStackNavigator /> : <AuthScreen />}
+        {user._id ? <MainStackNavigator /> : <AuthScreen />}
     </NavigationContainer>
 }
 

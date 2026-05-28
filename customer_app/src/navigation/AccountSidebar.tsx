@@ -24,7 +24,7 @@ export default function AccountSidebar({ visible, activeRoute, onClose, onNaviga
         ]);
     };
 
-    const initials = (user?.name || "C").trim().charAt(0).toUpperCase();
+    const initials = (user.name || "C").trim().charAt(0).toUpperCase();
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -41,9 +41,9 @@ export default function AccountSidebar({ visible, activeRoute, onClose, onNaviga
                             <Text style={styles.avatarText}>{initials}</Text>
                         </View>
                         <View style={styles.userMeta}>
-                            <Text style={styles.userName} numberOfLines={1}>{user?.name || "Customer"}</Text>
-                            {user?.mobile ? <Text style={styles.userMobile}>+91 {user.mobile}</Text> : null}
-                            <Text style={styles.walletMini}>₹{Number(user?.balance || 0).toLocaleString("en-IN")} wallet</Text>
+                            <Text style={styles.userName} numberOfLines={1}>{user.name || "Customer"}</Text>
+                            {user.mobile ? <Text style={styles.userMobile}>+91 {user.mobile}</Text> : null}
+                            <Text style={styles.walletMini}>₹{Number(user.balance || 0).toLocaleString("en-IN")} wallet</Text>
                         </View>
                     </View>
 

@@ -13,6 +13,7 @@ import { chatButtonStyles } from "../config/constant";
 import { formatDateTime } from "../helpers/date";
 import { useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 function formatMoney(value?: number | null) {
     if (value == null) return "—";
@@ -126,7 +127,7 @@ export default function BookingDetailScreen() {
     ].filter(Boolean).join(", ");
 
     return (
-        <View style={styles.root}>
+        <View style={screenStyles.stackRoot}>
             <DetailHeader
                 title={booking?.bookingNumber || "Booking"}
                 subtitle={booking ? `${booking.serviceCategoryName || "Service"} · ${booking.providerName || "Provider"}` : undefined}
@@ -134,10 +135,10 @@ export default function BookingDetailScreen() {
             />
 
             {loading ? (
-                <View style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></View>
+                <View style={screenStyles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
             ) : booking ? (
                 <ScrollView
-                    contentContainerStyle={styles.content}
+                    contentContainerStyle={[screenStyles.formContent, styles.scrollGap]}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.primary} />}
                     showsVerticalScrollIndicator={false}
                 >
@@ -255,9 +256,7 @@ export default function BookingDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.muted },
-    loader: { flex: 1, alignItems: "center", justifyContent: "center" },
-    content: { padding: spacing.lg, paddingBottom: spacing.x2, gap: spacing.md },
+    scrollGap: { gap: spacing.md },
     heroCard: { gap: spacing.sm },
     heroTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: spacing.md },
     heroNumber: { fontSize: 22, fontWeight: "800", color: colors.primary },
@@ -275,7 +274,7 @@ const styles = StyleSheet.create({
     chipText: { fontSize: 13, fontWeight: "600", color: colors.foreground },
     issue: { fontSize: 14, color: colors.mutedForeground, lineHeight: 21 },
     priceGrid: { flexDirection: "row", gap: spacing.sm },
-    priceBox: { flex: 1, backgroundColor: colors.muted, borderRadius: radius.xl, padding: spacing.md, gap: 4 },
+    priceBox: { flex: 1, backgroundColor: colors.muted, borderRadius: radius.x2, padding: spacing.md, gap: 4 },
     priceLabel: { fontSize: 11, color: colors.mutedForeground, fontWeight: "600" },
     priceValue: { fontSize: 16, fontWeight: "800", color: colors.foreground },
     cancelBtn: { minWidth: 88 },

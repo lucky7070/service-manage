@@ -3,13 +3,14 @@ import BookServiceSearch from "../components/booking/BookServiceSearch";
 import DetailHeader from "../components/ui/DetailHeader";
 import Screen from "../components/ui/Screen";
 import { useRootNavigation } from "../helpers/common";
-import { colors, spacing } from "../theme/colors";
+import { spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 export default function BookServiceScreen() {
     const navigation = useRootNavigation();
 
     return (
-        <View style={styles.root}>
+        <View style={screenStyles.stackRoot}>
             <DetailHeader title="Book a service" subtitle="Find verified professionals near you" onBack={() => navigation.goBack()} />
             <Screen safe={false} contentContainerStyle={styles.content}>
                 <BookServiceSearch />
@@ -19,6 +20,5 @@ export default function BookServiceScreen() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.muted },
     content: { paddingTop: spacing.md },
 });

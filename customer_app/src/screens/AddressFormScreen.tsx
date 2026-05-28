@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Formik } from "formik";
+import { Formik, FormikErrors } from "formik";
 import { useRoute, type RouteProp } from "@react-navigation/native";
 import { createAddress, fetchAddresses, fetchCities, fetchStates, updateAddress, type AddressRow, type SelectOption } from "../api";
 import FormField from "../components/form/FormField";
@@ -12,6 +12,7 @@ import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { addressSchema } from "../validation/schemas";
 import { colors, radius, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 const locationTypes = ["home", "office", "other"] as const;
 
@@ -108,21 +109,21 @@ export default function AddressFormScreen() {
 
     if (loading) {
         return (
-            <View style={styles.root}>
+            <View style={screenStyles.stackRoot}>
                 <DetailHeader title={isEdit ? "Edit address" : "Add address"} onBack={() => navigation.goBack()} />
-                <View style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></View>
+                <View style={screenStyles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
             </View>
         );
     }
 
     return (
-        <View style={styles.root}>
+        <View style={screenStyles.stackRoot}>
             <DetailHeader title={isEdit ? "Edit address" : "Add address"} subtitle="Coordinates help your provider find the job location." onBack={() => navigation.goBack()} />
             <Formik
                 initialValues={initialValues}
                 enableReinitialize
                 validationSchema={addressSchema}
-                onSubmit={async (values, { setSubmitting }) => {
+                onSubmit={async (values, { setSubmitting, setErrors }) => {
                     try {
                         const payload = {
                             addressLine1: values.addressLine1.trim(),
@@ -136,13 +137,12 @@ export default function AddressFormScreen() {
                             locationType: values.locationType,
                             isDefault: values.isDefault,
                         };
-                        const response = isEdit && addressId
-                            ? await updateAddress(addressId, payload)
-                            : await createAddress(payload);
+                        const response = isEdit && addressId ? await updateAddress(addressId, payload) : await createAddress(payload);
                         if (response.status) {
                             Alert.alert("Saved", response.message || "Address saved.", [{ text: "OK", onPress: () => navigation.goBack() }]);
                         } else {
                             Alert.alert("Could not save", response.message || "Try again.");
+                            setErrors(response.data as FormikErrors<AddressFormValues>);
                         }
                     } finally {
                         setSubmitting(false);
@@ -150,8 +150,8 @@ export default function AddressFormScreen() {
                 }}
             >
                 {({ values, errors, touched, submitCount, isSubmitting, setFieldValue, handleSubmit }) => (
-                    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-                        <Card large elevated style={styles.form}>
+                    <ScrollView contentContainerStyle={screenStyles.formContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                        <Card large elevated style={screenStyles.formCard}>
                             <FormField name="addressLine1" label="Address line 1" required placeholder="House number, street" />
                             <FormField name="addressLine2" label="Address line 2" required placeholder="Area, apartment" />
                             <FormField name="landmark" label="Landmark" placeholder="Nearby landmark" />
@@ -258,10 +258,6 @@ export default function AddressFormScreen() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.muted },
-    loader: { flex: 1, alignItems: "center", justifyContent: "center" },
-    content: { padding: spacing.lg, paddingBottom: spacing.x2 },
-    form: { gap: spacing.lg },
     optionList: { gap: 6, marginTop: -4 },
     option: { backgroundColor: colors.muted, borderRadius: radius.lg, paddingHorizontal: spacing.md, paddingVertical: 10 },
     optionText: { fontSize: 14, color: colors.foreground },
@@ -269,7 +265,7 @@ const styles = StyleSheet.create({
     half: { flex: 1 },
     groupLabel: { fontSize: 14, fontWeight: "600", color: colors.mutedForeground },
     typeRow: { flexDirection: "row", gap: 8 },
-    typeChip: { flex: 1, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center", backgroundColor: colors.card },
+    typeChip: { flex: 1, borderRadius: radius.x2, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center", backgroundColor: colors.card },
     typeChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
     typeText: { fontSize: 13, fontWeight: "700", color: colors.mutedForeground, textTransform: "capitalize" },
     typeTextActive: { color: colors.white },

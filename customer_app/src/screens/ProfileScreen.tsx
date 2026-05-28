@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Formik } from "formik";
 import * as ImagePicker from "expo-image-picker";
@@ -7,12 +7,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { resolveUploadUrl, updateProfile, uploadProfileImage } from "../api";
 import { useAuth } from "../context/AuthContext";
 import FormField from "../components/form/FormField";
+import LanguagePicker from "../components/form/LanguagePicker";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Screen from "../components/ui/Screen";
+import { useMainNavigation } from "../navigation/MainLayout";
+import { formatDate } from "../helpers/date";
 import { profileSchema } from "../validation/schemas";
-import { colors, radius, spacing } from "../theme/colors";
+import { colors, radius, shadows, spacing } from "../theme/colors";
+import type { AccountMenuRoute } from "../api/types";
 
 type ProfileFormValues = {
     name: string;
@@ -21,14 +25,35 @@ type ProfileFormValues = {
     preferredLanguage: "en" | "hi";
 };
 
+type QuickLink = {
+    route: AccountMenuRoute;
+    label: string;
+    icon: keyof typeof Feather.glyphMap;
+    gradient: [string, string];
+};
+
+const quickLinks: QuickLink[] = [
+    { route: "Ledger", label: "Wallet", icon: "credit-card", gradient: ["#0EA5E9", "#0284C7"] },
+    { route: "Addresses", label: "Addresses", icon: "map-pin", gradient: ["#10B981", "#059669"] },
+    { route: "Bookings", label: "Bookings", icon: "calendar", gradient: ["#FF8C3A", colors.primary] },
+    { route: "ReferEarn", label: "Refer & earn", icon: "gift", gradient: ["#F59E0B", "#D97706"] },
+];
+
+function languageLabel(lang?: "en" | "hi") {
+    return lang === "hi" ? "Hindi" : "English";
+}
+
 export default function ProfileScreen() {
-    const { user, refreshProfile } = useAuth();
+    const { user, refreshProfile, signOut } = useAuth();
+    const { navigate } = useMainNavigation();
     const [editing, setEditing] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [localPhoto, setLocalPhoto] = useState<string | null>(null);
 
-    const initials = (user?.name || "C").trim().charAt(0).toUpperCase();
-    const photoUri = localPhoto || (user?.image ? resolveUploadUrl(user.image) : "");
+    const firstName = (user.name || "Customer").trim().split(/\s+/)[0];
+    const initials = (user.name || "C").trim().charAt(0).toUpperCase();
+    const photoUri = localPhoto || (user.image ? resolveUploadUrl(user.image) : "");
+    const language = useMemo(() => languageLabel(user.preferredLanguage), [user.preferredLanguage]);
 
     const onPickPhoto = async () => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -55,49 +80,98 @@ export default function ProfileScreen() {
         }
     };
 
+    const onLogout = () => {
+        Alert.alert("Log out?", "You will need to sign in again to access your account.", [
+            { text: "Cancel", style: "cancel" },
+            { text: "Log out", style: "destructive", onPress: () => void signOut() },
+        ]);
+    };
+
     return (
         <Screen safe={false}>
-            <LinearGradient colors={["#FF8C3A", colors.primary, colors.primaryDark]} style={styles.cover}>
-                <View style={styles.coverDecor} />
-                <Pressable onPress={() => void onPickPhoto()} style={styles.avatarRing}>
+            <LinearGradient
+                colors={["#FF8C3A", colors.primary, colors.primaryDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.hero}
+            >
+                <View style={styles.heroDecorA} />
+                <View style={styles.heroDecorB} />
+                <View style={styles.heroDecorC} />
+
+                <View style={styles.heroTop}>
+                    <View>
+                        <Text style={styles.heroEyebrow}>My account</Text>
+                        <Text style={styles.heroTitle}>Profile</Text>
+                    </View>
+                    <View style={styles.walletPill}>
+                        <Feather name="credit-card" size={14} color={colors.white} />
+                        <View>
+                            <Text style={styles.walletLabel}>Wallet</Text>
+                            <Text style={styles.walletValue}>₹{Number(user.balance || 0).toLocaleString("en-IN")}</Text>
+                        </View>
+                    </View>
+                </View>
+
+                <Pressable onPress={() => void onPickPhoto()} style={styles.avatarWrap}>
                     {photoUri ? (
                         <Image source={{ uri: photoUri }} style={styles.avatarImage} />
                     ) : (
-                        <View style={styles.avatar}><Text style={styles.avatarText}>{initials}</Text></View>
+                        <View style={styles.avatarFallback}>
+                            <Text style={styles.avatarText}>{initials}</Text>
+                        </View>
                     )}
-                    <View style={styles.editBadge}><Feather name="camera" size={14} color={colors.white} /></View>
+                    <View style={styles.cameraBadge}>
+                        <Feather name="camera" size={13} color={colors.white} />
+                    </View>
                 </Pressable>
             </LinearGradient>
 
             <Card large elevated style={styles.profileCard}>
                 {!editing ? (
                     <>
-                        <Text style={styles.name}>{user?.name || "Customer"}</Text>
-                        <Text style={styles.meta}>+91 {user?.mobile || "—"}</Text>
-                        <Text style={styles.meta}>{user?.email || "No email added"}</Text>
-                        <View style={styles.walletRow}>
-                            <Feather name="credit-card" size={18} color={colors.primary} />
-                            <View>
-                                <Text style={styles.walletLabel}>Wallet balance</Text>
-                                <Text style={styles.walletValue}>₹{Number(user?.balance || 0).toLocaleString("en-IN")}</Text>
-                            </View>
+                        <View style={styles.identity}>
+                            <Text style={styles.name}>{user.name || "Customer"}</Text>
+                            <Text style={styles.greeting}>Hi {firstName}, manage your account details below.</Text>
                         </View>
+
                         {localPhoto ? (
-                            <Button label={uploading ? "Uploading…" : "Upload selected photo"} onPress={() => void onUploadPhoto()} loading={uploading} fullWidth />
+                            <View style={styles.photoBanner}>
+                                <Feather name="image" size={16} color={colors.primary} />
+                                <Text style={styles.photoBannerText}>New photo selected</Text>
+                                <Button
+                                    label={uploading ? "Uploading…" : "Save photo"}
+                                    onPress={() => void onUploadPhoto()}
+                                    loading={uploading}
+                                    style={styles.photoBtn}
+                                />
+                            </View>
                         ) : null}
+
+                        <View style={styles.infoList}>
+                            <InfoRow icon="phone" label="Mobile" value={user.mobile ? `+91 ${user.mobile}` : "—"} />
+                            <InfoRow icon="mail" label="Email" value={user.email || "No email added"} />
+                            <InfoRow
+                                icon="calendar"
+                                label="Date of birth"
+                                value={user.dateOfBirth ? formatDate(user.dateOfBirth) : "Not set"}
+                            />
+                            <InfoRow icon="globe" label="Language" value={language} last />
+                        </View>
+
                         <Button label="Edit profile" onPress={() => setEditing(true)} fullWidth />
                     </>
                 ) : (
                     <Formik<ProfileFormValues>
                         enableReinitialize
                         initialValues={{
-                            name: user?.name || "",
-                            email: user?.email || "",
-                            dateOfBirth: user?.dateOfBirth || "",
-                            preferredLanguage: user?.preferredLanguage || "en",
+                            name: user.name || "",
+                            email: user.email || "",
+                            dateOfBirth: user.dateOfBirth || "",
+                            preferredLanguage: user.preferredLanguage || "en",
                         }}
                         validationSchema={profileSchema}
-                        onSubmit={async (values, { setSubmitting }) => {
+                        onSubmit={async (values, { setSubmitting, setErrors }) => {
                             try {
                                 const response = await updateProfile({
                                     name: values.name.trim(),
@@ -111,32 +185,29 @@ export default function ProfileScreen() {
                                     setEditing(false);
                                 } else {
                                     Alert.alert("Could not save", response.message || "Try again.");
+                                    setErrors(response.data);
                                 }
                             } finally {
                                 setSubmitting(false);
                             }
                         }}
                     >
-                        {({ values, isSubmitting, setFieldValue, handleSubmit, resetForm }) => (
+                        {({ values, errors, touched, isSubmitting, setFieldValue, handleSubmit, resetForm }) => (
                             <View style={styles.form}>
+                                <Text style={styles.formTitle}>Edit profile</Text>
+                                <Text style={styles.formSub}>Update your personal details. Mobile number cannot be changed here.</Text>
+
                                 <FormField name="name" label="Full name" required />
-                                <Input label="Mobile" value={user?.mobile ? `+91 ${user.mobile}` : ""} editable={false} />
+                                <Input label="Mobile" value={user.mobile ? `+91 ${user.mobile}` : ""} editable={false} />
                                 <FormField name="email" label="Email" keyboardType="email-address" autoCapitalize="none" />
                                 <FormField name="dateOfBirth" label="Date of birth" placeholder="YYYY-MM-DD" />
-                                <Text style={styles.langLabel}>Preferred language</Text>
-                                <View style={styles.langRow}>
-                                    {(["en", "hi"] as const).map((lang) => (
-                                        <Pressable
-                                            key={lang}
-                                            onPress={() => void setFieldValue("preferredLanguage", lang)}
-                                            style={[styles.langChip, values.preferredLanguage === lang && styles.langChipActive]}
-                                        >
-                                            <Text style={[styles.langText, values.preferredLanguage === lang && styles.langTextActive]}>
-                                                {lang === "en" ? "English" : "Hindi"}
-                                            </Text>
-                                        </Pressable>
-                                    ))}
-                                </View>
+
+                                <LanguagePicker
+                                    value={values.preferredLanguage}
+                                    onChange={(lang) => void setFieldValue("preferredLanguage", lang)}
+                                    error={touched.preferredLanguage && errors.preferredLanguage ? String(errors.preferredLanguage) : undefined}
+                                />
+
                                 <View style={styles.actions}>
                                     <Button
                                         label="Cancel"
@@ -147,7 +218,12 @@ export default function ProfileScreen() {
                                         }}
                                         style={styles.actionBtn}
                                     />
-                                    <Button label={isSubmitting ? "Saving…" : "Save"} onPress={() => handleSubmit()} loading={isSubmitting} style={styles.actionBtn} />
+                                    <Button
+                                        label={isSubmitting ? "Saving…" : "Save changes"}
+                                        onPress={() => handleSubmit()}
+                                        loading={isSubmitting}
+                                        style={styles.actionBtn}
+                                    />
                                 </View>
                             </View>
                         )}
@@ -155,84 +231,297 @@ export default function ProfileScreen() {
                 )}
             </Card>
 
-            {!editing && user?.referralCode ? <Card elevated style={styles.referralBox}>
-                <Feather name="gift" size={16} color={colors.amber} />
-                <Text style={styles.referralText}>Referral code: {user.referralCode}</Text>
-            </Card> : null}
+            {!editing ? (
+                <>
+                    <Text style={styles.sectionLabel}>Quick access</Text>
+                    <View style={styles.quickGrid}>
+                        {quickLinks.map((link) => (
+                            <Pressable key={link.route} onPress={() => navigate(link.route)} style={styles.quickTile}>
+                                <LinearGradient colors={link.gradient} style={styles.quickIcon}>
+                                    <Feather name={link.icon} size={18} color={colors.white} />
+                                </LinearGradient>
+                                <Text style={styles.quickLabel}>{link.label}</Text>
+                                <Feather name="chevron-right" size={14} color={colors.mutedForeground} style={styles.quickChevron} />
+                            </Pressable>
+                        ))}
+                    </View>
+
+                    {user.referralCode ? (
+                        <Pressable onPress={() => navigate("ReferEarn")}>
+                            <LinearGradient colors={["#FFFBEB", "#FEF3C7"]} style={styles.referBanner}>
+                                <View style={styles.referIcon}>
+                                    <Feather name="gift" size={18} color={colors.amber} />
+                                </View>
+                                <View style={styles.referCopy}>
+                                    <Text style={styles.referTitle}>Invite friends, earn rewards</Text>
+                                    <Text style={styles.referCode}>Your code: {user.referralCode}</Text>
+                                </View>
+                                <Feather name="chevron-right" size={18} color={colors.amber} />
+                            </LinearGradient>
+                        </Pressable>
+                    ) : null}
+
+                    <Pressable onPress={onLogout} style={styles.logoutBtn}>
+                        <Feather name="log-out" size={16} color={colors.destructive} />
+                        <Text style={styles.logoutText}>Log out</Text>
+                    </Pressable>
+                </>
+            ) : null}
         </Screen>
     );
 }
 
+function InfoRow({
+    icon,
+    label,
+    value,
+    last,
+}: {
+    icon: keyof typeof Feather.glyphMap;
+    label: string;
+    value: string;
+    last?: boolean;
+}) {
+    return (
+        <View style={[styles.infoRow, !last && styles.infoRowBorder]}>
+            <View style={styles.infoIcon}>
+                <Feather name={icon} size={16} color={colors.primary} />
+            </View>
+            <View style={styles.infoBody}>
+                <Text style={styles.infoLabel}>{label}</Text>
+                <Text style={styles.infoValue}>{value}</Text>
+            </View>
+        </View>
+    );
+}
+
 const styles = StyleSheet.create({
-    cover: {
-        height: 120,
+    hero: {
         borderRadius: radius.x3,
-        marginBottom: 56,
+        padding: spacing.xl,
+        paddingBottom: 52,
+        marginBottom: -36,
         overflow: "hidden",
-        justifyContent: "flex-end",
         alignItems: "center",
     },
-    coverDecor: {
+    heroDecorA: {
         position: "absolute",
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: "rgba(255,255,255,0.1)",
-        top: -30,
-        right: -20,
+        width: 160,
+        height: 160,
+        borderRadius: 80,
+        backgroundColor: "rgba(255,255,255,0.08)",
+        top: -50,
+        right: -30,
     },
-    avatarRing: {
+    heroDecorB: {
         position: "absolute",
-        bottom: -44,
-        padding: 4,
-        borderRadius: 56,
-        backgroundColor: colors.card,
-    },
-    avatar: {
         width: 88,
         height: 88,
         borderRadius: 44,
+        backgroundColor: "rgba(255,255,255,0.06)",
+        bottom: 24,
+        left: 20,
+    },
+    heroDecorC: {
+        position: "absolute",
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: "rgba(255,255,255,0.05)",
+        top: 28,
+        left: 56,
+    },
+    heroTop: {
+        width: "100%",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        marginBottom: spacing.lg,
+    },
+    heroEyebrow: {
+        color: "rgba(255,255,255,0.85)",
+        fontSize: 13,
+        fontWeight: "600",
+    },
+    heroTitle: {
+        color: colors.white,
+        fontSize: 26,
+        fontWeight: "800",
+        marginTop: 2,
+    },
+    walletPill: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.sm,
+        backgroundColor: "rgba(255,255,255,0.16)",
+        borderRadius: radius.x2,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.18)",
+    },
+    walletLabel: {
+        color: "rgba(255,255,255,0.82)",
+        fontSize: 10,
+        fontWeight: "700",
+        textTransform: "uppercase",
+    },
+    walletValue: {
+        color: colors.white,
+        fontSize: 16,
+        fontWeight: "800",
+        marginTop: 1,
+    },
+    avatarWrap: {
+        padding: 4,
+        borderRadius: 52,
+        backgroundColor: colors.card,
+        ...shadows.card,
+        shadowOpacity: 0.12,
+    },
+    avatarFallback: {
+        width: 96,
+        height: 96,
+        borderRadius: 48,
         backgroundColor: "rgba(240,116,26,0.12)",
         alignItems: "center",
         justifyContent: "center",
     },
-    avatarImage: { width: 88, height: 88, borderRadius: 44 },
-    avatarText: { fontSize: 32, fontWeight: "800", color: colors.primary },
-    editBadge: {
+    avatarImage: { width: 96, height: 96, borderRadius: 48 },
+    avatarText: { fontSize: 36, fontWeight: "800", color: colors.primary },
+    cameraBadge: {
         position: "absolute",
-        bottom: 6,
-        right: 6,
-        width: 28,
-        height: 28,
-        borderRadius: 14,
+        bottom: 4,
+        right: 4,
+        width: 30,
+        height: 30,
+        borderRadius: 15,
         backgroundColor: colors.primary,
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 2,
         borderColor: colors.card,
     },
-    profileCard: { alignItems: "stretch", marginBottom: spacing.lg, paddingTop: spacing.x2, gap: spacing.md },
-    name: { fontSize: 24, fontWeight: "800", color: colors.foreground, textAlign: "center" },
-    meta: { fontSize: 14, color: colors.mutedForeground, textAlign: "center" },
-    walletRow: {
+    profileCard: {
+        marginBottom: spacing.lg,
+        paddingTop: spacing.x2 + 8,
+        gap: spacing.lg,
+    },
+    identity: { alignItems: "center", gap: 4 },
+    name: { fontSize: 22, fontWeight: "800", color: colors.foreground, textAlign: "center" },
+    greeting: { fontSize: 13, color: colors.mutedForeground, textAlign: "center", lineHeight: 19 },
+    photoBanner: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.sm,
+        backgroundColor: "rgba(240,116,26,0.08)",
+        borderRadius: radius.x2,
+        borderWidth: 1,
+        borderColor: "rgba(240,116,26,0.2)",
+        padding: spacing.md,
+    },
+    photoBannerText: { flex: 1, fontSize: 13, fontWeight: "600", color: colors.foreground },
+    photoBtn: { minWidth: 100 },
+    infoList: {
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.x2,
+        overflow: "hidden",
+        backgroundColor: colors.background,
+    },
+    infoRow: {
         flexDirection: "row",
         alignItems: "center",
         gap: spacing.md,
-        backgroundColor: colors.muted,
+        padding: spacing.md,
+    },
+    infoRowBorder: {
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+    infoIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: "rgba(240,116,26,0.1)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    infoBody: { flex: 1, gap: 2 },
+    infoLabel: { fontSize: 11, fontWeight: "700", color: colors.mutedForeground, textTransform: "uppercase" },
+    infoValue: { fontSize: 14, fontWeight: "600", color: colors.foreground },
+    form: { gap: spacing.md },
+    formTitle: { fontSize: 18, fontWeight: "800", color: colors.foreground },
+    formSub: { fontSize: 13, color: colors.mutedForeground, lineHeight: 20, marginBottom: spacing.sm },
+    actions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm },
+    actionBtn: { flex: 1 },
+    sectionLabel: {
+        fontSize: 15,
+        fontWeight: "800",
+        color: colors.foreground,
+        marginBottom: spacing.md,
+    },
+    quickGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: spacing.sm,
+        marginBottom: spacing.lg,
+    },
+    quickTile: {
+        width: "48%",
+        flexGrow: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: radius.x2,
+        backgroundColor: colors.card,
+        padding: spacing.md,
+        ...shadows.card,
+        shadowOpacity: 0.04,
+    },
+    quickIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 12,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    quickLabel: { flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground },
+    quickChevron: { marginLeft: "auto" },
+    referBanner: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.md,
         borderRadius: radius.x2,
         padding: spacing.lg,
+        marginBottom: spacing.lg,
+        borderWidth: 1,
+        borderColor: "#FDE68A",
     },
-    walletLabel: { fontSize: 12, fontWeight: "700", color: colors.mutedForeground, textTransform: "uppercase" },
-    walletValue: { fontSize: 22, fontWeight: "800", color: colors.foreground, marginTop: 2 },
-    form: { gap: spacing.md },
-    langLabel: { fontSize: 14, fontWeight: "600", color: colors.mutedForeground },
-    langRow: { flexDirection: "row", gap: 8 },
-    langChip: { flex: 1, borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center" },
-    langChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-    langText: { fontWeight: "700", color: colors.mutedForeground },
-    langTextActive: { color: colors.white },
-    actions: { flexDirection: "row", gap: spacing.sm },
-    actionBtn: { flex: 1 },
-    referralBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: colors.amberBg, borderColor: colors.amberRing },
-    referralText: { fontSize: 13, fontWeight: "700", color: colors.amber },
+    referIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        backgroundColor: "rgba(245,158,11,0.15)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    referCopy: { flex: 1, gap: 2 },
+    referTitle: { fontSize: 14, fontWeight: "800", color: "#92400E" },
+    referCode: { fontSize: 12, fontWeight: "600", color: "#B45309" },
+    logoutBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        borderWidth: 1,
+        borderColor: "rgba(225,29,72,0.25)",
+        borderRadius: radius.x2,
+        backgroundColor: "rgba(225,29,72,0.06)",
+        paddingVertical: 14,
+        marginBottom: spacing.md,
+    },
+    logoutText: { fontSize: 14, fontWeight: "700", color: colors.destructive },
 });

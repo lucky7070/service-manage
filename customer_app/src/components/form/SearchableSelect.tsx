@@ -17,6 +17,7 @@ type SearchableSelectProps = {
     loadOptions: (query: string) => Promise<SearchOption[]>;
     error?: string;
     required?: boolean;
+    icon?: keyof typeof Feather.glyphMap;
 };
 
 export default function SearchableSelect({
@@ -27,6 +28,7 @@ export default function SearchableSelect({
     loadOptions,
     error,
     required,
+    icon = "search",
 }: SearchableSelectProps) {
     const [query, setQuery] = useState(value?.label || "");
     const [options, setOptions] = useState<SearchOption[]>([]);
@@ -70,7 +72,7 @@ export default function SearchableSelect({
                 {required ? <Text style={styles.required}> *</Text> : null}
             </Text>
             <View style={[styles.field, error ? styles.fieldError : null]}>
-                <Feather name="search" size={16} color={colors.mutedForeground} />
+                <Feather name={icon} size={16} color={colors.mutedForeground} />
                 <TextInput
                     value={query}
                     onChangeText={(text) => {

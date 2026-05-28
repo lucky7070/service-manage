@@ -43,7 +43,7 @@ export default function BookingFeedbackSection({ bookingId, providerName, status
         <Formik<FeedbackFormValues>
             initialValues={{ starRating: 0, reviewText: "", quickTags: [] }}
             validationSchema={bookingFeedbackSchema}
-            onSubmit={async (values, { setSubmitting }) => {
+            onSubmit={async (values, { setSubmitting, setErrors }) => {
                 try {
                     const response = await submitBookingFeedback(bookingId, {
                         starRating: values.starRating,
@@ -55,6 +55,7 @@ export default function BookingFeedbackSection({ bookingId, providerName, status
                         onSaved();
                     } else {
                         Alert.alert("Could not submit", response.message || "Try again.");
+                        setErrors(response.data as FormikErrors<FeedbackFormValues>);
                     }
                 } finally {
                     setSubmitting(false);

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRoute, type RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { fetchServiceProviders, resolveUploadUrl, type ProviderListRow } from "../api";
@@ -7,10 +7,13 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import DetailHeader from "../components/ui/DetailHeader";
 import EmptyState from "../components/ui/EmptyState";
+import PaginationBar from "../components/ui/PaginationBar";
 import Screen from "../components/ui/Screen";
+import SearchField from "../components/ui/SearchField";
 import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 function providerRating(row: ProviderListRow) {
     const count = Number(row.ratingCount || 0);
@@ -54,7 +57,7 @@ export default function ProviderSearchScreen() {
     const onSearch = () => void load(false, 1, query);
 
     return (
-        <View style={styles.root}>
+        <View style={screenStyles.stackRoot}>
             <DetailHeader
                 title={`${categoryName} in ${cityName}`}
                 subtitle="Choose a professional or request assignment"
@@ -65,21 +68,15 @@ export default function ProviderSearchScreen() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true, pageNo)} tintColor={colors.primary} />}
             >
                 <Card elevated style={styles.searchCard}>
-                    <View style={styles.searchRow}>
-                        <Feather name="search" size={16} color={colors.mutedForeground} />
-                        <TextInput
-                            value={query}
-                            onChangeText={setQuery}
-                            onSubmitEditing={onSearch}
-                            placeholder="Search by provider name…"
-                            placeholderTextColor={colors.mutedForeground}
-                            style={styles.searchInput}
-                            returnKeyType="search"
-                        />
-                        <Pressable onPress={onSearch} style={styles.searchBtn}>
-                            <Text style={styles.searchBtnText}>Go</Text>
-                        </Pressable>
-                    </View>
+                    <SearchField
+                        value={query}
+                        onChangeText={setQuery}
+                        onSubmitEditing={onSearch}
+                        placeholder="Search by provider name…"
+                        returnKeyType="search"
+                        onGo={onSearch}
+                        style={styles.searchField}
+                    />
                     <Button
                         label="Request without choosing a provider"
                         variant="outline"
@@ -91,7 +88,7 @@ export default function ProviderSearchScreen() {
                 </Card>
 
                 {loading ? (
-                    <View style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></View>
+                    <View style={screenStyles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
                 ) : rows.length === 0 ? (
                     <EmptyState
                         icon="users"
@@ -99,9 +96,11 @@ export default function ProviderSearchScreen() {
                         message="Try another search or submit a service request and we will assign a professional."
                     />
                 ) : (
-                    <View style={styles.list}>
+                    <View style={screenStyles.list}>
                         {rows.map((row) => (
-                            <Card key={row._id} elevated style={styles.providerCard}>
+                            <View key={row._id} style={screenStyles.stripeRow}>
+                                <View style={[screenStyles.stripe, { backgroundColor: colors.primary }]} />
+                                <View style={screenStyles.stripeBody}>
                                 <View style={styles.providerTop}>
                                     <View style={styles.avatarWrap}>
                                         {row.image ? (
@@ -142,21 +141,19 @@ export default function ProviderSearchScreen() {
                                         style={styles.actionBtn}
                                     />
                                 </View>
-                            </Card>
+                                </View>
+                            </View>
                         ))}
                     </View>
                 )}
 
-                {totalPages > 1 && !loading ? (
-                    <View style={styles.pagination}>
-                        <Pressable disabled={pageNo <= 1} onPress={() => void load(false, Math.max(pageNo - 1, 1))} style={[styles.pageBtn, pageNo <= 1 && styles.pageBtnDisabled]}>
-                            <Text style={styles.pageBtnText}>Previous</Text>
-                        </Pressable>
-                        <Text style={styles.pageInfo}>Page {pageNo} of {totalPages}</Text>
-                        <Pressable disabled={pageNo >= totalPages} onPress={() => void load(false, pageNo + 1)} style={[styles.pageBtn, pageNo >= totalPages && styles.pageBtnDisabled]}>
-                            <Text style={styles.pageBtnText}>Next</Text>
-                        </Pressable>
-                    </View>
+                {!loading ? (
+                    <PaginationBar
+                        pageNo={pageNo}
+                        totalPages={totalPages}
+                        onPrevious={() => void load(false, Math.max(pageNo - 1, 1))}
+                        onNext={() => void load(false, pageNo + 1)}
+                    />
                 ) : null}
             </Screen>
         </View>
@@ -164,24 +161,8 @@ export default function ProviderSearchScreen() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.muted },
     searchCard: { gap: spacing.md, marginBottom: spacing.md },
-    searchRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.sm,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: radius.x2,
-        backgroundColor: colors.background,
-        paddingHorizontal: spacing.md,
-    },
-    searchInput: { flex: 1, fontSize: 15, color: colors.foreground, paddingVertical: 12 },
-    searchBtn: { backgroundColor: colors.primary, borderRadius: radius.lg, paddingHorizontal: 12, paddingVertical: 8 },
-    searchBtnText: { color: colors.white, fontWeight: "700", fontSize: 13 },
-    loader: { paddingVertical: 48, alignItems: "center" },
-    list: { gap: spacing.md },
-    providerCard: { gap: spacing.md },
+    searchField: { marginBottom: 0 },
     providerTop: { flexDirection: "row", gap: spacing.md },
     avatarWrap: { width: 56, height: 56, borderRadius: 28, overflow: "hidden" },
     avatar: { width: 56, height: 56 },
@@ -194,9 +175,4 @@ const styles = StyleSheet.create({
     metaText: { fontSize: 12, color: colors.mutedForeground, marginRight: 6 },
     actions: { flexDirection: "row", gap: spacing.sm },
     actionBtn: { flex: 1 },
-    pagination: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.lg, gap: 8 },
-    pageBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.card },
-    pageBtnDisabled: { opacity: 0.45 },
-    pageBtnText: { fontSize: 13, fontWeight: "600", color: colors.foreground },
-    pageInfo: { fontSize: 12, color: colors.mutedForeground },
 });

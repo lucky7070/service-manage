@@ -1,5 +1,5 @@
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Formik } from "formik";
+import { Formik, FormikErrors } from "formik";
 import * as Yup from "yup";
 import { useRoute, type RouteProp } from "@react-navigation/native";
 import { useEffect, useState } from "react";
@@ -15,7 +15,7 @@ import { mapApiFieldErrors } from "../helpers/common";
 import { toApiDateTime } from "../helpers/date";
 import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
-import { colors, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 const schema = Yup.object({
     serviceTypeIds: Yup.array().of(Yup.string().required()).min(1, "Select at least one service / issue type."),
@@ -23,6 +23,13 @@ const schema = Yup.object({
     addressId: Yup.string().required("Service address is required."),
     issueDescription: Yup.string().max(5000).optional(),
 });
+
+type ServiceLeadFormValues = {
+    serviceTypeIds: string[];
+    scheduledTime: Date | null;
+    addressId: string;
+    issueDescription: string;
+};
 
 export default function ServiceLeadFormScreen() {
     const navigation = useRootNavigation();
@@ -55,19 +62,19 @@ export default function ServiceLeadFormScreen() {
     }, [categorySlug]);
 
     return (
-        <View style={styles.root}>
+        <View style={screenStyles.stackRoot}>
             <DetailHeader
                 title={`Request — ${categoryName}`}
                 subtitle={`${cityName} · we will assign a professional`}
                 onBack={() => navigation.goBack()}
             />
             <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-                <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <ScrollView contentContainerStyle={screenStyles.formContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                     <Card large elevated>
-                        <Formik
+                        <Formik<ServiceLeadFormValues>
                             initialValues={{
-                                serviceTypeIds: [] as string[],
-                                scheduledTime: null as Date | null,
+                                serviceTypeIds: [],
+                                scheduledTime: null,
                                 addressId: "",
                                 issueDescription: "",
                             }}
@@ -98,19 +105,21 @@ export default function ServiceLeadFormScreen() {
                                     Alert.alert("Could not submit", response.message || "Try again.");
                                     if (Array.isArray(response.data)) {
                                         setErrors(mapApiFieldErrors(response.data, { serviceTypeId: "serviceTypeIds" }));
+                                    } else {
+                                        setErrors(response.data as FormikErrors<ServiceLeadFormValues>);
                                     }
                                 }
-                                
+
                                 setSubmitting(false);
                             }}
                         >
                             {({ values, errors, touched, setFieldValue, handleSubmit, isSubmitting }) => (
-                                <View style={styles.form}>
-                                    <Text style={styles.intro}>
+                                <View style={screenStyles.formCard}>
+                                    <Text style={screenStyles.intro}>
                                         Submit your job details. Our team will assign a verified {categoryName.toLowerCase()} professional in {cityName}.
                                     </Text>
 
-                                    <Text style={styles.sectionTitle}>Issue type / services</Text>
+                                    <Text style={screenStyles.sectionTitle}>Issue type / services</Text>
                                     <ServiceTypePicker
                                         items={services}
                                         selectedIds={values.serviceTypeIds}
@@ -132,7 +141,7 @@ export default function ServiceLeadFormScreen() {
                                         minimumDate={new Date()}
                                     />
 
-                                    <Text style={styles.sectionTitle}>Service address</Text>
+                                    <Text style={screenStyles.sectionTitle}>Service address</Text>
                                     <AddressPicker
                                         value={values.addressId}
                                         onChange={(addressId) => void setFieldValue("addressId", addressId)}
@@ -160,10 +169,5 @@ export default function ServiceLeadFormScreen() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.muted },
     flex: { flex: 1 },
-    content: { padding: spacing.lg, paddingBottom: spacing.x2 },
-    form: { gap: spacing.lg },
-    intro: { fontSize: 14, color: colors.mutedForeground, lineHeight: 22 },
-    sectionTitle: { fontSize: 15, fontWeight: "800", color: colors.foreground },
 });

@@ -10,6 +10,7 @@ import ImageGalleryModal from "../components/ui/ImageGalleryModal";
 import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 const GRID_COLUMNS = 3;
 const GRID_GAP = 5;
@@ -62,13 +63,13 @@ export default function ProviderDetailScreen() {
     const cellSize = (gridWidth - GRID_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS;
 
     return (
-        <View style={styles.root}>
+        <View style={screenStyles.stackRoot}>
             <DetailHeader title={provider?.name || "Provider"} subtitle={provider?.serviceCategoryName || "Professional profile"} onBack={() => navigation.goBack()} />
             {loading ? (
-                <View style={styles.loader}><ActivityIndicator size="large" color={colors.primary} /></View>
+                <View style={screenStyles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
             ) : provider ? (
                 <ScrollView
-                    contentContainerStyle={styles.content}
+                    contentContainerStyle={[screenStyles.formContent, styles.scrollGap]}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.primary} />}
                     showsVerticalScrollIndicator={false}
                 >
@@ -178,9 +179,7 @@ export default function ProviderDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.muted },
-    loader: { flex: 1, alignItems: "center", justifyContent: "center" },
-    content: { padding: spacing.lg, paddingBottom: spacing.x2, gap: spacing.md },
+    scrollGap: { gap: spacing.md },
     hero: { gap: spacing.md },
     heroTop: { flexDirection: "row", gap: spacing.md },
     avatar: { width: 88, height: 88, borderRadius: 44 },
@@ -192,13 +191,13 @@ const styles = StyleSheet.create({
     badge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
     badgeText: { fontSize: 12, fontWeight: "700", color: colors.emerald },
     stats: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-    stat: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.muted, borderRadius: radius.xl, paddingHorizontal: 10, paddingVertical: 6 },
+    stat: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.muted, borderRadius: radius.x2, paddingHorizontal: 10, paddingVertical: 6 },
     statText: { fontSize: 12, fontWeight: "600", color: colors.foreground },
     section: { gap: spacing.md, },
     sectionTitle: { fontSize: 17, fontWeight: "800", color: colors.foreground },
     about: { fontSize: 14, color: colors.mutedForeground, lineHeight: 22 },
     serviceList: { gap: spacing.sm },
-    serviceRow: { flexDirection: "row", gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.xl, padding: spacing.md },
+    serviceRow: { flexDirection: "row", gap: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.x2, padding: spacing.md },
     serviceMain: { flex: 1, gap: 2 },
     serviceName: { fontSize: 14, fontWeight: "700", color: colors.foreground },
     serviceDesc: { fontSize: 12, color: colors.mutedForeground },

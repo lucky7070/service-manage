@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors, spacing } from "../../theme/colors";
+import { colors, shadows, spacing } from "../../theme/colors";
 
 type DetailHeaderProps = {
     title: string;
@@ -13,16 +13,19 @@ export default function DetailHeader({ title, subtitle, onBack }: DetailHeaderPr
     const insets = useSafeAreaInsets();
 
     return (
-        <View style={[styles.wrap, { paddingTop: insets.top + spacing.sm }]}>
-            <Pressable onPress={onBack} style={styles.backBtn} hitSlop={8}>
-                <Feather name="arrow-left" size={20} color={colors.foreground} />
-            </Pressable>
-            <View style={styles.text}>
-                <Text style={styles.title} numberOfLines={1}>{title}</Text>
-                {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
+        <>
+            <View style={[styles.wrap, { paddingTop: insets.top + spacing.sm }]}>
+                <Pressable onPress={onBack} style={styles.backBtn} hitSlop={8}>
+                    <Feather name="arrow-left" size={20} color={colors.foreground} />
+                </Pressable>
+                <View style={styles.text}>
+                    <Text style={styles.title} numberOfLines={1}>{title}</Text>
+                    {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
+                </View>
+                <View style={styles.spacer} />
             </View>
-            <View style={styles.spacer} />
-        </View>
+            <View style={styles.accent} />
+        </>
     );
 }
 
@@ -36,6 +39,14 @@ const styles = StyleSheet.create({
         backgroundColor: colors.card,
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
+        ...shadows.card,
+        shadowOpacity: 0.06,
+        elevation: 2,
+        zIndex: 1,
+    },
+    accent: {
+        height: 3,
+        backgroundColor: colors.primary,
     },
     backBtn: {
         width: 40,

@@ -7,10 +7,12 @@ import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import FilterChips from "../components/ui/FilterChips";
 import PageHero from "../components/ui/PageHero";
+import PaginationBar from "../components/ui/PaginationBar";
 import Screen from "../components/ui/Screen";
 import { useRootNavigation } from "../helpers/common";
 import { formatDate, formatDateTimeShort } from "../helpers/date";
 import { colors, radius, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 const statuses: Array<{ value: "" | "open" | "assigned" | "cancelled"; label: string }> = [
     { value: "", label: "All" },
@@ -89,40 +91,40 @@ export default function ServiceLeadsScreen() {
                 />
 
                 {loading ? (
-                    <View style={styles.loadingBox}><ActivityIndicator color={colors.primary} /></View>
+                    <View style={screenStyles.loadingBox}><ActivityIndicator color={colors.primary} /></View>
                 ) : rows.length === 0 ? (
                     <EmptyState icon="clipboard" title="No booking requests yet" message="Search for a service and submit a request without choosing a provider." />
                 ) : (
-                    <View style={styles.list}>
+                    <View style={screenStyles.list}>
                         {rows.map((lead) => {
                             const tone = leadStatusStyle(lead.status);
                             return (
-                                <View key={lead._id} style={styles.leadCard}>
-                                    <View style={[styles.stripe, { backgroundColor: tone.stripe }]} />
-                                    <View style={styles.leadBody}>
-                                        <View style={styles.leadTop}>
-                                            <View style={styles.leadMain}>
-                                                <Text style={styles.leadNumber}>{lead.leadNumber}</Text>
-                                                <Text style={styles.leadMeta}>
+                                <View key={lead._id} style={screenStyles.stripeRow}>
+                                    <View style={[screenStyles.stripe, { backgroundColor: tone.stripe }]} />
+                                    <View style={screenStyles.stripeBody}>
+                                        <View style={screenStyles.rowTop}>
+                                            <View style={screenStyles.rowMain}>
+                                                <Text style={screenStyles.primaryNumber}>{lead.leadNumber}</Text>
+                                                <Text style={screenStyles.metaLine}>
                                                     {lead.serviceCategoryName || "Service"} · {lead.cityName || "—"}
                                                 </Text>
                                                 {lead.issueDescription ? (
-                                                    <Text style={styles.issue} numberOfLines={2}>{lead.issueDescription}</Text>
+                                                    <Text style={screenStyles.metaLine} numberOfLines={2}>{lead.issueDescription}</Text>
                                                 ) : null}
                                             </View>
                                             <View style={[styles.statusBadge, { backgroundColor: tone.bg }]}>
                                                 <Text style={[styles.statusText, { color: tone.text }]}>{lead.status}</Text>
                                             </View>
                                         </View>
-                                        <View style={styles.metaRow}>
+                                        <View style={screenStyles.metaRow}>
                                             {lead.scheduledTime ? (
                                                 <View style={styles.metaItem}>
                                                     <Feather name="clock" size={12} color={colors.mutedForeground} />
-                                                    <Text style={styles.metaText}>{formatDateTimeShort(lead.scheduledTime)}</Text>
+                                                    <Text style={screenStyles.metaText}>{formatDateTimeShort(lead.scheduledTime)}</Text>
                                                 </View>
                                             ) : null}
                                             {lead.createdAt ? (
-                                                <Text style={styles.metaText}>Submitted {formatDate(lead.createdAt)}</Text>
+                                                <Text style={screenStyles.metaText}>Submitted {formatDate(lead.createdAt)}</Text>
                                             ) : null}
                                         </View>
                                         <Text style={styles.hint}>{leadHint(lead.status)}</Text>
@@ -142,24 +144,13 @@ export default function ServiceLeadsScreen() {
                     </View>
                 )}
 
-                {totalPages > 1 && !loading ? (
-                    <View style={styles.pagination}>
-                        <Pressable
-                            disabled={pageNo <= 1}
-                            onPress={() => void load(false, Math.max(pageNo - 1, 1))}
-                            style={[styles.pageBtn, pageNo <= 1 && styles.pageBtnDisabled]}
-                        >
-                            <Text style={styles.pageBtnText}>Previous</Text>
-                        </Pressable>
-                        <Text style={styles.pageInfo}>Page {pageNo} of {totalPages}</Text>
-                        <Pressable
-                            disabled={pageNo >= totalPages}
-                            onPress={() => void load(false, pageNo + 1)}
-                            style={[styles.pageBtn, pageNo >= totalPages && styles.pageBtnDisabled]}
-                        >
-                            <Text style={styles.pageBtnText}>Next</Text>
-                        </Pressable>
-                    </View>
+                {!loading ? (
+                    <PaginationBar
+                        pageNo={pageNo}
+                        totalPages={totalPages}
+                        onPrevious={() => void load(false, Math.max(pageNo - 1, 1))}
+                        onNext={() => void load(false, pageNo + 1)}
+                    />
                 ) : null}
             </Card>
         </Screen>
@@ -167,28 +158,9 @@ export default function ServiceLeadsScreen() {
 }
 
 const styles = StyleSheet.create({
-    loadingBox: { paddingVertical: 40, alignItems: "center" },
-    list: { gap: 10 },
-    leadCard: {
-        borderRadius: radius.xl,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.card,
-        overflow: "hidden",
-        flexDirection: "row",
-    },
-    stripe: { width: 3 },
-    leadBody: { flex: 1, padding: spacing.md, gap: spacing.sm },
-    leadTop: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
-    leadMain: { flex: 1, gap: 4 },
-    leadNumber: { fontSize: 14, fontWeight: "700", color: colors.primary },
-    leadMeta: { fontSize: 12, color: colors.mutedForeground },
-    issue: { fontSize: 12, color: colors.mutedForeground, lineHeight: 18 },
-    statusBadge: { borderRadius: radius.xl, paddingHorizontal: 10, paddingVertical: 4, alignSelf: "flex-start" },
+    statusBadge: { borderRadius: radius.x2, paddingHorizontal: 10, paddingVertical: 4, alignSelf: "flex-start" },
     statusText: { fontSize: 11, fontWeight: "700", textTransform: "capitalize" },
-    metaRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center" },
     metaItem: { flexDirection: "row", alignItems: "center", gap: 4 },
-    metaText: { fontSize: 11, color: colors.mutedForeground },
     hint: { fontSize: 12, color: colors.mutedForeground },
     bookingBtn: {
         alignSelf: "flex-start",
@@ -201,9 +173,4 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
     },
     bookingBtnText: { color: colors.white, fontSize: 12, fontWeight: "700" },
-    pagination: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.lg, gap: 8 },
-    pageBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.card },
-    pageBtnDisabled: { opacity: 0.45 },
-    pageBtnText: { fontSize: 13, fontWeight: "600", color: colors.foreground },
-    pageInfo: { fontSize: 12, color: colors.mutedForeground },
 });

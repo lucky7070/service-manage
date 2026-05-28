@@ -16,6 +16,7 @@ export default function PageHero({ eyebrow, title, subtitle, footer, style, ...p
         <LinearGradient colors={["#FF8C3A", colors.primary, colors.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, style]} {...props}>
             <View style={styles.decorA} />
             <View style={styles.decorB} />
+            <View style={styles.decorC} />
             <View style={styles.content}>
                 {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
                 <Text style={styles.title}>{title}</Text>
@@ -50,6 +51,15 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.06)",
         bottom: 12,
         right: 48,
+    },
+    decorC: {
+        position: "absolute",
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        backgroundColor: "rgba(255,255,255,0.05)",
+        top: 28,
+        left: 16,
     },
     content: { gap: 6, zIndex: 1 },
     eyebrow: { color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: "600" },

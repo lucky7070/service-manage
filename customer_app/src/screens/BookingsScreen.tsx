@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { fetchBookings, type BookingRow } from "../api";
@@ -7,13 +7,15 @@ import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import FilterChips from "../components/ui/FilterChips";
 import PageHero from "../components/ui/PageHero";
+import PaginationBar from "../components/ui/PaginationBar";
 import Screen from "../components/ui/Screen";
 import StatusBadge from "../components/ui/StatusBadge";
 import { bookingAccentStripeColor } from "../helpers/common";
 import { formatDateTimeShort } from "../helpers/date";
 import { chatButtonStyles } from "../config/constant";
 import { useRootNavigation } from "../helpers/common";
-import { colors, radius, spacing } from "../theme/colors";
+import { colors } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 const statusFilters = [
     { value: "", label: "All" },
@@ -67,38 +69,38 @@ export default function BookingsScreen() {
                 <FilterChips items={statusFilters} value={status} onChange={setStatus} />
 
                 {loading ? (
-                    <View style={styles.loadingBox}><ActivityIndicator color={colors.primary} /></View>
+                    <View style={screenStyles.loadingBox}><ActivityIndicator color={colors.primary} /></View>
                 ) : rows.length === 0 ? (
                     <EmptyState icon="calendar" title="No bookings found" message="Try another filter or book a service to get started." />
                 ) : (
-                    <View style={styles.list}>
+                    <View style={screenStyles.list}>
                         {rows.map((booking) => (
-                            <View key={booking._id} style={styles.bookingCard}>
-                                <View style={[styles.stripe, { backgroundColor: bookingAccentStripeColor(booking.status) }]} />
-                                <View style={styles.bookingBody}>
+                            <View key={booking._id} style={screenStyles.stripeRow}>
+                                <View style={[screenStyles.stripe, { backgroundColor: bookingAccentStripeColor(booking.status) }]} />
+                                <View style={screenStyles.stripeBody}>
                                     <Pressable onPress={() => navigation.navigate("BookingDetail", { bookingId: booking._id })}>
-                                        <View style={styles.bookingTop}>
-                                            <View style={styles.bookingMain}>
-                                                <Text style={styles.bookingNumber}>{booking.bookingNumber}</Text>
-                                                <View style={styles.bookingLineRow}>
+                                        <View style={screenStyles.rowTop}>
+                                            <View style={screenStyles.rowMain}>
+                                                <Text style={screenStyles.primaryNumber}>{booking.bookingNumber}</Text>
+                                                <View style={screenStyles.metaRow}>
                                                     <Feather name="briefcase" size={12} color={colors.primary} />
-                                                    <Text style={styles.bookingLine}>
+                                                    <Text style={screenStyles.metaLine}>
                                                         {booking.serviceCategoryName || "Service"} · with {booking.providerName || "your professional"}
                                                     </Text>
                                                 </View>
                                                 {booking.cityName ? (
-                                                    <View style={styles.metaRow}><Feather name="map-pin" size={12} color={colors.mutedForeground} /><Text style={styles.metaLine}>{booking.cityName}</Text></View>
+                                                    <View style={screenStyles.metaRow}><Feather name="map-pin" size={12} color={colors.mutedForeground} /><Text style={screenStyles.metaLine}>{booking.cityName}</Text></View>
                                                 ) : null}
                                                 {booking.scheduledTime ? (
-                                                    <View style={styles.metaRow}><Feather name="clock" size={12} color={colors.mutedForeground} /><Text style={styles.metaLine}>{formatDateTimeShort(booking.scheduledTime)}</Text></View>
+                                                    <View style={screenStyles.metaRow}><Feather name="clock" size={12} color={colors.mutedForeground} /><Text style={screenStyles.metaLine}>{formatDateTimeShort(booking.scheduledTime)}</Text></View>
                                                 ) : null}
                                             </View>
                                             <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
                                         </View>
                                     </Pressable>
-                                    <View style={styles.bookingFooter}>
+                                    <View style={screenStyles.rowFooter}>
                                         <StatusBadge status={booking.status} />
-                                        <View style={styles.footerActions}>
+                                        <View style={screenStyles.footerActions}>
                                             <Pressable
                                                 onPress={() => navigation.navigate("BookingChat", {
                                                     bookingId: booking._id,
@@ -112,7 +114,7 @@ export default function BookingsScreen() {
                                                 <Feather name="message-circle" size={14} color={colors.primary} />
                                                 <Text style={chatButtonStyles.text}>Chat</Text>
                                             </Pressable>
-                                            {booking.finalPrice ? <Text style={styles.price}>₹{Number(booking.finalPrice).toLocaleString("en-IN")}</Text> : null}
+                                            {booking.finalPrice ? <Text style={screenStyles.price}>₹{Number(booking.finalPrice).toLocaleString("en-IN")}</Text> : null}
                                         </View>
                                     </View>
                                 </View>
@@ -121,48 +123,16 @@ export default function BookingsScreen() {
                     </View>
                 )}
 
-                {totalPages > 1 && !loading ? (
-                    <View style={styles.pagination}>
-                        <Pressable disabled={pageNo <= 1} onPress={() => void load(false, Math.max(pageNo - 1, 1))} style={[styles.pageBtn, pageNo <= 1 && styles.pageBtnDisabled]}>
-                            <Text style={styles.pageBtnText}>Previous</Text>
-                        </Pressable>
-                        <Text style={styles.pageInfo}>Page {pageNo} of {totalPages}</Text>
-                        <Pressable disabled={pageNo >= totalPages} onPress={() => void load(false, pageNo + 1)} style={[styles.pageBtn, pageNo >= totalPages && styles.pageBtnDisabled]}>
-                            <Text style={styles.pageBtnText}>Next</Text>
-                        </Pressable>
-                    </View>
+                {!loading ? (
+                    <PaginationBar
+                        pageNo={pageNo}
+                        totalPages={totalPages}
+                        onPrevious={() => void load(false, Math.max(pageNo - 1, 1))}
+                        onNext={() => void load(false, pageNo + 1)}
+                    />
                 ) : null}
             </Card>
         </Screen>
     );
 }
 
-const styles = StyleSheet.create({
-    loadingBox: { paddingVertical: 40, alignItems: "center" },
-    list: { gap: 12 },
-    bookingCard: {
-        borderRadius: radius.x2,
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.background,
-        overflow: "hidden",
-        flexDirection: "row",
-    },
-    stripe: { width: 4 },
-    bookingBody: { flex: 1, padding: spacing.md, gap: spacing.sm },
-    bookingTop: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
-    bookingMain: { flex: 1, gap: 4 },
-    bookingNumber: { fontSize: 15, fontWeight: "800", color: colors.primary },
-    bookingLineRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-    bookingLine: { flex: 1, fontSize: 12, color: colors.mutedForeground, lineHeight: 18 },
-    metaRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-    metaLine: { fontSize: 12, color: colors.mutedForeground },
-    bookingFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-    footerActions: { flexDirection: "row", alignItems: "center", gap: 10 },
-    price: { fontSize: 15, fontWeight: "800", color: colors.foreground },
-    pagination: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: spacing.lg, gap: 8 },
-    pageBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.card },
-    pageBtnDisabled: { opacity: 0.45 },
-    pageBtnText: { fontSize: 13, fontWeight: "600", color: colors.foreground },
-    pageInfo: { fontSize: 12, color: colors.mutedForeground },
-});

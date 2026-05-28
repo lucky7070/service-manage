@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Formik } from "formik";
+import { Formik, FormikErrors } from "formik";
 import * as Yup from "yup";
 import { useRoute, type RouteProp } from "@react-navigation/native";
 import { createBooking, fetchPublicProvider } from "../api";
@@ -16,6 +16,7 @@ import { toApiDateTime } from "../helpers/date";
 import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
+import { screenStyles } from "../theme/screenStyles";
 
 const schema = Yup.object({
     serviceTypeIds: Yup.array().of(Yup.string().required()).min(1, "Select at least one service."),
@@ -23,6 +24,13 @@ const schema = Yup.object({
     addressId: Yup.string().required("Service address is required."),
     issueDescription: Yup.string().max(5000).optional(),
 });
+
+type BookProviderFormValues = {
+    serviceTypeIds: string[];
+    scheduledTime: Date | null;
+    addressId: string;
+    issueDescription: string;
+};
 
 export default function BookProviderScreen() {
     const navigation = useRootNavigation();
@@ -57,15 +65,15 @@ export default function BookProviderScreen() {
     const title = providerName ? `Book ${providerName}` : "Confirm booking";
 
     return (
-        <View style={styles.root}>
+        <View style={screenStyles.stackRoot}>
             <DetailHeader title={title} subtitle="Select services, schedule, and address" onBack={() => navigation.goBack()} />
             <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-                <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                <ScrollView contentContainerStyle={screenStyles.formContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                     <Card large elevated>
-                        <Formik
+                        <Formik<BookProviderFormValues>
                             initialValues={{
-                                serviceTypeIds: [] as string[],
-                                scheduledTime: null as Date | null,
+                                serviceTypeIds: [],
+                                scheduledTime: null,
                                 addressId: "",
                                 issueDescription: "",
                             }}
@@ -99,6 +107,8 @@ export default function BookProviderScreen() {
                                     Alert.alert("Could not book", response.message || "Try again.");
                                     if (Array.isArray(response.data)) {
                                         setErrors(mapApiFieldErrors(response.data, { serviceTypeId: "serviceTypeIds" }));
+                                    } else {
+                                        setErrors(response.data as FormikErrors<BookProviderFormValues>);
                                     }
                                 }
                                 setSubmitting(false);
@@ -110,8 +120,8 @@ export default function BookProviderScreen() {
                                 const estimatedMinutes = selectedRows.reduce((sum, row) => sum + Number(row.estimatedTimeMinutes || 0), 0);
 
                                 return (
-                                    <View style={styles.form}>
-                                        <Text style={styles.sectionTitle}>Services</Text>
+                                    <View style={screenStyles.formCard}>
+                                        <Text style={screenStyles.sectionTitle}>Services</Text>
                                         <ServiceTypePicker
                                             items={services}
                                             selectedIds={values.serviceTypeIds}
@@ -140,7 +150,7 @@ export default function BookProviderScreen() {
                                             minimumDate={new Date()}
                                         />
 
-                                        <Text style={styles.sectionTitle}>Service address</Text>
+                                        <Text style={screenStyles.sectionTitle}>Service address</Text>
                                         <AddressPicker
                                             value={values.addressId}
                                             onChange={(addressId) => void setFieldValue("addressId", addressId)}
@@ -169,11 +179,7 @@ export default function BookProviderScreen() {
 }
 
 const styles = StyleSheet.create({
-    root: { flex: 1, backgroundColor: colors.muted },
     flex: { flex: 1 },
-    content: { padding: spacing.lg, paddingBottom: spacing.x2 },
-    form: { gap: spacing.lg },
-    sectionTitle: { fontSize: 15, fontWeight: "800", color: colors.foreground },
     summary: {
         backgroundColor: colors.muted,
         borderRadius: radius.x2,

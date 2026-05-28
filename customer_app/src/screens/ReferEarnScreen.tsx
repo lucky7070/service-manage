@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Alert, Share, StyleSheet, Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../context/AuthContext";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -21,10 +22,10 @@ export default function ReferEarnScreen() {
     const { user } = useAuth();
 
     const shareLink = useMemo(() => {
-        if (!user?.referralCode) return "";
+        if (!user.referralCode) return "";
         const base = env.webUrl.replace(/\/$/, "");
         return `${base}/login?ref=${encodeURIComponent(user.referralCode)}`;
-    }, [user?.referralCode]);
+    }, [user.referralCode]);
 
     const copyText = async (value: string, message: string) => {
         if (!value) {
@@ -36,7 +37,7 @@ export default function ReferEarnScreen() {
     };
 
     const shareReferral = async () => {
-        if (!user?.referralCode) {
+        if (!user.referralCode) {
             Alert.alert("Unavailable", "Referral code is not available.");
             return;
         }
@@ -61,6 +62,7 @@ export default function ReferEarnScreen() {
             />
 
             <Card large elevated style={styles.codeCard}>
+                <LinearGradient colors={["#FF8C3A", colors.primary]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.codeStripe} />
                 <IconBox name="gift" tone="primary" large />
                 <Text style={styles.codeLabel}>Your Referral Code</Text>
                 <Text style={styles.codeValue}>{user?.referralCode || "—"}</Text>
@@ -115,37 +117,9 @@ export default function ReferEarnScreen() {
 }
 
 const styles = StyleSheet.create({
-    hero: {
-        backgroundColor: colors.primary,
-        borderRadius: radius.x3,
-        padding: spacing.xl,
-        marginBottom: spacing.lg,
-    },
-    heroBadge: {
-        alignSelf: "flex-start",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-        backgroundColor: "rgba(255,255,255,0.15)",
-        borderRadius: radius.x2,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        marginBottom: spacing.md,
-    },
-    heroBadgeText: { color: colors.white, fontSize: 13, fontWeight: "700" },
-    heroTitle: { color: colors.white, fontSize: 26, fontWeight: "800", lineHeight: 32 },
-    heroSub: { color: "rgba(255,255,255,0.85)", fontSize: 14, lineHeight: 22, marginTop: spacing.sm },
-    codeCard: { alignItems: "center", marginBottom: spacing.lg },
-    codeIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: radius.x2,
-        backgroundColor: "rgba(240,116,26,0.1)",
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: spacing.md,
-    },
-    codeLabel: { fontSize: 14, fontWeight: "600", color: colors.mutedForeground },
+    codeCard: { alignItems: "center", marginBottom: spacing.lg, overflow: "hidden", paddingTop: spacing.xl },
+    codeStripe: { position: "absolute", top: 0, left: 0, right: 0, height: 4 },
+    codeLabel: { fontSize: 14, fontWeight: "600", color: colors.mutedForeground, marginTop: spacing.md },
     codeValue: {
         marginTop: spacing.sm,
         fontSize: 28,
@@ -162,7 +136,7 @@ const styles = StyleSheet.create({
     linkBox: {
         borderWidth: 1,
         borderColor: colors.border,
-        borderRadius: radius.xl,
+        borderRadius: radius.x2,
         backgroundColor: colors.muted,
         padding: spacing.md,
         marginVertical: spacing.sm,
@@ -171,14 +145,6 @@ const styles = StyleSheet.create({
     steps: { gap: spacing.md, marginBottom: spacing.lg },
     stepCard: { gap: spacing.sm },
     stepTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-    stepIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: radius.x2,
-        backgroundColor: "rgba(240,116,26,0.1)",
-        alignItems: "center",
-        justifyContent: "center",
-    },
     stepBadge: {
         fontSize: 11,
         fontWeight: "700",

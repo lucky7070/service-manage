@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { Formik } from "formik";
+import { Formik, FormikErrors } from "formik";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { sendOtp } from "../../api";
@@ -50,6 +50,7 @@ export default function AuthScreen() {
                 <LinearGradient colors={["#FF8C3A", colors.primary, colors.primaryDark]} style={styles.hero}>
                     <View style={styles.heroDecorA} />
                     <View style={styles.heroDecorB} />
+                    <View style={styles.heroDecorC} />
                     {/* <View style={styles.brandRow}>
                         <View style={styles.brandMark}><Text style={styles.brandMarkText}>{BRAND.mark}</Text></View>
                         <Text style={styles.brandName}>{BRAND.name}</Text>
@@ -82,12 +83,13 @@ export default function AuthScreen() {
                             key={isLogin ? "login-details" : "register-details"}
                             initialValues={{ mobile: detailsSnapshot.mobile, name: detailsSnapshot.name, referralCode: detailsSnapshot.referralCode }}
                             validationSchema={authDetailsSchema(isLogin)}
-                            onSubmit={async (values, { setSubmitting }) => {
+                            onSubmit={async (values, { setSubmitting, setErrors }) => {
                                 const mobile = values.mobile.replace(/\D/g, "").slice(-10);
                                 try {
                                     const response = await sendOtp(mobile, isLogin ? "login" : "register");
                                     if (!response.status) {
                                         Alert.alert("Could not send OTP", response.message || "Try again.");
+                                        setErrors(response.data as FormikErrors<AuthDetailsValues>);
                                         return;
                                     }
 
@@ -165,6 +167,9 @@ const styles = StyleSheet.create({
         borderBottomLeftRadius: radius.x3,
         borderBottomRightRadius: radius.x3,
         overflow: "hidden",
+        minHeight: 300,
+        justifyContent: "flex-end",
+        alignItems: "flex-end",
     },
     heroDecorA: {
         position: "absolute",
@@ -183,6 +188,15 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(255,255,255,0.06)",
         bottom: 20,
         left: 24,
+    },
+    heroDecorC: {
+        position: "absolute",
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: "rgba(255,255,255,0.05)",
+        top: 32,
+        left: 56,
     },
     brandRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: spacing.lg },
     brandMark: {
