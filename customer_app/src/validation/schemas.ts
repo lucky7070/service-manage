@@ -53,3 +53,11 @@ export const bookingFeedbackSchema = Yup.object({
     reviewText: Yup.string().trim().max(2000).optional(),
     quickTags: Yup.array().of(Yup.string()).default([]),
 });
+
+export const contactEnquirySchema = Yup.object({
+    name: Yup.string().trim().min(2, "Name must be at least 2 characters.").max(100).required("Name is required."),
+    email: Yup.string().trim().email("Enter a valid email address.").max(100).required("Email is required."),
+    phone: Yup.string().trim().test("phone", "Enter a valid 10-digit mobile number.", (value) => !value || indianMobile.test(value)).required("Mobile number is required."),
+    subject: Yup.string().trim().min(2, "Subject must be at least 2 characters.").max(200).required("Subject is required."),
+    message: Yup.string().trim().min(10, "Please enter at least 10 characters.").max(5000).required("Message is required."),
+});

@@ -10,9 +10,12 @@ import LedgerScreen from "../screens/LedgerScreen";
 import ReferEarnScreen from "../screens/ReferEarnScreen";
 import AddressesScreen from "../screens/AddressesScreen";
 import ProfileScreen from "../screens/ProfileScreen";
+import ContactUsScreen from "../screens/ContactUsScreen";
+import TermsScreen from "../screens/TermsScreen";
+import PrivacyScreen from "../screens/PrivacyScreen";
 import AccountSidebar from "./AccountSidebar";
 import { useAndroidExitConfirmation } from "../hooks/useAndroidExitConfirmation";
-import { accountMenuItems } from "../config/constant";
+import { allMenuItems } from "../config/constant";
 import type { AccountMenuRoute } from "../api/types";
 import { BRAND } from "../config/constant";
 import { colors, radius, shadows, spacing } from "../theme/colors";
@@ -41,6 +44,9 @@ const screenComponents: Record<AccountMenuRoute, ComponentType> = {
     ReferEarn: ReferEarnScreen,
     Addresses: AddressesScreen,
     Profile: ProfileScreen,
+    ContactUs: ContactUsScreen,
+    Terms: TermsScreen,
+    Privacy: PrivacyScreen,
 };
 
 export default function MainLayout() {
@@ -53,7 +59,7 @@ export default function MainLayout() {
         if (route.params?.initialTab) setActiveRoute(route.params.initialTab);
     }, [route.params?.initialTab]);
 
-    const activeItem = accountMenuItems.find((item) => item.route === activeRoute) ?? accountMenuItems[0];
+    const activeItem = allMenuItems.find((item) => item.route === activeRoute) ?? allMenuItems[0];
     const ActiveScreen = screenComponents[activeRoute];
 
     const navValue = useMemo<MainNavContextValue>(() => ({

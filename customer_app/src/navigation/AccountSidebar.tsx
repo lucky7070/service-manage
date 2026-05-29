@@ -3,7 +3,7 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
 import { colors, radius, spacing } from "../theme/colors";
-import { accountMenuItems } from "../config/constant";
+import { accountMenuItems, supportMenuItems } from "../config/constant";
 import type { AccountMenuRoute } from "../api/types";
 
 type AccountSidebarProps = {
@@ -11,6 +11,37 @@ type AccountSidebarProps = {
     activeRoute: AccountMenuRoute;
     onClose: () => void;
     onNavigate: (route: AccountMenuRoute) => void;
+};
+
+const renderMenuItem = (item: (typeof accountMenuItems)[number], activeRoute: AccountMenuRoute, onNavigate: (route: AccountMenuRoute) => void) => {
+    const active = activeRoute === item.route;
+    return (
+        <Pressable
+            key={item.route}
+            onPress={() => onNavigate(item.route)}
+            style={[
+                styles.menuItem,
+                item.highlight && !active && styles.menuItemHighlight,
+                active && styles.menuItemActive,
+            ]}
+        >
+            <Feather
+                name={item.icon}
+                size={18}
+                color={active ? colors.white : item.highlight ? colors.amber : colors.mutedForeground}
+            />
+            <Text
+                style={[
+                    styles.menuLabel,
+                    item.highlight && !active && styles.menuLabelHighlight,
+                    active && styles.menuLabelActive,
+                ]}
+            >
+                {item.label}
+            </Text>
+            {active ? <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.85)" /> : null}
+        </Pressable>
+    );
 };
 
 export default function AccountSidebar({ visible, activeRoute, onClose, onNavigate }: AccountSidebarProps) {
@@ -49,36 +80,10 @@ export default function AccountSidebar({ visible, activeRoute, onClose, onNaviga
 
                     <ScrollView contentContainerStyle={styles.menuScroll} showsVerticalScrollIndicator={false}>
                         <Text style={styles.menuHeading}>MY ACCOUNT</Text>
-                        {accountMenuItems.map((item) => {
-                            const active = activeRoute === item.route;
-                            return (
-                                <Pressable
-                                    key={item.route}
-                                    onPress={() => onNavigate(item.route)}
-                                    style={[
-                                        styles.menuItem,
-                                        item.highlight && !active && styles.menuItemHighlight,
-                                        active && styles.menuItemActive,
-                                    ]}
-                                >
-                                    <Feather
-                                        name={item.icon}
-                                        size={18}
-                                        color={active ? colors.white : item.highlight ? colors.amber : colors.mutedForeground}
-                                    />
-                                    <Text
-                                        style={[
-                                            styles.menuLabel,
-                                            item.highlight && !active && styles.menuLabelHighlight,
-                                            active && styles.menuLabelActive,
-                                        ]}
-                                    >
-                                        {item.label}
-                                    </Text>
-                                    {active ? <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.85)" /> : null}
-                                </Pressable>
-                            );
-                        })}
+                        {accountMenuItems.map((item) => renderMenuItem(item, activeRoute, onNavigate))}
+
+                        <Text style={[styles.menuHeading, styles.menuHeadingSpaced]}>SUPPORT</Text>
+                        {supportMenuItems.map((item) => renderMenuItem(item, activeRoute, onNavigate))}
                     </ScrollView>
 
                     <View style={styles.footer}>
@@ -222,6 +227,9 @@ const styles = StyleSheet.create({
         color: colors.mutedForeground,
         marginBottom: spacing.sm,
         paddingHorizontal: spacing.sm,
+    },
+    menuHeadingSpaced: {
+        marginTop: spacing.md,
     },
     menuItem: {
         flexDirection: "row",

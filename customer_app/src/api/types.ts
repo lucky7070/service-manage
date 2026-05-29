@@ -298,7 +298,39 @@ export type AccountMenuRoute =
     | "Ledger"
     | "ReferEarn"
     | "Addresses"
-    | "Profile";
+    | "Profile"
+    | "ContactUs"
+    | "Terms"
+    | "Privacy";
+
+export type CmsPageData = {
+    title?: string;
+    pageTitle?: string;
+    content?: string;
+    contentHi?: string;
+    metaDescription?: string;
+    updatedAt?: string;
+};
+
+export type GeneralSettings = {
+    application_name?: string;
+    copyright?: string;
+    address?: string;
+    email?: string;
+    phone?: string;
+    facebook?: string;
+    twitter?: string;
+    linkdin?: string;
+    instagram?: string;
+};
+
+export type ContactEnquiryPayload = {
+    name: string;
+    email: string;
+    phone?: string;
+    subject: string;
+    message: string;
+};
 
 export type AccountMenuItem = {
     route: AccountMenuRoute;

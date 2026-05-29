@@ -26,9 +26,17 @@ export const accountMenuItems: AccountMenuItem[] = [
     { route: "ServiceLeads", label: "Booking requests", icon: "clipboard" },
     { route: "Ledger", label: "Ledger", icon: "credit-card" },
     { route: "ReferEarn", label: "Refer and Earn", icon: "gift", highlight: true },
-    { route: "Addresses", label: "Addresses", icon: "home" },
+    { route: "Addresses", label: "Addresses", icon: "map-pin" },
     { route: "Profile", label: "Profile", icon: "user" },
 ];
+
+export const supportMenuItems: AccountMenuItem[] = [
+    { route: "ContactUs", label: "Contact us", icon: "mail" },
+    { route: "Terms", label: "Terms & conditions", icon: "file-text" },
+    { route: "Privacy", label: "Privacy policy", icon: "shield" },
+];
+
+export const allMenuItems: AccountMenuItem[] = [...accountMenuItems, ...supportMenuItems];
 
 export const BRAND = {
     mark: "H",
