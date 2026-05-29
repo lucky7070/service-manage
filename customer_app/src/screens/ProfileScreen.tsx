@@ -7,6 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { resolveUploadUrl, updateProfile, uploadProfileImage } from "../api";
 import { useAuth } from "../context/AuthContext";
 import FormField from "../components/form/FormField";
+import DateField from "../components/form/DateField";
 import LanguagePicker from "../components/form/LanguagePicker";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -104,13 +105,10 @@ export default function ProfileScreen() {
                         <Text style={styles.heroEyebrow}>My account</Text>
                         <Text style={styles.heroTitle}>Profile</Text>
                     </View>
-                    <View style={styles.walletPill}>
-                        <Feather name="credit-card" size={14} color={colors.white} />
-                        <View>
-                            <Text style={styles.walletLabel}>Wallet</Text>
-                            <Text style={styles.walletValue}>₹{Number(user.balance || 0).toLocaleString("en-IN")}</Text>
-                        </View>
-                    </View>
+                    {user.balance != null ? <View style={{ flexDirection: "column", alignItems: "flex-end", gap: spacing.sm }}>
+                        <Text style={styles.walletLabel}>Wallet Balance</Text>
+                        <Text style={styles.walletValue}>₹{Number(user.balance || 0).toLocaleString("en-IN")}</Text>
+                    </View> : null}
                 </View>
 
                 <Pressable onPress={() => void onPickPhoto()} style={styles.avatarWrap}>
@@ -192,7 +190,7 @@ export default function ProfileScreen() {
                             }
                         }}
                     >
-                        {({ values, errors, touched, isSubmitting, setFieldValue, handleSubmit, resetForm }) => (
+                        {({ values, errors, touched, isSubmitting, setFieldValue, setFieldTouched, handleSubmit, resetForm }) => (
                             <View style={styles.form}>
                                 <Text style={styles.formTitle}>Edit profile</Text>
                                 <Text style={styles.formSub}>Update your personal details. Mobile number cannot be changed here.</Text>
@@ -200,7 +198,17 @@ export default function ProfileScreen() {
                                 <FormField name="name" label="Full name" required />
                                 <Input label="Mobile" value={user.mobile ? `+91 ${user.mobile}` : ""} editable={false} />
                                 <FormField name="email" label="Email" keyboardType="email-address" autoCapitalize="none" />
-                                <FormField name="dateOfBirth" label="Date of birth" placeholder="YYYY-MM-DD" />
+                                <DateField
+                                    label="Date of birth"
+                                    value={values.dateOfBirth}
+                                    onChange={(date) => {
+                                        void setFieldValue("dateOfBirth", date);
+                                        void setFieldTouched("dateOfBirth", true, false);
+                                    }}
+                                    error={touched.dateOfBirth && errors.dateOfBirth ? String(errors.dateOfBirth) : undefined}
+                                    maximumDate={new Date()}
+                                    clearable
+                                />
 
                                 <LanguagePicker
                                     value={values.preferredLanguage}
@@ -361,16 +369,16 @@ const styles = StyleSheet.create({
         borderColor: "rgba(255,255,255,0.18)",
     },
     walletLabel: {
-        color: "rgba(255,255,255,0.82)",
-        fontSize: 10,
+        color: "rgba(255,255,255,0.78)",
+        fontSize: 11,
         fontWeight: "700",
-        textTransform: "uppercase",
+        textTransform: "uppercase"
     },
     walletValue: {
         color: colors.white,
-        fontSize: 16,
+        fontSize: 20,
         fontWeight: "800",
-        marginTop: 1,
+        marginTop: 2
     },
     avatarWrap: {
         padding: 4,

@@ -17,7 +17,7 @@ const Schema = new mongoose.Schema(
         averageRating: { type: Number, default: 0 },
         referralCode: { type: String, unique: true, sparse: true, index: true, default: null },
         referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", default: null },
-        registerFrom: { type: String, enum: ["website", "admin"], default: "website", index: true },
+        registerFrom: { type: String, enum: ["website", "admin", "ios", "android"], default: "website", index: true },
         isActive: { type: Boolean, default: true },
         lastLogin: { type: Date, default: null },
         isVerified: { type: Boolean, default: false },

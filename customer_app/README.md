@@ -288,9 +288,23 @@ Loads `.env.production` while still in dev mode — useful to verify URLs before
 1. User enters mobile number on **Auth** screen.
 2. App calls `POST /customer/send-otp` with `purpose: "login" | "register"`.
 3. User enters OTP → `POST /customer/register` with `registerFrom: "mobile"`.
-4. Backend returns JWT → stored in **Expo SecureStore** (`src/storage/token.ts`).
-5. `AxiosHelper` attaches `Authorization: Bearer <token>` and `x-api-key` on every request.
-6. On `401`, user is logged out and returned to auth.
+4. Backend returns `{ token, ...profile }` in JSON — **no `Set-Cookie`** for mobile clients.
+5. Token is stored in **Expo SecureStore** (`src/storage/token.ts`).
+6. `AxiosHelper` sends on every request:
+   - `Authorization: Bearer <token>`
+   - `x-api-key` (from `EXPO_PUBLIC_API_LICENCE`)
+   - `X-Client-Platform: ios | android`
+7. On `401`, user is logged out and returned to auth.
+
+**Backend cookie config** (see `backend/.env.example`):
+
+| Variable | Mobile app |
+|----------|--------------|
+| `CROSS_ORIGIN_COOKIES` | Not used by native app (CORS is browser-only) |
+| `COOKIE_ENABLED_FOR_MOBILE` | Keep `false` (default) |
+| `MOBILE_CLIENT_HEADER` | Default `x-client-platform` — sent by this app |
+
+Web customer portal still uses `customer_token` httpOnly cookies; admin and provider portals unchanged.
 
 ---
 

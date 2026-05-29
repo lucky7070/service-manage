@@ -8,6 +8,17 @@ export function parseDate(value?: string | Date | null) {
     return parsed.isValid() ? parsed : null;
 }
 
+/** Date picker display — e.g. 19 May 2026 */
+export function formatPickerDate(value: Date | null) {
+    if (!value) return "Select date";
+    return moment(value).format("DD MMM YYYY");
+}
+
+/** Send date-only value to API — YYYY-MM-DD */
+export function toApiDate(value: Date) {
+    return moment(value).format("YYYY-MM-DD");
+}
+
 /** e.g. 19 May 2026, 02:30 PM — booking detail, ledger */
 export function formatDateTime(value?: string | Date | null, fallback = "—") {
     const parsed = parseDate(value);

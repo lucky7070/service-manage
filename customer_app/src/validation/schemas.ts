@@ -1,4 +1,5 @@
 import * as Yup from "yup";
+import { parseDate } from "../helpers/date";
 
 const indianMobile = /^[6-9]\d{9}$/;
 
@@ -44,7 +45,7 @@ export const addressSchema = Yup.object({
 export const profileSchema = Yup.object({
     name: Yup.string().trim().min(2, "Name must be at least 2 characters.").required("Name is required."),
     email: Yup.string().trim().email("Invalid email.").nullable().transform((v) => v || null),
-    dateOfBirth: Yup.string().trim().nullable().transform((v) => v || null),
+    dateOfBirth: Yup.string().nullable().transform((v) => v || null).test("valid-date", "Enter a valid date.", (value) => !value || parseDate(value)?.isValid() === true),
     preferredLanguage: Yup.string().oneOf(["en", "hi"]).required(),
 });
 

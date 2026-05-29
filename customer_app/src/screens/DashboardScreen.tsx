@@ -18,7 +18,6 @@ import { useMainNavigation } from "../navigation/MainLayout";
 import { useRootNavigation } from "../helpers/common";
 import { bookingAccentStripeColor } from "../helpers/common";
 import { formatDateTimeShort } from "../helpers/date";
-import Card from "../components/ui/Card";
 import EmptyState from "../components/ui/EmptyState";
 import Screen from "../components/ui/Screen";
 import SectionHeader from "../components/ui/SectionHeader";
@@ -66,7 +65,6 @@ export default function DashboardScreen() {
     const [refreshing, setRefreshing] = useState(false);
 
     const firstName = (user.name || "there").trim().split(/\s+/)[0];
-    const userInitial = firstName.charAt(0).toUpperCase();
     const greeting = useMemo(() => getGreeting(), []);
 
     const load = useCallback(async (isRefresh = false) => {

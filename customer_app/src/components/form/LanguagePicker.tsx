@@ -49,7 +49,7 @@ export default function LanguagePicker({ label = "Preferred language", value, on
                             <View style={styles.copy}>
                                 <Text style={[styles.optionLabel, active && styles.optionLabelActive]}>{option.label}</Text>
                                 <Text style={styles.optionNative}>{option.native}</Text>
-                                <Text style={styles.optionDesc}>{option.description}</Text>
+                                {/* <Text style={styles.optionDesc}>{option.description}</Text> */}
                             </View>
                             <View style={[styles.radio, active && styles.radioActive]}>
                                 {active ? <Feather name="check" size={14} color={colors.white} /> : null}

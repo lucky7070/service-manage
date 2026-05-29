@@ -8,7 +8,23 @@ Production-style platform using Next.js (frontend) and Express + MongoDB (backen
 - Frontend libs: Redux Toolkit, Axios, Formik, Yup, React Select, SweetAlert2, React Toastify, Moment
 - Backend: Node.js, Express, Mongoose, Express Validator, Multer, Socket.io (booking room chat / typing)
 - Database: MongoDB
-- Auth: JWT + cookie-based admin auth; JWT for customer / service-provider APIs as applicable
+- Auth: JWT + httpOnly cookies for **web** (admin, customer site, provider portal); **Bearer token** for the React Native customer app (`customer_app/`)
+
+## Auth & cookies
+
+| Client | Session | Backend detection |
+|--------|---------|-------------------|
+| Admin panel (Next.js) | `admin_token` cookie | Browser — cookies set on login |
+| Customer website | `customer_token` cookie | Browser — cookies set on login |
+| Service provider portal | `service-provider-token` cookie | Browser |
+| **Customer mobile app** | Bearer JWT in SecureStore | `X-Client-Platform: mobile` or `registerFrom: "mobile"` — **no cookies** |
+
+Protected customer routes accept `Authorization: Bearer <token>` **or** `customer_token` cookie (`extractCustomerToken` in `backend/src/helpers/authToken.js`).
+
+**Backend env** (`backend/.env.example`):
+
+- `CROSS_ORIGIN_COOKIES` + `COOKIE_DOMAIN` — when web frontend and API are on different domains (requires HTTPS, `SameSite=None`).
+See [`customer_app/README.md`](customer_app/README.md) for mobile env and build setup.
 
 ## Project Structure
 

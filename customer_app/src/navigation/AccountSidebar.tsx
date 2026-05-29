@@ -1,4 +1,4 @@
-import { Alert, Animated, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Animated, Modal, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../context/AuthContext";
@@ -47,6 +47,7 @@ const renderMenuItem = (item: (typeof accountMenuItems)[number], activeRoute: Ac
 export default function AccountSidebar({ visible, activeRoute, onClose, onNavigate }: AccountSidebarProps) {
     const { user, signOut } = useAuth();
     const insets = useSafeAreaInsets();
+    const topInset = Math.max(insets.top, Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0);
 
     const onLogout = () => {
         Alert.alert("Log out", "Are you sure you want to log out?", [
@@ -60,7 +61,7 @@ export default function AccountSidebar({ visible, activeRoute, onClose, onNaviga
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
             <View style={{ ...styles.overlay }}>
-                <Animated.View style={[styles.panel, { paddingTop: Math.min(insets.top, 10), paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+                <Animated.View style={[styles.panel, { paddingTop: topInset + spacing.md, paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
                     {/* <View style={styles.brandRow}>
                         <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={8}>
                             <Feather name="x" size={20} color={colors.mutedForeground} />

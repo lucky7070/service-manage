@@ -9,7 +9,7 @@ const toInt = (value, fallback) => {
 };
 
 export const customMethods = (req, res, next) => {
-    res.header("Access-Control-Allow-Headers", "x-access-token, Authorization, Origin, Content-Type, Accept, x-api-key");
+    res.header("Access-Control-Allow-Headers", "x-access-token, Authorization, Origin, Content-Type, Accept, x-api-key, x-client-platform");
 
     const { limit, pageNo, query, orderBy, orderDirection } = req.query;
     req.query.limit = toInt(limit, 10);
@@ -119,10 +119,12 @@ export const customMethods = (req, res, next) => {
 
     res.setCookie = function setCookie(key, value) {
         this.cookie(key, value, COOKIE_OPTIONS);
+        return this;
     };
 
     res.deleteCookie = function deleteCookie(key) {
         this.clearCookie(key, COOKIE_OPTIONS);
+        return this;
     };
 
     next();

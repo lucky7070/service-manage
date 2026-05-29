@@ -1,16 +1,20 @@
 import axios, { InternalAxiosRequestConfig, isAxiosError, type AxiosError, type AxiosInstance, type AxiosResponse } from "axios";
 import env from "../config/env";
 import { getToken } from "../storage/token";
+import { Platform } from "react-native";
 
 let axiosInstance: AxiosInstance | null = null;
 
 export const getAxios = () => {
     if (!axiosInstance) {
         axiosInstance = axios.create({
-            withCredentials: true,
+            withCredentials: false,
             baseURL: env.apiUrl,
             timeout: 30000,
-            headers: { "x-api-key": env.apiLicence },
+            headers: {
+                "x-api-key": env.apiLicence,
+                "x-client-platform": Platform.OS.toLowerCase(),
+            },
         });
 
         axiosInstance.interceptors.request.use(async (config) => {
