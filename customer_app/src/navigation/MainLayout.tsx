@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ComponentType } from "react";
+import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
@@ -21,20 +21,7 @@ import { BRAND } from "../config/constant";
 import { colors, radius, shadows, spacing } from "../theme/colors";
 import { useRoute, type RouteProp } from "@react-navigation/native";
 import type { MainStackParamList } from "../api/types";
-
-export type MainDrawerParamList = Record<AccountMenuRoute, undefined>;
-
-type MainNavContextValue = {
-    navigate: (route: AccountMenuRoute) => void;
-};
-
-const MainNavContext = createContext<MainNavContextValue | null>(null);
-
-export function useMainNavigation() {
-    const ctx = useContext(MainNavContext);
-    if (!ctx) throw new Error("useMainNavigation must be used within MainLayout");
-    return ctx;
-}
+import { MainNavContext, type MainNavContextValue } from "./MainNavContext";
 
 const screenComponents: Record<AccountMenuRoute, ComponentType> = {
     Dashboard: DashboardScreen,
@@ -71,8 +58,14 @@ export default function MainLayout() {
             setSidebarOpen(false);
             return true;
         }
+
+        if (activeRoute !== "Dashboard") {
+            setActiveRoute("Dashboard");
+            return true;
+        }
+        
         return false;
-    }, [sidebarOpen]);
+    }, [sidebarOpen, activeRoute]);
 
     useAndroidExitConfirmation(onHardwareBack);
 

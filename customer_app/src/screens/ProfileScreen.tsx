@@ -13,7 +13,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import Screen from "../components/ui/Screen";
-import { useMainNavigation } from "../navigation/MainLayout";
+import { useMainNavigation } from "../navigation/MainNavContext";
 import { formatDate } from "../helpers/date";
 import { profileSchema } from "../validation/schemas";
 import { colors, radius, shadows, spacing } from "../theme/colors";

@@ -14,7 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { fetchDashboard, type DashboardData } from "../api";
 import { useAuth } from "../context/AuthContext";
 import BookServiceSearch from "../components/booking/BookServiceSearch";
-import { useMainNavigation } from "../navigation/MainLayout";
+import { useMainNavigation } from "../navigation/MainNavContext";
 import { useRootNavigation } from "../helpers/common";
 import { bookingAccentStripeColor } from "../helpers/common";
 import { formatDateTimeShort } from "../helpers/date";
