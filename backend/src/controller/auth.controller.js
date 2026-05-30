@@ -167,3 +167,13 @@ export const logout = async (req, res) => {
         return res.someThingWentWrong(error);
     }
 };
+
+export const deleteCustomerAccount = async (req, res) => {
+    try {
+        await req.customer.updateOne({ deletedAt: now(), isActive: false, fcmToken: null, deviceId: null, });
+        res.deleteCookie("customer_token");
+        return res.successDelete([], "Your account has been deleted.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};

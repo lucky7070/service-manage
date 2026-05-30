@@ -313,15 +313,32 @@ export type CmsPageData = {
 };
 
 export type GeneralSettings = {
-    application_name?: string;
-    copyright?: string;
-    address?: string;
-    email?: string;
-    phone?: string;
-    facebook?: string;
-    twitter?: string;
-    linkdin?: string;
-    instagram?: string;
+    favicon: string;
+    logo: string;
+    application_name: string;
+    copyright: string;
+    address: string;
+    email: string;
+    phone: string;
+    brand_tagline: string;
+    facebook: string;
+    twitter: string;
+    linkdin: string;
+    instagram: string;
+    force_update_android: string;
+    force_update_ios: string;
+    app_version_android: string;
+    app_version_ios: string;
+    app_url_android: string;
+    app_url_ios: string;
+    force_update_message_android: string;
+    force_update_message_ios: string;
+    maintenance: string;
+    maintenance_toggle: string;
+    information_banner: string;
+    information_banner_toggle: string;
+    baseUrl: string;
+    uploadUrl: string;
 };
 
 export type ContactEnquiryPayload = {

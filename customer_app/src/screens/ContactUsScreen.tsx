@@ -1,10 +1,10 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Alert, Linking, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { Formik } from "formik";
-import { useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
-import { fetchGeneralSettings, submitContactEnquiry, type GeneralSettings } from "../api";
+import { submitContactEnquiry } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 import ContactDetailsCard from "../components/cms/ContactDetailsCard";
 import FormField from "../components/form/FormField";
 import FormTextareaField from "../components/form/FormTextareaField";
@@ -35,55 +35,38 @@ type ContactMethod = {
 
 export default function ContactUsScreen() {
     const { user } = useAuth();
-    const [settings, setSettings] = useState<GeneralSettings | null>(null);
-    const [refreshing, setRefreshing] = useState(false);
-
-    const loadSettings = useCallback(async (isRefresh = false) => {
-        if (isRefresh) setRefreshing(true);
-        try {
-            const response = await fetchGeneralSettings();
-            if (response.status && response.data) setSettings(response.data);
-        } finally {
-            if (isRefresh) setRefreshing(false);
-        }
-    }, []);
-
-    useFocusEffect(useCallback(() => { void loadSettings(); }, [loadSettings]));
+    const { settings } = useSettings();
 
     const contactMethods: ContactMethod[] = [
         {
             icon: "phone",
             title: "Phone support",
             description: "Talk to our support team",
-            value: settings?.phone || "Not available",
-            action: settings?.phone ? () => void Linking.openURL(`tel:${settings.phone}`) : undefined,
+            value: settings.phone || "Not available",
+            action: settings.phone ? () => void Linking.openURL(`tel:${settings.phone}`) : undefined,
         },
         {
             icon: "mail",
             title: "Email us",
             description: "We respond within 24 hours",
-            value: settings?.email || "Not available",
-            action: settings?.email ? () => void Linking.openURL(`mailto:${settings.email}`) : undefined,
+            value: settings.email || "Not available",
+            action: settings.email ? () => void Linking.openURL(`mailto:${settings.email}`) : undefined,
         },
         {
             icon: "map-pin",
             title: "Office",
             description: "Visit us for assistance",
-            value: settings?.address || "Not available",
+            value: settings.address || "Not available",
         },
     ];
 
     return (
-        <Screen
-            safe={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void loadSettings(true)} tintColor={colors.primary} />}
-        >
+        <Screen safe={false}>
             <PageHero
                 eyebrow="Support"
                 title="Contact us"
                 subtitle="Have questions or feedback? Our team is here to help you."
             />
-
             <View style={styles.methods}>
                 {contactMethods.map((method) => (
                     <Pressable
@@ -101,11 +84,9 @@ export default function ContactUsScreen() {
                     </Pressable>
                 ))}
             </View>
-
             <Card large elevated style={styles.formCard}>
                 <Text style={styles.formTitle}>Send us a message</Text>
                 <Text style={styles.formSub}>Fill in the form and we will get back to you as soon as possible.</Text>
-
                 <Formik<ContactFormValues>
                     enableReinitialize
                     initialValues={{
@@ -161,8 +142,7 @@ export default function ContactUsScreen() {
                     )}
                 </Formik>
             </Card>
-
-            <ContactDetailsCard settings={settings} />
+            <ContactDetailsCard />
         </Screen>
     );
 }
@@ -204,3 +184,5 @@ const styles = StyleSheet.create({
     formTitle: { fontSize: 18, fontWeight: "800", color: colors.foreground },
     formSub: { fontSize: 13, color: colors.mutedForeground, lineHeight: 20, marginBottom: spacing.sm },
 });
+
+

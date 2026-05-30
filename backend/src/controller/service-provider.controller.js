@@ -269,6 +269,22 @@ export const logout = async (req, res) => {
     }
 };
 
+export const deleteServiceProviderAccount = async (req, res) => {
+    try {
+        await req.serviceProvider.updateOne({
+            deletedAt: now(),
+            isActive: false,
+            isAvailable: false,
+            fcmToken: null,
+            deviceId: null,
+        });
+        res.deleteCookie("service-provider-token");
+        return res.successDelete([], "Your account has been deleted.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
 export const getWorkPhotos = async (req, res) => {
     try {
 

@@ -1,3 +1,4 @@
+import { config } from "../../config/index.js";
 import { Setting } from "../../models/index.js";
 
 const TYPE_REQUIRED_FIELDS = {
@@ -12,9 +13,16 @@ const TYPE_REQUIRED_FIELDS = {
 
 export const getGeneralSettings = async (req, res) => {
     try {
+        const settingType = [1, 2];
+        if (req.query.type === 'customer') settingType.push(6);
+        if (req.query.type === 'service-provider') settingType.push(7);
 
-        const rows = await Setting.find({ setting_type: [1, 2], status: 1 }, '-_id setting_name filed_value');
-        return res.success(rows.reduce((acc, row) => ({ ...acc, [row.setting_name]: row.filed_value }), {}));
+        const rows = await Setting.find({ setting_type: settingType, status: 1 }, '-_id setting_name filed_value');
+        const out = rows.reduce((acc, row) => ({ ...acc, [row.setting_name]: row.filed_value }), {});
+
+        out.baseUrl = String(`${req.protocol}://${req.headers.host}`).trim().toLowerCase();
+        out.uploadUrl = String(`${req.protocol}://${req.headers.host}/uploads`).trim().toLowerCase();
+        return res.success(out);
     } catch (error) {
         return res.someThingWentWrong(error);
     }

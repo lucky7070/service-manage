@@ -28,7 +28,7 @@ export const SETTINGS_SEED_ROWS = [
     [5, "sms_sender", "TextLocal Sender Id", "text", "AYTSMS"],
     [6, "force_update_android", "Force Update Android", "check", "1"],
     [6, "force_update_ios", "Force Update IOS", "check", "1"],
-    [6, "app_version_android", "App Version Android App", "number", "17.0"],
+    [6, "app_version_android", "App Version Android App", "number", "1.0"],
     [6, "app_version_ios", "App Version IOS App", "number", "1.0"],
     [6, "app_url_android", "App URL Android App", "text", "com.adiyogi.fintech"],
     [6, "app_url_ios", "App URL IOS App", "text", "https://www.apple.com/in/app-store"],
@@ -38,9 +38,21 @@ export const SETTINGS_SEED_ROWS = [
     [6, "maintenance_toggle", "Maintenance Toggle", "check", "0"],
     [6, "information_banner", "Information Banner", "file", ""],
     [6, "information_banner_toggle", "Information Banner Toggle", "check", "0"],
-    [7, "refer_amount", "Refer amount on Register", "number", "0"],
-    [7, "signup_rewards", "Signup Rewards", "number", "0"],
-    [7, "job_start_geofence_meters", "Job start geofence (meters)", "number", "50"]
+    [7, "force_update_android_pro", "Force Update Android", "check", "1"],
+    [7, "force_update_ios_pro", "Force Update IOS", "check", "1"],
+    [7, "app_version_android_pro", "App Version Android App", "number", "1.0"],
+    [7, "app_version_ios_pro", "App Version IOS App", "number", "1.0"],
+    [7, "app_url_android_pro", "App URL Android App", "text", "com.adiyogi.fintech"],
+    [7, "app_url_ios_pro", "App URL IOS App", "text", "https://www.apple.com/in/app-store"],
+    [7, "force_update_message_android_pro", "Force Update Message Android", "textarea", "Force Update Message.."],
+    [7, "force_update_message_ios_pro", "Force Update Message IOS", "textarea", "Force Update Message.."],
+    [7, "maintenance_pro", "Maintenance", "textarea", "Under Maintenance"],
+    [7, "maintenance_toggle_pro", "Maintenance Toggle", "check", "0"],
+    [7, "information_banner_pro", "Information Banner", "file", ""],
+    [7, "information_banner_toggle_pro", "Information Banner Toggle", "check", "0"],
+    [8, "refer_amount", "Refer amount on Register", "number", "0"],
+    [8, "signup_rewards", "Signup Rewards", "number", "0"],
+    [8, "job_start_geofence_meters", "Job start geofence (meters)", "number", "50"]
 ];
 
 /**

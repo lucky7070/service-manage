@@ -4,7 +4,7 @@ import { Formik } from "formik";
 import * as ImagePicker from "expo-image-picker";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { resolveUploadUrl, updateProfile, uploadProfileImage } from "../api";
+import { resolveUploadUrl, updateProfile, uploadProfileImage, deleteAccount } from "../api";
 import { useAuth } from "../context/AuthContext";
 import FormField from "../components/form/FormField";
 import DateField from "../components/form/DateField";
@@ -86,6 +86,43 @@ export default function ProfileScreen() {
             { text: "Cancel", style: "cancel" },
             { text: "Log out", style: "destructive", onPress: () => void signOut() },
         ]);
+    };
+
+    const onDeleteAccountPress = () => {
+        Alert.alert(
+            "Delete account?",
+            "Your profile will be deactivated and you will be signed out. You will not be able to log in again with this account. Some booking records may be kept as required for service and legal purposes.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Continue",
+                    style: "destructive",
+                    onPress: () => {
+                        Alert.alert(
+                            "Delete account permanently?",
+                            "This cannot be undone from the app.",
+                            [
+                                { text: "Cancel", style: "cancel" },
+                                {
+                                    text: "Delete my account",
+                                    style: "destructive",
+                                    onPress: async () => {
+                                        try {
+                                            const response = await deleteAccount();
+                                            if (response.status) {
+                                                await signOut();
+                                                return;
+                                            }
+                                            Alert.alert("Could not delete account", response.message || "Please try again.");
+                                        } finally { }
+                                    },
+                                },
+                            ]
+                        );
+                    },
+                },
+            ]
+        );
     };
 
     return (
@@ -232,6 +269,22 @@ export default function ProfileScreen() {
                                         loading={isSubmitting}
                                         style={styles.actionBtn}
                                     />
+                                </View>
+
+                                <View style={styles.dangerZone}>
+                                    <Text style={styles.dangerHint}>
+                                        Need to remove your account? You will not be able to log in again with this account. Some booking records may be kept as required for service and legal purposes.
+                                        This cannot be undone.
+                                    </Text>
+                                    <Pressable
+                                        onPress={onDeleteAccountPress}
+                                        disabled={isSubmitting}
+                                        style={({ pressed }) => [styles.deleteAccountLink, pressed && styles.deleteAccountPressed]}
+                                    >
+                                        <Text style={styles.deleteAccountText}>
+                                            Delete Account
+                                        </Text>
+                                    </Pressable>
                                 </View>
                             </View>
                         )}
@@ -463,6 +516,31 @@ const styles = StyleSheet.create({
     formSub: { fontSize: 13, color: colors.mutedForeground, lineHeight: 20, marginBottom: spacing.sm },
     actions: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm },
     actionBtn: { flex: 1 },
+    dangerZone: {
+        marginTop: spacing.x2,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+        gap: spacing.sm,
+        alignItems: "center",
+    },
+    dangerHint: {
+        fontSize: 12,
+        color: colors.mutedForeground,
+        textAlign: "center",
+        lineHeight: 18,
+    },
+    deleteAccountLink: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+    },
+    deleteAccountPressed: { opacity: 0.6 },
+    deleteAccountText: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: colors.destructive,
+        textDecorationLine: "underline",
+    },
     sectionLabel: {
         fontSize: 15,
         fontWeight: "800",

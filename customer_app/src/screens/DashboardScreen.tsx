@@ -127,19 +127,6 @@ export default function DashboardScreen() {
                 ))}
             </ScrollView>
 
-            {user?.referralCode ? (
-                <Pressable onPress={() => navigate("ReferEarn")} style={styles.referBannerWrap}>
-                    <LinearGradient colors={["#FFFBEB", "#FEF3C7"]} style={styles.referBanner}>
-                        <View style={styles.referIcon}><Feather name="gift" size={20} color={colors.amber} /></View>
-                        <View style={styles.referCopy}>
-                            <Text style={styles.referTitle}>Invite friends, earn rewards</Text>
-                            <Text style={styles.referCode}>Code: {user.referralCode}</Text>
-                        </View>
-                        <Feather name="chevron-right" size={18} color={colors.amber} />
-                    </LinearGradient>
-                </Pressable>
-            ) : null}
-
             {loading ? (
                 <View style={styles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
             ) : (
@@ -304,27 +291,6 @@ const styles = StyleSheet.create({
     },
     quickLabel: { fontSize: 12, fontWeight: "800", color: colors.foreground },
     quickSub: { fontSize: 10, color: colors.mutedForeground, marginTop: 2, fontWeight: "600" },
-    referBannerWrap: { marginBottom: spacing.lg },
-    referBanner: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.md,
-        borderRadius: radius.x2,
-        padding: spacing.md,
-        borderWidth: 1,
-        borderColor: colors.amberRing,
-    },
-    referIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        backgroundColor: colors.card,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    referCopy: { flex: 1, gap: 2 },
-    referTitle: { fontSize: 14, fontWeight: "800", color: colors.foreground },
-    referCode: { fontSize: 12, fontWeight: "700", color: colors.amber },
     howCard: { marginBottom: spacing.lg, gap: spacing.md },
     howTitle: { fontSize: 16, fontWeight: "800", color: colors.foreground },
     howRow: { flexDirection: "row", justifyContent: "space-between" },

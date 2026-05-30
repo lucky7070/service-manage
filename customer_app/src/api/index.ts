@@ -51,6 +51,11 @@ export async function uploadProfileImage(imageUri: string) {
     return data as ApiResponse<CustomerProfile>;
 }
 
+export async function deleteAccount() {
+    const { data } = await AxiosHelper.deleteData("/customer/profile");
+    return data as ApiResponse<unknown>;
+}
+
 export async function logout() {
     const { data } = await AxiosHelper.postData("/customer/logout", {});
     return data as ApiResponse<unknown>;
@@ -235,7 +240,7 @@ export async function fetchTermsAndConditions() {
 }
 
 export async function fetchGeneralSettings() {
-    const { data } = await AxiosHelper.getData("/general-settings");
+    const { data } = await AxiosHelper.getData("/general-settings", { type: "customer" });
     return data as ApiResponse<GeneralSettings>;
 }
 

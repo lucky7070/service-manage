@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sendOtp, register, login, profile, getServiceProviderDashboard, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback } from "../controller/service-provider.controller.js";
+import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback } from "../controller/service-provider.controller.js";
 import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/service-provider-services.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
@@ -18,6 +18,8 @@ router.post("/register", serviceProviderStorage.fields([{ name: "image", maxCoun
 router.use(requireServiceProviderAuth);
 router.get("/dashboard", getServiceProviderDashboard);
 router.get("/profile", profile);
+router.delete("/profile", deleteServiceProviderAccount);
+router.post("/logout", logout);
 router.get("/services", listMyProviderServices);
 router.get("/service-types", listMyServiceTypeOptions);
 router.post("/services", validator("provider-service-create"), createMyProviderService);

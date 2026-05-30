@@ -106,18 +106,6 @@ export default function BookServiceSearch({ elevated = true, embedded = false }:
                 </View>
             )}
 
-            <View style={styles.stepsRow}>
-                {["City", "Service", "Book"].map((step, index) => (
-                    <View key={step} style={styles.stepItem}>
-                        <View style={[styles.stepDot, index === 0 && styles.stepDotActive]}>
-                            <Text style={styles.stepDotText}>{index + 1}</Text>
-                        </View>
-                        <Text style={styles.stepLabel}>{step}</Text>
-                        {index < 2 ? <View style={styles.stepLine} /> : null}
-                    </View>
-                ))}
-            </View>
-
             <Formik<SearchFormValues>
                 innerRef={formikRef}
                 initialValues={{ citySlug: "", categorySlug: "" }}
@@ -267,27 +255,6 @@ const styles = StyleSheet.create({
     cardHeaderText: { flex: 1, gap: 4 },
     cardTitle: { fontSize: 20, fontWeight: "800", color: colors.foreground, lineHeight: 26 },
     cardSubtitle: { fontSize: 13, color: colors.mutedForeground, lineHeight: 19 },
-    stepsRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: spacing.lg,
-        backgroundColor: colors.muted,
-        borderRadius: radius.x2,
-        padding: spacing.sm,
-    },
-    stepItem: { flexDirection: "row", alignItems: "center", flex: 1 },
-    stepDot: {
-        width: 22,
-        height: 22,
-        borderRadius: 11,
-        backgroundColor: colors.border,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    stepDotActive: { backgroundColor: colors.primary },
-    stepDotText: { color: colors.white, fontSize: 11, fontWeight: "800" },
-    stepLabel: { marginLeft: 6, fontSize: 11, fontWeight: "700", color: colors.mutedForeground },
-    stepLine: { flex: 1, height: 1, backgroundColor: colors.border, marginHorizontal: 6 },
     form: { gap: spacing.lg },
     fieldShell: { flexDirection: "row", gap: spacing.sm, alignItems: "flex-start" },
     fieldIcon: { marginTop: 28 },

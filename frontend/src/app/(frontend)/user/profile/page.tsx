@@ -1,17 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import { Edit2 } from "lucide-react";
 import { toast } from "react-toastify";
+import Swal from "sweetalert2/dist/sweetalert2.js";
 import Image from "@/components/ui/Image";
 import AccountNav from "@/components/front/user/AccountNav";
 import { Button, Input, Label, Select } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
-import { resolveFileUrl } from "@/helpers/utils";
+import { getSweetAlertConfigFront, resolveFileUrl } from "@/helpers/utils";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { updateUser, type UserState } from "@/store/slices/userSlice";
+import { resetUser, updateUser, type UserState } from "@/store/slices/userSlice";
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().trim().min(2, "Name must be at least 2 characters.").max(100, "Name is too long.").required("Name is required."),
@@ -21,6 +23,7 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function CustomerProfilePage() {
+    const router = useRouter();
     const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.user);
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -46,6 +49,42 @@ export default function CustomerProfilePage() {
             toast.error(data.message || "Could not upload photo.");
         }
         setImageUploading(false);
+    };
+
+    const onDeleteAccountPress = async () => {
+
+        const first = await Swal.fire(getSweetAlertConfigFront({
+            title: "Delete your account?",
+            text: "Your profile will be deactivated and you will be signed out. You will not be able to log in again with this account. Some booking records may be kept as required for service and legal purposes.",
+            icon: "warning",
+            confirmButtonText: "Continue",
+            cancelButtonText: "Cancel",
+        }));
+        if (!first.isConfirmed) return;
+
+        try {
+            const second = await Swal.fire(getSweetAlertConfigFront({
+                title: "Delete account permanently?",
+                text: "This cannot be undone from the website.",
+                icon: "error",
+                confirmButtonText: "Delete my account",
+                cancelButtonText: "Go back",
+                showLoaderOnConfirm: true,
+                allowOutsideClick: () => !Swal.isLoading(),
+                preConfirm: async () => {
+                    const { data } = await AxiosHelper.deleteData("/customer/profile");
+                    if (!data.status) throw new Error(data.message || "Could not delete account.");
+
+                    return data.status;
+                },
+            }));
+
+            if (second.isConfirmed && second.value) {
+                toast.success("Your account has been deleted.");
+                dispatch(resetUser());
+                router.push("/login");
+            }
+        } finally { }
     };
 
     return (
@@ -161,6 +200,22 @@ export default function CustomerProfilePage() {
                                         <Button type="submit" disabled={isSubmitting}>
                                             {isSubmitting ? "Saving..." : "Save Profile"}
                                         </Button>
+
+                                        <div className="border-t border-border pt-6">
+                                            <p className="text-center text-xs leading-relaxed text-muted-foreground">
+                                                Need to remove your account? This option is at the bottom of your profile settings and requires confirmation.
+                                            </p>
+                                            <div className="mt-3 text-center">
+                                                <button
+                                                    type="button"
+                                                    disabled={isSubmitting}
+                                                    onClick={onDeleteAccountPress}
+                                                    className="text-sm font-medium text-rose-600 underline underline-offset-2 transition hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    Delete account
+                                                </button>
+                                            </div>
+                                        </div>
                                     </Form>
                                 )}
                             </Formik>

@@ -981,6 +981,21 @@
           }
         },
         {
+          "name": "Delete account (auth)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/profile",
+            "description": "Soft-deletes the logged-in service provider (`deletedAt`, `isActive: false`, clears push fields). Clears **`service-provider-token`** cookie."
+          }
+        },
+        {
           "name": "My priced services (auth)",
           "request": {
             "method": "GET",

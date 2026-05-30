@@ -1,21 +1,21 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import type { GeneralSettings } from "../../api/types";
+import { useSettings } from "../../context/SettingsContext";
 import Card from "../ui/Card";
 import { colors, radius, spacing } from "../../theme/colors";
 
 type ContactDetailsCardProps = {
-    settings: GeneralSettings | null;
     title?: string;
     description?: string;
 };
 
 export default function ContactDetailsCard({
-    settings,
     title = "Contact us",
     description = "Reach our support team using the details below.",
 }: ContactDetailsCardProps) {
-    if (!settings?.email && !settings?.phone && !settings?.address) return null;
+    const { settings } = useSettings();
+
+    if (!settings.email && !settings.phone && !settings.address) return null;
 
     const rows = [
         settings.phone ? { icon: "phone" as const, label: "Phone", value: settings.phone } : null,
@@ -28,15 +28,17 @@ export default function ContactDetailsCard({
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.description}>{description}</Text>
             <View style={styles.list}>
-                {rows.map((row) => <View key={row.label} style={styles.row}>
-                    <View style={styles.iconWrap}>
-                        <Feather name={row.icon} size={16} color={colors.primary} />
+                {rows.map((row) => (
+                    <View key={row.label} style={styles.row}>
+                        <View style={styles.iconWrap}>
+                            <Feather name={row.icon} size={16} color={colors.primary} />
+                        </View>
+                        <View style={styles.copy}>
+                            <Text style={styles.label}>{row.label}</Text>
+                            <Text style={styles.value}>{row.value}</Text>
+                        </View>
                     </View>
-                    <View style={styles.copy}>
-                        <Text style={styles.label}>{row.label}</Text>
-                        <Text style={styles.value}>{row.value}</Text>
-                    </View>
-                </View>)}
+                ))}
             </View>
         </Card>
     );
