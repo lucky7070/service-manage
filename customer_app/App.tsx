@@ -1,14 +1,18 @@
+import { useMemo } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { SettingsProvider, useSettings } from "./src/context/SettingsContext";
+import { getAppUpdateStatus } from "./src/helpers/appVersion";
 import AppNavigator from "./src/navigation/AppNavigator";
+import ForceUpdateScreen from "./src/screens/ForceUpdateScreen";
 import { colors } from "./src/theme/colors";
 
 function AppBootstrap() {
     const { bootstrapping: settingsBoot, settings } = useSettings();
     const { bootstrapping: authBoot } = useAuth();
+    const updateStatus = useMemo(() => getAppUpdateStatus(settings), [settings]);
 
     if (settingsBoot || authBoot) {
         return (
@@ -18,6 +22,21 @@ function AppBootstrap() {
                     <Text style={styles.splashTitle}>{settings.application_name}</Text>
                 ) : null}
             </View>
+        );
+    }
+
+    if (updateStatus.blocking) {
+        return (
+            <>
+                <ForceUpdateScreen
+                    message={updateStatus.message}
+                    storeUrl={updateStatus.storeUrl}
+                    applicationName={settings.application_name}
+                    currentVersion={updateStatus.currentVersion}
+                    requiredVersion={updateStatus.requiredVersion}
+                />
+                <StatusBar style="dark" />
+            </>
         );
     }
 
