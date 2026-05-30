@@ -20,6 +20,8 @@ const Schema = new mongoose.Schema(
         registerFrom: { type: String, enum: ["website", "admin", "ios", "android"], default: "website", index: true },
         isActive: { type: Boolean, default: true },
         lastLogin: { type: Date, default: null },
+        fcmToken: { type: String, default: null, trim: true, index: true },
+        deviceId: { type: String, default: null, trim: true, index: true },
         isVerified: { type: Boolean, default: false },
         deletedAt: { type: Date, default: null }
     },

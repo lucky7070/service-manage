@@ -4,6 +4,7 @@ import { parseBookingChatPayload } from "../helpers/bookingChat.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
 import { bookingStatusMail } from "../libraries/mail.js";
+import { notifyBookingStatusChange } from "../helpers/bookingNotifications.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
     const match = { customerId, deletedAt: null };
@@ -284,6 +285,7 @@ export const createCustomerBooking = async (req, res) => {
 
         const [detail] = await Booking.aggregate(bookingDetailPipeline({ _id: booking._id, customerId, deletedAt: null }));
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus: null, actorType: "customer" });
         return res.successInsert(detail, "Booking created successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -312,11 +314,13 @@ export const acceptCustomerBookingQuote = async (req, res) => {
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (!booking.quotedPrice || booking.status !== "price_pending") return res.clientError("No pending quote found for this booking.", 400);
 
+        const previousStatus = booking.status;
         booking.agreedPrice = booking.quotedPrice;
         booking.finalPrice = booking.quotedPrice;
         booking.status = "confirmed";
         await booking.save();
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus, actorType: "customer" });
         return res.successUpdate(booking, "Quote accepted successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -329,12 +333,14 @@ export const cancelCustomerBooking = async (req, res) => {
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (["completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be cancelled.", 400);
 
+        const previousStatus = booking.status;
         booking.status = "cancelled";
         booking.cancelledBy = "customer";
         booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by customer").trim();
         await booking.save();
 
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus, actorType: "customer" });
         return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -356,11 +362,13 @@ export const completeCustomerBooking = async (req, res) => {
 
         await OtpVerification.deleteMany({ purpose: "booking_completion", bookingId: booking._id });
 
+        const previousStatus = booking.status;
         booking.completionTime = now();
         booking.status = "completed";
         await booking.save();
 
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus, actorType: "customer" });
         return res.successUpdate(booking, "Job marked complete.");
     } catch (error) {
         return res.someThingWentWrong(error);

@@ -175,7 +175,7 @@ export async function bookingStatusMail(bookingId) {
         });
 
         if (!result.sent) {
-            logger.warn(`Password reset email not sent for ${email}: ${result.error}`);
+            logger.warn(`Booking status email not sent for ${booking.customerEmail}: ${result.error}`);
             return false;
         }
 

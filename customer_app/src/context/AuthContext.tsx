@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { fetchProfile, logout as logoutApi, register as registerApi } from "../api";
+import { getPushCredentials } from "../notifications/push";
 import { clearToken, getToken, setToken } from "../storage/token";
 import type { CustomerProfile } from "../api/types";
 
@@ -38,7 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [refreshProfile]);
 
     const signInWithOtp = useCallback(async (payload: { mobile: string; otp: string; name?: string; referralCode?: string }) => {
-        const response = await registerApi(payload);
+        const push = await getPushCredentials();
+        const response = await registerApi({ ...payload, ...(push || {}) });
         if (!response.status || !response.data?.token) {
             return response.message || "Could not sign in.";
         }

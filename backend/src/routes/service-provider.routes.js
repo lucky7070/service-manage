@@ -12,7 +12,7 @@ const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: t
 const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provider-work", isImage: true, isDoc: false, fileSize: 2 });
 
 router.post("/send-otp", otpRateLimiter, sendOtp);
-router.post("/login", login);
+router.post("/login", validator("service-provider-login"), login);
 router.post("/register", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider-register"), register);
 
 router.use(requireServiceProviderAuth);

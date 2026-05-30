@@ -3,9 +3,11 @@ import { createServer } from "node:http";
 import { config } from "./src/config/index.js";
 import { connectDb } from "./src/libraries/db.js";
 import { createSocket } from "./src/socket/index.js";
+import { initFirebase } from "./src/libraries/firebase.js";
 
 const start = async () => {
     await connectDb();
+    initFirebase();
     const server = createServer(app);
     app.io = createSocket(server);
 

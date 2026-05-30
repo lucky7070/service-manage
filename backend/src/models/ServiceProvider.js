@@ -39,6 +39,8 @@ const Schema = new mongoose.Schema(
         isFeatured: { type: Boolean, default: false, index: true },
         isVerified: { type: Boolean, default: false },
         lastLogin: { type: Date, default: null },
+        fcmToken: { type: String, default: null, trim: true, index: true },
+        deviceId: { type: String, default: null, trim: true, index: true },
         deletedAt: { type: Date, default: null }
     },
     { timestamps: true }

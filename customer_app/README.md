@@ -188,6 +188,8 @@ npm start
 
 4. Scan the QR code with Expo Go (same Wi‑Fi as your PC).
 
+**Push notifications do not work in Expo Go** (SDK 53+). Login still works; `fcmToken` is only sent from a **development build** with `google-services.json`. Use `npm run android` to test FCM.
+
 ### Native dev build (USB device / emulator)
 
 Generates `android/` via Expo prebuild on first run:
@@ -394,10 +396,35 @@ Stack screens are pushed from Dashboard / Bookings / Addresses flows. The accoun
 
 ---
 
+## Push notifications (FCM)
+
+The backend sends FCM using the **`home-serve-customer`** Firebase project (service account JSON in `backend/.env`).
+
+The customer app **must** use the **Android client** config for the same project and package `com.serva.users`:
+
+1. Firebase Console → project **home-serve-customer** → **Project settings** → **Your apps**
+2. Add Android app with package **`com.serva.users`** (if missing)
+3. Download **`google-services.json`** → save as `customer_app/google-services.json` (see `google-services.json.example`)
+4. Rebuild the native app (Expo Go will **not** match the backend sender ID):
+
+```powershell
+npx expo prebuild --clean
+npm run android
+```
+
+5. Log in again so `fcmToken` is saved on the customer profile
+
+**SenderId mismatch** means the stored `fcmToken` was created by a different Firebase project or build (e.g. Expo Go, wrong `google-services.json`, or provider app `com.serva.services_pro`). Fix the app config, reinstall, and re-login.
+
+Provider quote notifications go to the **customer** on that booking — ensure the **customer** app token is correct, not only the provider device.
+
+---
+
 ## Troubleshooting
 
 | Problem | Fix |
 |---------|-----|
+| FCM `SenderId mismatch` | Use `google-services.json` from **home-serve-customer** for `com.serva.users`, rebuild native app, customer re-login |
 | Network error / API unreachable on phone | Use LAN IP in `.env.development`, same Wi‑Fi, backend running |
 | Wrong API key / 403 | Match `EXPO_PUBLIC_API_LICENCE` to backend `X_API_KEY` |
 | Env changes not applied | `npx expo start -c` |

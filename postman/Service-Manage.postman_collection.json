@@ -344,14 +344,14 @@
             "url": "{{baseUrl}}/customer/register",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Test User\",\n  \"referralCode\": \"\"\n}",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Test User\",\n  \"referralCode\": \"\",\n  \"fcmToken\": \"\",\n  \"deviceId\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "`referralCode` optional. Optional **`registerFrom`: `\"mobile\"`** for new signups. Response **`data`** includes profile + **`token`** (JWT). Web uses **`customer_token`** cookie; mobile stores **`token`** and sends **`Authorization: Bearer <token>`**. **Name** required even for login."
+            "description": "`referralCode` optional. Optional **`fcmToken`** and **`deviceId`** (saved on Customer at login/register). Optional **`registerFrom`: `\"mobile\"`** for new signups. Response **`data`** includes profile + **`token`** (JWT). Web uses **`customer_token`** cookie; mobile stores **`token`** and sends **`Authorization: Bearer <token>`**. **Name** required even for login."
           }
         },
         {
@@ -849,14 +849,14 @@
             "url": "{{baseUrl}}/service-provider/login",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\"\n}",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"fcmToken\": \"\",\n  \"deviceId\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Sets **`service-provider-token`** cookie. Call after **Send OTP**."
+            "description": "Sets **`service-provider-token`** cookie. Optional **`fcmToken`** / **`deviceId`** saved on provider profile. Call after **Send OTP**."
           }
         },
         {
@@ -935,6 +935,18 @@
                   "enabled": true
                 },
                 {
+                  "key": "fcmToken",
+                  "value": "",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "deviceId",
+                  "value": "",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
                   "key": "image",
                   "type": "file",
                   "src": []
@@ -951,7 +963,7 @@
                 }
               ]
             },
-            "description": "Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
+            "description": "Optional **`fcmToken`** / **`deviceId`** (saved on ServiceProvider). Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
           }
         },
         {

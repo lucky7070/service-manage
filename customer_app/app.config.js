@@ -10,7 +10,7 @@ module.exports = {
         ...appJson.expo,
         android: {
             ...appJson.expo.android,
-            // Production should use HTTPS; allow HTTP only for local dev builds.
+            googleServicesFile: "./google-services.json",
             usesCleartextTraffic: !isProduction,
         },
         extra: {

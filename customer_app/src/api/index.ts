@@ -15,6 +15,8 @@ export async function register(payload: {
     otp: string;
     name?: string;
     referralCode?: string;
+    fcmToken?: string;
+    deviceId?: string;
 }) {
     const { data } = await AxiosHelper.postData("/customer/register", {
         ...payload,

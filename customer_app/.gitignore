@@ -30,6 +30,9 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# Firebase (download from Console for com.serva.users — see google-services.json.example)
+google-services.json
+
 # local env files
 .env
 .env.development

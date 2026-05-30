@@ -1,6 +1,7 @@
 import { Address, Booking, ProviderService, ServiceLead, ServiceProvider } from "../../models/index.js";
 import { ObjectId, escapeRegex } from "../../helpers/utils.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
+import { notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 
 export const listServiceLeads = async (req, res) => {
     try {
@@ -181,6 +182,7 @@ export const assignServiceLead = async (req, res) => {
         await lead.save();
 
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus: null, actorType: "admin" });
         return res.successUpdate({ leadId: lead._id, leadNumber: lead.leadNumber, bookingId: booking._id, bookingNumber: booking.bookingNumber }, "Provider assigned and booking created.");
     } catch (error) {
         return res.someThingWentWrong(error);

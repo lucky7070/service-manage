@@ -105,6 +105,8 @@ const title = check("title", "Title is required.").trim().notEmpty().isLength({ 
 const description = check("description", "Description is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
 const year = check("year", "Year is required.").trim().notEmpty().isLength({ min: 4, max: 4 });
 const event = check("event", "Event is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
+const fcmTokenOptional = check("fcmToken").optional({ values: "falsy" }).trim().isLength({ min: 10, max: 4096 });
+const deviceIdOptional = check("deviceId").optional({ values: "falsy" }).isLength({ min: 3, max: 200 }).trim();
 
 const addressId = param("addressId", "Invalid address ID.").exists().notEmpty().isMongoId();
 const addressLine1 = check("addressLine1", "Address line 1 is required.").trim().notEmpty().isLength({ min: 2, max: 100 });
@@ -284,7 +286,10 @@ export const validator = (method) => {
             output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
             break;
         case "service-provider-register":
-            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument];
+            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument, fcmTokenOptional, deviceIdOptional];
+            break;
+        case "service-provider-login":
+            output = [mobile, otp, fcmTokenOptional, deviceIdOptional];
             break;
         case "provider-service-create":
             output = [providerServiceTypeId, providerServicePrice, providerServiceStatus];

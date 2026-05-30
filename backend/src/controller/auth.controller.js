@@ -7,6 +7,7 @@ import { OtpVerification, Customer } from "../models/index.js";
 import { sendOTP } from "../libraries/sms.js";
 import { getSettings } from "../helpers/database.js";
 import { deleteFile } from "../libraries/storage.js";
+import { pickPushFields } from "../helpers/pushFields.js";
 
 const getProfile = (user) => {
     return {
@@ -72,7 +73,7 @@ export const register = async (req, res) => {
                 referredBy = referrer._id;
             }
 
-            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy, registerFrom: String(req.body.registerFrom || "").trim().toLowerCase() === "mobile" ? "mobile" : "website" });
+            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy, registerFrom: String(req.body.registerFrom || "").trim().toLowerCase() === "mobile" ? "mobile" : "website", ...pickPushFields(req.body) });
 
             const settings = await getSettings(["signup_rewards", "refer_amount"]);
             const signupReward = Number(settings.signup_rewards || 0);
@@ -92,7 +93,7 @@ export const register = async (req, res) => {
             }
         }
 
-        await user.updateOne({ lastLogin: now() });
+        await user.updateOne({ lastLogin: now(), ...pickPushFields(req.body) });
         await verify.deleteOne();
 
         const token = jwt.sign({ id: user._id, role: "customer" }, config.customerJwtSecret, JWT_CONFIG);

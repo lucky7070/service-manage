@@ -18,3 +18,4 @@ public/uploads/testimonials/*
 !public/uploads/customers/default.png
 !public/uploads/service-provider/default.png
 !public/uploads/testimonials/default.png
+google-services.json

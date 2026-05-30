@@ -5,11 +5,13 @@ import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../helpers/utils.js";
 import { Booking, ChatMessage, City, ServiceCategory, Customer, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
+import { pickPushFields } from "../helpers/pushFields.js";
 import { sendOTP } from "../libraries/sms.js";
 import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
 import { parseBookingChatPayload } from "../helpers/bookingChat.js";
 import { getSettings } from "../helpers/database.js";
 import { bookingStatusMail } from "../libraries/mail.js";
+import { notifyBookingQuoteSent, notifyBookingStatusChange } from "../helpers/bookingNotifications.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -135,7 +137,7 @@ export const login = async (req, res) => {
         const user = await ServiceProvider.findOne({ mobile: verify.phoneNumber, deletedAt: null });
         if (!user) return res.clientError("User not registered..!!", 404);
 
-        await user.updateOne({ lastLogin: now() });
+        await user.updateOne({ lastLogin: now(), ...pickPushFields(req.body) });
         await verify.deleteOne();
 
         const token = jwt.sign({ id: user._id, role: "service-provider" }, config.serviceProviderJwtSecret, JWT_CONFIG);
@@ -206,7 +208,8 @@ export const register = async (req, res) => {
             registerFrom: "front",
             profileStatus: "pending",
             isVerified: false,
-            isActive: true
+            isActive: true,
+            ...pickPushFields(req.body)
         });
 
         await verify.deleteOne();
@@ -411,11 +414,13 @@ export const cancelProviderBooking = async (req, res) => {
             return res.clientError("This booking cannot be cancelled.", 400);
         }
 
+        const previousStatus = booking.status;
         booking.status = "cancelled";
         booking.cancelledBy = "provider";
         booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by service provider").trim();
         await booking.save();
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
         return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -428,10 +433,15 @@ export const setBookingQuote = async (req, res) => {
         if (!booking) return res.noRecords(false, "Booking not found.");
         if (["completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be quoted.", 400);
 
+        const previousStatus = booking.status;
         booking.quotedPrice = Number(req.body.quotedPrice);
         booking.status = "price_pending";
         await booking.save();
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
+        if (previousStatus === booking.status) {
+            await notifyBookingQuoteSent({ booking, actorType: "provider" });
+        }
         return res.successUpdate(booking, "Quote sent successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -488,10 +498,12 @@ export const startProviderBooking = async (req, res) => {
             return res.clientError(`You must be within ${radiusM} m of the customer's service address to start the job (device is about ${Math.round(metersApart)} m away).`, 400);
         }
 
+        const previousStatus = booking.status;
         booking.startTime = now();
         booking.status = "in_progress";
         await booking.save();
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
         return res.successUpdate(booking, "Job started.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -566,11 +578,13 @@ export const completeProviderBooking = async (req, res) => {
         }
 
         await verify.deleteOne();
+        const previousStatus = booking.status;
         booking.completionTime = now();
         booking.status = "completed";
         await booking.save();
 
         await bookingStatusMail(booking._id);
+        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
         return res.successUpdate(booking, "Booking completed successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
