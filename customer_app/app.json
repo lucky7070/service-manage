@@ -18,6 +18,7 @@
         },
         "android": {
             "package": "com.serva.services",
+            "versionCode": 1,
             "adaptiveIcon": {
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"
@@ -33,6 +34,13 @@
             "expo-secure-store",
             "expo-font",
             "@react-native-community/datetimepicker",
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "Allow access to your photos to share images in booking chat.",
+                    "cameraPermission": "Allow camera access to take photos for booking chat."
+                }
+            ],
             [
                 "expo-notifications",
                 {

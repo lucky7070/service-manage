@@ -331,7 +331,7 @@ export const cancelCustomerBooking = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
-        if (["completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be cancelled.", 400);
+        if (["in_progress", "completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be cancelled.", 400);
 
         const previousStatus = booking.status;
         booking.status = "cancelled";

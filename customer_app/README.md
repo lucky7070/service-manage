@@ -22,6 +22,7 @@ The app uses **Bearer token** auth stored in SecureStore (the web app uses cooki
 - [Setup](#setup)
 - [Development](#development)
 - [Production builds](#production-builds)
+- [Google Play Store (AAB)](#google-play-store-aab)
 - [Scripts reference](#scripts-reference)
 - [Auth flow](#auth-flow)
 - [Project structure](#project-structure)
@@ -342,7 +343,7 @@ Use when you do **not** want Android Studio / Gradle on your PC. Requires [EAS C
 cd customer_app
 npx eas login
 npm run apk:preview      # internal test APK (production env)
-npm run apk:production   # production APK
+npm run aab:production   # Play Store AAB (production env)
 ```
 
 **Important:** `.env.production` is **not uploaded** (see `.easignore`). Set all `EXPO_PUBLIC_*` variables in the [EAS project environment](https://docs.expo.dev/eas/environment-variables/) for the `production` environment. Upload `google-services.json` via EAS file secrets if you need push in cloud builds.
@@ -353,9 +354,75 @@ Profiles in `eas.json`:
 |---------|--------|-----|
 | `development` | Dev client APK | `EXPO_PUBLIC_APP_ENV=development` |
 | `preview` | Internal APK | `EXPO_PUBLIC_APP_ENV=production` |
-| `production` | Store-ready APK | `EXPO_PUBLIC_APP_ENV=production` |
+| `production` | **Play Store AAB** | `EXPO_PUBLIC_APP_ENV=production` |
 
 The project includes `.easignore` to exclude `node_modules/`, local `android/`, and monorepo folders from the upload (EAS archive limit is 2 GB).
+
+---
+
+## Google Play Store (AAB)
+
+Google Play requires an **Android App Bundle (`.aab`)**, not an APK. Use the **`production`** EAS profile (already set to `buildType: app-bundle`).
+
+### Before each Play upload
+
+1. **Bump version** in `app.json`:
+   - `expo.version` — user-visible version (e.g. `1.0.1`)
+   - `expo.android.versionCode` — integer, must increase every upload (e.g. `2`, `3`, …)
+
+2. **Set EAS production env vars** (Expo dashboard → project **serva-services** → Environment variables → **production**):
+
+   | Variable | Example |
+   |----------|---------|
+   | `EXPO_PUBLIC_APP_ENV` | `production` |
+   | `EXPO_PUBLIC_API_URL` | `https://serva-server.technolite.in/api` |
+   | `EXPO_PUBLIC_UPLOAD_URL` | `https://serva-server.technolite.in/uploads` |
+   | `EXPO_PUBLIC_SOCKET_URL` | `https://serva-server.technolite.in` |
+   | `EXPO_PUBLIC_WEB_URL` | `https://serva.technolite.in` |
+   | `EXPO_PUBLIC_API_LICENCE` | same as backend `X_API_KEY` |
+   | `EXPO_PUBLIC_LOG_ERRORS_IN_CONSOLE` | `false` |
+
+3. **`google-services.json`** — add via [EAS file env var](https://docs.expo.dev/eas/environment-variables/#file-environment-variables) if not bundled locally.
+
+### Build AAB (recommended — EAS)
+
+EAS manages the **Play signing keystore** (you already created one on first build).
+
+```powershell
+cd customer_app
+npx eas login
+npm run aab:production
+```
+
+When the build finishes, open the link in the terminal (or [expo.dev](https://expo.dev) → **Builds**) and **Download** the `.aab` file.
+
+Submit manually in [Google Play Console](https://play.google.com/console):
+
+1. **Release** → **Production** (or **Internal testing** first)
+2. **Create new release** → upload the `.aab`
+3. Complete store listing, content rating, privacy policy, etc.
+4. **Review and roll out**
+
+Optional — submit from CLI after linking the Play app:
+
+```powershell
+npx eas submit -p android --latest
+```
+
+### Build AAB locally (alternative)
+
+Requires a **release keystore** configured in `android/` (not the debug keystore). EAS is easier for first Play upload.
+
+```powershell
+npm run prebuild:prod
+npm run aab:local
+```
+
+Output:
+
+```text
+android/app/build/outputs/bundle/release/app-release.aab
+```
 
 ---
 
@@ -381,8 +448,9 @@ Loads `.env.production` while still in dev mode — useful to verify URLs before
 | `npm run web` | Expo web (limited; mobile-first app) |
 | `npm run prebuild:prod` | `expo prebuild --clean` with production env |
 | `npm run apk:local` | Gradle `assembleRelease` → local APK |
-| `npm run apk:preview` | EAS preview APK |
-| `npm run apk:production` | EAS production APK |
+| `npm run aab:local` | Gradle `bundleRelease` → local AAB |
+| `npm run apk:preview` | EAS preview APK (testers) |
+| `npm run aab:production` | EAS production **AAB** for Google Play |
 
 ---
 

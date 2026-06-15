@@ -1,4 +1,7 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import ImageGalleryModal from "../ui/ImageGalleryModal";
 import { resolveUploadUrl, type ChatMessage } from "../../api";
 import { compareByDate, formatDateKey, formatDateLong, formatTime } from "../../helpers/date";
 import { colors, radius, shadows, spacing } from "../../theme/colors";
@@ -28,39 +31,77 @@ function groupMessages(messages: ChatMessage[]) {
 }
 
 export default function BookingChatThread({ messages, emptyLabel = "No messages yet." }: BookingChatThreadProps) {
+    const [galleryOpen, setGalleryOpen] = useState(false);
+    const [galleryIndex, setGalleryIndex] = useState(0);
+
+    const imageUrls = useMemo(
+        () =>
+            messages
+                .filter((msg) => msg.attachmentUrl)
+                .map((msg) => resolveUploadUrl(msg.attachmentUrl)),
+        [messages]
+    );
+
+    const openGallery = (attachmentUrl: string) => {
+        const fullUrl = resolveUploadUrl(attachmentUrl);
+        const index = imageUrls.indexOf(fullUrl);
+        setGalleryIndex(index >= 0 ? index : 0);
+        setGalleryOpen(true);
+    };
+
     if (!messages.length) {
         return <Text style={styles.empty}>{emptyLabel}</Text>;
     }
 
     const groups = groupMessages(messages);
     return (
-        <View style={styles.wrap}>
-            {groups.map((group) => (
-                <View key={group.key} style={styles.group}>
-                    <View style={styles.dateRow}>
-                        <Text style={styles.dateLabel}>{group.label}</Text>
-                    </View>
-                    {group.items.map((msg) => {
-                        const mine = msg.senderType === "customer";
-                        const time = formatTime(msg.createdAt);
-                        return (
-                            <View key={msg._id} style={[styles.bubbleWrap, mine ? styles.bubbleWrapMine : styles.bubbleWrapTheirs]}>
-                                <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
-                                    {msg.attachmentUrl ? (
-                                        <Image source={{ uri: resolveUploadUrl(msg.attachmentUrl) }} style={styles.image} resizeMode="cover" />
-                                    ) : null}
-                                    {msg.message ? <Text style={[styles.msgText, mine && styles.msgTextMine]}>{msg.message}</Text> : null}
-                                    {time ? (
-                                        <Text style={[styles.time, mine && styles.timeMine]}>{time}</Text>
+        <>
+            <View style={styles.wrap}>
+                {groups.map((group) => (
+                    <View key={group.key} style={styles.group}>
+                        <View style={styles.dateRow}>
+                            <Text style={styles.dateLabel}>{group.label}</Text>
+                        </View>
+                        {group.items.map((msg) => {
+                            const mine = msg.senderType === "customer";
+                            const time = formatTime(msg.createdAt);
+                            const imageUri = msg.attachmentUrl ? resolveUploadUrl(msg.attachmentUrl) : null;
 
-                                    ) : null}
+                            return (
+                                <View key={msg._id} style={[styles.bubbleWrap, mine ? styles.bubbleWrapMine : styles.bubbleWrapTheirs]}>
+                                    <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleTheirs]}>
+                                        {imageUri ? (
+                                            <Pressable
+                                                onPress={() => openGallery(msg.attachmentUrl!)}
+                                                style={({ pressed }) => [styles.imageWrap, pressed && styles.imageWrapPressed]}
+                                                accessibilityRole="button"
+                                                accessibilityLabel="View image full screen"
+                                            >
+                                                <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
+                                                <View style={styles.imageOverlay}>
+                                                    <Feather name="maximize-2" size={14} color={colors.white} />
+                                                </View>
+                                            </Pressable>
+                                        ) : null}
+                                        {msg.message ? <Text style={[styles.msgText, mine && styles.msgTextMine]}>{msg.message}</Text> : null}
+                                        {time ? (
+                                            <Text style={[styles.time, mine && styles.timeMine]}>{time}</Text>
+                                        ) : null}
+                                    </View>
                                 </View>
-                            </View>
-                        );
-                    })}
-                </View>
-            ))}
-        </View>
+                            );
+                        })}
+                    </View>
+                ))}
+            </View>
+
+            <ImageGalleryModal
+                visible={galleryOpen}
+                images={imageUrls}
+                initialIndex={galleryIndex}
+                onClose={() => setGalleryOpen(false)}
+            />
+        </>
     );
 }
 
@@ -110,7 +151,23 @@ const styles = StyleSheet.create({
     msgTextMine: { color: colors.white },
     time: { fontSize: 10, color: colors.mutedForeground, alignSelf: "flex-end" },
     timeMine: { color: "rgba(255,255,255,0.78)" },
-    image: { width: 220, height: 160, borderRadius: radius.lg },
+    imageWrap: {
+        borderRadius: radius.lg,
+        overflow: "hidden",
+    },
+    imageWrapPressed: { opacity: 0.92 },
+    image: { width: 220, height: 160 },
+    imageOverlay: {
+        position: "absolute",
+        right: 8,
+        bottom: 8,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: "rgba(0,0,0,0.45)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
 });
 
 

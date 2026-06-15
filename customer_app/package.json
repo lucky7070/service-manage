@@ -12,7 +12,8 @@
     "prebuild:prod": "cross-env NODE_ENV=production expo prebuild --clean",
     "apk:local": "cross-env NODE_ENV=production cmd /c \"cd android && gradlew.bat assembleRelease\"",
     "apk:preview": "eas build -p android --profile preview",
-    "apk:production": "eas build -p android --profile production"
+    "aab:local": "cross-env NODE_ENV=production cmd /c \"cd android && gradlew.bat bundleRelease\"",
+    "aab:production": "eas build -p android --profile production"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

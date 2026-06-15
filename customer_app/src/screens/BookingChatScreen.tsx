@@ -1,11 +1,11 @@
 import { useRef, useState } from "react";
 import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, } from "react-native";
 import { useRoute, type RouteProp } from "@react-navigation/native";
-import * as ImagePicker from "expo-image-picker";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookingChatThread from "../components/booking/BookingChatThread";
+import ChatImagePickerSheet from "../components/booking/ChatImagePickerSheet";
 import ChatTypingIndicator from "../components/booking/ChatTypingIndicator";
 import ChatPatternBackground from "../components/chat/ChatPatternBackground";
 import DetailHeader from "../components/ui/DetailHeader";
@@ -24,20 +24,12 @@ export default function BookingChatScreen() {
     const scrollRef = useRef<ScrollView>(null);
     const [text, setText] = useState("");
     const [pendingImage, setPendingImage] = useState<string | null>(null);
+    const [pickerVisible, setPickerVisible] = useState(false);
 
     const { messages, loading, sending, connected, providerOnline, providerTyping, onTextChange, stopTyping, send, } = useBookingChat({ bookingId, enabled: !chatDisabled });
     const providerInitial = (providerName || "P").trim().charAt(0).toUpperCase();
 
-    const onPickImage = async () => {
-        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (!permission.granted) {
-            Alert.alert("Permission needed", "Allow photo access to share images in chat.");
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.8 });
-        if (!result.canceled && result.assets[0]?.uri) setPendingImage(result.assets[0].uri);
-    };
+    const onAttachImage = () => setPickerVisible(true);
 
     const onSend = async () => {
         const result = await send({ message: text, imageUri: pendingImage || undefined });
@@ -69,7 +61,7 @@ export default function BookingChatScreen() {
                 subtitle={providerName ? `Chat with ${providerName}` : "Provider chat"}
                 onBack={() => navigation.goBack()}
             />
-            
+
             <View style={styles.statusBar}>
                 <View style={styles.providerChip}>
                     <View style={styles.providerAvatar}>
@@ -131,8 +123,15 @@ export default function BookingChatScreen() {
                         ) : null}
 
                         <View style={styles.composer}>
-                            <Pressable onPress={() => void onPickImage()} style={styles.attachBtn} disabled={sending}>
-                                <Feather name="image" size={20} color={colors.primary} />
+                            <Pressable
+                                onPress={onAttachImage}
+                                style={({ pressed }) => [styles.attachBtn, pressed && styles.attachBtnPressed]}
+                                disabled={sending}
+                                accessibilityLabel="Add photo"
+                            >
+                                <LinearGradient colors={["#FF8C3A", colors.primary]} style={styles.attachGradient}>
+                                    <Feather name="plus" size={22} color={colors.white} />
+                                </LinearGradient>
                             </Pressable>
                             <TextInput
                                 value={text}
@@ -149,20 +148,20 @@ export default function BookingChatScreen() {
                             />
                             <Pressable
                                 onPress={() => void onSend()}
-                                disabled={!canSend}
+                                disabled={!canSend || sending}
                                 style={({ pressed }) => [
                                     styles.sendBtn,
                                     !canSend && styles.sendBtnDisabled,
-                                    pressed && canSend && styles.sendBtnPressed,
+                                    pressed && canSend && !sending && styles.sendBtnPressed,
                                 ]}
                             >
-                                {sending ? (
-                                    <ActivityIndicator size="small" color={colors.white} />
-                                ) : (
-                                    <LinearGradient colors={["#FF8C3A", colors.primary, colors.primaryDark]} style={styles.sendGradient}>
+                                <LinearGradient colors={["#FF8C3A", colors.primary, colors.primaryDark]} style={styles.sendGradient}>
+                                    {sending ? (
+                                        <ActivityIndicator size="small" color={colors.white} />
+                                    ) : (
                                         <Feather name="send" size={18} color={colors.white} />
-                                    </LinearGradient>
-                                )}
+                                    )}
+                                </LinearGradient>
                             </Pressable>
                         </View>
                     </View>
@@ -173,6 +172,12 @@ export default function BookingChatScreen() {
                     </View>
                 )}
             </KeyboardAvoidingView>
+
+            <ChatImagePickerSheet
+                visible={pickerVisible}
+                onClose={() => setPickerVisible(false)}
+                onPicked={setPendingImage}
+            />
         </View>
     );
 }
@@ -257,11 +262,15 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 21,
-        backgroundColor: colors.card,
+        overflow: "hidden",
+        ...shadows.primaryButton,
+    },
+    attachBtnPressed: { opacity: 0.9, transform: [{ scale: 0.96 }] },
+    attachGradient: {
+        width: "100%",
+        height: "100%",
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: 1,
-        borderColor: colors.border,
     },
     input: {
         flex: 1,
