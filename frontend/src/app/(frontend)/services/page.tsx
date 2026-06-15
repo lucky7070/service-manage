@@ -1,8 +1,8 @@
-import { getHomeServiceCategories } from "@/lib/api.server";
+import { getServiceCategories } from "@/lib/api.server";
 import ServiceCategory from "@/components/front/ServiceCategory";
 
 export default async function ServicesPage() {
-    const categories = await getHomeServiceCategories(1000);
+    const categories = await getServiceCategories(1000);
     return (
         <section className="bg-white py-16 md:py-24">
             <div className="container mx-auto px-4">

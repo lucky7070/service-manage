@@ -1,10 +1,10 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
-import { getHomeServiceCategories } from "@/lib/api.server"
+import { getServiceCategories } from "@/lib/api.server"
 import ServiceCategory from "../ServiceCategory"
 
 export async function ServiceCategories() {
-    const categories = await getHomeServiceCategories(8)
+    const categories = await getServiceCategories(8)
 
     return (
         <section className="bg-white py-16 md:py-24">

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { sendOtp, register, profile, updateProfile, updateCustomerProfileImage, logout, deleteCustomerAccount } from "../controller/auth.controller.js";
-import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, createCustomerServiceLead, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, listCustomerServiceLeads, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
+import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, createCustomerServiceLead, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, getCustomerNotificationUnreadCount, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, listCustomerNotifications, listCustomerServiceLeads, markAllCustomerNotificationsRead, markCustomerNotificationRead, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { validator } from "../libraries/validator.js";
@@ -28,6 +28,10 @@ router.put("/bookings/:bookingId/complete", validator("customer-booking-id"), co
 router.get("/bookings/:bookingId/messages", validator("customer-booking-id"), listCustomerBookingMessages);
 router.post("/bookings/:bookingId/messages", bookingChatStorage.single("image"), validator("booking-message"), sendCustomerBookingMessage);
 router.post("/bookings/:bookingId/feedback", validator("booking-feedback"), submitCustomerBookingFeedback);
+router.get("/notifications/unread-count", getCustomerNotificationUnreadCount);
+router.get("/notifications", listCustomerNotifications);
+router.put("/notifications/read-all", markAllCustomerNotificationsRead);
+router.put("/notifications/:notificationId/read", markCustomerNotificationRead);
 router.get("/ledger", listCustomerLedger);
 router.get("/addresses", listCustomerAddresses);
 router.post("/addresses", validator("customer-self-address"), createCustomerAddress);

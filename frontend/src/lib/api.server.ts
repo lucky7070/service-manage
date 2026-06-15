@@ -36,7 +36,7 @@ export type ServiceCategory = {
     displayOrder?: number;
 };
 
-export async function getHomeServiceCategories(limit = 8): Promise<ServiceCategory[]> {
+export async function getServiceCategories(limit = 8): Promise<ServiceCategory[]> {
     const { data } = await AxiosHelper.getData(`/service-categories-home?limit=${limit}`);
     if (data.status && data.data && Array.isArray(data.data)) {
         return data.data as ServiceCategory[];

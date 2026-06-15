@@ -1,10 +1,10 @@
 import moment from "moment";
-import { Address, Booking, ChatMessage, City, Customer, Ledger, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../models/index.js";
+import { Address, Booking, ChatMessage, City, Customer, Ledger, Notification, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../models/index.js";
 import { parseBookingChatPayload } from "../helpers/bookingChat.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
 import { bookingStatusMail } from "../libraries/mail.js";
-import { notifyBookingStatusChange } from "../helpers/bookingNotifications.js";
+import { notifyBookingChatMessage, notifyBookingStatusChange } from "../helpers/bookingNotifications.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
     const match = { customerId, deletedAt: null };
@@ -389,7 +389,7 @@ export const listCustomerBookingMessages = async (req, res) => {
 
 export const sendCustomerBookingMessage = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null }, { _id: 1 });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         const payload = parseBookingChatPayload(req);
@@ -403,6 +403,12 @@ export const sendCustomerBookingMessage = async (req, res) => {
             attachmentUrl: payload.attachmentUrl
         });
         req.app.io?.to(`booking:${booking._id}`).emit("booking:message", message);
+        void notifyBookingChatMessage({
+            booking,
+            message,
+            senderType: "customer",
+            senderName: req.customer.name
+        });
         return res.successInsert(message, "Message sent.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -563,6 +569,71 @@ export const listCustomerServiceLeads = async (req, res) => {
         const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
         if (record.length === 0) return res.datatableNoRecords();
         return res.pagination(record, total_count, limit, pageNo);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+const notificationProjection = "_id title message type relatedId isRead readAt createdAt";
+
+export const getCustomerNotificationUnreadCount = async (req, res) => {
+    try {
+        const unreadCount = await Notification.countDocuments({ userId: req.customer._id, userType: "customer", isRead: false });
+        return res.success({ unreadCount }, "Unread count fetched.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listCustomerNotifications = async (req, res) => {
+    try {
+        const customerId = req.customer._id;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
+
+        const filter = { userId: customerId, userType: "customer" };
+
+        const [record, totalCount, unreadCount] = await Promise.all([
+            Notification.find(filter, notificationProjection).sort({ createdAt: -1 }).skip((pageNo - 1) * limit).limit(limit).lean(),
+            Notification.countDocuments(filter),
+            Notification.countDocuments({ ...filter, isRead: false })
+        ]);
+
+        return res.pagination(record, totalCount, limit, pageNo, 3, { unreadCount });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const markCustomerNotificationRead = async (req, res) => {
+    try {
+        const notificationId = req.params.notificationId;
+        if (!ObjectId.isValid(notificationId)) {
+            return res.clientError("Invalid notification.", 422, [{ field: "notificationId", message: "Invalid id" }]);
+        }
+
+        const row = await Notification.findOneAndUpdate(
+            { _id: notificationId, userId: req.customer._id, userType: "customer" },
+            { $set: { isRead: true, readAt: new Date() } },
+            { new: true, projection: notificationProjection }
+        ).lean();
+
+        if (!row) return res.noRecords(false, "Notification not found.");
+        return res.success(row, "Notification marked as read.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const markAllCustomerNotificationsRead = async (req, res) => {
+    try {
+        await Notification.updateMany(
+            { userId: req.customer._id, userType: "customer", isRead: false },
+            { $set: { isRead: true, readAt: new Date() } }
+        );
+
+        const unreadCount = await Notification.countDocuments({ userId: req.customer._id, userType: "customer", isRead: false });
+        return res.success({ unreadCount }, "All notifications marked as read.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

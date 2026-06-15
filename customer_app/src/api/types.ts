@@ -85,6 +85,25 @@ export type BookingListData = {
     current_page: number;
 };
 
+export type NotificationRow = {
+    _id: string;
+    title: string;
+    message: string;
+    type: "booking" | "chat" | "system" | "promotion";
+    relatedId?: string | null;
+    isRead: boolean;
+    readAt?: string | null;
+    createdAt: string;
+};
+
+export type NotificationListData = {
+    record: NotificationRow[];
+    count: number;
+    totalPages: number;
+    current_page: number;
+    unreadCount?: number;
+};
+
 export type BookingServiceType = {
     _id: string;
     name: string;
@@ -293,6 +312,7 @@ export type BookingTypingPayload = {
 
 export type AccountMenuRoute =
     | "Dashboard"
+    | "Notifications"
     | "Bookings"
     | "ServiceLeads"
     | "Ledger"

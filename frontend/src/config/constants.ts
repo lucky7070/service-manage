@@ -73,8 +73,8 @@ export const JOIN_PRO_BENEFITS: JoinProBenefit[] = [
 
 // --- Frontend login ---
 export const FRONTEND_LOGIN_BRAND = {
-    mark: "H",
-    name: "HomeServe Pro"
+    mark: "S",
+    name: "Serva Services"
 } as const;
 
 export const FRONTEND_LOGIN_HERO = {
@@ -200,8 +200,8 @@ export const POPULAR_ARTICLES: Array<{ title: string, href: string }> = [];
 
 
 
-export const JOIN_PRO_HERO_SECONDARY_LEAD = `Join ${PLATFORM_MARKETING.verifiedProfessionalsFormatted} professionals earning more with HomeServe Pro.`;
-export const JOIN_PRO_CTA_SUBLINE = `Join ${PLATFORM_MARKETING.verifiedProfessionalsFormatted} professionals who are growing their business with HomeServe Pro`;
+export const JOIN_PRO_HERO_SECONDARY_LEAD = `Join ${PLATFORM_MARKETING.verifiedProfessionalsFormatted} professionals earning more with ${FRONTEND_LOGIN_BRAND.name}.`;
+export const JOIN_PRO_CTA_SUBLINE = `Join ${PLATFORM_MARKETING.verifiedProfessionalsFormatted} professionals who are growing their business with ${FRONTEND_LOGIN_BRAND.name}`;
 
 export type FeaturedProviderPersona = {
     name: string;

@@ -22,6 +22,7 @@ export const chatButtonStyles = {
 
 export const accountMenuItems: AccountMenuItem[] = [
     { route: "Dashboard", label: "Home", icon: "home" },
+    { route: "Notifications", label: "Notifications", icon: "bell" },
     { route: "Bookings", label: "Bookings", icon: "calendar" },
     { route: "ServiceLeads", label: "Booking requests", icon: "clipboard" },
     { route: "Ledger", label: "Ledger", icon: "credit-card" },
@@ -39,8 +40,8 @@ export const supportMenuItems: AccountMenuItem[] = [
 export const allMenuItems: AccountMenuItem[] = [...accountMenuItems, ...supportMenuItems];
 
 export const BRAND = {
-    mark: "H",
-    name: "HomeServe Pro",
+    mark: "S",
+    name: "Serva Services",
 } as const;
 
 export const LOGIN_HERO = {

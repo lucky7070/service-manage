@@ -1,18 +1,28 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { SettingsProvider, useSettings } from "./src/context/SettingsContext";
-import { getAppUpdateStatus } from "./src/helpers/appVersion";
+import { getAppUpdateStatus, getMaintenanceStatus } from "./src/helpers/appVersion";
+import InformationBannerOverlay from "./src/components/InformationBannerOverlay";
 import AppNavigator from "./src/navigation/AppNavigator";
 import ForceUpdateScreen from "./src/screens/ForceUpdateScreen";
+import MaintenanceScreen from "./src/screens/MaintenanceScreen";
 import { colors } from "./src/theme/colors";
 
 function AppBootstrap() {
-    const { bootstrapping: settingsBoot, settings } = useSettings();
+    const { bootstrapping: settingsBoot, settings, refreshSettings } = useSettings();
     const { bootstrapping: authBoot } = useAuth();
+    const [retryingSettings, setRetryingSettings] = useState(false);
+
+    const maintenanceStatus = useMemo(() => getMaintenanceStatus(settings), [settings]);
     const updateStatus = useMemo(() => getAppUpdateStatus(settings), [settings]);
+
+    const onRetrySettings = () => {
+        setRetryingSettings(true);
+        void refreshSettings().finally(() => setRetryingSettings(false));
+    };
 
     if (settingsBoot || authBoot) {
         return (
@@ -22,6 +32,20 @@ function AppBootstrap() {
                     <Text style={styles.splashTitle}>{settings.application_name}</Text>
                 ) : null}
             </View>
+        );
+    }
+
+    if (maintenanceStatus.blocking) {
+        return (
+            <>
+                <MaintenanceScreen
+                    message={maintenanceStatus.message}
+                    applicationName={settings.application_name}
+                    onRetry={onRetrySettings}
+                    retrying={retryingSettings}
+                />
+                <StatusBar style="dark" />
+            </>
         );
     }
 
@@ -42,7 +66,9 @@ function AppBootstrap() {
 
     return (
         <>
-            <AppNavigator />
+            <InformationBannerOverlay>
+                <AppNavigator />
+            </InformationBannerOverlay>
             <StatusBar style="dark" />
         </>
     );

@@ -417,6 +417,15 @@ const serviceProvider = [
     req("Dashboard (auth)", "GET", "/service-provider/dashboard", {
         description: "Returns **profile**, **workPhotoCount**, **bookingStats** (counts per status + total), **recentBookings** (5 most recent).",
     }),
+    req("Notification unread count (auth)", "GET", "/service-provider/notifications/unread-count", {
+        description: "Unread in-app notification count for logged-in provider (`userType: provider`).",
+    }),
+    req("Notifications list (auth)", "GET", "/service-provider/notifications?pageNo=1&limit=10", {
+        description: "Paginated notifications. Response includes **`unreadCount`** in `data`.",
+    }),
+    req("Notifications mark all read (auth)", "PUT", "/service-provider/notifications/read-all", {
+        description: "Marks all provider notifications as read. Returns `{ unreadCount }`.",
+    }),
     req("Bookings (auth)", "GET", "/service-provider/bookings?pageNo=1&limit=10&status="),
     req("Booking detail (auth)", "GET", `/service-provider/bookings/${OID}`),
     req("Set booking quote (auth)", "PUT", `/service-provider/bookings/${OID}/quote`, {

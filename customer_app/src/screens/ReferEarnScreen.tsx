@@ -44,7 +44,7 @@ export default function ReferEarnScreen() {
 
         try {
             await Share.share({
-                title: "Join HomeServe Pro",
+                title: "Join Serva Services",
                 message: `Use my referral code ${user.referralCode} when you sign up.\n${shareLink || ""}`.trim(),
                 url: shareLink || undefined,
             });

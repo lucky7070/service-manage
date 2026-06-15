@@ -1,6 +1,7 @@
 import logger from "./logger.js";
 import { formatBookingStatus } from "./emailTemplates.js";
-import { notifyUser } from "../services/notificationPush.service.js";
+import { notifyUser, pushToUser } from "../services/notificationPush.service.js";
+import { getBookingPresence } from "../socket/index.js";
 
 const ACTOR_LABELS = {
     customer: "The customer",
@@ -66,7 +67,7 @@ export const notifyBookingStatusChange = async ({ booking, previousStatus = null
                     userType: "provider",
                     title,
                     message: buildStatusMessage(newStatus, actorType, "provider", bookingNumber),
-                    type: "booking",
+                    type: previousStatus === null ? "new-booking" : "booking",
                     relatedId: booking._id,
                     data
                 })
@@ -76,6 +77,55 @@ export const notifyBookingStatusChange = async ({ booking, previousStatus = null
         await Promise.all(tasks);
     } catch (error) {
         logger.error(`Booking push notification failed: ${error?.message || error}`);
+    }
+};
+
+const buildChatPreview = (message) => {
+    if (message?.attachmentUrl) {
+        const text = String(message?.message || "").trim();
+        return text || "Sent an image";
+    }
+
+    return String(message?.message || "").trim() || "New message";
+};
+
+/**
+ * Push-only chat alert when the other party is not in the booking chat room (no DB notification row).
+ * @param {{ booking: { _id, customerId?, providerId?, bookingNumber? }, message: { message?, attachmentUrl? }, senderType: "customer"|"provider", senderName?: string }} params
+ */
+export const notifyBookingChatMessage = async ({ booking, message, senderType, senderName = "" }) => {
+    try {
+        if (!booking?._id || !message || !["customer", "provider"].includes(senderType)) return;
+
+        const recipientType = senderType === "customer" ? "provider" : "customer";
+        const presence = getBookingPresence(booking._id);
+        const recipientOnline = recipientType === "customer" ? presence.customerOnline : presence.providerOnline;
+        if (recipientOnline) return;
+
+        const recipientId = recipientType === "customer" ? booking.customerId : booking.providerId;
+        if (!recipientId) return;
+
+        const name = String(senderName || "").trim();
+        const bookingNumber = booking.bookingNumber || "";
+        const title = name ? `Message from ${name}` : bookingNumber ? `Booking ${bookingNumber}` : "New chat message";
+        const body = buildChatPreview(message);
+
+        await pushToUser({
+            userId: recipientId,
+            userType: recipientType,
+            title,
+            message: body,
+            type: "chat",
+            relatedId: booking._id,
+            data: {
+                bookingId: String(booking._id),
+                bookingNumber: String(bookingNumber),
+                senderType: String(senderType),
+                event: "chat_message"
+            }
+        });
+    } catch (error) {
+        logger.error(`Booking chat push notification failed: ${error?.message || error}`);
     }
 };
 

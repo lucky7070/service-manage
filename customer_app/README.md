@@ -210,38 +210,142 @@ npx tsc --noEmit
 
 ## Production builds
 
-### Local release APK (Gradle)
+Use **Option A (local APK)** to build a release APK on your PC with live URLs from `.env.production`, then share the file with testers (Drive, WhatsApp, email). No Expo cloud upload required.
 
-1. Fill `.env.production` with real HTTPS URLs and production API key.
-2. Ensure `JAVA_HOME` and `ANDROID_HOME` are set.
-3. Generate native project (if `android/` is missing or stale):
+### Option A — Local release APK (recommended for sharing with users)
+
+Build on your machine. Reads `.env.production` from disk. Best for sharing with a small group of testers.
+
+#### Before you build
+
+1. **Create `.env.production`** (copy from `.env.example`) with your **live HTTPS URLs** and API key:
+
+```env
+EXPO_PUBLIC_APP_ENV=production
+EXPO_PUBLIC_API_URL=https://serva-server.technolite.in/api
+EXPO_PUBLIC_UPLOAD_URL=https://serva-server.technolite.in/uploads
+EXPO_PUBLIC_SOCKET_URL=https://serva-server.technolite.in
+EXPO_PUBLIC_WEB_URL=https://serva.technolite.in
+EXPO_PUBLIC_API_LICENCE=your-production-x-api-key
+EXPO_PUBLIC_LOG_ERRORS_IN_CONSOLE=false
+```
+
+- Do **not** put spaces around `=` — use `KEY=value`.
+- `EXPO_PUBLIC_API_LICENCE` must match backend `X_API_KEY`.
+- Confirm the backend is reachable at your API URL before building.
+
+2. **Add `google-services.json`** (required for push notifications in release builds):
+
+   - Firebase Console → project **home-serve-customer** → Android app `com.serva.users`
+   - Download `google-services.json` → save as `customer_app/google-services.json`
+   - See [Push notifications (FCM)](#push-notifications-fcm)
+
+3. **Install build tools** (one-time):
+
+   - **Node.js 20+** and `npm install` in `customer_app`
+   - **Android Studio** (SDK + platform tools)
+   - **JDK 17**
+
+   Windows environment variables (adjust paths to your machine):
 
 ```powershell
+setx JAVA_HOME "C:\Program Files\Java\jdk-17"
+setx ANDROID_HOME "C:\Users\<you>\AppData\Local\Android\Sdk"
+```
+
+   Add `%ANDROID_HOME%\platform-tools` to `PATH`, then **restart the terminal**.
+
+   Verify:
+
+```powershell
+java -version
+adb version
+```
+
+#### Step 1 — Test live URLs before building (optional)
+
+```powershell
+cd customer_app
+npm run start:prod
+```
+
+In another terminal, run on a device:
+
+```powershell
+npm run android:prod
+```
+
+Confirm login and API calls work against production URLs.
+
+#### Step 2 — Generate native Android project
+
+Regenerates `android/` with production env (`NODE_ENV=production`):
+
+```powershell
+cd customer_app
 npm run prebuild:prod
 ```
 
-4. Build APK:
+Run this again if you change plugins, `app.config.js`, or `google-services.json`.
+
+#### Step 3 — Build the release APK
 
 ```powershell
 npm run apk:local
 ```
 
-Output:
+This runs Gradle `assembleRelease` with production env variables baked in.
+
+#### Step 4 — Locate the APK
 
 ```text
-android/app/build/outputs/apk/release/app-release.apk
+customer_app/android/app/build/outputs/apk/release/app-release.apk
 ```
 
-> **Note:** The default release build uses the debug keystore (fine for testing). For Google Play, configure a release keystore in `android/app/build.gradle` and store credentials securely.
+#### Step 5 — Share with users
 
-### EAS Build (cloud)
+1. Upload `app-release.apk` to Google Drive, WhatsApp, or email.
+2. On the phone: enable **Install unknown apps** for the app used to open the file (Chrome, Files, Drive, etc.).
+3. Open the APK and install.
 
-Requires [EAS CLI](https://docs.expo.dev/build/setup/) and an Expo account:
+> **Note:** The default local release build uses the debug keystore — fine for internal testing. For Google Play, configure a release keystore in `android/app/build.gradle` and store credentials securely.
+
+#### Option A — Quick command summary
 
 ```powershell
-npm install -g eas-cli
-eas login
+cd customer_app
+npm install
+# Edit .env.production + add google-services.json first
+npm run prebuild:prod
+npm run apk:local
+# Share: android/app/build/outputs/apk/release/app-release.apk
 ```
+
+#### Option A — Common issues
+
+| Problem | Fix |
+|---------|-----|
+| App still hits LAN / localhost in release | Fix `.env.production` (no spaces around `=`); re-run `prebuild:prod` and `apk:local` |
+| API 403 | Match `EXPO_PUBLIC_API_LICENCE` to backend `X_API_KEY` |
+| Push not working | Add correct `google-services.json`, re-run `prebuild:prod` + `apk:local`, user re-login |
+| `JAVA_HOME` not set | Install JDK 17, set env var, reopen terminal |
+| Gradle / SDK errors | Open Android Studio once to install SDK; confirm `ANDROID_HOME` |
+| Cleartext HTTP blocked | Expected in production — use HTTPS URLs only in `.env.production` |
+
+---
+
+### Option B — EAS Build (cloud)
+
+Use when you do **not** want Android Studio / Gradle on your PC. Requires [EAS CLI](https://docs.expo.dev/build/setup/) (`eas-cli` is in `devDependencies`) and an Expo account.
+
+```powershell
+cd customer_app
+npx eas login
+npm run apk:preview      # internal test APK (production env)
+npm run apk:production   # production APK
+```
+
+**Important:** `.env.production` is **not uploaded** (see `.easignore`). Set all `EXPO_PUBLIC_*` variables in the [EAS project environment](https://docs.expo.dev/eas/environment-variables/) for the `production` environment. Upload `google-services.json` via EAS file secrets if you need push in cloud builds.
 
 Profiles in `eas.json`:
 
@@ -251,12 +355,9 @@ Profiles in `eas.json`:
 | `preview` | Internal APK | `EXPO_PUBLIC_APP_ENV=production` |
 | `production` | Store-ready APK | `EXPO_PUBLIC_APP_ENV=production` |
 
-```powershell
-npm run apk:preview      # internal test APK (production env)
-npm run apk:production   # production APK
-```
+The project includes `.easignore` to exclude `node_modules/`, local `android/`, and monorepo folders from the upload (EAS archive limit is 2 GB).
 
-Set production secrets in [EAS environment variables](https://docs.expo.dev/eas/environment-variables/) or ensure `.env.production` is present locally before `eas build`.
+---
 
 ### Test production config in Metro
 

@@ -1,5 +1,5 @@
 import type { NotificationResponse } from "expo-notifications";
-import { navigateToBookingDetail } from "../navigation/rootNavigation";
+import { navigateToBookingChat, navigateToBookingDetail } from "../navigation/rootNavigation";
 
 export type PushNotificationData = {
     type?: string;
@@ -20,9 +20,10 @@ export const parsePushNotificationData = (response: NotificationResponse | null 
     return asRecord(raw);
 };
 
-/** Resolve booking id from FCM data payload (type=booking, relatedId or bookingId). */
+/** Resolve booking id from FCM data payload (type=booking|chat, relatedId or bookingId). */
 export const getBookingIdFromPushData = (data: PushNotificationData): string | null => {
-    if (String(data.type || "").trim() !== "booking") return null;
+    const type = String(data.type || "").trim();
+    if (!["booking", "chat"].includes(type)) return null;
     const id = String(data.relatedId || data.bookingId || "").trim();
     return id || null;
 };
@@ -30,6 +31,21 @@ export const getBookingIdFromPushData = (data: PushNotificationData): string | n
 export const handleNotificationResponse = (response: NotificationResponse | null | undefined) => {
     const data = parsePushNotificationData(response);
     const bookingId = getBookingIdFromPushData(data);
+    if (!bookingId) return;
+
+    if (String(data.type || "").trim() === "chat") {
+        navigateToBookingChat(bookingId);
+        return;
+    }
+
+    navigateToBookingDetail(bookingId);
+};
+
+export const openInAppNotification = (row: { type?: string; relatedId?: string | null }) => {
+    const bookingId = getBookingIdFromPushData({
+        type: row.type,
+        relatedId: row.relatedId ? String(row.relatedId) : "",
+    });
     if (bookingId) {
         navigateToBookingDetail(bookingId);
     }

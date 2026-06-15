@@ -41,6 +41,8 @@ const snapshot = (bookingId) => {
     };
 };
 
+export const getBookingPresence = (bookingId) => snapshot(String(bookingId || "").trim());
+
 export function createSocket(server) {
 
     const io = new Server(server, { cors: { origin: config.isDevelopment ? true : config.frontendUrl } });

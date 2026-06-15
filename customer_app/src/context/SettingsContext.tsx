@@ -5,6 +5,7 @@ import type { GeneralSettings } from "../api/types";
 type SettingsContextValue = {
     settings: GeneralSettings;
     bootstrapping: boolean;
+    refreshSettings: () => Promise<boolean>;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -42,19 +43,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const [settings, setSettings] = useState<GeneralSettings>(DEFAULT_APP_SETTINGS);
     const [bootstrapping, setBootstrapping] = useState(true);
 
-    useEffect(() => {
-        void (async () => {
-            const response = await fetchGeneralSettings();
-            if (response.status && response.data) {
-                setSettings({ ...DEFAULT_APP_SETTINGS, ...(response.data || {}) });
-                setBootstrapping(false);
-            } else {
-                setBootstrapping(false);
-            }
-        })();
+    const refreshSettings = useCallback(async () => {
+        const response = await fetchGeneralSettings();
+        if (response.status && response.data) {
+            setSettings({ ...DEFAULT_APP_SETTINGS, ...(response.data || {}) });
+            return true;
+        }
+        return false;
     }, []);
 
-    const value = useMemo(() => ({ settings, bootstrapping }), [settings, bootstrapping]);
+    useEffect(() => {
+        void (async () => {
+            await refreshSettings();
+            setBootstrapping(false);
+        })();
+    }, [refreshSettings]);
+
+    const value = useMemo(() => ({ settings, bootstrapping, refreshSettings }), [settings, bootstrapping, refreshSettings]);
     return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
 

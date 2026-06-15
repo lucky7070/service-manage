@@ -3,24 +3,51 @@ import type { MainStackParamList } from "../api/types";
 
 export const navigationRef = createNavigationContainerRef<MainStackParamList>();
 
-let pendingBookingId: string | null = null;
+type PendingNavigation =
+    | { screen: "BookingDetail"; bookingId: string }
+    | { screen: "BookingChat"; bookingId: string }
+    | null;
+
+let pendingNavigation: PendingNavigation = null;
 
 export function onNavigationReady() {
-    if (!pendingBookingId || !navigationRef.isReady()) return;
-    const id = pendingBookingId;
-    pendingBookingId = null;
-    navigationRef.navigate("BookingDetail", { bookingId: id });
+    if (!pendingNavigation || !navigationRef.isReady()) return;
+
+    const pending = pendingNavigation;
+    pendingNavigation = null;
+
+    if (pending.screen === "BookingChat") {
+        navigationRef.navigate("BookingChat", { bookingId: pending.bookingId });
+        return;
+    }
+
+    navigationRef.navigate("BookingDetail", { bookingId: pending.bookingId });
+}
+
+function navigateWhenReady(pending: PendingNavigation) {
+    if (!pending) return;
+
+    if (navigationRef.isReady()) {
+        pendingNavigation = null;
+        if (pending.screen === "BookingChat") {
+            navigationRef.navigate("BookingChat", { bookingId: pending.bookingId });
+            return;
+        }
+        navigationRef.navigate("BookingDetail", { bookingId: pending.bookingId });
+        return;
+    }
+
+    pendingNavigation = pending;
 }
 
 export function navigateToBookingDetail(bookingId: string) {
     const id = String(bookingId || "").trim();
     if (!id) return;
+    navigateWhenReady({ screen: "BookingDetail", bookingId: id });
+}
 
-    if (navigationRef.isReady()) {
-        pendingBookingId = null;
-        navigationRef.navigate("BookingDetail", { bookingId: id });
-        return;
-    }
-
-    pendingBookingId = id;
+export function navigateToBookingChat(bookingId: string) {
+    const id = String(bookingId || "").trim();
+    if (!id) return;
+    navigateWhenReady({ screen: "BookingChat", bookingId: id });
 }

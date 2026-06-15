@@ -1,9 +1,9 @@
 import AxiosHelper, { resolveUploadUrl } from "../helpers/AxiosHelper";
-import type { AddressPayload, AddressRow, BookingLocation, ApiResponse, BookingDetail, BookingListData, CategoryServiceType, ChatMessage, CmsPageData, ContactEnquiryPayload, CreateBookingPayload, CreateBookingResult, CreateServiceLeadPayload, CreateServiceLeadResult, CustomerProfile, DashboardData, FieldErrorRow, GeneralSettings, LedgerListData, ProviderSearchData, PublicProviderDetail, RatingTag, SelectOption, ServiceLeadListData, SlugOption, } from "./types";
+import type { AddressPayload, AddressRow, BookingLocation, ApiResponse, BookingDetail, BookingListData, CategoryServiceType, ChatMessage, CmsPageData, ContactEnquiryPayload, CreateBookingPayload, CreateBookingResult, CreateServiceLeadPayload, CreateServiceLeadResult, CustomerProfile, DashboardData, FieldErrorRow, GeneralSettings, LedgerListData, NotificationListData, NotificationRow, ProviderSearchData, PublicProviderDetail, RatingTag, SelectOption, ServiceLeadListData, SlugOption, } from "./types";
 import type { BookingFeedback, BookingRow, BookingServiceType, LedgerRow, ProviderListRow, ProviderSearchMeta, ProviderServiceRow, ServiceLeadRow } from "./types";
 
 export { resolveUploadUrl };
-export type { AddressPayload, AddressRow, ApiResponse, BookingDetail, BookingFeedback, BookingListData, BookingLocation, BookingRow, BookingServiceType, CategoryServiceType, ChatMessage, CmsPageData, ContactEnquiryPayload, CreateBookingPayload, CreateBookingResult, CreateServiceLeadPayload, CreateServiceLeadResult, CustomerProfile, DashboardData, FieldErrorRow, GeneralSettings, LedgerListData, LedgerRow, ProviderListRow, ProviderSearchData, ProviderSearchMeta, ProviderServiceRow, PublicProviderDetail, RatingTag, SelectOption, ServiceLeadListData, ServiceLeadRow, SlugOption, }
+export type { AddressPayload, AddressRow, ApiResponse, BookingDetail, BookingFeedback, BookingListData, BookingLocation, BookingRow, BookingServiceType, CategoryServiceType, ChatMessage, CmsPageData, ContactEnquiryPayload, CreateBookingPayload, CreateBookingResult, CreateServiceLeadPayload, CreateServiceLeadResult, CustomerProfile, DashboardData, FieldErrorRow, GeneralSettings, LedgerListData, LedgerRow, NotificationListData, NotificationRow, ProviderListRow, ProviderSearchData, ProviderSearchMeta, ProviderServiceRow, PublicProviderDetail, RatingTag, SelectOption, ServiceLeadListData, ServiceLeadRow, SlugOption, }
 
 export async function sendOtp(mobile: string, purpose: "login" | "register") {
     const { data } = await AxiosHelper.postData("/customer/send-otp", { mobile, purpose });
@@ -225,6 +225,27 @@ export async function fetchPublicProvider(idOrSlug: string) {
 export async function fetchServiceTypesByCategory(categorySlug: string) {
     const { data } = await AxiosHelper.getData(`/service-types-by-category/${encodeURIComponent(categorySlug)}`);
     return data as ApiResponse<CategoryServiceType[]>;
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+export async function fetchNotificationUnreadCount() {
+    const { data } = await AxiosHelper.getData("/customer/notifications/unread-count");
+    return data as ApiResponse<{ unreadCount: number }>;
+}
+
+export async function fetchNotifications(params: { pageNo?: number; limit?: number }) {
+    const { data } = await AxiosHelper.getData("/customer/notifications", params as Record<string, unknown>);
+    return data as ApiResponse<NotificationListData>;
+}
+
+export async function markNotificationRead(notificationId: string) {
+    const { data } = await AxiosHelper.putData(`/customer/notifications/${notificationId}/read`, {});
+    return data as ApiResponse<NotificationRow>;
+}
+
+export async function markAllNotificationsRead() {
+    const { data } = await AxiosHelper.putData("/customer/notifications/read-all", {});
+    return data as ApiResponse<{ unreadCount: number }>;
 }
 
 // ─── CMS & contact ────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import moment from "moment";
 import { config } from "../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../helpers/utils.js";
-import { Booking, ChatMessage, City, ServiceCategory, Customer, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
+import { Booking, ChatMessage, City, ServiceCategory, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
 import { pickPushFields } from "../helpers/pushFields.js";
 import { sendOTP } from "../libraries/sms.js";
@@ -11,7 +11,7 @@ import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/boo
 import { parseBookingChatPayload } from "../helpers/bookingChat.js";
 import { getSettings } from "../helpers/database.js";
 import { bookingStatusMail } from "../libraries/mail.js";
-import { notifyBookingQuoteSent, notifyBookingStatusChange } from "../helpers/bookingNotifications.js";
+import { notifyBookingChatMessage, notifyBookingQuoteSent, notifyBookingStatusChange } from "../helpers/bookingNotifications.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -621,7 +621,7 @@ export const listProviderBookingMessages = async (req, res) => {
 
 export const sendProviderBookingMessage = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null }, { _id: 1 });
+        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
 
         const payload = parseBookingChatPayload(req);
@@ -635,6 +635,12 @@ export const sendProviderBookingMessage = async (req, res) => {
             attachmentUrl: payload.attachmentUrl
         });
         req.app.io?.to(`booking:${booking._id}`).emit("booking:message", message);
+        void notifyBookingChatMessage({
+            booking,
+            message,
+            senderType: "provider",
+            senderName: req.serviceProvider.name
+        });
         return res.successInsert(message, "Message sent.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -681,6 +687,52 @@ export const submitProviderBookingFeedback = async (req, res) => {
         if (error?.code === 11000) {
             return res.clientError("Feedback has already been submitted for this booking.", 409);
         }
+        return res.someThingWentWrong(error);
+    }
+};
+
+const providerNotificationProjection = "_id title message type relatedId isRead readAt createdAt";
+
+export const getProviderNotificationUnreadCount = async (req, res) => {
+    try {
+        const unreadCount = await Notification.countDocuments({ userId: req.serviceProvider._id, userType: "provider", isRead: false });
+        return res.success({ unreadCount }, "Unread count fetched.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listProviderNotifications = async (req, res) => {
+    try {
+        const providerId = req.serviceProvider._id;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
+
+        const filter = { userId: providerId, userType: "provider" };
+
+        const [record, totalCount, unreadCount] = await Promise.all([
+            Notification.find(filter, providerNotificationProjection).sort({ createdAt: -1 }).skip((pageNo - 1) * limit).limit(limit).lean(),
+            Notification.countDocuments(filter),
+            Notification.countDocuments({ ...filter, isRead: false })
+        ]);
+
+        return res.pagination(record, totalCount, limit, pageNo, 3, { unreadCount });
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const markAllProviderNotificationsRead = async (req, res) => {
+    try {
+        const now = new Date();
+        await Notification.updateMany(
+            { userId: req.serviceProvider._id, userType: "provider", isRead: false },
+            { $set: { isRead: true, readAt: now } }
+        );
+
+        const unreadCount = await Notification.countDocuments({ userId: req.serviceProvider._id, userType: "provider", isRead: false });
+        return res.success({ unreadCount }, "All notifications marked as read.");
+    } catch (error) {
         return res.someThingWentWrong(error);
     }
 };

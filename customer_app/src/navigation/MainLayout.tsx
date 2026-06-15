@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ComponentType } from "react";
+import { fetchNotificationUnreadCount } from "../api";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import DashboardScreen from "../screens/DashboardScreen";
+import NotificationsScreen from "../screens/NotificationsScreen";
 import BookingsScreen from "../screens/BookingsScreen";
 import ServiceLeadsScreen from "../screens/ServiceLeadsScreen";
 import LedgerScreen from "../screens/LedgerScreen";
@@ -25,6 +27,7 @@ import { MainNavContext, type MainNavContextValue } from "./MainNavContext";
 
 const screenComponents: Record<AccountMenuRoute, ComponentType> = {
     Dashboard: DashboardScreen,
+    Notifications: NotificationsScreen,
     Bookings: BookingsScreen,
     ServiceLeads: ServiceLeadsScreen,
     Ledger: LedgerScreen,
@@ -41,10 +44,22 @@ export default function MainLayout() {
     const route = useRoute<RouteProp<MainStackParamList, "Main">>();
     const [activeRoute, setActiveRoute] = useState<AccountMenuRoute>(route.params?.initialTab ?? "Dashboard");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const refreshUnreadCount = useCallback(async () => {
+        const response = await fetchNotificationUnreadCount();
+        if (response.status && response.data) {
+            setUnreadCount(Number(response.data.unreadCount) || 0);
+        }
+    }, []);
 
     useEffect(() => {
         if (route.params?.initialTab) setActiveRoute(route.params.initialTab);
     }, [route.params?.initialTab]);
+
+    useEffect(() => {
+        void refreshUnreadCount();
+    }, [activeRoute, refreshUnreadCount]);
 
     const activeItem = allMenuItems.find((item) => item.route === activeRoute) ?? allMenuItems[0];
     const ActiveScreen = screenComponents[activeRoute];
@@ -82,7 +97,19 @@ export default function MainLayout() {
                         <Text style={styles.headerEyebrow}>{BRAND.name}</Text>
                         <Text style={styles.headerTitle}>{activeItem.label}</Text>
                     </View>
-                    <View style={styles.headerSpacer} />
+                    <Pressable
+                        onPress={() => setActiveRoute("Notifications")}
+                        style={styles.bellBtn}
+                        hitSlop={8}
+                        accessibilityLabel="Notifications"
+                    >
+                        <Feather name="bell" size={22} color={colors.foreground} />
+                        {unreadCount > 0 ? (
+                            <View style={styles.badge}>
+                                <Text style={styles.badgeText}>{unreadCount > 99 ? "99+" : unreadCount}</Text>
+                            </View>
+                        ) : null}
+                    </Pressable>
                 </View>
                 <View style={styles.headerAccent} />
 
@@ -149,8 +176,30 @@ const styles = StyleSheet.create({
         fontWeight: "800",
         color: colors.foreground,
     },
-    headerSpacer: {
+    bellBtn: {
         width: 42,
+        height: 42,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    badge: {
+        position: "absolute",
+        top: 4,
+        right: 2,
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
+        backgroundColor: colors.destructive,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 4,
+        borderWidth: 2,
+        borderColor: colors.card,
+    },
+    badgeText: {
+        fontSize: 10,
+        fontWeight: "800",
+        color: colors.white,
     },
     content: {
         flex: 1,

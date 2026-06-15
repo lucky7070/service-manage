@@ -1,0 +1,56 @@
+# EAS uses this file instead of .gitignore when present.
+# Keep patterns aligned with .gitignore, plus build artifacts EAS must not upload.
+
+# Dependencies (installed fresh on EAS builders)
+node_modules/
+
+# Expo / Metro
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Native — regenerated on EAS (do not upload local android/ios trees)
+android/
+ios/
+.kotlin/
+*.orig.*
+
+# Android / Gradle build outputs (if any native paths remain)
+**/.gradle/
+**/.cxx/
+**/build/
+**/.idea/
+*.apk
+*.aab
+
+# Secrets & local env (use EAS env vars / file secrets instead)
+.env
+.env.development
+.env.production
+.env*.local
+google-services.json
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Debug / OS
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+*.tsbuildinfo
+
+# Monorepo siblings (never needed for this app build)
+../backend/
+../frontend/
+../postman/
+../.cursor/
+
+# Editor / tooling
+.claude/
+.git/

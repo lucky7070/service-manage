@@ -26,6 +26,9 @@ module.exports = {
         extra: {
             appEnv: isProduction ? "production" : "development",
             hasGoogleServices,
+            eas: {
+                projectId: "22c3af9a-0fcf-48e9-98a4-eb6662fd006e",
+            },
         },
     },
 };

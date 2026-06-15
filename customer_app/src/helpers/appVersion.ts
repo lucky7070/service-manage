@@ -55,6 +55,23 @@ function platformUpdateFields(settings: GeneralSettings) {
     return null;
 }
 
+export type MaintenanceStatus = {
+    blocking: boolean;
+    message: string;
+};
+
+/** Block app when admin enables maintenance (maintenance_toggle === "1"). */
+export function getMaintenanceStatus(settings: GeneralSettings): MaintenanceStatus {
+    if (settings.maintenance_toggle !== "1") {
+        return { blocking: false, message: "" };
+    }
+
+    return {
+        blocking: true,
+        message: settings.maintenance?.trim() || "The app is under maintenance. Please try again later.",
+    };
+}
+
 export function getAppUpdateStatus(settings: GeneralSettings): AppUpdateStatus {
     const currentVersion = getCurrentAppVersion();
     const empty: AppUpdateStatus = { blocking: false, message: "", storeUrl: "", currentVersion, requiredVersion: "", };
