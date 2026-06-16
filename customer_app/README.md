@@ -23,6 +23,7 @@ The app uses **Bearer token** auth stored in SecureStore (the web app uses cooki
 - [Development](#development)
 - [Production builds](#production-builds)
 - [Google Play Store (AAB)](#google-play-store-aab)
+- [Play Store updates without EAS cloud](#play-store-updates-without-eas-cloud)
 - [Scripts reference](#scripts-reference)
 - [Auth flow](#auth-flow)
 - [Project structure](#project-structure)
@@ -360,7 +361,85 @@ The project includes `.easignore` to exclude `node_modules/`, local `android/`, 
 
 ---
 
-## Google Play Store (AAB)
+## Play Store updates without EAS cloud
+
+If your **first** AAB was uploaded via EAS, you can build all **future updates locally**. You do not need EAS cloud, an Expo account, or `eas build` for each release.
+
+You **must** keep using the **same upload keystore** EAS created — Google Play rejects updates signed with a different key.
+
+### One-time setup (export keystore from EAS)
+
+1. Download the keystore (while you still have Expo access):
+
+```powershell
+cd customer_app
+npx eas login
+npx eas credentials
+```
+
+Choose **Android** → **production** → **Keystore** → **Download**.
+
+2. Save the file as:
+
+```text
+customer_app/android/app/serva-upload.keystore
+```
+
+3. Copy signing properties into `android/gradle.properties` (see `android/gradle.properties.release.example`):
+
+```properties
+SERVA_UPLOAD_STORE_FILE=serva-upload.keystore
+SERVA_UPLOAD_KEY_ALIAS=<alias from EAS>
+SERVA_UPLOAD_STORE_PASSWORD=<password from EAS>
+SERVA_UPLOAD_KEY_PASSWORD=<key password from EAS>
+```
+
+4. **Back up** the keystore + passwords somewhere safe (password manager, encrypted backup). If you lose them, you cannot publish updates to the same Play listing.
+
+`android/app/build.gradle` is already configured to use these properties for release builds.
+
+### Every Play Store update (local workflow)
+
+1. Update `.env.production` (live URLs / API key).
+2. Bump version in `app.json`:
+   - `expo.version` → e.g. `1.0.1`
+   - `expo.android.versionCode` → must increase (e.g. `2`, `3`, …)
+3. Rebuild native project **only if** you changed plugins, `app.json`, or `google-services.json`:
+
+```powershell
+npm run prebuild:prod
+```
+
+After `prebuild --clean`, re-copy the four `SERVA_UPLOAD_*` lines into `android/gradle.properties` (prebuild can reset that file).
+
+4. Build the signed AAB:
+
+```powershell
+npm run aab:local
+```
+
+5. Upload to [Google Play Console](https://play.google.com/console):
+
+```text
+android/app/build/outputs/bundle/release/app-release.aab
+```
+
+Release → Production (or Internal testing) → Create release → upload AAB → roll out.
+
+### What you still use Expo for (locally only)
+
+| Tool | Still needed? | Purpose |
+|------|----------------|---------|
+| **EAS cloud** (`eas build`) | No | Optional |
+| **Expo SDK** (npm packages) | Yes | Your app code |
+| **`expo prebuild`** | Sometimes | Regenerate `android/` after native config changes |
+| **Gradle** (`aab:local`) | Yes | Produces the Play Store AAB on your PC |
+
+### Google Play App Signing
+
+If you enrolled in **Play App Signing**, Google holds the app signing key. Your EAS/local keystore is the **upload key**. You still must sign every new AAB with that same upload key — exporting it from EAS once is enough.
+
+---
 
 Google Play requires an **Android App Bundle (`.aab`)**, not an APK. Use the **`production`** EAS profile (already set to `buildType: app-bundle`).
 

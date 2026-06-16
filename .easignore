@@ -1,0 +1,41 @@
+# EAS archives from the git repo root (service-manage), not customer_app/.
+# This file must live here for default EAS uploads. See customer_app/.easignore for app-only rules.
+
+# Monorepo folders — not needed for customer app builds
+/backend/
+/frontend/
+/postman/
+/.cursor/
+
+# Dependencies & caches (all packages)
+**/node_modules/
+**/.gradle/
+**/.cxx/
+**/build/
+**/.expo/
+**/dist/
+**/web-build/
+
+# Native trees — regenerated on EAS
+**/android/
+**/ios/
+**/.kotlin/
+
+# Secrets & local env
+**/.env
+**/.env.*
+**/google-services.json
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/*.pem
+**/*.apk
+**/*.aab
+
+# OS / editor
+**/.DS_Store
+**/*.tsbuildinfo
+**/.claude/
+**/.git/
