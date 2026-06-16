@@ -5,8 +5,8 @@ React Native mobile app for **Service Manage** customers. Built with **Expo SDK 
 | | |
 |---|---|
 | **App name** | Serva Services |
-| **Android package** | `com.serva.users` |
-| **iOS bundle ID** | `com.serva.users` |
+| **Android package** | `com.serva.services` |
+| **iOS bundle ID** | `com.serva.services` |
 | **Backend** | [`../backend`](../backend) — Express API on port `5000` |
 | **Web frontend** | [`../frontend`](../frontend) — Next.js customer site |
 
@@ -19,11 +19,12 @@ The app uses **Bearer token** auth stored in SecureStore (the web app uses cooki
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Environment variables](#environment-variables)
-- [Setup](#setup)
-- [Development](#development)
-- [Production builds](#production-builds)
-- [Google Play Store (AAB)](#google-play-store-aab)
-- [Play Store updates without EAS cloud](#play-store-updates-without-eas-cloud)
+- [Setup (first time)](#setup-first-time)
+- [Run the app (development)](#run-the-app-development)
+- [Production builds — overview](#production-builds--overview)
+- [Build APK (share with testers)](#build-apk-share-with-testers)
+- [Build AAB (Google Play Store)](#build-aab-google-play-store)
+- [EAS cloud builds (optional)](#eas-cloud-builds-optional)
 - [Scripts reference](#scripts-reference)
 - [Auth flow](#auth-flow)
 - [Project structure](#project-structure)
@@ -155,72 +156,68 @@ Runtime access: `src/config/env.ts` exports `env.apiUrl`, `env.isProduction`, et
 
 ---
 
-## Setup
+## Setup (first time)
+
+Complete these steps once on a new machine.
+
+### 1. Install tools
+
+| Tool | Purpose |
+|------|---------|
+| **Node.js 20+** | JavaScript runtime |
+| **npm** | Package manager (comes with Node) |
+| **Android Studio** | Android SDK, emulator, platform tools |
+| **JDK 17** | Required for native Android builds |
+
+Windows environment variables (adjust paths):
+
+```powershell
+setx JAVA_HOME "C:\Program Files\Java\jdk-17"
+setx ANDROID_HOME "C:\Users\<you>\AppData\Local\Android\Sdk"
+```
+
+Add `%ANDROID_HOME%\platform-tools` to `PATH`, then **restart the terminal**.
+
+Verify:
+
+```powershell
+node -v
+java -version
+adb version
+```
+
+### 2. Install app dependencies
 
 ```powershell
 cd customer_app
 npm install
+```
+
+### 3. Create environment files
+
+```powershell
 copy .env.example .env.development
-# Edit .env.development with your LAN IP and API key
 copy .env.example .env.production
-# Edit .env.production with live URLs before release builds
 ```
 
-Start the backend (from repo root):
+Edit **`.env.development`** — use your PC **LAN IP**, not `localhost`, for physical phone testing:
 
 ```powershell
-cd backend
-npm run dev
+ipconfig
+# Use IPv4 Address, e.g. 192.168.1.56
 ```
 
----
-
-## Development
-
-### Expo Go (fastest — no native build)
-
-1. Install **Expo Go** on your Android phone.
-2. Ensure `.env.development` points to your LAN IP.
-3. Run:
-
-```powershell
-cd customer_app
-npm start
+```env
+EXPO_PUBLIC_APP_ENV=development
+EXPO_PUBLIC_API_URL=http://192.168.1.56:5000/api
+EXPO_PUBLIC_UPLOAD_URL=http://192.168.1.56:5000/uploads
+EXPO_PUBLIC_SOCKET_URL=http://192.168.1.56:5000
+EXPO_PUBLIC_WEB_URL=http://192.168.1.56:3000
+EXPO_PUBLIC_API_LICENCE=your-x-api-key-from-backend-env
+EXPO_PUBLIC_LOG_ERRORS_IN_CONSOLE=true
 ```
 
-4. Scan the QR code with Expo Go (same Wi‑Fi as your PC).
-
-**Push notifications do not work in Expo Go** (SDK 53+). Login still works; `fcmToken` is only sent from a **development build** with `google-services.json`. Use `npm run android` to test FCM.
-
-### Native dev build (USB device / emulator)
-
-Generates `android/` via Expo prebuild on first run:
-
-```powershell
-npm run android
-```
-
-Requires a connected device (`adb devices`) or a running Android emulator.
-
-### Typecheck
-
-```powershell
-npx tsc --noEmit
-```
-
----
-
-## Production builds
-
-Use **Option A (local APK)** to build a release APK on your PC with live URLs from `.env.production`, then share the file with testers (Drive, WhatsApp, email). No Expo cloud upload required.
-
-### Option A — Local release APK (recommended for sharing with users)
-
-Build on your machine. Reads `.env.production` from disk. Best for sharing with a small group of testers.
-
-#### Before you build
-
-1. **Create `.env.production`** (copy from `.env.example`) with your **live HTTPS URLs** and API key:
+Edit **`.env.production`** — live HTTPS URLs for release builds:
 
 ```env
 EXPO_PUBLIC_APP_ENV=production
@@ -232,144 +229,22 @@ EXPO_PUBLIC_API_LICENCE=your-production-x-api-key
 EXPO_PUBLIC_LOG_ERRORS_IN_CONSOLE=false
 ```
 
-- Do **not** put spaces around `=` — use `KEY=value`.
+Rules:
+
+- No spaces around `=` — use `KEY=value`.
 - `EXPO_PUBLIC_API_LICENCE` must match backend `X_API_KEY`.
-- Confirm the backend is reachable at your API URL before building.
 
-2. **Add `google-services.json`** (required for push notifications in release builds):
+### 4. Firebase (push notifications)
 
-   - Firebase Console → project **home-serve-customer** → Android app `com.serva.users`
-   - Download `google-services.json` → save as `customer_app/google-services.json`
-   - See [Push notifications (FCM)](#push-notifications-fcm)
+1. Firebase Console → project **home-serve-customer** → **Project settings** → **Your apps**
+2. Android app package: **`com.serva.services`**
+3. Download **`google-services.json`** → save as `customer_app/google-services.json`
 
-3. **Install build tools** (one-time):
+Push notifications **do not work in Expo Go**. Use a native build (`npm run android`).
 
-   - **Node.js 20+** and `npm install` in `customer_app`
-   - **Android Studio** (SDK + platform tools)
-   - **JDK 17**
+### 5. Play Store signing (one time, if you use EAS or already published)
 
-   Windows environment variables (adjust paths to your machine):
-
-```powershell
-setx JAVA_HOME "C:\Program Files\Java\jdk-17"
-setx ANDROID_HOME "C:\Users\<you>\AppData\Local\Android\Sdk"
-```
-
-   Add `%ANDROID_HOME%\platform-tools` to `PATH`, then **restart the terminal**.
-
-   Verify:
-
-```powershell
-java -version
-adb version
-```
-
-#### Step 1 — Test live URLs before building (optional)
-
-```powershell
-cd customer_app
-npm run start:prod
-```
-
-In another terminal, run on a device:
-
-```powershell
-npm run android:prod
-```
-
-Confirm login and API calls work against production URLs.
-
-#### Step 2 — Generate native Android project
-
-Regenerates `android/` with production env (`NODE_ENV=production`):
-
-```powershell
-cd customer_app
-npm run prebuild:prod
-```
-
-Run this again if you change plugins, `app.config.js`, or `google-services.json`.
-
-#### Step 3 — Build the release APK
-
-```powershell
-npm run apk:local
-```
-
-This runs Gradle `assembleRelease` with production env variables baked in.
-
-#### Step 4 — Locate the APK
-
-```text
-customer_app/android/app/build/outputs/apk/release/app-release.apk
-```
-
-#### Step 5 — Share with users
-
-1. Upload `app-release.apk` to Google Drive, WhatsApp, or email.
-2. On the phone: enable **Install unknown apps** for the app used to open the file (Chrome, Files, Drive, etc.).
-3. Open the APK and install.
-
-> **Note:** The default local release build uses the debug keystore — fine for internal testing. For Google Play, configure a release keystore in `android/app/build.gradle` and store credentials securely.
-
-#### Option A — Quick command summary
-
-```powershell
-cd customer_app
-npm install
-# Edit .env.production + add google-services.json first
-npm run prebuild:prod
-npm run apk:local
-# Share: android/app/build/outputs/apk/release/app-release.apk
-```
-
-#### Option A — Common issues
-
-| Problem | Fix |
-|---------|-----|
-| App still hits LAN / localhost in release | Fix `.env.production` (no spaces around `=`); re-run `prebuild:prod` and `apk:local` |
-| API 403 | Match `EXPO_PUBLIC_API_LICENCE` to backend `X_API_KEY` |
-| Push not working | Add correct `google-services.json`, re-run `prebuild:prod` + `apk:local`, user re-login |
-| `JAVA_HOME` not set | Install JDK 17, set env var, reopen terminal |
-| Gradle / SDK errors | Open Android Studio once to install SDK; confirm `ANDROID_HOME` |
-| Cleartext HTTP blocked | Expected in production — use HTTPS URLs only in `.env.production` |
-
----
-
-### Option B — EAS Build (cloud)
-
-Use when you do **not** want Android Studio / Gradle on your PC. Requires [EAS CLI](https://docs.expo.dev/build/setup/) (`eas-cli` is in `devDependencies`) and an Expo account.
-
-```powershell
-cd customer_app
-npx eas login
-npm run apk:preview      # internal test APK (production env)
-npm run aab:production   # Play Store AAB (production env)
-```
-
-**Important:** `.env.production` is **not uploaded** (see `.easignore`). Set all `EXPO_PUBLIC_*` variables in the [EAS project environment](https://docs.expo.dev/eas/environment-variables/) for the `production` environment. Upload `google-services.json` via EAS file secrets if you need push in cloud builds.
-
-Profiles in `eas.json`:
-
-| Profile | Output | Env |
-|---------|--------|-----|
-| `development` | Dev client APK | `EXPO_PUBLIC_APP_ENV=development` |
-| `preview` | Internal APK | `EXPO_PUBLIC_APP_ENV=production` |
-| `production` | **Play Store AAB** | `EXPO_PUBLIC_APP_ENV=production` |
-
-The project includes `.easignore` to exclude `node_modules/`, local `android/`, and monorepo folders from the upload (EAS archive limit is 2 GB).
-
----
-
-## Play Store updates without EAS cloud
-
-If your **first** AAB was uploaded via EAS, you can build all **future updates locally**. You do not need EAS cloud, an Expo account, or `eas build` for each release.
-
-You **must** keep using the **same upload keystore** EAS created — Google Play rejects updates signed with a different key.
-
-### One-time setup (export keystore from EAS)
-
-1. Download the keystore (while you still have Expo access):
+If your first Play upload used EAS, export the upload keystore once:
 
 ```powershell
 cd customer_app
@@ -377,159 +252,248 @@ npx eas login
 npx eas credentials
 ```
 
-Choose **Android** → **production** → **Keystore** → **Download**.
+**Android** → **production** → **Keystore** → **Download** (or **Download credentials to credentials.json**).
 
-2. Save the file as:
+Then:
 
-```text
-customer_app/android/app/serva-upload.keystore
+1. Copy keystore to `android/app/serva-upload.keystore`
+2. Add four lines to `android/gradle.properties` (see `android/gradle.properties.release.example`)
+3. Back up keystore + passwords securely — **never commit them**
+
+`credentials.json`, `*.jks`, and `google-services.json` are gitignored.
+
+### 6. Start the backend
+
+From repo root:
+
+```powershell
+cd backend
+npm install
+npm run dev
 ```
 
-3. Copy signing properties into `android/gradle.properties` (see `android/gradle.properties.release.example`):
+Backend listens on `http://0.0.0.0:5000` (reachable on your LAN IP from a phone).
 
-```properties
-SERVA_UPLOAD_STORE_FILE=serva-upload.keystore
-SERVA_UPLOAD_KEY_ALIAS=<alias from EAS>
-SERVA_UPLOAD_STORE_PASSWORD=<password from EAS>
-SERVA_UPLOAD_KEY_PASSWORD=<key password from EAS>
+---
+
+## Run the app (development)
+
+### Option A — Native dev build (recommended)
+
+USB phone or Android emulator. Generates `android/` on first run.
+
+```powershell
+cd customer_app
+npm run android
 ```
 
-4. **Back up** the keystore + passwords somewhere safe (password manager, encrypted backup). If you lose them, you cannot publish updates to the same Play listing.
+- Phone: enable **USB debugging**, connect cable, run `adb devices`
+- Emulator: start one from Android Studio first
+- After env changes: `npx expo start -c` then re-run `npm run android`
 
-`android/app/build.gradle` is already configured to use these properties for release builds.
+Test **production URLs** without a release build:
 
-### Every Play Store update (local workflow)
+```powershell
+npm run android:prod
+```
 
-1. Update `.env.production` (live URLs / API key).
-2. Bump version in `app.json`:
-   - `expo.version` → e.g. `1.0.1`
-   - `expo.android.versionCode` → must increase (e.g. `2`, `3`, …)
-3. Rebuild native project **only if** you changed plugins, `app.json`, or `google-services.json`:
+### Option B — Expo Go (quick UI check only)
+
+```powershell
+cd customer_app
+npm start
+```
+
+Scan QR code with **Expo Go** (same Wi‑Fi as PC). No push notifications; some native features may differ.
+
+### Option C — Metro only (already have dev build installed)
+
+```powershell
+npm start
+# Press a to open on Android
+```
+
+### Typecheck
+
+```powershell
+npx tsc --noEmit
+```
+
+---
+
+## Production builds — overview
+
+| Goal | Command | Output | Signing |
+|------|---------|--------|---------|
+| Share APK with testers | `npm run apk:local` | `app-release.apk` | Upload keystore (if configured) |
+| **Google Play update** | `npm run aab:local` | `app-release.aab` | Upload keystore (required) |
+| Cloud build (optional) | `npm run apk:preview` / `aab:production` | Download from expo.dev | EAS keystore |
+
+**Before every release build:**
+
+1. Update `.env.production` with correct live URLs
+2. Ensure `google-services.json` exists
+3. Bump version in `app.json`:
+   - `expo.version` — e.g. `"1.0.1"` (shown to users)
+   - `expo.android.versionCode` — integer, **must increase** each Play upload (`2`, `3`, …)
+
+**Regenerate native project** when you change plugins, `app.json`, or `google-services.json`:
 
 ```powershell
 npm run prebuild:prod
 ```
 
-After `prebuild --clean`, re-copy the four `SERVA_UPLOAD_*` lines into `android/gradle.properties` (prebuild can reset that file).
-
-4. Build the signed AAB:
-
-```powershell
-npm run aab:local
-```
-
-5. Upload to [Google Play Console](https://play.google.com/console):
-
-```text
-android/app/build/outputs/bundle/release/app-release.aab
-```
-
-Release → Production (or Internal testing) → Create release → upload AAB → roll out.
-
-### What you still use Expo for (locally only)
-
-| Tool | Still needed? | Purpose |
-|------|----------------|---------|
-| **EAS cloud** (`eas build`) | No | Optional |
-| **Expo SDK** (npm packages) | Yes | Your app code |
-| **`expo prebuild`** | Sometimes | Regenerate `android/` after native config changes |
-| **Gradle** (`aab:local`) | Yes | Produces the Play Store AAB on your PC |
-
-### Google Play App Signing
-
-If you enrolled in **Play App Signing**, Google holds the app signing key. Your EAS/local keystore is the **upload key**. You still must sign every new AAB with that same upload key — exporting it from EAS once is enough.
+After `prebuild --clean`, re-add `SERVA_UPLOAD_*` lines to `android/gradle.properties` if they were removed.
 
 ---
 
-Google Play requires an **Android App Bundle (`.aab`)**, not an APK. Use the **`production`** EAS profile (already set to `buildType: app-bundle`).
+## Build APK (share with testers)
 
-### Before each Play upload
+For internal testing via Drive, WhatsApp, or direct install — **not** for Google Play (Play requires AAB).
 
-1. **Bump version** in `app.json`:
-   - `expo.version` — user-visible version (e.g. `1.0.1`)
-   - `expo.android.versionCode` — integer, must increase every upload (e.g. `2`, `3`, …)
+### Steps
 
-2. **Set EAS production env vars** (Expo dashboard → project **serva-services** → Environment variables → **production**):
+```powershell
+cd customer_app
 
-   | Variable | Example |
-   |----------|---------|
-   | `EXPO_PUBLIC_APP_ENV` | `production` |
-   | `EXPO_PUBLIC_API_URL` | `https://serva-server.technolite.in/api` |
-   | `EXPO_PUBLIC_UPLOAD_URL` | `https://serva-server.technolite.in/uploads` |
-   | `EXPO_PUBLIC_SOCKET_URL` | `https://serva-server.technolite.in` |
-   | `EXPO_PUBLIC_WEB_URL` | `https://serva.technolite.in` |
-   | `EXPO_PUBLIC_API_LICENCE` | same as backend `X_API_KEY` |
-   | `EXPO_PUBLIC_LOG_ERRORS_IN_CONSOLE` | `false` |
+# 1. Confirm .env.production + google-services.json
 
-3. **`google-services.json`** — add via [EAS file env var](https://docs.expo.dev/eas/environment-variables/#file-environment-variables) if not bundled locally.
+# 2. Regenerate android/ if native config changed
+npm run prebuild:prod
 
-### Build AAB (recommended — EAS)
+# 3. Build release APK
+npm run apk:local
+```
 
-EAS manages the **Play signing keystore** (you already created one on first build).
+### Output
+
+```text
+customer_app/android/app/build/outputs/apk/release/app-release.apk
+```
+
+### Install on a phone
+
+1. Send the APK file to the device
+2. Enable **Install unknown apps** for Chrome / Files / Drive
+3. Open the APK and install
+
+### APK troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| App hits localhost / wrong API | Fix `.env.production` (no spaces around `=`); re-run `prebuild:prod` + `apk:local` |
+| API 403 | Match `EXPO_PUBLIC_API_LICENCE` to backend `X_API_KEY` |
+| `JAVA_HOME` / SDK errors | Set env vars; open Android Studio once to install SDK |
+| Push not working | Add `google-services.json`, rebuild, user re-login |
+
+---
+
+## Build AAB (Google Play Store)
+
+Google Play requires an **Android App Bundle (`.aab`)**. **Recommended: build locally** with your exported EAS upload keystore — no EAS cloud needed for updates.
+
+### One-time signing setup
+
+Already done if you exported from EAS. Otherwise:
+
+```powershell
+npx eas credentials
+# Download keystore → save as android/app/serva-upload.keystore
+```
+
+Add to `android/gradle.properties`:
+
+```properties
+SERVA_UPLOAD_STORE_FILE=serva-upload.keystore
+SERVA_UPLOAD_KEY_ALIAS=<from EAS or credentials.json>
+SERVA_UPLOAD_STORE_PASSWORD=<from EAS>
+SERVA_UPLOAD_KEY_PASSWORD=<from EAS>
+```
+
+Template: `android/gradle.properties.release.example`
+
+### Every Play Store release
+
+```powershell
+cd customer_app
+
+# 1. Bump app.json version + versionCode
+# 2. Confirm .env.production
+
+# 3. Regenerate android/ only if native config changed
+npm run prebuild:prod
+# Re-add SERVA_UPLOAD_* to gradle.properties if prebuild reset it
+
+# 4. Build signed AAB
+npm run aab:local
+```
+
+### Output
+
+```text
+customer_app/android/app/build/outputs/bundle/release/app-release.aab
+```
+
+### Upload to Play Console
+
+1. Open [Google Play Console](https://play.google.com/console)
+2. **Release** → **Production** (or **Internal testing** first)
+3. **Create new release** → upload `app-release.aab`
+4. Add release notes → **Review and roll out**
+
+Use the **same upload keystore** for every update. Google rejects AABs signed with a different key.
+
+---
+
+## EAS cloud builds (optional)
+
+Use only if you prefer building on Expo servers instead of local Gradle. Requires Expo account and [EAS env vars](https://docs.expo.dev/eas/environment-variables/) (`.env.production` is **not** uploaded).
 
 ```powershell
 cd customer_app
 npx eas login
-npm run aab:production
+npm run apk:preview      # test APK (production env)
+npm run aab:production   # Play Store AAB (production env)
 ```
 
-When the build finishes, open the link in the terminal (or [expo.dev](https://expo.dev) → **Builds**) and **Download** the `.aab` file.
+Monorepo note: root `.easignore` excludes `frontend/`, `backend/`, and large folders from the upload.
 
-Submit manually in [Google Play Console](https://play.google.com/console):
+| Profile | Output |
+|---------|--------|
+| `preview` | Internal test APK |
+| `production` | Play Store AAB (`buildType: app-bundle`) |
 
-1. **Release** → **Production** (or **Internal testing** first)
-2. **Create new release** → upload the `.aab`
-3. Complete store listing, content rating, privacy policy, etc.
-4. **Review and roll out**
-
-Optional — submit from CLI after linking the Play app:
-
-```powershell
-npx eas submit -p android --latest
-```
-
-### Build AAB locally (alternative)
-
-Requires a **release keystore** configured in `android/` (not the debug keystore). EAS is easier for first Play upload.
-
-```powershell
-npm run prebuild:prod
-npm run aab:local
-```
-
-Output:
-
-```text
-android/app/build/outputs/bundle/release/app-release.aab
-```
+For ongoing Play updates after your first EAS upload, **local `aab:local` is simpler** and does not require EAS cloud.
 
 ---
 
-### Test production config in Metro
+### Test production config in Metro (before building)
 
 ```powershell
 npm run start:prod
 ```
 
-Loads `.env.production` while still in dev mode — useful to verify URLs before building.
+Loads `.env.production` in dev mode — verify API URLs before `apk:local` or `aab:local`.
 
 ---
 
 ## Scripts reference
 
-| Script | Description |
-|--------|-------------|
-| `npm start` | Start Expo dev server (uses `.env.development`) |
-| `npm run start:prod` | Start with `NODE_ENV=production` (uses `.env.production`) |
-| `npm run android` | Run native Android dev build |
-| `npm run android:prod` | Android dev build with production env |
-| `npm run ios` | Run native iOS dev build (macOS only) |
-| `npm run web` | Expo web (limited; mobile-first app) |
-| `npm run prebuild:prod` | `expo prebuild --clean` with production env |
-| `npm run apk:local` | Gradle `assembleRelease` → local APK |
-| `npm run aab:local` | Gradle `bundleRelease` → local AAB |
-| `npm run apk:preview` | EAS preview APK (testers) |
-| `npm run aab:production` | EAS production **AAB** for Google Play |
+| Script | When to use | Output |
+|--------|-------------|--------|
+| `npm install` | First-time setup | Installs dependencies |
+| `npm start` | Daily development | Metro dev server (`.env.development`) |
+| `npm run start:prod` | Test production URLs in dev | Metro with `.env.production` |
+| `npm run android` | Dev on device/emulator | Debug build + installs app |
+| `npm run android:prod` | Dev build with prod env | Same, production URLs |
+| `npm run prebuild:prod` | Before release or after native config change | Regenerates `android/` |
+| `npm run apk:local` | Share APK with testers | `android/.../app-release.apk` |
+| `npm run aab:local` | **Google Play upload** | `android/.../app-release.aab` |
+| `npm run apk:preview` | Optional EAS cloud test APK | Download from expo.dev |
+| `npm run aab:production` | Optional EAS cloud Play AAB | Download from expo.dev |
+| `npm run ios` | Dev on iOS (macOS only) | Xcode build |
+| `npm run web` | Limited web preview | Browser |
+| `npx tsc --noEmit` | Before commit | TypeScript check |
 
 ---
 
@@ -648,23 +612,21 @@ Stack screens are pushed from Dashboard / Bookings / Addresses flows. The accoun
 
 The backend sends FCM using the **`home-serve-customer`** Firebase project (service account JSON in `backend/.env`).
 
-The customer app **must** use the **Android client** config for the same project and package `com.serva.users`:
+The customer app **must** use the **Android client** config for the same project and package **`com.serva.services`**:
 
 1. Firebase Console → project **home-serve-customer** → **Project settings** → **Your apps**
-2. Add Android app with package **`com.serva.users`** (if missing)
-3. Download **`google-services.json`** → save as `customer_app/google-services.json` (see `google-services.json.example`)
+2. Add Android app with package **`com.serva.services`** (if missing)
+3. Download **`google-services.json`** → save as `customer_app/google-services.json`
 4. Rebuild the native app (Expo Go will **not** match the backend sender ID):
 
 ```powershell
-npx expo prebuild --clean
+npm run prebuild:prod
 npm run android
 ```
 
 5. Log in again so `fcmToken` is saved on the customer profile
 
-**SenderId mismatch** means the stored `fcmToken` was created by a different Firebase project or build (e.g. Expo Go, wrong `google-services.json`, or provider app `com.serva.services_pro`). Fix the app config, reinstall, and re-login.
-
-Provider quote notifications go to the **customer** on that booking — ensure the **customer** app token is correct, not only the provider device.
+**SenderId mismatch** means the stored `fcmToken` was created by a different Firebase project or build (e.g. Expo Go, wrong `google-services.json`). Fix the app config, reinstall, and re-login.
 
 ---
 
@@ -672,15 +634,20 @@ Provider quote notifications go to the **customer** on that booking — ensure t
 
 | Problem | Fix |
 |---------|-----|
-| FCM `SenderId mismatch` | Use `google-services.json` from **home-serve-customer** for `com.serva.users`, rebuild native app, customer re-login |
-| Network error / API unreachable on phone | Use LAN IP in `.env.development`, same Wi‑Fi, backend running |
+| FCM `SenderId mismatch` | Use `google-services.json` for `com.serva.services`, rebuild, re-login |
+| Network error / API unreachable on phone | LAN IP in `.env.development`, same Wi‑Fi, backend running |
+| App uses `localhost` on physical phone | Use PC LAN IP in `.env.development`, not `localhost` |
 | Wrong API key / 403 | Match `EXPO_PUBLIC_API_LICENCE` to backend `X_API_KEY` |
-| Env changes not applied | `npx expo start -c` |
+| Env changes not applied | `npx expo start -c` then rebuild |
 | `JAVA_HOME` not set | Install JDK 17, set `JAVA_HOME`, reopen terminal |
-| `ANDROID_HOME` / SDK not found | Install Android Studio SDK; set `ANDROID_HOME` (no leading/trailing spaces) |
-| No device for `npm run android` | Enable USB debugging or start an emulator; run `adb devices` |
-| Cleartext HTTP blocked in release | Expected in production — use HTTPS in `.env.production` |
-| OTP not received | Check backend SMS/log config; use dev OTP bypass if configured |
+| `ANDROID_HOME` / SDK not found | Install Android Studio SDK; set `ANDROID_HOME` |
+| No device for `npm run android` | Enable USB debugging or start emulator; `adb devices` |
+| Cleartext HTTP blocked in release | Use HTTPS in `.env.production` only |
+| OTP not received | Check backend SMS config |
+| EAS archive too big (>2 GB) | Root `.easignore` excludes monorepo folders; or use local `aab:local` |
+| EAS `ENOSPC` disk full | Free disk space on `C:`; delete `android/app/build`, temp files |
+| Play rejects AAB signing | Use same upload keystore as first upload (`SERVA_UPLOAD_*` in gradle.properties) |
+| `prebuild:prod` reset signing | Re-add `SERVA_UPLOAD_*` lines to `android/gradle.properties` |
 
 ---
 
