@@ -60,7 +60,7 @@ export function getSweetAlertConfig({
         showCancelButton: true,
         reverseButtons: true,
         customClass: {
-            container: "px-3 fixed inset-0 flex items-center justify-center bg-white/10 backdrop-blur-xs",
+            container: "z-[1000] px-3 fixed inset-0 flex items-center justify-center bg-white/10 backdrop-blur-xs",
             popup: "w-full p-6 text-center max-w-lg rounded-3xl flex flex-col items-center justify-center border border-indigo-100 bg-white text-slate-900 shadow-xl dark:border-indigo-100 dark:bg-slate-900 dark:text-slate-100 max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto",
             icon: `mt-1 mb-2 flex items-center justify-center mx-auto text-5xl ${iconConfig.color}`,
             title: "text-2xl font-semibold leading-tight text-slate-900 dark:text-slate-100",

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Service Manage API",
-    "description": "## Service Manage API — mobile & integrations\n\nREST base path is `{{baseUrl}}` → `{host}/api`. Server root `{{rootUrl}}/health` is outside `/api`.\n\n### Headers and security (every app)\n\n- **`x-api-key`**: required on (almost) all calls. Set collection variable `xApiKey` = backend `X_API_KEY` from `.env`.\n- **Customer session (web)**: httpOnly cookie **`customer_token`** (JWT) after `POST /customer/register`. Browser clients use **`withCredentials`** / cookie jar.\n- **Customer session (mobile)**: same **`POST /customer/register`** returns **`data.token`** (JWT). Send **`Authorization: Bearer <token>`** on authenticated routes. Cookie is also set but mobile can ignore it.\n- **Service provider session**: cookie **`service-provider-token`** after `POST /service-provider/login` or `POST /service-provider/register`.\n- **Admin session**: cookie **`admin_token`** after Admin login (web/postman cookie jar).\n\n**Native iOS/Android (customer):** store **`data.token`** from register in secure storage; attach **`Authorization: Bearer {{customerToken}}`** on each request. Web keeps using cookies only.\n\n### Customer app — end-to-end flow\n\n1. **OTP:** `POST /customer/send-otp` with `purpose`: `register` (new user) or `login` (existing).\n2. **Session:** `POST /customer/register` with mobile + OTP + **name**. Web: **`customer_token`** cookie. Mobile: save **`data.token`** and use Bearer header.\n3. **Profile / home:** `GET /customer/profile`, `GET /customer/dashboard`.\n4. **Addresses:** `/customer/addresses` — need at least one address to create a booking.\n5. **Discovery (no auth):** **Open (public)** — settings, categories, cities, **`GET /featured-service-providers`** (homepage grid; approved verified providers with **`isFeatured`**), providers by city/category, **`GET /service-types-by-category/:categorySlug`**, **`GET /feedback-rating-tags?tagFor=provider`** for rating chips.\n6. **Booking** vs **lead:** **`POST /customer/bookings`** assigns a chosen provider immediately. **`POST /customer/service-leads`** creates an open **service lead** (city + category + types + address); admin assigns a provider via **`PUT /admin/service-leads/:id/assign`**.\n7. **Statuses** (poll `GET /customer/bookings/:id`): `pending` → `price_pending` → **`PUT .../accept-quote`** → `price_agreed` / `confirmed` → provider **`POST .../start`** → `in_progress` → provider completion OTP → **`completed`**. Terminal: `cancelled`.\n8. **Chat (REST):** booking messages endpoints.\n9. **Realtime (optional):** Socket.IO on API server — emit **`booking:join`** `{ bookingId, role: \"customer\" }`, listen for **`booking:presence`**, **`booking:typing`**, emit **`booking:leave`** with booking id when leaving chat.\n10. **After `completed`:** `POST /customer/bookings/:id/feedback`. Detail payload may include **customerFeedback**.\n11. **Profile photo:** `PUT /customer/profile/image` — multipart **`image`** (auth).\n12. **Mark job done (customer):** when status **`in_progress`**, **`PUT /customer/bookings/:id/complete`** (empty body; confirms completion alongside provider OTP flow — see backend for exact lifecycle).\n13. **Logout:** `POST /customer/logout`.\n\n### Service provider app — end-to-end flow\n\n1. **OTP** → **`POST /service-provider/login`** or multipart **`POST /service-provider/register`**. Cookie **`service-provider-token`**.\n2. **Jobs:** list/detail bookings.\n3. **Quote:** `PUT .../quote` → customer **`PUT /customer/bookings/:id/accept-quote`**.\n4. **On site:** `POST .../start` (when status `confirmed` and price agreed).\n5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.\n6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.\n7. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.\n8. **Sockets:** join with `role: \"provider\"`.\n\n**Admin auth** then **Admin (authenticated)** — back-office, not typical consumer mobile.\n\n### Postman\n\n**Regenerate:** from repo root run `node postman/generate-postman-collection.mjs` after editing this script (overwrites **`postman/Service-Manage.postman_collection.json`**).",
+    "description": "## Service Manage API — mobile & integrations\n\nREST base path is `{{baseUrl}}` → `{host}/api`. Server root `{{rootUrl}}/health` is outside `/api`.\n\n### Headers and security (every app)\n\n- **`x-api-key`**: required on (almost) all calls. Set collection variable `xApiKey` = backend `X_API_KEY` from `.env`.\n- **Customer session (web)**: httpOnly cookie **`customer_token`** (JWT) after `POST /customer/register`. Browser clients use **`withCredentials`** / cookie jar.\n- **Customer session (mobile)**: same **`POST /customer/register`** returns **`data.token`** (JWT). Send **`Authorization: Bearer <token>`** on authenticated routes. Cookie is also set but mobile can ignore it.\n- **Service provider session**: cookie **`service-provider-token`** after `POST /service-provider/login` or `POST /service-provider/register`.\n- **Admin session**: cookie **`admin_token`** after Admin login (web/postman cookie jar).\n\n**Native iOS/Android (customer):** store **`data.token`** from register in secure storage; attach **`Authorization: Bearer {{customerToken}}`** on each request. Web keeps using cookies only.\n\n### Customer app — end-to-end flow\n\n1. **OTP:** `POST /customer/send-otp` with `purpose`: `register` (new user) or `login` (existing).\n2. **Session:** `POST /customer/register` with mobile + OTP + **name**. Web: **`customer_token`** cookie. Mobile: save **`data.token`** and use Bearer header.\n3. **Profile / home:** `GET /customer/profile`, `GET /customer/dashboard`.\n4. **Addresses:** `/customer/addresses` — need at least one address to create a booking.\n5. **Discovery (no auth):** **Open (public)** — settings, categories, cities, **`GET /featured-service-providers`** (homepage grid; approved verified providers with **`isFeatured`**), providers by city/category, **`GET /service-types-by-category/:categorySlug`**, **`GET /feedback-rating-tags?tagFor=provider`** for rating chips.\n6. **Booking** vs **lead:** **`POST /customer/bookings`** assigns a chosen provider immediately. **`POST /customer/service-leads`** creates an open **service lead** (city + category + types + address); admin assigns a provider via **`PUT /admin/service-leads/:id/assign`**.\n7. **Statuses** (poll `GET /customer/bookings/:id`): `pending` → `price_pending` → **`PUT .../accept-quote`** → `price_agreed` / `confirmed` → provider **`POST .../start`** → `in_progress` → provider completion OTP → **`completed`**. Terminal: `cancelled`.\n8. **Chat (REST):** booking messages endpoints.\n9. **Realtime (optional):** Socket.IO on API server — emit **`booking:join`** `{ bookingId, role: \"customer\" }`, listen for **`booking:presence`**, **`booking:typing`**, emit **`booking:leave`** with booking id when leaving chat.\n10. **After `completed`:** `POST /customer/bookings/:id/feedback`. Detail payload may include **customerFeedback**.\n11. **Profile photo:** `PUT /customer/profile/image` — multipart **`image`** (auth).\n12. **Mark job done (customer):** when status **`in_progress`**, **`PUT /customer/bookings/:id/complete`** (empty body; confirms completion alongside provider OTP flow — see backend for exact lifecycle).\n13. **Logout:** `POST /customer/logout`.\n\n### Service provider app — end-to-end flow\n\n1. **OTP** → **`POST /service-provider/login`** or multipart **`POST /service-provider/register`**. Cookie **`service-provider-token`**.\n2. **Jobs:** list/detail bookings.\n3. **Quote:** `PUT .../quote` → customer **`PUT /customer/bookings/:id/accept-quote`**.\n4. **On site:** `POST .../start` (when status `confirmed` and price agreed).\n5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.\n6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.\n7. **Subscription purchase:** **`GET /subscriptions-list`** (public plans) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**.\n8. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.\n9. **Sockets:** join with `role: \"provider\"`.\n\n**Admin auth** then **Admin (authenticated)** — back-office, not typical consumer mobile.\n\n### Postman\n\n**Regenerate:** from repo root run `node postman/generate-postman-collection.mjs` after editing this script (overwrites **`postman/Service-Manage.postman_collection.json`**).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -266,6 +266,21 @@
           }
         },
         {
+          "name": "Subscription plans list (public)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/subscriptions-list",
+            "description": "Active subscription plans for provider purchase. Use **`_id`** as **`subscriptionId`** in **`POST /service-provider/subscriptions/purchase`**."
+          }
+        },
+        {
           "name": "Submit enquiry (contact)",
           "request": {
             "method": "POST",
@@ -293,7 +308,7 @@
           }
         }
       ],
-      "description": "No auth cookie — send **`x-api-key`**. Includes **`featured-service-providers`** (homepage), **`service-types-by-category/:slug`**, categories, cities, provider search, enquiries, **`feedback-rating-tags`**."
+      "description": "No auth cookie — send **`x-api-key`**. Includes **`featured-service-providers`** (homepage), **`service-types-by-category/:slug`**, **`subscriptions-list`**, categories, cities, provider search, enquiries, **`feedback-rating-tags`**."
     },
     {
       "name": "Customer",
@@ -344,14 +359,14 @@
             "url": "{{baseUrl}}/customer/register",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Test User\",\n  \"referralCode\": \"\",\n  \"fcmToken\": \"\",\n  \"deviceId\": \"\"\n}",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Test User\",\n  \"referralCode\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "`referralCode` optional. Optional **`fcmToken`** and **`deviceId`** (saved on Customer at login/register). Optional **`registerFrom`: `\"mobile\"`** for new signups. Response **`data`** includes profile + **`token`** (JWT). Web uses **`customer_token`** cookie; mobile stores **`token`** and sends **`Authorization: Bearer <token>`**. **Name** required even for login."
+            "description": "`referralCode` optional. Optional **`registerFrom`: `\"mobile\"`** for new signups. Response **`data`** includes profile + **`token`** (JWT). Web uses **`customer_token`** cookie; mobile stores **`token`** and sends **`Authorization: Bearer <token>`**. **Name** required even for login."
           }
         },
         {
@@ -849,14 +864,14 @@
             "url": "{{baseUrl}}/service-provider/login",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"fcmToken\": \"\",\n  \"deviceId\": \"\"\n}",
+              "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"123456\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             },
-            "description": "Sets **`service-provider-token`** cookie. Optional **`fcmToken`** / **`deviceId`** saved on provider profile. Call after **Send OTP**."
+            "description": "Sets **`service-provider-token`** cookie. Call after **Send OTP**."
           }
         },
         {
@@ -935,18 +950,6 @@
                   "enabled": true
                 },
                 {
-                  "key": "fcmToken",
-                  "value": "",
-                  "type": "text",
-                  "enabled": true
-                },
-                {
-                  "key": "deviceId",
-                  "value": "",
-                  "type": "text",
-                  "enabled": true
-                },
-                {
                   "key": "image",
                   "type": "file",
                   "src": []
@@ -963,7 +966,7 @@
                 }
               ]
             },
-            "description": "Optional **`fcmToken`** / **`deviceId`** (saved on ServiceProvider). Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
+            "description": "Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
           }
         },
         {
@@ -978,21 +981,6 @@
               }
             ],
             "url": "{{baseUrl}}/service-provider/profile"
-          }
-        },
-        {
-          "name": "Delete account (auth)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "x-api-key",
-                "value": "{{xApiKey}}",
-                "type": "text"
-              }
-            ],
-            "url": "{{baseUrl}}/service-provider/profile",
-            "description": "Soft-deletes the logged-in service provider (`deletedAt`, `isActive: false`, clears push fields). Clears **`service-provider-token`** cookie."
           }
         },
         {
@@ -1108,6 +1096,51 @@
             ],
             "url": "{{baseUrl}}/service-provider/dashboard",
             "description": "Returns **profile**, **workPhotoCount**, **bookingStats** (counts per status + total), **recentBookings** (5 most recent)."
+          }
+        },
+        {
+          "name": "Notification unread count (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/notifications/unread-count",
+            "description": "Unread in-app notification count for logged-in provider (`userType: provider`)."
+          }
+        },
+        {
+          "name": "Notifications list (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/notifications?pageNo=1&limit=10",
+            "description": "Paginated notifications. Response includes **`unreadCount`** in `data`."
+          }
+        },
+        {
+          "name": "Notifications mark all read (auth)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/notifications/read-all",
+            "description": "Marks all provider notifications as read. Returns `{ unreadCount }`."
           }
         },
         {
@@ -1414,9 +1447,65 @@
             ],
             "url": "{{baseUrl}}/service-provider/work-photos/507f1f77bcf86cd799439011"
           }
+        },
+        {
+          "name": "Purchase subscription plan — create Razorpay order (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/subscriptions/purchase",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subscriptionId\": \"507f1f77bcf86cd799439011\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Creates **`AssignedSubscription`** with **`paymentStatus: unpaid`**, **`status: inactive`**, **`paymentGatewayTransactionStatus: pending`**, and a Razorpay order for **`plan.price`**. Response includes **`razorpayKey`**, **`razorpayOrderId`**, **`amountInPaise`**, **`assignmentId`** for checkout. Requires Razorpay keys in admin settings."
+          }
+        },
+        {
+          "name": "Verify subscription payment after Razorpay checkout (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/subscriptions/purchase/payment",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_xxxxxxxx\",\n  \"razorpay_payment_id\": \"pay_xxxxxxxx\",\n  \"razorpay_signature\": \"signature_from_checkout\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Send Razorpay checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`** (all required). Assignment is matched by logged-in provider + **`paymentGatewayOrderId`**. Server verifies signature, fetches payment from Razorpay, checks amount (paise) and **`captured`** status. On success: **`paymentStatus: paid`**, **`status: active`** when start date is today else queued **`inactive`**. Invalid signature / failed / amount mismatch / not captured → **422**."
+          }
         }
       ],
-      "description": "Cookie **`service-provider-token`**. **`/services`** CRUD + bookings (quote → start → OTP complete) → **feedback**; work photos + Socket.IO."
+      "description": "Cookie **`service-provider-token`**. **`/services`** CRUD + bookings (quote → start → OTP complete) → **feedback**; **subscription purchase** (Razorpay); work photos + Socket.IO."
     },
     {
       "name": "Admin auth",
@@ -3074,6 +3163,48 @@
                 ],
                 "url": "{{baseUrl}}/admin/service-providers/:id/services/:serviceId"
               }
+            },
+            {
+              "name": "Provider subscriptions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-providers/:id/subscriptions"
+              }
+            },
+            {
+              "name": "Assign subscription to provider",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-providers/:id/subscriptions",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"subscriptionId\": \"507f1f77bcf86cd799439011\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Admin assign only **`subscriptionId`**. Start/end dates and status are computed automatically (queue after current active plan if any). **`paymentStatus`** defaults to **`unpaid`**; **`paymentAmount`** from plan price."
+              }
             }
           ]
         },
@@ -4263,6 +4394,186 @@
                   }
                 ],
                 "url": "{{baseUrl}}/admin/our-milestones/:id"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subscriptions",
+          "item": [
+            {
+              "name": "List subscriptions",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/subscriptions?pageNo=1&limit=10"
+              }
+            },
+            {
+              "name": "Get subscription",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/subscriptions/:id"
+              }
+            },
+            {
+              "name": "Create subscription (multipart)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/subscriptions",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Premium Plan",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "description",
+                      "value": "Best value for regular home service customers.",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "price",
+                      "value": "999",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "interval",
+                      "value": "month",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "intervalCount",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "features",
+                      "value": "[{\"name\":\"Priority support\",\"description\":\"24/7 chat\",\"included\":true}]",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update subscription (multipart)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/subscriptions/:id",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "Premium Plan",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "description",
+                      "value": "Best value for regular home service customers.",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "price",
+                      "value": "999",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "interval",
+                      "value": "month",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "intervalCount",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "features",
+                      "value": "[{\"name\":\"Priority support\",\"description\":\"24/7 chat\",\"included\":true}]",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "description": "Image optional on update — attach only when replacing."
+              }
+            },
+            {
+              "name": "Delete subscription",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/subscriptions/:id"
               }
             }
           ]

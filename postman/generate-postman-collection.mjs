@@ -56,8 +56,9 @@ const COLLECTION_DESCRIPTION = [
     "4. **On site:** `POST .../start` (when status `confirmed` and price agreed).",
     "5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.",
     "6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.",
-    "7. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.",
-    "8. **Sockets:** join with `role: \"provider\"`.",
+    "7. **Subscription purchase:** **`GET /subscriptions-list`** (public plans) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**.",
+    "8. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.",
+    "9. **Sockets:** join with `role: \"provider\"`.",
     "",
     "**Admin auth** then **Admin (authenticated)** — back-office, not typical consumer mobile.",
     "",
@@ -141,6 +142,7 @@ function moduleForAdminUrl(url) {
     if (u.includes("/admin/testimonials")) return "Testimonials";
     if (u.includes("/admin/cms-pages")) return "CMS pages";
     if (u.includes("/admin/our-values") || u.includes("/admin/our-milestones")) return "Our content (values & milestones)";
+    if (u.includes("/admin/subscriptions")) return "Subscriptions";
     return "Other";
 }
 
@@ -163,6 +165,7 @@ const ADMIN_MODULE_ORDER = [
     "Testimonials",
     "CMS pages",
     "Our content (values & milestones)",
+    "Subscriptions",
     "Other",
 ];
 
@@ -243,6 +246,9 @@ const open = [
     req("Terms and conditions", "GET", "/terms-and-conditions"),
     req("Feedback rating tags (public)", "GET", "/feedback-rating-tags?tagFor=provider", {
         description: "Query **`tagFor`** is required: `customer` (tags shown when provider rates customer) or `provider` (tags when customer rates provider).",
+    }),
+    req("Subscription plans list (public)", "GET", "/subscriptions-list", {
+        description: "Active subscription plans for provider purchase. Use **`_id`** as **`subscriptionId`** in **`POST /service-provider/subscriptions/purchase`**.",
     }),
     req(
         "Submit enquiry (contact)",
@@ -465,6 +471,20 @@ const serviceProvider = [
         description: "Replace orderedIds with all work photo `_id` values in display order.",
     }),
     req("Delete work photo (auth)", "DELETE", `/service-provider/work-photos/${OID}`),
+    req("Purchase subscription plan — create Razorpay order (auth)", "POST", "/service-provider/subscriptions/purchase", {
+        body: { subscriptionId: OID },
+        description:
+            "Creates **`AssignedSubscription`** with **`paymentStatus: unpaid`**, **`status: inactive`**, **`paymentGatewayTransactionStatus: pending`**, and a Razorpay order for **`plan.price`**. Response includes **`razorpayKey`**, **`razorpayOrderId`**, **`amountInPaise`**, **`assignmentId`** for checkout. Requires Razorpay keys in admin settings.",
+    }),
+    req("Verify subscription payment after Razorpay checkout (auth)", "POST", "/service-provider/subscriptions/purchase/payment", {
+        body: {
+            razorpay_order_id: "order_xxxxxxxx",
+            razorpay_payment_id: "pay_xxxxxxxx",
+            razorpay_signature: "signature_from_checkout",
+        },
+        description:
+            "Send Razorpay checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`** (all required). Assignment is matched by logged-in provider + **`paymentGatewayOrderId`**. Server verifies signature, fetches payment from Razorpay, checks amount (paise) and **`captured`** status. On success: **`paymentStatus: paid`**, **`status: active`** when start date is today else queued **`inactive`**. Invalid signature / failed / amount mismatch / not captured → **422**.",
+    }),
 ];
 
 const adminAuth = [
@@ -690,6 +710,12 @@ const admin = [
         body: { serviceTypeId: OID, price: 599, status: 1 },
     }),
     req("Delete provider service", "DELETE", "/admin/service-providers/:id/services/:serviceId"),
+    req("Provider subscriptions", "GET", "/admin/service-providers/:id/subscriptions"),
+    req("Assign subscription to provider", "POST", "/admin/service-providers/:id/subscriptions", {
+        body: { subscriptionId: OID },
+        description:
+            "Admin assign only **`subscriptionId`**. Start/end dates and status are computed automatically (queue after current active plan if any). **`paymentStatus`** defaults to **`unpaid`**; **`paymentAmount`** from plan price.",
+    }),
     req("Create rating tag", "POST", "/admin/rating-tags", {
         body: { tagFor: "customer", tagName: "Punctual", tagType: "positive", status: 1 },
     }),
@@ -779,6 +805,34 @@ const admin = [
     }),
     req("Delete banner", "DELETE", "/admin/banners/:id"),
     req("List banners", "GET", "/admin/banners"),
+    req("List subscriptions", "GET", "/admin/subscriptions?pageNo=1&limit=10"),
+    req("Get subscription", "GET", "/admin/subscriptions/:id"),
+    req("Create subscription (multipart)", "POST", "/admin/subscriptions", {
+        formdata: [
+            fd.text("name", "Premium Plan"),
+            fd.text("description", "Best value for regular home service customers."),
+            fd.text("price", "999"),
+            fd.text("interval", "month"),
+            fd.text("intervalCount", "1"),
+            fd.text("status", "1"),
+            fd.text("features", JSON.stringify([{ name: "Priority support", description: "24/7 chat", included: true }])),
+            fd.file("image"),
+        ],
+    }),
+    req("Update subscription (multipart)", "PUT", "/admin/subscriptions/:id", {
+        formdata: [
+            fd.text("name", "Premium Plan"),
+            fd.text("description", "Best value for regular home service customers."),
+            fd.text("price", "999"),
+            fd.text("interval", "month"),
+            fd.text("intervalCount", "1"),
+            fd.text("status", "1"),
+            fd.text("features", JSON.stringify([{ name: "Priority support", description: "24/7 chat", included: true }])),
+            fd.file("image"),
+        ],
+        description: "Image optional on update — attach only when replacing.",
+    }),
+    req("Delete subscription", "DELETE", "/admin/subscriptions/:id"),
     req("List enquiries", "GET", "/admin/enquiries"),
     req("Resolve enquiry", "PUT", "/admin/enquiries/:id/resolve", { body: { isResolved: 1 } }),
     req("Delete enquiry", "DELETE", "/admin/enquiries/:id"),
@@ -869,7 +923,7 @@ const admin = [
 collection.item.push(
     folder(
         "Open (public)",
-        "No auth cookie — send **`x-api-key`**. Includes **`featured-service-providers`** (homepage), **`service-types-by-category/:slug`**, categories, cities, provider search, enquiries, **`feedback-rating-tags`**.",
+        "No auth cookie — send **`x-api-key`**. Includes **`featured-service-providers`** (homepage), **`service-types-by-category/:slug`**, **`subscriptions-list`**, categories, cities, provider search, enquiries, **`feedback-rating-tags`**.",
         open
     )
 );
@@ -883,7 +937,7 @@ collection.item.push(
 collection.item.push(
     folder(
         "Service provider",
-        "Cookie **`service-provider-token`**. **`/services`** CRUD + bookings (quote → start → OTP complete) → **feedback**; work photos + Socket.IO.",
+        "Cookie **`service-provider-token`**. **`/services`** CRUD + bookings (quote → start → OTP complete) → **feedback**; **subscription purchase** (Razorpay); work photos + Socket.IO.",
         serviceProvider
     )
 );

@@ -27,3 +27,5 @@ export { CmsPage } from "./CmsPage.js";
 export { OurValue } from "./OurValue.js";
 export { OurMilestone } from "./OurMilestone.js";
 export { Testimonial } from "./Testimonial.js";
+export { Subscription } from "./Subscription.js";
+export { AssignedSubscription } from "./AssignedSubscription.js";

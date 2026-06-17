@@ -52,7 +52,10 @@ export default function AsyncSelect({
     isDisabled = false,
     cacheOptions = true,
     defaultOptions = true,
-    isLoading = false
+    isLoading = false,
+    menuPortalTarget = null,
+    menuPosition = "absolute",
+    isClearable = false
 }: AsyncFormSelectProps) {
     return (
         <ReactAsyncSelect
@@ -67,6 +70,10 @@ export default function AsyncSelect({
             placeholder={placeholder}
             classNames={selectClassNames}
             isLoading={isLoading}
+            menuPortalTarget={menuPortalTarget}
+            menuPosition={menuPosition}
+            styles={menuPortalTarget ? { menuPortal: (base) => ({ ...base, zIndex: 10000 }) } : undefined}
+            isClearable={isClearable}
         />
     );
 }

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag } from "../models/index.js";
+import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag, Subscription } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
 
 
@@ -429,6 +429,15 @@ export const listFeedbackRatingTags = async (req, res) => {
         }
 
         const rows = await PredefinedRatingTag.find({ deletedAt: null, isActive: true, tagFor }, { tagName: 1, tagType: 1 }).sort({ tagName: 1 }).lean();
+        return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listSubscriptions = async (req, res) => {
+    try {
+        const rows = await Subscription.find({ deletedAt: null, isActive: true }, { name: 1, subscriptionId: 1, slug: 1, image: 1, description: 1, price: 1, interval: 1, intervalCount: 1, features: 1 }).sort({ name: 1 }).lean();
         return res.success(rows);
     } catch (error) {
         return res.someThingWentWrong(error);

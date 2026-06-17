@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck, ClipboardList, CircleHelp, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
+import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -216,6 +216,17 @@ export const PERMISSIONS = [
             { id: 444, label: "View Our Milestones" },
         ]
     },
+    {
+        name: "Subscription Management",
+        permissions: [
+            { id: 451, label: "Create Subscription" },
+            { id: 452, label: "Update Subscription" },
+            { id: 453, label: "Delete Subscription" },
+            { id: 454, label: "View Subscriptions" },
+            { id: 455, label: "Assign Subscription to Provider" },
+            { id: 457, label: "View Provider Subscriptions" },
+        ]
+    },
 
 ];
 
@@ -246,6 +257,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/testimonials", label: "Testimonials", icon: Quote, permission_id: 424 },
             { href: "/admin/our-values", label: "Our Values", icon: Heart, permission_id: 434 },
             { href: "/admin/our-milestones", label: "Our Milestones", icon: History, permission_id: 444 },
+            { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, permission_id: 454 },
             { href: "/admin/cms-pages", label: "CMS Pages", icon: FileText, permission_id: 414 },
         ]
     },
@@ -348,6 +360,11 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         items: [{ label: "Service Providers", href: "/admin/service-providers" }, { label: "Provider Services" }]
     },
     {
+        path: "/admin/service-providers/:slug/subscriptions",
+        permission_id: 457,
+        items: [{ label: "Service Providers", href: "/admin/service-providers" }, { label: "Provider Subscriptions" }]
+    },
+    {
         path: "/admin/rating-tags",
         permission_id: 344,
         items: [{ label: "Rating Tags" }]
@@ -406,5 +423,10 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/our-milestones",
         permission_id: 444,
         items: [{ label: "Our Milestones" }]
+    },
+    {
+        path: "/admin/subscriptions",
+        permission_id: 454,
+        items: [{ label: "Subscriptions" }]
     },
 ];

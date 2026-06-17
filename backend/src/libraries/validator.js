@@ -73,6 +73,29 @@ const rating = check("rating", "Rating must be between 1 and 5.").exists().notEm
 const review = check("review", "Review is required.").trim().notEmpty().isLength({ min: 3, max: 5000 });
 const bannerType = check("bannerType", "Banner type is required.").optional({ values: "falsy" }).isIn(BANNER_TYPES);
 const bannerLink = check("link", "Invalid link.").optional({ values: "falsy" }).isLength({ max: 500 }).trim();
+const interval = check("interval", "Billing interval is required.").trim().notEmpty().isIn(["day", "month", "year"]);
+const intervalCount = check("intervalCount", "Interval count must be at least 1.").optional({ values: "falsy" }).isInt({ min: 1, max: 365 });
+const subscriptionFeatures = check("features", "At least one feature with name and description is required.").custom((value) => {
+    let parsed = value;
+    if (typeof value === "string") {
+        try {
+            parsed = JSON.parse(value);
+        } catch {
+            throw new Error("Features must be valid JSON.");
+        }
+    }
+
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("At least one feature is required.");
+
+    const complete = parsed.filter((row) => String(row?.name ?? "").trim() && String(row?.description ?? "").trim());
+    if (!complete.length) throw new Error("Each feature must include name and description.");
+
+    return true;
+});
+const assignSubscriptionId = check("subscriptionId", "Subscription plan is required.").trim().notEmpty().isMongoId();
+const razorpayOrderId = check("razorpay_order_id", "Razorpay order ID is required.").trim().notEmpty();
+const razorpayPaymentId = check("razorpay_payment_id", "Razorpay payment ID is required.").trim().notEmpty();
+const razorpaySignature = check("razorpay_signature", "Razorpay signature is required.").trim().notEmpty();
 const pageSlug = check("pageSlug", "Page slug is required.").trim().notEmpty().isLength({ min: 2, max: 150 }).matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const pageTitle = check("pageTitle", "Page title is required.").trim().notEmpty().isLength({ min: 2, max: 255 });
 const pageTitleHi = check("pageTitleHi").optional({ values: "falsy" }).isLength({ max: 255 }).trim();
@@ -128,8 +151,7 @@ const particulars = check("particulars").optional({ values: "falsy" }).trim().is
 const bookingId = param("bookingId", "Invalid booking ID.").exists().notEmpty().isMongoId();
 const providerServiceId = param("serviceId", "Invalid service ID.").exists().notEmpty().isMongoId();
 const providerServiceTypeId = check("serviceTypeId", "Service type is required.").exists().notEmpty().isMongoId();
-const providerServicePrice = check("price", "Valid price is required.").exists().notEmpty().isFloat({ min: 0 });
-const providerServiceStatus = check("status", "Status must be 0 or 1.").optional({ values: "falsy" }).isIn([0, 1, "0", "1"]);
+const price = check("price", "Price is required.").exists().notEmpty().isFloat({ min: 0 });
 const providerId = check("providerId", "Provider is required.").exists().notEmpty().isMongoId();
 const serviceTypeIds = check("serviceTypeId", "At least one service type is required.").exists().isArray({ min: 1 });
 const serviceTypeIdItems = check("serviceTypeId.*", "Invalid service type.").isMongoId();
@@ -276,6 +298,18 @@ export const validator = (method) => {
         case "banner":
             output = [bannerType, bannerLink, displayOrder, status];
             break;
+        case "subscription":
+            output = [name, description, price, interval, intervalCount, subscriptionFeatures, status];
+            break;
+        case "provider-subscription-assign":
+            output = [assignSubscriptionId];
+            break;
+        case "provider-subscription-purchase":
+            output = [assignSubscriptionId];
+            break;
+        case "provider-subscription-payment":
+            output = [razorpayOrderId, razorpayPaymentId, razorpaySignature];
+            break;
         case "enquiry-resolve":
             output = [id, isResolved];
             break;
@@ -292,10 +326,10 @@ export const validator = (method) => {
             output = [mobile, otp, fcmTokenOptional, deviceIdOptional];
             break;
         case "provider-service-create":
-            output = [providerServiceTypeId, providerServicePrice, providerServiceStatus];
+            output = [providerServiceTypeId, price, status];
             break;
         case "provider-service-update":
-            output = [providerServiceId, providerServiceTypeId, providerServicePrice, providerServiceStatus];
+            output = [providerServiceId, providerServiceTypeId, price, status];
             break;
         case "provider-service-delete":
             output = [providerServiceId];

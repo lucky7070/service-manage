@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider } from "../../controller/admin/serviceProvider.controller.js";
 import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServiceProviderPhoto, reorderServiceProviderPhotos } from "../../controller/admin/serviceProviderPhoto.controller.js";
 import { createProviderService, deleteProviderService, getProviderServices, updateProviderService } from "../../controller/admin/providerService.controller.js";
+import { assignSubscriptionToProvider, getProviderAssignedSubscriptions } from "../../controller/admin/assignedSubscription.controller.js";
 import { validator } from "../../libraries/validator.js";
 import { serviceProviderStorage, serviceProviderWorkPhotoStorage } from "./storages.js";
 
@@ -31,5 +32,7 @@ router.get("/service-providers/:id/services", getProviderServices);
 router.post("/service-providers/:id/services", createProviderService);
 router.put("/service-providers/:id/services/:serviceId", updateProviderService);
 router.delete("/service-providers/:id/services/:serviceId", deleteProviderService);
+router.get("/service-providers/:id/subscriptions", getProviderAssignedSubscriptions);
+router.post("/service-providers/:id/subscriptions", validator("provider-subscription-assign"), assignSubscriptionToProvider);
 
 export default router;
