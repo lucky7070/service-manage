@@ -132,6 +132,7 @@ export type BookingDetail = {
     _id: string;
     bookingNumber: string;
     providerName?: string;
+    providerMobile?: string;
     serviceCategoryName?: string;
     serviceTypes?: BookingServiceType[];
     status: string;

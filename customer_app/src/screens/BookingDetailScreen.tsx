@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect, useRoute, type RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { acceptBookingQuote, cancelBooking, completeBooking, fetchBooking, type BookingDetail, } from "../api";
@@ -126,6 +126,19 @@ export default function BookingDetailScreen() {
         booking?.location?.pincode,
     ].filter(Boolean).join(", ");
 
+    const providerPhoneDigits = String(booking?.providerMobile || "").replace(/\D/g, "").slice(-10);
+    const providerPhoneDisplay = providerPhoneDigits.length === 10 ? `+91 ${providerPhoneDigits}` : null;
+
+    const onCallProvider = () => {
+        if (providerPhoneDigits.length !== 10) {
+            Alert.alert("No phone number", "Provider phone number is not available.");
+            return;
+        }
+        void Linking.openURL(`tel:+91${providerPhoneDigits}`).catch(() => {
+            Alert.alert("Could not call", "Unable to open the phone dialer.");
+        });
+    };
+
     return (
         <View style={screenStyles.stackRoot}>
             <DetailHeader
@@ -230,23 +243,34 @@ export default function BookingDetailScreen() {
                     <Card large elevated style={styles.section}>
                         <View style={styles.chatCard}>
                             <View style={styles.chatCardCopy}>
-                                <Text style={styles.sectionTitle}>Chat with provider</Text>
+                                <Text style={styles.sectionTitle}>Contact provider</Text>
                                 <Text style={styles.chatSub}>
-                                    Message {booking.providerName || "your provider"} in real time about this booking.
+                                    Call or message {booking.providerName || "your provider"} about this booking.
                                 </Text>
+                                {providerPhoneDisplay ? (
+                                    <Text style={styles.phoneText}>{providerPhoneDisplay}</Text>
+                                ) : null}
                             </View>
-                            <Pressable
-                                onPress={() => navigation.navigate("BookingChat", {
-                                    bookingId: bookingId,
-                                    bookingNumber: booking.bookingNumber,
-                                    providerName: booking.providerName,
-                                    chatDisabled: booking.status === "cancelled",
-                                })}
-                                style={chatButtonStyles.btn}
-                            >
-                                <Feather name="message-circle" size={16} color={colors.primary} />
-                                <Text style={chatButtonStyles.text}>Open chat</Text>
-                            </Pressable>
+                            <View style={styles.contactActions}>
+                                {providerPhoneDisplay ? (
+                                    <Pressable onPress={onCallProvider} style={chatButtonStyles.btn}>
+                                        <Feather name="phone" size={16} color={colors.primary} />
+                                        <Text style={chatButtonStyles.text}>Call</Text>
+                                    </Pressable>
+                                ) : null}
+                                <Pressable
+                                    onPress={() => navigation.navigate("BookingChat", {
+                                        bookingId: bookingId,
+                                        bookingNumber: booking.bookingNumber,
+                                        providerName: booking.providerName,
+                                        chatDisabled: booking.status === "cancelled",
+                                    })}
+                                    style={chatButtonStyles.btn}
+                                >
+                                    <Feather name="message-circle" size={16} color={colors.primary} />
+                                    <Text style={chatButtonStyles.text}>Chat</Text>
+                                </Pressable>
+                            </View>
                         </View>
                     </Card>
                 </ScrollView>
@@ -285,4 +309,6 @@ const styles = StyleSheet.create({
     chatCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: spacing.md },
     chatCardCopy: { flex: 1, gap: 4 },
     chatSub: { fontSize: 13, color: colors.mutedForeground, lineHeight: 20 },
+    phoneText: { fontSize: 13, fontWeight: "700", color: colors.foreground },
+    contactActions: { flexDirection: "row", alignItems: "center", gap: 8 },
 });

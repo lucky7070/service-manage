@@ -69,6 +69,7 @@ const bookingDetailPipeline = (match) => [
             location: 1,
             providerName: { $ifNull: [{ $first: "$provider.name" }, ""] },
             providerImage: { $ifNull: [{ $first: "$provider.image" }, ""] },
+            providerMobile: { $ifNull: [{ $first: "$provider.mobile" }, ""] },
             serviceCategoryName: { $ifNull: [{ $first: "$category.name" }, ""] },
             cityName: { $ifNull: [{ $first: "$city.name" }, ""] },
             serviceTypes: { $map: { input: "$serviceTypes", as: "serviceType", in: { _id: "$$serviceType._id", name: "$$serviceType.name", basePrice: "$$serviceType.basePrice", estimatedTimeMinutes: "$$serviceType.estimatedTimeMinutes" } } },
