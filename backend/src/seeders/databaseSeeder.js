@@ -8,6 +8,7 @@ import { seedOurValues } from "./ourValue.seeder.js";
 import { seedFaqs } from "./faq.seeder.js";
 import { seedPredefinedRatingTags } from "./predefinedRatingTag.seeder.js";
 import { seedSubscriptions } from "./subscription.seeder.js";
+import { seedCmsPages } from "./cmsPage.seeder.js";
 
 /**
  * Registered seeders in execution order (dependencies first).
@@ -23,7 +24,8 @@ export const SEEDER_REGISTRY = [
     { name: "ourValues", description: "About page core values", run: seedOurValues },
     { name: "faqs", description: "Frequently asked questions", run: seedFaqs },
     { name: "predefinedRatingTags", description: "Booking feedback quick tags", run: seedPredefinedRatingTags },
-    { name: "subscriptions", description: "Provider subscription plans (weekly, monthly, yearly)", run: seedSubscriptions }
+    { name: "subscriptions", description: "Provider subscription plans (weekly, monthly, yearly)", run: seedSubscriptions },
+    { name: "cmsPages", description: "CMS pages (privacy, terms, cookies, our story)", run: seedCmsPages }
 ];
 
 export const SEEDER_NAMES = SEEDER_REGISTRY.map((s) => s.name);

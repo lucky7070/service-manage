@@ -62,6 +62,7 @@ backend/
       ourValue.seeder.js
       faq.seeder.js
       predefinedRatingTag.seeder.js
+      cmsPage.seeder.js           # Privacy, terms, cookies, our story
       defaultAdmin.seeder.js
     socket/          # Socket.io booking rooms (join/leave, messages, typing)
 frontend/
@@ -137,6 +138,8 @@ npm run seed -- --only=ourValues,faqs           # comma-separated via --only=
 | `ourValues` | `ourValue.seeder.js` | About page values with icon paths (`SEED_OUR_VALUES`) |
 | `faqs` | `faq.seeder.js` | FAQ questions and answers (`SEED_FAQS`) |
 | `predefinedRatingTags` | `predefinedRatingTag.seeder.js` | Quick feedback tags for customer ↔ provider ratings |
+| `subscriptions` | `subscription.seeder.js` | Provider plans (weekly, monthly, yearly) |
+| `cmsPages` | `cmsPage.seeder.js` | CMS pages: `privacy-policy`, `terms-and-conditions`, `cookies`, `our-story` (`data/cmsPages.seed.json`) |
 
 All seeders are **idempotent** (upsert by stable keys such as `setting_name`, category `slug`, FAQ `question`, or `tagFor` + `tagName`). Re-running updates existing rows with the latest seed file values.
 

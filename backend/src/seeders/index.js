@@ -9,3 +9,4 @@ export { seedOurValues, SEED_OUR_VALUES } from "./ourValue.seeder.js";
 export { seedFaqs, SEED_FAQS } from "./faq.seeder.js";
 export { seedPredefinedRatingTags, SEED_PREDEFINED_RATING_TAGS } from "./predefinedRatingTag.seeder.js";
 export { seedSubscriptions, SEED_SUBSCRIPTIONS } from "./subscription.seeder.js";
+export { seedCmsPages, SEED_CMS_PAGES } from "./cmsPage.seeder.js";
