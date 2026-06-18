@@ -1,58 +1,67 @@
 import { ServiceCategory, ServiceType } from "../models/index.js";
-import { escapeRegex } from "../helpers/utils.js";
-import { seedServiceCategories } from "./serviceCategory.seeder.js";
+import { SEED_CATEGORIES, seedServiceCategories } from "./serviceCategory.seeder.js";
 
-/** Concrete jobs under a category (e.g. Tap repair under Plumber). */
-export const SEED_SERVICE_TYPES = [
-    { categorySlug: "plumber", name: "Tap Repair" },
-    { categorySlug: "plumber", name: "Waste pipe leakage" },
-    { categorySlug: "plumber", name: "Jet spray (installation / Repair)" },
-    { categorySlug: "plumber", name: "Bathroom tile gap filling" },
-    { categorySlug: "air-conditioner-repair", name: "Split AC Repair" },
-    { categorySlug: "air-conditioner-repair", name: "Deep clean AC service (window)" },
-    { categorySlug: "air-conditioner-repair", name: "Deep clean AC service (split)" },
-    { categorySlug: "air-conditioner-repair", name: "Ac Cooling problem" }
-];
+const optionalString = (value) => {
+    const text = typeof value === "string" ? value.trim() : "";
+    return text || null;
+};
+
+const optionalNumber = (value) => {
+    if (value === undefined || value === null || value === "") return null;
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
+};
 
 /**
- * Ensures seed categories exist, then creates missing service types (idempotent per category + name).
+ * Seeds service types from `SEED_CATEGORIES[].services` (idempotent upserts per category + name).
  * @param {{ seedCategoriesFirst?: boolean }} [options]
- * @returns {Promise<{ count: number, created: number, skipped: number }>}
+ * @returns {Promise<{ count: number, upserted: number, modified: number }>}
  */
 export async function seedServiceTypes({ seedCategoriesFirst = true } = {}) {
     if (seedCategoriesFirst) {
         await seedServiceCategories();
     }
 
-    const slugs = [...new Set(SEED_SERVICE_TYPES.map((r) => r.categorySlug))];
+    const slugs = SEED_CATEGORIES.map((row) => row.slug);
     const categories = await ServiceCategory.find({ slug: { $in: slugs }, deletedAt: null }).lean();
-    const slugToId = new Map(categories.map((c) => [c.slug, c._id]));
+    const slugToId = new Map(categories.map((category) => [category.slug, category._id]));
 
-    let created = 0;
-    let skipped = 0;
-    for (const row of SEED_SERVICE_TYPES) {
-        const categoryId = slugToId.get(row.categorySlug);
+    const ops = [];
+    for (const category of SEED_CATEGORIES) {
+        const categoryId = slugToId.get(category.slug);
         if (!categoryId) continue;
 
-        const normalizedName = row.name.trim();
-        const exists = await ServiceType.findOne({
-            categoryId,
-            name: { $regex: `^${escapeRegex(normalizedName)}$`, $options: "i" },
-            deletedAt: null
-        });
-        if (exists) {
-            skipped += 1;
-            continue;
+        for (const service of category.services ?? []) {
+            const name = service.name?.trim();
+            if (!name) continue;
+
+            ops.push({
+                updateOne: {
+                    filter: { categoryId, name, deletedAt: null },
+                    update: {
+                        $set: {
+                            categoryId,
+                            name,
+                            nameHi: optionalString(service.nameHi),
+                            estimatedTimeMinutes: optionalNumber(service.estimatedTimeMinutes),
+                            basePrice: optionalNumber(service.basePrice),
+                            description: optionalString(service.description),
+                            isActive: true,
+                            deletedAt: null
+                        }
+                    },
+                    upsert: true
+                }
+            });
         }
-        await ServiceType.create({
-            categoryId,
-            name: normalizedName,
-            nameHi: row.nameHi?.trim() || null,
-            isActive: true
-        });
-        created += 1;
     }
 
+    const writeResult = ops.length ? await ServiceType.bulkWrite(ops) : { upsertedCount: 0, modifiedCount: 0 };
+
     const count = await ServiceType.countDocuments({ deletedAt: null });
-    return { count, created, skipped };
+    return {
+        count,
+        upserted: writeResult.upsertedCount ?? 0,
+        modified: writeResult.modifiedCount ?? 0
+    };
 }

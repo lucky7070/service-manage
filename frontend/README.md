@@ -1,10 +1,11 @@
-> **Service Manage:** For project overview, backend setup, Postman, and seeding, see the repository root [`README.md`](../README.md).
+> **Serva Services / Service Manage:** Project overview, backend setup, database seeders, and Postman — see the repository root [`README.md`](../README.md).
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Next.js App Router frontend for the customer marketing site and admin panel.
 
 ## Getting Started
 
-First, run the development server:
+1. Start the [backend](../README.md#run-locally) and run **`npm run seed`** once so settings, categories, and CMS content exist.
+2. Run the development server:
 
 ```bash
 npm run dev

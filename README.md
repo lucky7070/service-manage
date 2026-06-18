@@ -1,6 +1,12 @@
-# Service Manage (Admin Panel + API)
+# Serva Services — Service Manage
 
-Production-style platform using Next.js (frontend) and Express + MongoDB (backend): public marketing pages, customer and service-provider accounts, booking lifecycle, and a full admin panel (permissions, settings, master data, and content).
+Home services platform (**Serva Services**): Next.js marketing site + admin panel, Express + MongoDB API, and React Native customer app. Covers public marketing pages, customer and service-provider accounts, booking lifecycle, and admin (permissions, settings, master data, CMS).
+
+| App | Folder | Default URL |
+|-----|--------|-------------|
+| API + admin backend | [`backend/`](backend/) | `http://localhost:5000` |
+| Web (customer + admin UI) | [`frontend/`](frontend/) | `http://localhost:3000` |
+| Customer mobile app | [`customer_app/`](customer_app/) | Expo — see [`customer_app/README.md`](customer_app/README.md) |
 
 ## Tech Stack
 
@@ -47,6 +53,16 @@ backend/
       admin/         # modular admin routers (dashboard, bookings, geography, etc.)
       ...
     seeders/
+      databaseSeeder.js       # SEEDER_REGISTRY orchestrator
+      settings.seeder.js      # Serva branding + app config defaults
+      serviceCategory.seeder.js
+      serviceType.seeder.js
+      indiaLocation.seeder.js
+      ourMilestone.seeder.js
+      ourValue.seeder.js
+      faq.seeder.js
+      predefinedRatingTag.seeder.js
+      defaultAdmin.seeder.js
     socket/          # Socket.io booking rooms (join/leave, messages, typing)
 frontend/
   src/
@@ -65,6 +81,23 @@ node postman/generate-postman-collection.mjs
 ```
 
 This overwrites `postman/Service-Manage.postman_collection.json` — do not hand-edit that file if you rely on the script.
+
+## First-time setup (local)
+
+1. **MongoDB** — running locally or Atlas; set `MONGO_URI` in `backend/.env` (copy from `backend/.env.example`).
+2. **Backend** — `cd backend && npm install && npm run dev`
+3. **Seed base data** (from `backend/`):
+
+   ```bash
+   npm run seed
+   ```
+
+   This loads default admin, **Serva Services** settings, India locations, service categories/types, FAQs, about-page content, and rating tags. Safe to re-run (upserts by key fields).
+4. **Frontend** — `cd frontend && npm install && npm run dev`
+5. **Admin login** — `admin@admin.com` / `123456789` (change after first login in production).
+6. **Mobile app** (optional) — see [`customer_app/README.md`](customer_app/README.md); seed the backend before testing categories, settings, or CMS pages.
+
+Replace placeholder secrets in admin **Settings** (SMTP, Razorpay, SMS API key) and upload logo/favicon under `/application/`.
 
 ## Run Locally
 
@@ -86,12 +119,32 @@ From `backend/`:
 
 ```bash
 npm run seed                                    # run all registered seeders in order
-npm run seed -- serviceCategories               # only service category seeder
+npm run seed -- settings                        # only settings
 npm run seed -- serviceCategories serviceTypes  # multiple by name
-npm run seed -- --only=settings                 # comma-separated via --only=
+npm run seed -- --only=ourValues,faqs           # comma-separated via --only=
 ```
 
-Registered seeder names: `defaultAdmin`, `settings`, `serviceCategories`, `serviceTypes` (see `SEEDER_REGISTRY` in `databaseSeeder.js`).
+**Registered seeder names** (see `SEEDER_REGISTRY` in `databaseSeeder.js`):
+
+| Seeder | Source file | What it loads |
+|--------|-------------|---------------|
+| `defaultAdmin` | `defaultAdmin.seeder.js` | Super Admin role + default admin account |
+| `settings` | `settings.seeder.js` | Branding, contact, SMTP, Razorpay, SMS, customer/pro app version & store URLs |
+| `location` | `indiaLocation.seeder.js` | India country, states, cities |
+| `serviceCategories` | `serviceCategory.seeder.js` | 10 trade categories from `SEED_CATEGORIES` (slug, name, image, description) |
+| `serviceTypes` | `serviceType.seeder.js` | Service types from each category’s nested `services[]` in `SEED_CATEGORIES` |
+| `ourMilestones` | `ourMilestone.seeder.js` | About page timeline (`SEED_OUR_MILESTONES`) |
+| `ourValues` | `ourValue.seeder.js` | About page values with icon paths (`SEED_OUR_VALUES`) |
+| `faqs` | `faq.seeder.js` | FAQ questions and answers (`SEED_FAQS`) |
+| `predefinedRatingTags` | `predefinedRatingTag.seeder.js` | Quick feedback tags for customer ↔ provider ratings |
+
+All seeders are **idempotent** (upsert by stable keys such as `setting_name`, category `slug`, FAQ `question`, or `tagFor` + `tagName`). Re-running updates existing rows with the latest seed file values.
+
+#### Default settings (`settings` seeder)
+
+Branding defaults to **Serva Services** (`application_name`, tagline, copyright). Contact: `info@serva.technolite.in`, phone `9602570577`, Jodhpur office address. Customer app settings (type 6) use version `1.0.0`, Play Store `com.serva.services`, force-update off by default. SMTP/Razorpay/SMS keys use `change_me_*` placeholders — configure in admin or `.env` before production.
+
+Category images in seed data use paths like `/service-categories/plumber.png` (upload matching files to `backend/uploads/` or replace via admin).
 
 ### Default admin seeder values
 
@@ -194,7 +247,8 @@ node postman/generate-postman-collection.mjs
 
 ### CMS and marketing content (admin)
 
-- FAQs, banners, enquiries, testimonials, CMS pages, “our values” / milestones, and related CRUD where implemented
+- FAQs, banners, enquiries, testimonials, CMS pages, “our values” / milestones, and related CRUD in admin
+- **Base CMS data** (FAQs, our values, milestones, rating tags) ships in seeders — run `npm run seed` on a fresh DB or `npm run seed -- faqs ourValues ourMilestones predefinedRatingTags` to refresh
 
 ### Route Guarding
 

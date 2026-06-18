@@ -188,6 +188,8 @@ adb version
 
 ### 2. Install app dependencies
 
+Ensure the [backend is running and seeded](../README.md#first-time-setup-local) so categories, settings, and CMS pages are available.
+
 ```powershell
 cd customer_app
 npm install

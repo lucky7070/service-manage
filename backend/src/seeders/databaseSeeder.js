@@ -3,6 +3,10 @@ import { seedServiceCategories } from "./serviceCategory.seeder.js";
 import { seedServiceTypes } from "./serviceType.seeder.js";
 import { seedDefaultAdmin } from "./defaultAdmin.seeder.js";
 import { seedIndiaLocations } from "./indiaLocation.seeder.js";
+import { seedOurMilestones } from "./ourMilestone.seeder.js";
+import { seedOurValues } from "./ourValue.seeder.js";
+import { seedFaqs } from "./faq.seeder.js";
+import { seedPredefinedRatingTags } from "./predefinedRatingTag.seeder.js";
 
 /**
  * Registered seeders in execution order (dependencies first).
@@ -13,7 +17,11 @@ export const SEEDER_REGISTRY = [
     { name: "settings", description: "Application settings defaults", run: seedSettings },
     { name: "location", description: "India country/state/city master data", run: seedIndiaLocations },
     { name: "serviceCategories", description: "Service category trade groups", run: seedServiceCategories },
-    { name: "serviceTypes", description: "Sample service types under categories", run: () => seedServiceTypes({ seedCategoriesFirst: true }) }
+    { name: "serviceTypes", description: "Sample service types under categories", run: () => seedServiceTypes({ seedCategoriesFirst: true }) },
+    { name: "ourMilestones", description: "About page milestone timeline", run: seedOurMilestones },
+    { name: "ourValues", description: "About page core values", run: seedOurValues },
+    { name: "faqs", description: "Frequently asked questions", run: seedFaqs },
+    { name: "predefinedRatingTags", description: "Booking feedback quick tags", run: seedPredefinedRatingTags }
 ];
 
 export const SEEDER_NAMES = SEEDER_REGISTRY.map((s) => s.name);
