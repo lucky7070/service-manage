@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead } from "../controller/service-provider.controller.js";
 import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/service-provider-services.controller.js";
-import { createProviderSubscriptionOrder, updateProviderSubscriptionPayment } from "../controller/providerSubscription.controller.js";
+import { createProviderSubscriptionOrder, listProviderSubscriptionHistory, updateProviderSubscriptionPayment } from "../controller/providerSubscription.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
@@ -43,6 +43,7 @@ router.get("/work-photos", getWorkPhotos);
 router.post("/work-photos", serviceProviderWorkPhotoStorage.array("photos", 20), uploadWorkPhotos);
 router.delete("/work-photos/:photoId", deleteWorkPhoto);
 router.put("/work-photos/reorder", reorderWorkPhotos);
+router.get("/subscriptions", listProviderSubscriptionHistory);
 router.post("/subscriptions/purchase", validator("provider-subscription-purchase"), createProviderSubscriptionOrder);
 router.post("/subscriptions/purchase/payment", validator("provider-subscription-payment"), updateProviderSubscriptionPayment);
 

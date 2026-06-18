@@ -28,16 +28,16 @@ export const addressSchema = Yup.object({
     pincode: Yup.string().trim().matches(/^\d{6}$/, "Pincode must be 6 digits.").required("Pincode is required."),
     latitude: Yup.number()
         .transform((_value, originalValue) => (originalValue === "" ? undefined : Number(originalValue)))
-        .typeError("Latitude must be a valid number.")
-        .required("Valid latitude is required.")
-        .min(-90, "Latitude must be at least -90.")
-        .max(90, "Latitude must be at most 90."),
+        .typeError("Capture your current location to continue.")
+        .required("Capture your current location to continue.")
+        .min(-90, "Location capture failed — try again outdoors with GPS enabled.")
+        .max(90, "Location capture failed — try again outdoors with GPS enabled."),
     longitude: Yup.number()
         .transform((_value, originalValue) => (originalValue === "" ? undefined : Number(originalValue)))
-        .typeError("Longitude must be a valid number.")
-        .required("Valid longitude is required.")
-        .min(-180, "Longitude must be at least -180.")
-        .max(180, "Longitude must be at most 180."),
+        .typeError("Capture your current location to continue.")
+        .required("Capture your current location to continue.")
+        .min(-180, "Location capture failed — try again outdoors with GPS enabled.")
+        .max(180, "Location capture failed — try again outdoors with GPS enabled."),
     locationType: Yup.string().oneOf(["home", "office", "other"]).required(),
     isDefault: Yup.boolean().required(),
 });

@@ -29,9 +29,7 @@ type AssignedRow = {
     startDate: string;
     endDate: string;
     status: "active" | "inactive";
-    paymentStatus: "paid" | "unpaid";
     paymentAmount: number;
-    paymentDate?: string | null;
     assignedBy?: string | null;
     createdAt?: string;
 };
@@ -64,35 +62,43 @@ function getAssignmentMeta(row: AssignedRow) {
     const start = moment(row.startDate).startOf("day");
     const end = moment(row.endDate).endOf("day");
 
-    if (row.status === "inactive" && start.isAfter(today)) {
+    if (row.status === "inactive") {
         return {
-            label: "Queued",
-            variant: "info" as const,
-            note: "Scheduled to start after the current active plan ends.",
+            label: "Not paid",
+            variant: "warning" as const,
+            note: "Payment not captured yet.",
         };
-    }
+    } else {
+        if (start.isAfter(today)) {
+            return {
+                label: "Queued",
+                variant: "info" as const,
+                note: "Scheduled to start after the current active plan ends.",
+            };
+        }
 
-    if (!start.isAfter(today, "day") && !end.isBefore(today, "day") && row.status === "active") {
-        return {
-            label: "Current",
-            variant: "success" as const,
-            note: "Active plan for the provider right now.",
-        };
-    }
+        if (today.isBetween(start, end, null, "[]")) {
+            return {
+                label: "Current",
+                variant: "success" as const,
+                note: "Active plan for the provider right now.",
+            };
+        }
 
-    if (end.isBefore(today)) {
+        if (end.isBefore(today)) {
+            return {
+                label: "Past",
+                variant: "secondary" as const,
+                note: "Completed assignment period.",
+            };
+        }
+
         return {
-            label: "Past",
+            label: "Inactive",
             variant: "secondary" as const,
-            note: "Completed assignment period.",
+            note: "No longer active.",
         };
     }
-
-    return {
-        label: "Inactive",
-        variant: "secondary" as const,
-        note: "No longer active.",
-    };
 }
 
 function normalizeApiFormErrors(data: unknown): Record<string, string> {
@@ -205,7 +211,6 @@ export default function ServiceProviderSubscriptionsPage() {
                             <th className="px-3 py-2">Period</th>
                             <th className="px-3 py-2">Assignment</th>
                             <th className="px-3 py-2">Amount</th>
-                            <th className="px-3 py-2">Payment</th>
                             <th className="px-3 py-2">Status</th>
                             <th className="px-3 py-2">Purchased On</th>
                             <th className="px-3 py-2">Assign By</th>
@@ -235,13 +240,8 @@ export default function ServiceProviderSubscriptionsPage() {
                                     </td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">₹ {Number(row.paymentAmount || 0).toLocaleString("en-IN")}</td>
                                     <td className="px-3 py-2">
-                                        <Badge variant={row.paymentStatus === "paid" ? "success" : "warning"} size="sm" className="capitalize">
-                                            {row.paymentStatus}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-3 py-2">
                                         <Badge variant={row.status === "active" ? "success" : "secondary"} size="sm" className="capitalize">
-                                            {row.status}
+                                            {row.status === "active" ? "Active" : "Un Paid"}
                                         </Badge>
                                     </td>
                                     <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-200">

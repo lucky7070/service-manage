@@ -7,6 +7,7 @@ import { seedOurMilestones } from "./ourMilestone.seeder.js";
 import { seedOurValues } from "./ourValue.seeder.js";
 import { seedFaqs } from "./faq.seeder.js";
 import { seedPredefinedRatingTags } from "./predefinedRatingTag.seeder.js";
+import { seedSubscriptions } from "./subscription.seeder.js";
 
 /**
  * Registered seeders in execution order (dependencies first).
@@ -21,7 +22,8 @@ export const SEEDER_REGISTRY = [
     { name: "ourMilestones", description: "About page milestone timeline", run: seedOurMilestones },
     { name: "ourValues", description: "About page core values", run: seedOurValues },
     { name: "faqs", description: "Frequently asked questions", run: seedFaqs },
-    { name: "predefinedRatingTags", description: "Booking feedback quick tags", run: seedPredefinedRatingTags }
+    { name: "predefinedRatingTags", description: "Booking feedback quick tags", run: seedPredefinedRatingTags },
+    { name: "subscriptions", description: "Provider subscription plans (weekly, monthly, yearly)", run: seedSubscriptions }
 ];
 
 export const SEEDER_NAMES = SEEDER_REGISTRY.map((s) => s.name);

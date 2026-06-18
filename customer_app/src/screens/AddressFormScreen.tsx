@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Formik, FormikErrors } from "formik";
+import * as Location from "expo-location";
 import { useRoute, type RouteProp } from "@react-navigation/native";
-import { createAddress, fetchAddresses, fetchCities, fetchStates, updateAddress, type AddressRow, type SelectOption } from "../api";
+import { createAddress, fetchAddresses, fetchCities, fetchStates, updateAddress, type AddressRow } from "../api";
 import FormField from "../components/form/FormField";
+import LocationCaptureCard from "../components/form/LocationCaptureCard";
+import SearchableSelect, { type SearchOption } from "../components/form/SearchableSelect";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import DetailHeader from "../components/ui/DetailHeader";
-import Input from "../components/ui/Input";
 import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { addressSchema } from "../validation/schemas";
-import { colors, radius, spacing } from "../theme/colors";
+import { colors, radius } from "../theme/colors";
 import { screenStyles } from "../theme/screenStyles";
 
 const locationTypes = ["home", "office", "other"] as const;
@@ -42,6 +44,35 @@ const emptyValues: AddressFormValues = {
     isDefault: false,
 };
 
+async function captureCurrentLocation(
+    setFieldValue: (field: "latitude" | "longitude", value: string) => void,
+    setLocating: (value: boolean) => void,
+) {
+    setLocating(true);
+    try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+            Alert.alert(
+                "Permission needed",
+                "Enable location access in your device settings to pin your service location.",
+            );
+            return;
+        }
+        const position = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+        });
+        void setFieldValue("latitude", String(position.coords.latitude));
+        void setFieldValue("longitude", String(position.coords.longitude));
+    } catch {
+        Alert.alert(
+            "Location unavailable",
+            "Could not read your current location. Move outdoors, enable GPS, and try again.",
+        );
+    } finally {
+        setLocating(false);
+    }
+}
+
 export default function AddressFormScreen() {
     const navigation = useRootNavigation();
     const route = useRoute<RouteProp<MainStackParamList, "AddressForm">>();
@@ -50,13 +81,26 @@ export default function AddressFormScreen() {
 
     const [loading, setLoading] = useState(isEdit);
     const [initialValues, setInitialValues] = useState<AddressFormValues>(emptyValues);
+    const [selectedState, setSelectedState] = useState<SearchOption | null>(null);
+    const [selectedCity, setSelectedCity] = useState<SearchOption | null>(null);
+    const [locating, setLocating] = useState(false);
 
-    const [stateQuery, setStateQuery] = useState("");
-    const [cityQuery, setCityQuery] = useState("");
-    const [stateOptions, setStateOptions] = useState<SelectOption[]>([]);
-    const [cityOptions, setCityOptions] = useState<SelectOption[]>([]);
-    const [selectedState, setSelectedState] = useState<SelectOption | null>(null);
-    const [selectedCity, setSelectedCity] = useState<SelectOption | null>(null);
+    const loadStates = useCallback(async (query: string) => {
+        const response = await fetchStates(query);
+        if (response.status && Array.isArray(response.data)) {
+            return response.data.map((row) => ({ value: row.value, label: row.label }));
+        }
+        return [];
+    }, []);
+
+    const loadCities = useCallback(async (query: string) => {
+        if (!selectedState?.value) return [];
+        const response = await fetchCities(selectedState.value, query);
+        if (response.status && Array.isArray(response.data)) {
+            return response.data.map((row) => ({ value: row.value, label: row.label }));
+        }
+        return [];
+    }, [selectedState?.value]);
 
     useEffect(() => {
         if (!isEdit || !addressId) return;
@@ -84,28 +128,6 @@ export default function AddressFormScreen() {
             setLoading(false);
         })();
     }, [addressId, isEdit]);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            void fetchStates(stateQuery).then((res) => {
-                if (res.status && Array.isArray(res.data)) setStateOptions(res.data);
-            });
-        }, 250);
-        return () => clearTimeout(timer);
-    }, [stateQuery]);
-
-    useEffect(() => {
-        if (!selectedState?.value) {
-            setCityOptions([]);
-            return;
-        }
-        const timer = setTimeout(() => {
-            void fetchCities(selectedState.value, cityQuery).then((res) => {
-                if (res.status && Array.isArray(res.data)) setCityOptions(res.data);
-            });
-        }, 250);
-        return () => clearTimeout(timer);
-    }, [selectedState, cityQuery]);
 
     if (loading) {
         return (
@@ -152,81 +174,55 @@ export default function AddressFormScreen() {
                 {({ values, errors, touched, submitCount, isSubmitting, setFieldValue, handleSubmit }) => (
                     <ScrollView contentContainerStyle={screenStyles.formContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                         <Card large elevated style={screenStyles.formCard}>
-                            <FormField name="addressLine1" label="Address line 1" required placeholder="House number, street" />
-                            <FormField name="addressLine2" label="Address line 2" required placeholder="Area, apartment" />
-                            <FormField name="landmark" label="Landmark" placeholder="Nearby landmark" />
+                            <FormField icon="map" name="addressLine1" label="Address line 1" required placeholder="House number, street" />
+                            <FormField icon="map" name="addressLine2" label="Address line 2" required placeholder="Area, apartment" />
+                            <FormField icon="map" name="landmark" label="Landmark" placeholder="Nearby landmark" />
 
-                            <Input
-                                label="Search state"
-                                required
-                                value={selectedState ? selectedState.label : stateQuery}
-                                onChangeText={(v) => {
-                                    setStateQuery(v);
-                                    setSelectedState(null);
-                                    setSelectedCity(null);
-                                    setCityQuery("");
-                                    void setFieldValue("state", "");
-                                    void setFieldValue("city", "");
-                                }}
-                                placeholder="Type to search state"
-                                error={(touched.state || submitCount > 0) && errors.state ? errors.state : undefined}
-                            />
-                            {!selectedState && stateOptions.length ? (
-                                <View style={styles.optionList}>
-                                    {stateOptions.slice(0, 6).map((opt) => (
-                                        <Pressable
-                                            key={opt.value}
-                                            onPress={() => {
-                                                setSelectedState(opt);
-                                                setStateQuery("");
-                                                setSelectedCity(null);
-                                                void setFieldValue("state", opt.value);
-                                                void setFieldValue("city", "");
-                                            }}
-                                            style={styles.option}
-                                        >
-                                            <Text style={styles.optionText}>{opt.label}</Text>
-                                        </Pressable>
-                                    ))}
-                                </View>
-                            ) : null}
-
-                            <Input
-                                label="Search city"
-                                required
-                                value={selectedCity ? selectedCity.label : cityQuery}
-                                onChangeText={setCityQuery}
-                                placeholder={selectedState ? "Type to search city" : "Select state first"}
-                                editable={Boolean(selectedState)}
-                                error={(touched.city || submitCount > 0) && errors.city ? errors.city : undefined}
-                            />
-                            {selectedState && !selectedCity && cityOptions.length ? (
-                                <View style={styles.optionList}>
-                                    {cityOptions.slice(0, 6).map((opt) => (
-                                        <Pressable
-                                            key={opt.value}
-                                            onPress={() => {
-                                                setSelectedCity(opt);
-                                                setCityQuery("");
-                                                void setFieldValue("city", opt.value);
-                                            }}
-                                            style={styles.option}
-                                        >
-                                            <Text style={styles.optionText}>{opt.label}</Text>
-                                        </Pressable>
-                                    ))}
-                                </View>
-                            ) : null}
-
-                            <FormField name="pincode" label="Pincode" required keyboardType="number-pad" maxLength={6} />
-                            <View style={styles.row}>
-                                <View style={styles.half}>
-                                    <FormField name="latitude" label="Latitude" required keyboardType="decimal-pad" placeholder="26.9124" />
-                                </View>
-                                <View style={styles.half}>
-                                    <FormField name="longitude" label="Longitude" required keyboardType="decimal-pad" placeholder="75.7873" />
-                                </View>
+                            <View style={[styles.selectWrap, styles.selectWrapState]}>
+                                <SearchableSelect
+                                    label="State"
+                                    icon="map-pin"
+                                    placeholder="Search state…"
+                                    value={selectedState}
+                                    onChange={(option) => {
+                                        setSelectedState(option);
+                                        setSelectedCity(null);
+                                        void setFieldValue("state", option?.value || "");
+                                        void setFieldValue("city", "");
+                                    }}
+                                    loadOptions={loadStates}
+                                    error={(touched.state || submitCount > 0) && errors.state ? errors.state : undefined}
+                                    required
+                                />
                             </View>
+
+                            <View style={styles.selectWrap}>
+                                <SearchableSelect
+                                    label="City"
+                                    icon="map-pin"
+                                    placeholder={selectedState ? "Search city…" : "Select state first"}
+                                    value={selectedCity}
+                                    disabled={!selectedState}
+                                    onChange={(option) => {
+                                        setSelectedCity(option);
+                                        void setFieldValue("city", option?.value || "");
+                                    }}
+                                    loadOptions={loadCities}
+                                    error={(touched.city || submitCount > 0) && errors.city ? errors.city : undefined}
+                                    required
+                                />
+                            </View>
+
+                            <FormField icon="navigation" name="pincode" label="Pincode" required keyboardType="number-pad" placeholder="Enter pincode" maxLength={6} />
+                            <LocationCaptureCard
+                                latitude={values.latitude}
+                                longitude={values.longitude}
+                                locating={locating}
+                                onCapture={() => void captureCurrentLocation(setFieldValue, setLocating)}
+                                error={
+                                    submitCount > 0 && (errors.latitude || errors.longitude) ? errors.latitude || errors.longitude : undefined
+                                }
+                            />
 
                             <Text style={styles.groupLabel}>Location type</Text>
                             <View style={styles.typeRow}>
@@ -258,11 +254,8 @@ export default function AddressFormScreen() {
 }
 
 const styles = StyleSheet.create({
-    optionList: { gap: 6, marginTop: -4 },
-    option: { backgroundColor: colors.muted, borderRadius: radius.lg, paddingHorizontal: spacing.md, paddingVertical: 10 },
-    optionText: { fontSize: 14, color: colors.foreground },
-    row: { flexDirection: "row", gap: spacing.sm },
-    half: { flex: 1 },
+    selectWrap: { zIndex: 1 },
+    selectWrapState: { zIndex: 2 },
     groupLabel: { fontSize: 14, fontWeight: "600", color: colors.mutedForeground },
     typeRow: { flexDirection: "row", gap: 8 },
     typeChip: { flex: 1, borderRadius: radius.x2, borderWidth: 1, borderColor: colors.border, paddingVertical: 10, alignItems: "center", backgroundColor: colors.card },

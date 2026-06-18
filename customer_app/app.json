@@ -46,6 +46,12 @@
                 {
                     "color": "#4f46e5"
                 }
+            ],
+            [
+                "expo-location",
+                {
+                    "locationWhenInUsePermission": "Allow Serva Services to use your location to fill in address coordinates."
+                }
             ]
         ]
     }

@@ -3,7 +3,7 @@ import moment from "moment";
 import { config } from "../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../helpers/utils.js";
-import { Booking, ChatMessage, City, ServiceCategory, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
+import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
 import { pickPushFields } from "../helpers/pushFields.js";
 import { sendOTP } from "../libraries/sms.js";
@@ -66,39 +66,54 @@ const bookingAggregation = (filter) => {
 }
 
 const getProfile = async (user) => {
-    const [city, serviceCategory] = await Promise.all([City.findOne({ _id: user.cityId }).lean(), ServiceCategory.findOne({ _id: user.serviceCategoryId }).lean()]);
-    return {
-        _id: user._id,
-        userId: user.userId,
-        name: user.name,
-        mobile: user.mobile,
-        email: user.email,
-        image: user.image,
-        cityId: user.cityId,
-        serviceCategoryId: user.serviceCategoryId,
-        cityName: city?.name || "N/A",
-        serviceCategoryName: serviceCategory?.name || "N/A",
-        panCardNumber: user.panCardNumber,
-        aadharNumber: user.aadharNumber,
-        panCardDocument: user.panCardDocument,
-        aadharDocument: user.aadharDocument,
-        experienceYears: user.experienceYears,
-        experienceDescription: user.experienceDescription,
-        registerFrom: user.registerFrom,
-        profileStatus: user.profileStatus,
-        isVerified: user.isVerified,
-        isActive: user.isActive,
-        lastLogin: user.lastLogin,
-        rejectionReason: user.rejectionReason,
-        approvedAt: user.approvedAt,
-        isAvailable: user.isAvailable,
-        currentLatitude: user.currentLatitude,
-        currentLongitude: user.currentLongitude,
-        totalCompletedServices: user.totalCompletedServices,
-        totalRating: user.totalRating,
-        ratingCount: user.ratingCount,
-    }
-}
+    const todayDate = moment().startOf("day").toDate();
+    const [profile] = await ServiceProvider.aggregate([
+        { $match: { _id: user._id, deletedAt: null } },
+        { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+        { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+        { $unwind: "$city" },
+        { $unwind: "$category" },
+        { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
+        { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
+        {
+            $project: {
+                _id: 1,
+                userId: 1,
+                name: 1,
+                mobile: 1,
+                email: 1,
+                image: 1,
+                cityId: 1,
+                serviceCategoryId: 1,
+                cityName: { $ifNull: ["$city.name", "N/A"] },
+                serviceCategoryName: { $ifNull: ["$category.name", "N/A"] },
+                panCardNumber: 1,
+                aadharNumber: 1,
+                panCardDocument: 1,
+                aadharDocument: 1,
+                experienceYears: 1,
+                experienceDescription: 1,
+                registerFrom: 1,
+                profileStatus: 1,
+                isVerified: 1,
+                isActive: 1,
+                lastLogin: 1,
+                rejectionReason: 1,
+                approvedAt: 1,
+                isAvailable: 1,
+                currentLatitude: 1,
+                currentLongitude: 1,
+                totalCompletedServices: 1,
+                totalRating: 1,
+                ratingCount: 1,
+                activeSubscription: { $ifNull: ["$subscription.voucherNo", null] },
+                activeSubscriptionStartDate: { $ifNull: ["$subscription.startDate", null] },
+                activeSubscriptionEndDate: { $ifNull: ["$subscription.endDate", null] }
+            }
+        }
+    ]);
+    return profile ?? null;
+};
 
 export const sendOtp = async (req, res) => {
     try {
@@ -113,7 +128,7 @@ export const sendOtp = async (req, res) => {
 
         let otp = generateOtp();
         if (mobile === "9876543210") otp = "123456";
-        
+
         const isSent = await sendOTP(mobile, otp);
         if (!isSent) return res.clientError("Failed to send OTP", 502);
 

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { AssignedSubscription, Subscription } from "../models/index.js";
 import { ObjectId } from "../helpers/utils.js";
-import { resolveProviderPurchaseSchedule } from "../helpers/subscriptionAssignment.js";
+import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline } from "../helpers/subscriptionAssignment.js";
 import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature } from "../helpers/razorpay.js";
 
 export const createProviderSubscriptionOrder = async (req, res) => {
@@ -32,8 +32,6 @@ export const createProviderSubscriptionOrder = async (req, res) => {
             startDate,
             endDate,
             status: "inactive",
-            paymentStatus: "unpaid",
-            paymentDate: null,
             paymentAmount,
             paymentGatewayTransactionStatus: "pending",
             assignedBy: null,
@@ -51,7 +49,6 @@ export const createProviderSubscriptionOrder = async (req, res) => {
         });
 
         assignment.paymentGatewayOrderId = razorpayOrder.id;
-        assignment.orderId = razorpayOrder.id;
         await assignment.save({ session });
 
         await session.commitTransaction();
@@ -64,7 +61,6 @@ export const createProviderSubscriptionOrder = async (req, res) => {
             startDate: assignment.startDate,
             endDate: assignment.endDate,
             paymentAmount,
-            paymentStatus: assignment.paymentStatus,
             status: assignment.status,
             razorpayKey: key_id,
             razorpayOrderId: razorpayOrder.id,
@@ -77,6 +73,49 @@ export const createProviderSubscriptionOrder = async (req, res) => {
         return res.someThingWentWrong(error);
     } finally {
         await session.endSession();
+    }
+};
+
+export const listProviderSubscriptionHistory = async (req, res) => {
+    try {
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const sortBy = ["createdAt", "startDate", "endDate", "paymentAmount", "status"].includes(String(req.query.sortBy)) ? String(req.query.sortBy) : "createdAt";
+        const sortOrder = String(req.query.sortOrder || "desc").toLowerCase() === "asc" ? "asc" : "desc";
+
+        const filter = { providerId: req.serviceProvider._id };
+
+        const status = String(req.query.status || "").trim();
+        if (status && ["active", "inactive"].includes(status)) filter.status = status;
+
+        const paymentStatus = String(req.query.paymentStatus || "").trim();
+        if (paymentStatus && ["success", "failed", "pending"].includes(paymentStatus)) {
+            filter.paymentGatewayTransactionStatus = paymentStatus;
+        }
+
+        const source = String(req.query.source || "").trim();
+        if (source === "self") filter.assignedBy = null;
+        if (source === "admin") filter.assignedBy = { $ne: null };
+
+        const pipeline = buildAssignedSubscriptionListPipeline(filter);
+        const totalCountPipeline = [...pipeline, { $count: "total_count" }];
+        const resultsPipeline = [
+            ...pipeline,
+            { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } },
+            { $skip: (pageNo - 1) * limit },
+            { $limit: limit },
+        ];
+
+        const [results, totalCount] = await Promise.all([
+            AssignedSubscription.aggregate(resultsPipeline),
+            AssignedSubscription.aggregate(totalCountPipeline),
+        ]);
+        const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
+
+        if (results.length > 0) return res.pagination(results, total_count, limit, pageNo);
+        return res.datatableNoRecords();
+    } catch (error) {
+        return res.someThingWentWrong(error);
     }
 };
 
@@ -100,7 +139,7 @@ export const updateProviderSubscriptionPayment = async (req, res) => {
             ]);
         }
 
-        const assignment = await AssignedSubscription.findOne({ providerId: provider._id, paymentStatus: "unpaid", paymentGatewayOrderId: razorpayOrderId }).session(session);
+        const assignment = await AssignedSubscription.findOne({ providerId: provider._id, paymentGatewayOrderId: razorpayOrderId }).session(session);
         if (!assignment) {
             if (session.inTransaction()) await session.abortTransaction();
             return res.noRecords();
@@ -145,22 +184,18 @@ export const updateProviderSubscriptionPayment = async (req, res) => {
             assignment.paymentGatewayOrderId = razorpayOrderId;
             assignment.paymentGatewayTransactionStatus = "success";
             assignment.paymentGatewayTransactionMessage = "Payment successful.";
-            assignment.paymentStatus = "paid";
-            assignment.paymentDate = new Date();
-            assignment.status = moment(assignment.startDate).isSame(moment(), "day") ? "active" : "inactive";
+            assignment.status = "active";
             await assignment.save({ session });
             await session.commitTransaction();
 
             return res.successUpdate({
                 assignmentId: assignment._id,
                 voucherNo: assignment.voucherNo,
-                paymentStatus: assignment.paymentStatus,
-                paymentDate: assignment.paymentDate,
                 paymentGatewayTransactionStatus: assignment.paymentGatewayTransactionStatus,
                 status: assignment.status,
                 startDate: assignment.startDate,
                 endDate: assignment.endDate,
-            }, assignment.status === "active" ? "Subscription activated." : "Payment successful. Plan is queued to start on the scheduled date.");
+            }, "Payment successful.");
         } else {
             assignment.paymentGatewayTransactionStatus = "pending";
             assignment.paymentGatewayTransactionMessage = "Payment not captured yet.";

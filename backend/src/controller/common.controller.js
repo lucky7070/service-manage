@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag, Subscription } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
-
+import moment from "moment";
 
 export const listStates = async (req, res) => {
     try {
@@ -198,8 +198,11 @@ export const listServiceProviders = async (req, res) => {
         const filter = { cityId: city._id, serviceCategoryId: serviceCategory._id, deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true };
         if (query) filter.name = { $regex: escapeRegex(String(query)), $options: "i" };
 
+        const todayDate = moment().startOf("day").toDate();
         const pipeline = [
             { $match: filter },
+            { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
+            { $unwind: { path: "$subscription" } },
             {
                 $project: {
                     _id: 1,
@@ -242,12 +245,15 @@ export const getPublicServiceProvider = async (req, res) => {
 
         if (!filter._id && !filter.slug) return res.noRecords();
 
+        const todayDate = moment().startOf("day").toDate();
         const [doc] = await ServiceProvider.aggregate([
             { $match: filter },
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
             { $unwind: { path: "$city" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
             { $unwind: { path: "$serviceCategory" } },
+            { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
+            { $unwind: { path: "$subscription" } },
             {
                 $lookup: {
                     from: "serviceproviderphotos", localField: "_id", foreignField: "providerId", as: "photos",

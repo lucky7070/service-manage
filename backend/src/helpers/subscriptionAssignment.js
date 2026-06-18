@@ -29,3 +29,31 @@ export const resolveProviderPurchaseSchedule = async (providerId, plan, session)
     const endDate = computeSubscriptionEndDate(startDate, plan.interval, plan.intervalCount);
     return { startDate, endDate };
 };
+
+export const buildAssignedSubscriptionListPipeline = (match) => [
+    { $match: match },
+    { $lookup: { from: "subscriptions", localField: "subscriptionId", foreignField: "_id", as: "plan" } },
+    { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
+    {
+        $project: {
+            _id: 1,
+            voucherNo: 1,
+            subscriptionId: 1,
+            startDate: 1,
+            endDate: 1,
+            status: 1,
+            paymentAmount: 1,
+            paymentGatewayTransactionStatus: 1,
+            paymentGatewayTransactionMessage: 1,
+            assignedBy: 1,
+            createdAt: 1,
+            source: { $cond: [{ $ifNull: ["$assignedBy", false] }, "admin", "self"] },
+            planName: { $ifNull: ["$plan.name", ""] },
+            planCode: { $ifNull: ["$plan.subscriptionId", ""] },
+            planPrice: { $ifNull: ["$plan.price", 0] },
+            planInterval: { $ifNull: ["$plan.interval", ""] },
+            planIntervalCount: { $ifNull: ["$plan.intervalCount", 1] },
+            planImage: { $ifNull: ["$plan.image", ""] },
+        },
+    },
+];

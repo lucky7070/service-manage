@@ -8,3 +8,4 @@ export { seedOurMilestones, SEED_OUR_MILESTONES } from "./ourMilestone.seeder.js
 export { seedOurValues, SEED_OUR_VALUES } from "./ourValue.seeder.js";
 export { seedFaqs, SEED_FAQS } from "./faq.seeder.js";
 export { seedPredefinedRatingTags, SEED_PREDEFINED_RATING_TAGS } from "./predefinedRatingTag.seeder.js";
+export { seedSubscriptions, SEED_SUBSCRIPTIONS } from "./subscription.seeder.js";

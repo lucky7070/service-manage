@@ -1,5 +1,5 @@
 import moment from "moment";
-import { Address, Booking, ChatMessage, City, Customer, Ledger, Notification, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../models/index.js";
+import { Address, Booking, ChatMessage, City, AssignedSubscription, Ledger, Notification, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../models/index.js";
 import { parseBookingChatPayload } from "../helpers/bookingChat.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../helpers/bookingRating.js";
@@ -244,6 +244,10 @@ export const createCustomerBooking = async (req, res) => {
         const customerId = req.customer._id;
         const provider = await ServiceProvider.findOne({ _id: ObjectId(req.body.providerId), deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true });
         if (!provider) return res.noRecords(false, "Service provider not found.");
+
+        const todayDate = moment().startOf("day").toDate();
+        const subscription = await AssignedSubscription.findOne({ providerId: provider._id, status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } });
+        if (!subscription) return res.clientError("Provider is not active. Please contact support.", 400);
 
         const selectedServiceTypeIds = [...new Set((req.body.serviceTypeId || []).map((value) => String(value)))].map((value) => ObjectId(value)).filter(Boolean);
         if (!selectedServiceTypeIds.length) return res.clientError("At least one service type is required.", 422, [{ field: "serviceTypeId", message: "At least one service type is required." }]);

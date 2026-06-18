@@ -56,7 +56,7 @@ const COLLECTION_DESCRIPTION = [
     "4. **On site:** `POST .../start` (when status `confirmed` and price agreed).",
     "5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.",
     "6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.",
-    "7. **Subscription purchase:** **`GET /subscriptions-list`** (public plans) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**.",
+    "7. **Subscription purchase history:** **`GET /subscriptions-list`** (public plans) → **`GET /service-provider/subscriptions`** (your plan history) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**.",
     "8. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.",
     "9. **Sockets:** join with `role: \"provider\"`.",
     "",
@@ -471,10 +471,14 @@ const serviceProvider = [
         description: "Replace orderedIds with all work photo `_id` values in display order.",
     }),
     req("Delete work photo (auth)", "DELETE", `/service-provider/work-photos/${OID}`),
+    req("Subscription plan history (auth)", "GET", "/service-provider/subscriptions?pageNo=1&limit=10", {
+        description:
+            "Paginated assigned plans for the logged-in provider. Optional query: **`status`** (`active`|`inactive`), **`paymentStatus`** (`success`|`failed`|`pending`), **`source`** (`self`|`admin`), **`sortBy`** (`createdAt`|`startDate`|`endDate`|`paymentAmount`|`status`), **`sortOrder`** (`asc`|`desc`).",
+    }),
     req("Purchase subscription plan — create Razorpay order (auth)", "POST", "/service-provider/subscriptions/purchase", {
         body: { subscriptionId: OID },
         description:
-            "Creates **`AssignedSubscription`** with **`paymentStatus: unpaid`**, **`status: inactive`**, **`paymentGatewayTransactionStatus: pending`**, and a Razorpay order for **`plan.price`**. Response includes **`razorpayKey`**, **`razorpayOrderId`**, **`amountInPaise`**, **`assignmentId`** for checkout. Requires Razorpay keys in admin settings.",
+            "Creates **`AssignedSubscription`** with **`status: inactive`**, **`paymentGatewayTransactionStatus: pending`**, and a Razorpay order for **`plan.price`**. Response includes **`razorpayKey`**, **`razorpayOrderId`**, **`amountInPaise`**, **`assignmentId`** for checkout. Requires Razorpay keys in admin settings.",
     }),
     req("Verify subscription payment after Razorpay checkout (auth)", "POST", "/service-provider/subscriptions/purchase/payment", {
         body: {
@@ -483,7 +487,7 @@ const serviceProvider = [
             razorpay_signature: "signature_from_checkout",
         },
         description:
-            "Send Razorpay checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`** (all required). Assignment is matched by logged-in provider + **`paymentGatewayOrderId`**. Server verifies signature, fetches payment from Razorpay, checks amount (paise) and **`captured`** status. On success: **`paymentStatus: paid`**, **`status: active`** when start date is today else queued **`inactive`**. Invalid signature / failed / amount mismatch / not captured → **422**.",
+            "Send Razorpay checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`** (all required). Assignment is matched by logged-in provider + **`paymentGatewayOrderId`**. Server verifies signature, fetches payment from Razorpay, checks amount (paise) and **`captured`** status. On success: **`paymentGatewayTransactionStatus: success`**, **`status: active`** when start date is today else queued **`inactive`**. Invalid signature / failed / amount mismatch / not captured → **422**.",
     }),
 ];
 
@@ -714,7 +718,7 @@ const admin = [
     req("Assign subscription to provider", "POST", "/admin/service-providers/:id/subscriptions", {
         body: { subscriptionId: OID },
         description:
-            "Admin assign only **`subscriptionId`**. Start/end dates and status are computed automatically (queue after current active plan if any). **`paymentStatus`** defaults to **`unpaid`**; **`paymentAmount`** from plan price.",
+            "Admin assign only **`subscriptionId`**. Start/end dates and status are computed automatically (queue after current active plan if any). **`paymentAmount`** from plan price.",
     }),
     req("Create rating tag", "POST", "/admin/rating-tags", {
         body: { tagFor: "customer", tagName: "Punctual", tagType: "positive", status: 1 },

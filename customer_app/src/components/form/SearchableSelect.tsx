@@ -17,6 +17,7 @@ type SearchableSelectProps = {
     loadOptions: (query: string) => Promise<SearchOption[]>;
     error?: string;
     required?: boolean;
+    disabled?: boolean;
     icon?: keyof typeof Feather.glyphMap;
 };
 
@@ -28,6 +29,7 @@ export default function SearchableSelect({
     loadOptions,
     error,
     required,
+    disabled = false,
     icon = "search",
 }: SearchableSelectProps) {
     const [query, setQuery] = useState(value?.label || "");
@@ -41,7 +43,7 @@ export default function SearchableSelect({
     }, [value?.value, value?.label]);
 
     useEffect(() => {
-        if (!open) return;
+        if (!open || disabled) return;
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             void (async () => {
@@ -57,9 +59,10 @@ export default function SearchableSelect({
         return () => {
             if (debounceRef.current) clearTimeout(debounceRef.current);
         };
-    }, [open, query, loadOptions]);
+    }, [open, query, loadOptions, disabled]);
 
     const onSelect = (option: SearchOption) => {
+        if (disabled) return;
         onChange(option);
         setQuery(option.label);
         setOpen(false);
@@ -71,28 +74,34 @@ export default function SearchableSelect({
                 {label}
                 {required ? <Text style={styles.required}> *</Text> : null}
             </Text>
-            <View style={[styles.field, error ? styles.fieldError : null]}>
+            <View style={[styles.field, error ? styles.fieldError : null, disabled ? styles.fieldDisabled : null]}>
                 <Feather name={icon} size={16} color={colors.mutedForeground} />
                 <TextInput
                     value={query}
+                    editable={!disabled}
                     onChangeText={(text) => {
+                        if (disabled) return;
                         setQuery(text);
                         if (value && text !== value.label) onChange(null);
                         setOpen(true);
                     }}
-                    onFocus={() => setOpen(true)}
+                    onFocus={() => {
+                        if (!disabled) setOpen(true);
+                    }}
                     placeholder={placeholder}
                     placeholderTextColor={colors.mutedForeground}
                     style={styles.input}
                 />
-                {value ? (
+                {value && !disabled ? (
                     <Pressable onPress={() => { onChange(null); setQuery(""); setOpen(true); }} hitSlop={8}>
                         <Feather name="x-circle" size={18} color={colors.mutedForeground} />
                     </Pressable>
-                ) : null}
+                ) : (
+                    <Feather name={open ? "chevron-up" : "chevron-down"} size={18} color={colors.mutedForeground} />
+                )}
             </View>
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            {open ? (
+            {open && !disabled ? (
                 <View style={styles.dropdown}>
                     {loading ? (
                         <View style={styles.loader}><ActivityIndicator color={colors.primary} /></View>
@@ -129,6 +138,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     fieldError: { borderColor: colors.destructive },
+    fieldDisabled: { backgroundColor: colors.muted, opacity: 0.85 },
     input: { flex: 1, fontSize: 16, color: colors.foreground, paddingVertical: 10 },
     error: { fontSize: 12, color: colors.rose },
     dropdown: {
