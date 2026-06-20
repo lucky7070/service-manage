@@ -3,7 +3,7 @@ import moment from "moment";
 import { config } from "../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../helpers/utils.js";
-import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto } from "../models/index.js";
+import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City } from "../models/index.js";
 import { deleteFile } from "../libraries/storage.js";
 import { pickPushFields } from "../helpers/pushFields.js";
 import { sendOTP } from "../libraries/sms.js";
@@ -204,10 +204,17 @@ export const register = async (req, res) => {
             return res.clientError("This Aadhar number is already registered.", 409, [{ field: "aadharNumber", message: "Aadhar already registered." }]);
         }
 
+        const checkServiceCategory = await ServiceCategory.findOne({ _id: ObjectId(serviceCategoryId), deletedAt: null });
+        if (!checkServiceCategory) return res.clientError("Service category not found.", 404);
+
+        const checkCity = await City.findOne({ _id: ObjectId(cityId), deletedAt: null });
+        if (!checkCity) return res.clientError("City not found.", 404);
+
         const files = req.files || {};
         const image = `/service-provider/${files?.image?.[0]?.filename}`;
         const panCardDocument = `/service-provider/${files?.panCardDocument?.[0]?.filename}`;
         const aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
+        if(!image || !panCardDocument || !aadharDocument) return res.clientError("All images and documents are required.", 422);
 
         await ServiceProvider.create({
             name: String(name).trim(),

@@ -14,7 +14,6 @@ import { errorHandler, notFound } from "./middlewares/errorHandler.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.TZ = config.timeZone;
-moment.tz.setDefault(config.timeZone);
 
 const app = express();
 app.disable('x-powered-by');
