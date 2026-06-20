@@ -5,6 +5,7 @@ export const config = {
     baseUrl: String(process.env.BASE_URL || ""),
     port: Number(process.env.PORT || 5000),
     mongoUri: String(process.env.MONGO_URI),
+    timeZone: String(process.env.TIME_ZONE || "Asia/Kolkata"),
     jwtSecret: String(process.env.JWT_SECRET),
     customerJwtSecret: String(process.env.CUSTOMER_JWT_SECRET),
     serviceProviderJwtSecret: String(process.env.SERVICE_PROVIDER_JWT_SECRET),
