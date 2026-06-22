@@ -73,7 +73,17 @@ const getProfile = async (user) => {
         { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
         { $unwind: "$city" },
         { $unwind: "$category" },
-        { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
+        {
+            $lookup: {
+                from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [
+                    { $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } },
+                    { $lookup: { from: "subscriptions", localField: "subscriptionId", foreignField: "_id", as: "plan" } },
+                    { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
+                    { $sort: { createdAt: -1 } },
+                    { $limit: 1 },
+                ]
+            }
+        },
         { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
         {
             $project: {
@@ -108,7 +118,10 @@ const getProfile = async (user) => {
                 ratingCount: 1,
                 activeSubscription: { $ifNull: ["$subscription.voucherNo", null] },
                 activeSubscriptionStartDate: { $ifNull: ["$subscription.startDate", null] },
-                activeSubscriptionEndDate: { $ifNull: ["$subscription.endDate", null] }
+                activeSubscriptionEndDate: { $ifNull: ["$subscription.endDate", null] },
+                activeSubscriptionName: { $ifNull: ["$subscription.plan.name", null] },
+                activeSubscriptionId: { $ifNull: ["$subscription.subscriptionId", null] },
+                activeSubscriptionPrice: { $ifNull: ["$subscription.paymentAmount", null] },
             }
         }
     ]);
@@ -214,7 +227,7 @@ export const register = async (req, res) => {
         const image = `/service-provider/${files?.image?.[0]?.filename}`;
         const panCardDocument = `/service-provider/${files?.panCardDocument?.[0]?.filename}`;
         const aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
-        if(!image || !panCardDocument || !aadharDocument) return res.clientError("All images and documents are required.", 422);
+        if (!image || !panCardDocument || !aadharDocument) return res.clientError("All images and documents are required.", 422);
 
         await ServiceProvider.create({
             name: String(name).trim(),
