@@ -46,7 +46,11 @@ export const axiosResponse = (data: unknown, status: number = 200): AxiosRespons
 export const errorData = (error: AxiosError): AxiosResponse<unknown> => {
     if (env.logErrorsInConsole) console.log(error?.response);
     if (["ERR_NETWORK", "ECONNREFUSED", "ECONNABORTED"].includes(error.code ?? "")) {
-        return axiosResponse({ status: false, message: error.message || "Something went wrong..!!", data: error }, 500);
+        return axiosResponse({
+            status: false,
+            message: "Could not reach the server. Check your internet connection and try again.",
+            data: error,
+        }, 500);
     }
 
     if (typeof error === "string") {
