@@ -1,0 +1,32 @@
+// Source-controlled release signing helper (copied to android/app/ on prebuild).
+// Reads credentials.json at project root (EAS export) or SERVA_UPLOAD_* in gradle.properties.
+
+ext.resolveUploadKeystore = {
+    def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+
+    def storeRel = findProperty('SERVA_UPLOAD_STORE_FILE')
+    if (storeRel) {
+        return [
+            storeFile: file(storeRel),
+            storePassword: findProperty('SERVA_UPLOAD_STORE_PASSWORD'),
+            keyAlias: findProperty('SERVA_UPLOAD_KEY_ALIAS'),
+            keyPassword: findProperty('SERVA_UPLOAD_KEY_PASSWORD'),
+        ]
+    }
+
+    def credFile = new File(projectRoot, "credentials.json")
+    if (credFile.exists()) {
+        def creds = new groovy.json.JsonSlurper().parse(credFile)
+        def ks = creds?.android?.keystore
+        if (ks?.keystorePath) {
+            return [
+                storeFile: new File(projectRoot, ks.keystorePath as String),
+                storePassword: ks.keystorePassword as String,
+                keyAlias: ks.keyAlias as String,
+                keyPassword: ks.keyPassword as String,
+            ]
+        }
+    }
+
+    return null
+}

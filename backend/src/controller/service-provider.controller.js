@@ -273,8 +273,7 @@ export const getServiceProviderDashboard = async (req, res) => {
         const providerId = req.serviceProvider._id;
 
         const pipeline = bookingAggregation({ providerId, deletedAt: null });
-        const [workPhotoCount, statusRows, recentBookings] = await Promise.all([
-            ServiceProviderPhoto.countDocuments({ providerId }),
+        const [statusRows, recentBookings] = await Promise.all([
             Booking.aggregate([{ $match: { providerId, deletedAt: null } }, { $group: { _id: "$status", count: { $sum: 1 } } }]),
             Booking.aggregate(pipeline.concat({ $sort: { createdAt: -1 } }, { $limit: 5 }))
         ]);
@@ -285,13 +284,14 @@ export const getServiceProviderDashboard = async (req, res) => {
             confirmed: 0,
             in_progress: 0,
             completed: 0,
-            cancelled: 0
+            cancelled: 0,
+            price_pending: 0
         };
         statusRows.forEach((row) => {
             bookingStats[row._id] = row.count;
         });
 
-        return res.success({ profile: await getProfile(req.serviceProvider), workPhotoCount, bookingStats, recentBookings });
+        return res.success({ profile: await getProfile(req.serviceProvider), bookingStats, recentBookings });
     } catch (error) {
         return res.someThingWentWrong(error);
     }

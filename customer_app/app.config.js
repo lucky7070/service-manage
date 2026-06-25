@@ -23,6 +23,10 @@ module.exports = {
     expo: {
         ...appJson.expo,
         android,
+        plugins: [
+            ...(appJson.expo.plugins ?? []),
+            "./plugins/withAndroidReleaseSigning",
+        ],
         extra: {
             appEnv: isProduction ? "production" : "development",
             hasGoogleServices,
