@@ -118,6 +118,7 @@ export const notifyBookingChatMessage = async ({ booking, message, senderType, s
             type: "chat",
             relatedId: booking._id,
             data: {
+                senderName: name,
                 bookingId: String(booking._id),
                 bookingNumber: String(bookingNumber),
                 senderType: String(senderType),
