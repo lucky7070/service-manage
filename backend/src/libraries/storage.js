@@ -11,17 +11,10 @@ const wrapMulter = (middleware, fallbackField = 'file') => (req, res, next) => {
 
         if (err.code === 'LIMIT_FILE_SIZE') {
             const field = err.field || fallbackField;
-            req.fileValidationError[field] = language.FILE_TOO_LARGE;
-            if (Object.entries(req.fileValidationError || {}).length) {
-                return res.status(422).json({
-                    status: false,
-                    message: language.REQUIRED_PARAMETER_MISSING,
-                    data: req.fileValidationError
-                });
-            }
+            req.addFileValidationError(field, language.FILE_TOO_LARGE);
         }
 
-        return next(err);
+        return next();
     });
 };
 
@@ -35,23 +28,22 @@ export const Storage = class {
 
             const isValidImage = SUPPORTED_FORMATS_IMAGE.includes(file.mimetype);
             const isValidDoc = SUPPORTED_FORMATS_DOC.includes(file.mimetype);
-            if (!req.fileValidationError) req.fileValidationError = {};
 
             // Accept either image or document when both flags are enabled.
             if (isImage && isDoc && !isValidImage && !isValidDoc) {
-                req.fileValidationError[file.fieldname] = 'Please select only image or document file..!!';
+                req.addFileValidationError(file.fieldname, 'Please select only image or document file..!!');
                 return cb(null, false, new Error('Please select only image or document file..!!'));
             }
 
             // Accept only image when only image uploads are enabled.
             if (isImage && !isDoc && !isValidImage) {
-                req.fileValidationError[file.fieldname] = 'Please select only Image Only..!!';
+                req.addFileValidationError(file.fieldname, 'Please select only Image Only..!!');
                 return cb(null, false, new Error('Please select only Image Only..!!'));
             }
 
             // Accept only document when only doc uploads are enabled.
             if (!isImage && isDoc && !isValidDoc) {
-                req.fileValidationError[file.fieldname] = 'Please select document file Only..!!';
+                req.addFileValidationError(file.fieldname, 'Please select document file Only..!!');
                 return cb(null, false, new Error('Please select document file Only..!!'));
             }
 

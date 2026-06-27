@@ -27,6 +27,11 @@ export const customMethods = (req, res, next) => {
         return output;
     };
 
+    req.addFileValidationError = function addFileValidationError(field, message) {
+        if (!req.fileValidationError || typeof req.fileValidationError !== 'object') req.fileValidationError = {};
+        req.fileValidationError[field] = message;
+    };
+
     res.noRecords = function noRecords(status = false, message = null) {
         return this.status(404).json({
             status,
@@ -86,10 +91,15 @@ export const customMethods = (req, res, next) => {
 
     res.clientError = function clientError(message = language.SOMETHING_WENT_WRONG, statusCode = 400, data = []) {
         const code = Number.isFinite(Number(statusCode)) && Number(statusCode) >= 400 && Number(statusCode) < 600 ? Math.trunc(Number(statusCode)) : 400;
+        let payload = Array.isArray(data) ? data : [];
+
+        const errors = payload.filter((row) => row.field && row.message);
+        if (errors.length) payload = errors.reduce((acc, row) => ({ ...acc, [row.field]: row.message }), {});
+
         return this.status(code).json({
             status: false,
             message,
-            data: Array.isArray(data) ? data : []
+            data: payload
         });
     };
 

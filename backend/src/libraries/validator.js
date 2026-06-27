@@ -107,16 +107,19 @@ const viewCount = check("viewCount", "View count must be 0 or greater.").optiona
 const cityId = check("cityId", "City ID is required.").trim().notEmpty().isMongoId();
 const serviceCategoryId = check("serviceCategoryId", "Service category is required.").trim().notEmpty().isMongoId();
 const image = check("image", "Profile image is required.").custom((value, { req }) => {
+    if (Object.keys(req.fileValidationError || {}).length) return true;
     if (!req.params?.id && !req.files?.image?.[0]?.filename) throw new Error("Profile image is required.");
     return true;
 });
 
 const panCardDocument = check("panCardDocument", "PAN card document is required.").custom((value, { req }) => {
+    if (Object.keys(req.fileValidationError || {}).length) return true;
     if (!req.params?.id && !req.files?.panCardDocument?.[0]?.filename) throw new Error("PAN card document is required.");
     return true;
 });
 
 const aadharDocument = check("aadharDocument", "Aadhar document is required.").custom((value, { req }) => {
+    if (Object.keys(req.fileValidationError || {}).length) return true;
     if (!req.params?.id && !req.files?.aadharDocument?.[0]?.filename) throw new Error("Aadhar document is required.");
     return true;
 });

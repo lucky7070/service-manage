@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead } from "../controller/provider/service-provider.controller.js";
-import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/provider/service-provider-services.controller.js";
-import { createProviderSubscriptionOrder, listProviderSubscriptionHistory, updateProviderSubscriptionPayment } from "../controller/provider/providerSubscription.controller.js";
+import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead } from "../controller/provider/auth.controller.js";
+import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/provider/services.controller.js";
+import { createProviderSubscriptionOrder, listProviderSubscriptionHistory, updateProviderSubscriptionPayment } from "../controller/provider/subscription.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
