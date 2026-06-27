@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { sendOtp, register, profile, updateProfile, updateCustomerProfileImage, logout, deleteCustomerAccount } from "../controller/auth.controller.js";
-import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, createCustomerServiceLead, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, getCustomerNotificationUnreadCount, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, listCustomerNotifications, listCustomerServiceLeads, markAllCustomerNotificationsRead, markCustomerNotificationRead, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer.controller.js";
+import { sendOtp, register, profile, updateProfile, updateCustomerProfileImage, logout, deleteCustomerAccount } from "../controller/customer/auth.controller.js";
+import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, createCustomerServiceLead, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, getCustomerNotificationUnreadCount, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, listCustomerNotifications, listCustomerServiceLeads, markAllCustomerNotificationsRead, markCustomerNotificationRead, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer/customer.controller.js";
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { validator } from "../libraries/validator.js";
-import { customerStorage, bookingChatStorage } from "./admin/storages.js";
+import { customerStorage, bookingChatStorage } from "./storages.js";
 
 const router = Router();
 

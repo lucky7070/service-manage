@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getSettings, updateSettingsByType } from "../../controller/admin/setting.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { appSettingStorage } from "./storages.js";
+import { appSettingStorage } from "../storages.js";
 
 const router = Router();
 

@@ -1,6 +1,6 @@
-import { ProviderService } from "../models/index.js";
-import { ObjectId } from "../helpers/utils.js";
-import { aggregateProviderServices, listActiveServiceTypesForCategory, loadServiceTypeForProviderCategory, parseProviderServicePrice } from "../helpers/providerServiceOps.js";
+import { ProviderService } from "../../models/index.js";
+import { ObjectId } from "../../helpers/utils.js";
+import { aggregateProviderServices, listActiveServiceTypesForCategory, loadServiceTypeForProviderCategory, parseProviderServicePrice } from "../../helpers/providerServiceOps.js";
 
 const providerSummary = (sp) => ({
     _id: sp._id,

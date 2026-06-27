@@ -5,7 +5,7 @@ import { Button, Input, Label, OtpField, Textarea, FrontAsyncSelect } from "@/co
 import * as Yup from "yup"
 import { toast } from "react-toastify";
 import AxiosHelper from "@/helpers/AxiosHelper"
-import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
+import { AlLOWED_SIZE_MB, DOCUMENT_MIME_TYPES, IMAGE_MIME_TYPES, OTP_REGEXP, PHONE_REGEXP } from "@/config";
 import { useMemo, useState } from "react"
 import { ArrowRight } from "lucide-react";
 
@@ -44,9 +44,42 @@ const ProRegistrationForm = () => {
             aadharNumber: Yup.string().trim().matches(/^[0-9]{12}$/, "Aadhar must be exactly 12 digits.").required("Aadhar number is required."),
             experienceYears: Yup.number().typeError("Experience years must be numeric.").min(0, "Experience must be 0 or more.").max(80, "Experience cannot exceed 80 years.").required("Experience years is required."),
             experienceDescription: Yup.string().trim().max(5000, "Description is too long."),
-            image: Yup.mixed().required("Profile image is required."),
-            panCardDocument: Yup.mixed().required("PAN card document is required."),
-            aadharDocument: Yup.mixed().required("Aadhar document is required.")
+            image: Yup.mixed().required("Profile image is required.").test("file-type", "Profile image must be JPEG, PNG, WebP, or GIF.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return IMAGE_MIME_TYPES.includes(value.type as typeof IMAGE_MIME_TYPES[number]);
+            }).test("file-size", "Profile image must be less than 5MB.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
+            }),
+            panCardDocument: Yup.mixed().required("PAN card document is required.").test("file-type", "PAN card document must be JPEG, PNG, WebP, or GIF, or PDF.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return DOCUMENT_MIME_TYPES.includes(value.type as typeof DOCUMENT_MIME_TYPES[number]);
+            }).test("file-size", "PAN card document must be less than 5MB.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
+            }),
+            aadharDocument: Yup.mixed().required("Aadhar document is required.").test("file-type", "Aadhar document must be JPEG, PNG, WebP, or GIF, or PDF.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return DOCUMENT_MIME_TYPES.includes(value.type as typeof DOCUMENT_MIME_TYPES[number]);
+            }).test("file-size", "Aadhar document must be less than 5MB.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
+            }),
+            policeVerification: Yup.mixed().nullable().optional().test("file-type", "Police verification document must be JPEG, PNG, WebP, or GIF, or PDF.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return DOCUMENT_MIME_TYPES.includes(value.type as typeof DOCUMENT_MIME_TYPES[number]);
+            }).test("file-size", "Police verification document must be less than 5MB.", (value) => {
+                if (value == null || value === "") return true;
+                if (!(value instanceof File)) return false;
+                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
+            }),
         };
         if (step === "details") {
             return Yup.object(base);
@@ -87,10 +120,11 @@ const ProRegistrationForm = () => {
                 image: null,
                 panCardDocument: null,
                 aadharDocument: null,
+                policeVerification: null,
                 otp: ""
             }}
             validationSchema={validationSchema}
-            onSubmit={async (values, { resetForm, setFieldValue }) => {
+            onSubmit={async (values, { resetForm, setFieldValue, setErrors }) => {
                 if (step === "details") {
                     await sendOtp(values.mobile, (otp) => { setFieldValue("otp", otp); });
                     return;
@@ -105,6 +139,7 @@ const ProRegistrationForm = () => {
                     setStep("details");
                 } else {
                     toast.error(data?.message || "Unable to submit register.");
+                    setErrors(data?.data || {});
                 }
             }}
         >
@@ -199,6 +234,11 @@ const ProRegistrationForm = () => {
                             <Label required>Aadhar Document</Label>
                             <Input type="file" accept="image/*,application/pdf" disabled={locked} onChange={(e) => setFieldValue("aadharDocument", e.currentTarget.files?.[0] ?? null)} />
                             <ErrorMessage name="aadharDocument" component="small" className="mt-1 block text-xs text-rose-600" />
+                        </div>
+                        <div>
+                            <Label>Police Verification <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                            <Input type="file" accept="image/*,application/pdf" disabled={locked} onChange={(e) => setFieldValue("policeVerification", e.currentTarget.files?.[0] ?? null)} />
+                            <ErrorMessage name="policeVerification" component="small" className="mt-1 block text-xs text-rose-600" />
                         </div>
                         {step === "otp" ? (
                             <div className="col-span-1 md:col-span-2 rounded-lg border border-border bg-muted/30 p-4">

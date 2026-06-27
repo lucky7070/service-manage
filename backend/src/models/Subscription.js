@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { orderId, slugify, generateOtp } from "../helpers/utils.js";
 import { Counter } from "./Counter.js";
+import { config } from "../config/index.js";
 
 const Schema = new mongoose.Schema(
     {
@@ -20,7 +21,7 @@ const Schema = new mongoose.Schema(
         isActive: { type: Boolean, default: true },
         deletedAt: { type: Date, default: null }
     },
-    { timestamps: true }
+    { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 Schema.pre("save", async function onSave(next) {
@@ -33,5 +34,8 @@ Schema.pre("save", async function onSave(next) {
 
     next();
 });
+
+Schema.virtual("taxPercentage").get(() => config.taxPercentage || 0);
+Schema.virtual("priceWithTax").get(function () { return this.price + (this.price * (this.taxPercentage || 0) / 100); });
 
 export const Subscription = mongoose.model("Subscription", Schema);

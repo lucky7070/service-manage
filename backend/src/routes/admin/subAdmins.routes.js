@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { listAdmins, createAdmin, updateAdmin, deleteAdmin, getSingleAdmin, addAdminPermission } from "../../controller/admin/subAdmin.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { adminStorage } from "./storages.js";
+import { adminStorage } from "../storages.js";
 
 const router = Router();
 

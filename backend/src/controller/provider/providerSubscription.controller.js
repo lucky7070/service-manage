@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { AssignedSubscription, Subscription } from "../models/index.js";
-import { ObjectId } from "../helpers/utils.js";
-import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline } from "../helpers/subscriptionAssignment.js";
-import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature } from "../helpers/razorpay.js";
+import { AssignedSubscription, Subscription } from "../../models/index.js";
+import { ObjectId } from "../../helpers/utils.js";
+import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline } from "../../helpers/subscriptionAssignment.js";
+import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature } from "../../helpers/razorpay.js";
 
 export const createProviderSubscriptionOrder = async (req, res) => {
     const session = await mongoose.startSession();
@@ -11,13 +11,13 @@ export const createProviderSubscriptionOrder = async (req, res) => {
         await session.startTransaction();
 
         const provider = req.serviceProvider;
-        const plan = await Subscription.findOne({ _id: ObjectId(req.body.subscriptionId), deletedAt: null, isActive: true }).session(session).lean();
+        const plan = await Subscription.findOne({ _id: ObjectId(req.body.subscriptionId), deletedAt: null, isActive: true }).session(session);
         if (!plan) {
             if (session.inTransaction()) await session.abortTransaction();
             return res.clientError("Active subscription plan not found.", 422, [{ field: "subscriptionId", message: "Active subscription plan not found." }]);
         }
 
-        const paymentAmount = Number(plan.price) || 0;
+        const paymentAmount = Number(plan.priceWithTax) || 0;
         if (paymentAmount <= 0) {
             if (session.inTransaction()) await session.abortTransaction();
             return res.clientError("Plan price must be greater than 0.", 422, [{ field: "subscriptionId", message: "Plan price must be greater than 0." }]);
@@ -32,6 +32,9 @@ export const createProviderSubscriptionOrder = async (req, res) => {
             startDate,
             endDate,
             status: "inactive",
+            amount: Number(plan.price) || 0,
+            taxAmount: Number(plan.price) * (plan.taxPercentage || 0) / 100,
+            taxPercentage: plan.taxPercentage || 0,
             paymentAmount,
             paymentGatewayTransactionStatus: "pending",
             assignedBy: null,

@@ -9,7 +9,8 @@ const language = {
     FORBIDDEN: "Forbidden",
     INVALID_TOKEN: "Invalid token",
     REQUIRED_PARAMETER_MISSING: "Required parameter missing",
-    MISSING_REQUIRED_FIELDS: "Please fill all required fields."
+    MISSING_REQUIRED_FIELDS: "Please fill all required fields.",
+    FILE_TOO_LARGE: "Uploaded file is too large to upload."
 };
 
 export default language;

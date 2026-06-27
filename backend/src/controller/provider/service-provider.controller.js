@@ -1,17 +1,17 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
-import { config } from "../config/index.js";
-import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
-import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../helpers/utils.js";
-import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City } from "../models/index.js";
-import { deleteFile } from "../libraries/storage.js";
-import { pickPushFields } from "../helpers/pushFields.js";
-import { sendOTP } from "../libraries/sms.js";
-import { refreshCustomerAverageRating, resolveQuickTagIds } from "../helpers/bookingRating.js";
-import { parseBookingChatPayload } from "../helpers/bookingChat.js";
-import { getSettings } from "../helpers/database.js";
-import { bookingStatusMail } from "../libraries/mail.js";
-import { notifyBookingChatMessage, notifyBookingQuoteSent, notifyBookingStatusChange } from "../helpers/bookingNotifications.js";
+import { config } from "../../config/index.js";
+import { JWT_CONFIG, PHONE_REGEXP } from "../../config/constants.js";
+import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../../helpers/utils.js";
+import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City } from "../../models/index.js";
+import { deleteFile } from "../../libraries/storage.js";
+import { pickPushFields } from "../../helpers/pushFields.js";
+import { sendOTP } from "../../libraries/sms.js";
+import { refreshCustomerAverageRating, resolveQuickTagIds } from "../../helpers/bookingRating.js";
+import { parseBookingChatPayload } from "../../helpers/bookingChat.js";
+import { getSettings } from "../../helpers/database.js";
+import { bookingStatusMail } from "../../libraries/mail.js";
+import { notifyBookingChatMessage, notifyBookingQuoteSent, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -101,6 +101,7 @@ const getProfile = async (user) => {
                 aadharNumber: 1,
                 panCardDocument: 1,
                 aadharDocument: 1,
+                policeVerification: 1,
                 experienceYears: 1,
                 experienceDescription: 1,
                 registerFrom: 1,
@@ -224,10 +225,18 @@ export const register = async (req, res) => {
         if (!checkCity) return res.clientError("City not found.", 404);
 
         const files = req.files || {};
-        const image = `/service-provider/${files?.image?.[0]?.filename}`;
-        const panCardDocument = `/service-provider/${files?.panCardDocument?.[0]?.filename}`;
-        const aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
-        if (!image || !panCardDocument || !aadharDocument) return res.clientError("All images and documents are required.", 422);
+        const imageFile = files?.image?.[0]?.filename;
+        const panCardFile = files?.panCardDocument?.[0]?.filename;
+        const aadharFile = files?.aadharDocument?.[0]?.filename;
+        if (!imageFile || !panCardFile || !aadharFile) {
+            return res.clientError("Profile image, PAN document, and Aadhar document are required.", 422);
+        }
+
+        const image = `/service-provider/${imageFile}`;
+        const panCardDocument = `/service-provider/${panCardFile}`;
+        const aadharDocument = `/service-provider/${aadharFile}`;
+        const policeVerificationFile = files?.policeVerification?.[0]?.filename;
+        const policeVerification = policeVerificationFile ? `/service-provider/${policeVerificationFile}` : null;
 
         await ServiceProvider.create({
             name: String(name).trim(),
@@ -240,6 +249,7 @@ export const register = async (req, res) => {
             aadharNumber: String(aadharNumber).trim(),
             panCardDocument,
             aadharDocument,
+            policeVerification,
             experienceYears: Number(experienceYears ?? 0),
             experienceDescription: String(experienceDescription).trim() || null,
             registerFrom: "front",

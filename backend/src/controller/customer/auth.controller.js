@@ -1,13 +1,13 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
-import { config } from "../config/index.js";
-import { JWT_CONFIG, PHONE_REGEXP } from "../config/constants.js";
-import { generateOtp, now, nowPlusMinutes } from "../helpers/utils.js";
-import { OtpVerification, Customer } from "../models/index.js";
-import { sendOTP } from "../libraries/sms.js";
-import { getSettings } from "../helpers/database.js";
-import { deleteFile } from "../libraries/storage.js";
-import { pickPushFields } from "../helpers/pushFields.js";
+import { config } from "../../config/index.js";
+import { JWT_CONFIG, PHONE_REGEXP } from "../../config/constants.js";
+import { generateOtp, now, nowPlusMinutes } from "../../helpers/utils.js";
+import { OtpVerification, Customer } from "../../models/index.js";
+import { sendOTP } from "../../libraries/sms.js";
+import { getSettings } from "../../helpers/database.js";
+import { deleteFile } from "../../libraries/storage.js";
+import { pickPushFields } from "../../helpers/pushFields.js";
 
 const getProfile = (user) => {
     return {

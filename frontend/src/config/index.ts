@@ -24,6 +24,10 @@ export type AdminBreadcrumbItem = {
     href?: string;
 };
 
+export const IMAGE_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"] as const;
+export const DOCUMENT_MIME_TYPES = [...IMAGE_MIME_TYPES, "application/pdf"] as const;
+export const AlLOWED_SIZE_MB = 5;
+
 export type ProfileStatus = "pending" | "approved" | "rejected" | "suspended";
 
 /** Indian mobile: optional +91 / leading 0, then 10-digit starting with 6–9. */

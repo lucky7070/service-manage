@@ -36,6 +36,7 @@ type ServiceProvider = {
     image: File | string | null;
     panCardDocument: File | string | null;
     aadharDocument: File | string | null;
+    policeVerification?: File | string | null;
     experienceYears: number | "";
     experienceDescription: string;
     profileStatus: ProfileStatus;
@@ -62,7 +63,7 @@ type ServiceProviderRecord = {
 type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, profileStatus: "pending", rejectionReason: "", isFeatured: false };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, policeVerification: null, profileStatus: "pending", rejectionReason: "", isFeatured: false };
 
 const statusValidationSchema = Yup.object().shape({
     profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
@@ -102,6 +103,7 @@ const validationSchema = Yup.object().shape({
     image: Yup.mixed().required("Image is required."),
     panCardDocument: Yup.mixed().required("PAN card document is required."),
     aadharDocument: Yup.mixed().required("Aadhar document is required."),
+    policeVerification: Yup.mixed().nullable(),
     experienceDescription: Yup.string().max(5000, "Too long.").nullable(),
 });
 
@@ -190,6 +192,7 @@ export default function AdminServiceProvidersPage() {
             image: data.image || null,
             panCardDocument: data.panCardDocument || null,
             aadharDocument: data.aadharDocument || null,
+            policeVerification: data.policeVerification || null,
         });
 
         setCity({ value: String(data.cityId ?? ""), label: String(data.cityName ?? "") });
@@ -540,6 +543,10 @@ export default function AdminServiceProvidersPage() {
                                         <InputFile accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" value={typeof values.aadharDocument === 'string' ? values.aadharDocument : undefined} onChange={(e) => setFieldValue('aadharDocument', e.target.files?.[0] ?? null)} />
                                         <ErrorMessage className="text-xs text-rose-600" name="aadharDocument" component="small" />
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label>Police verification <span className="font-normal text-slate-500">(optional)</span></Label>
+                                        <InputFile accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" value={typeof values.policeVerification === 'string' ? values.policeVerification : undefined} onChange={(e) => setFieldValue('policeVerification', e.target.files?.[0] ?? null)} />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="sp-exp-d">Experience description <span className="font-normal text-slate-500">(optional)</span></Label>
@@ -601,6 +608,7 @@ export default function AdminServiceProvidersPage() {
                             <RegistrationDocument label="Profile photo" path={initialValues.image} />
                             <RegistrationDocument label="PAN document" path={initialValues.panCardDocument} />
                             <RegistrationDocument label="Aadhar document" path={initialValues.aadharDocument} />
+                            <RegistrationDocument label="Police verification" path={initialValues.policeVerification} />
                         </div>
                     </div>
 

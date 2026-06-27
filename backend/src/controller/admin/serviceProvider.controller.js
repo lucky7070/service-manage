@@ -25,13 +25,15 @@ export const createServiceProvider = async (req, res) => {
         let image = "/service-provider/default.png";
         let panCardDocument = null;
         let aadharDocument = null;
+        let policeVerification = null;
         if (files?.image?.[0]?.filename) image = `/service-provider/${files?.image?.[0]?.filename}`;
         if (files?.panCardDocument?.[0]?.filename) panCardDocument = `/service-provider/${files?.panCardDocument?.[0]?.filename}`;
         if (files?.aadharDocument?.[0]?.filename) aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
+        if (files?.policeVerification?.[0]?.filename) policeVerification = `/service-provider/${files?.policeVerification?.[0]?.filename}`;
 
         const record = await ServiceProvider.create({
             name: name.trim(),
-            mobile, email, panCardNumber, cityId, serviceCategoryId, aadharNumber, image, panCardDocument, aadharDocument,
+            mobile, email, panCardNumber, cityId, serviceCategoryId, aadharNumber, image, panCardDocument, aadharDocument, policeVerification,
             experienceYears: experienceYears ?? 0,
             experienceDescription: experienceDescription?.trim() || null,
             registerFrom: "admin",
@@ -74,14 +76,16 @@ export const updateServiceProvider = async (req, res) => {
         let image = record.image;
         let panCardDocument = record.panCardDocument;
         let aadharDocument = record.aadharDocument;
+        let policeVerification = record.policeVerification;
 
         if (files?.image?.[0]?.filename) image = `/service-provider/${files?.image?.[0]?.filename}`;
         if (files?.panCardDocument?.[0]?.filename) panCardDocument = `/service-provider/${files?.panCardDocument?.[0]?.filename}`;
         if (files?.aadharDocument?.[0]?.filename) aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
+        if (files?.policeVerification?.[0]?.filename) policeVerification = `/service-provider/${files?.policeVerification?.[0]?.filename}`;
 
         await ServiceProvider.updateOne(
             { _id: record._id },
-            { name: name.trim(), cityId, serviceCategoryId, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, isFeatured: toBoolean(req.body.isFeatured) }
+            { name: name.trim(), cityId, serviceCategoryId, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, policeVerification, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, isFeatured: toBoolean(req.body.isFeatured) }
         );
         return res.successUpdate(record);
     } catch (error) {
@@ -178,7 +182,7 @@ export const getServiceProvider = async (req, res) => {
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
             { $unwind: { path: "$city" } },
             { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
+            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];
@@ -215,6 +219,7 @@ export const getSingleServiceProvider = async (req, res) => {
             image: doc.image,
             panCardDocument: doc.panCardDocument,
             aadharDocument: doc.aadharDocument,
+            policeVerification: doc.policeVerification,
             experienceYears: doc.experienceYears ?? "",
             experienceDescription: doc.experienceDescription ?? "",
             profileStatus: doc.profileStatus,

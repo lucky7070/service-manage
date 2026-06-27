@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createOurValue, updateOurValue, deleteOurValue, getOurValues } from "../../controller/admin/ourValue.controller.js";
 import { createOurMilestone, updateOurMilestone, deleteOurMilestone, getOurMilestones } from "../../controller/admin/ourMilestone.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { ourValueStorage } from "./storages.js";
+import { ourValueStorage } from "../storages.js";
 
 const router = Router();
 

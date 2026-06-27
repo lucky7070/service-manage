@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createTestimonial, deleteTestimonial, getSingleTestimonial, getTestimonial, updateTestimonial } from "../../controller/admin/testimonial.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { testimonialStorage } from "./storages.js";
+import { testimonialStorage } from "../storages.js";
 
 const router = Router();
 

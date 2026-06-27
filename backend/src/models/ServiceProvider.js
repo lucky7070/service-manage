@@ -17,6 +17,7 @@ const Schema = new mongoose.Schema(
         aadharNumber: { type: String, sparse: true, default: null },
         panCardDocument: { type: String, default: null },
         aadharDocument: { type: String, default: null },
+        policeVerification: { type: String, default: null },
         experienceYears: { type: Number, default: 0 },
         experienceDescription: { type: String, default: null },
         registerFrom: { type: String, enum: ["front", "admin"], default: "admin", index: true },

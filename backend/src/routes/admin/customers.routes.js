@@ -3,7 +3,7 @@ import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleC
 import { createCustomerAddress, deleteCustomerAddress, getCustomerAddresses, updateCustomerAddress } from "../../controller/admin/customerAddress.controller.js";
 import { createCustomerLedgerEntry, getCustomerLedger } from "../../controller/admin/ledger.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { customerStorage } from "./storages.js";
+import { customerStorage } from "../storages.js";
 
 const router = Router();
 

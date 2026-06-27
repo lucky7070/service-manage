@@ -4,19 +4,19 @@ import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServicePro
 import { createProviderService, deleteProviderService, getProviderServices, updateProviderService } from "../../controller/admin/providerService.controller.js";
 import { assignSubscriptionToProvider, getProviderAssignedSubscriptions } from "../../controller/admin/assignedSubscription.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { serviceProviderStorage, serviceProviderWorkPhotoStorage } from "./storages.js";
+import { serviceProviderStorage, serviceProviderWorkPhotoStorage } from "../storages.js";
 
 const router = Router();
 
 router.post(
     "/service-providers",
-    serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]),
+    serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }, { name: "policeVerification", maxCount: 1 }]),
     validator("service-provider"),
     createServiceProvider
 );
 router.put(
     "/service-providers/:id",
-    serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]),
+    serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }, { name: "policeVerification", maxCount: 1 }]),
     validator("service-provider"),
     updateServiceProvider
 );

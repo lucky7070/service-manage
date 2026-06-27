@@ -3,6 +3,27 @@ import fs from "fs";
 import path from "path";
 import { SUPPORTED_FORMATS_IMAGE, SUPPORTED_FORMATS_DOC } from '../config/constants.js';
 import { config } from "../config/index.js";
+import language from "../languages/english.js";
+
+const wrapMulter = (middleware, fallbackField = 'file') => (req, res, next) => {
+    middleware(req, res, (err) => {
+        if (!err) return next();
+
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            const field = err.field || fallbackField;
+            req.fileValidationError[field] = language.FILE_TOO_LARGE;
+            if (Object.entries(req.fileValidationError || {}).length) {
+                return res.status(422).json({
+                    status: false,
+                    message: language.REQUIRED_PARAMETER_MISSING,
+                    data: req.fileValidationError
+                });
+            }
+        }
+
+        return next(err);
+    });
+};
 
 export const Storage = class {
 
@@ -12,32 +33,25 @@ export const Storage = class {
 
         const fileFilter = (req, file, cb) => {
 
-            // Check uploaded file not exceed permitted size.
-            const reqSize = parseInt(req.headers["content-length"]);
-
-            if (reqSize && reqSize > maxAllowSize) {
-                req.fileValidationError = { [file.fieldname]: 'Uploaded file is too large to upload..!!' };
-                return cb(null, false, new Error('Uploaded file is too large to upload..!!'));
-            }
-
             const isValidImage = SUPPORTED_FORMATS_IMAGE.includes(file.mimetype);
             const isValidDoc = SUPPORTED_FORMATS_DOC.includes(file.mimetype);
+            if (!req.fileValidationError) req.fileValidationError = {};
 
             // Accept either image or document when both flags are enabled.
             if (isImage && isDoc && !isValidImage && !isValidDoc) {
-                req.fileValidationError = { [file.fieldname]: 'Please select only image or document file..!!' };
+                req.fileValidationError[file.fieldname] = 'Please select only image or document file..!!';
                 return cb(null, false, new Error('Please select only image or document file..!!'));
             }
 
             // Accept only image when only image uploads are enabled.
             if (isImage && !isDoc && !isValidImage) {
-                req.fileValidationError = { [file.fieldname]: 'Please select only Image Only..!!' };
+                req.fileValidationError[file.fieldname] = 'Please select only Image Only..!!';
                 return cb(null, false, new Error('Please select only Image Only..!!'));
             }
 
             // Accept only document when only doc uploads are enabled.
             if (!isImage && isDoc && !isValidDoc) {
-                req.fileValidationError = { [file.fieldname]: 'Please select document file Only..!!' };
+                req.fileValidationError[file.fieldname] = 'Please select document file Only..!!';
                 return cb(null, false, new Error('Please select document file Only..!!'));
             }
 
@@ -60,19 +74,19 @@ export const Storage = class {
     }
 
     single(fieldName = 'image') {
-        return this.upload.single(fieldName);
+        return wrapMulter(this.upload.single(fieldName), fieldName);
     }
 
     array(fieldName = 'image', maxCount = 5) {
-        return this.upload.array(fieldName, maxCount);
+        return wrapMulter(this.upload.array(fieldName, maxCount), fieldName);
     }
 
     fields(fieldsArray) {
-        return this.upload.fields(fieldsArray);
+        return wrapMulter(this.upload.fields(fieldsArray), fieldsArray[0]?.name || 'file');
     }
 
     any() {
-        return this.upload.any();
+        return wrapMulter(this.upload.any(), 'file');
     }
 };
 

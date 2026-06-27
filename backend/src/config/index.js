@@ -20,4 +20,5 @@ export const config = {
     allowDbSeed: String(process.env.ALLOW_DB_SEED || "false").toLowerCase() === "true",
     cookieDomain: String(process.env.COOKIE_DOMAIN || ""),
     enableGoogleDns: String(process.env.ENABLE_GOOGLE_DNS || "false").toLowerCase() === "true",
+    taxPercentage: Number(process.env.TAX_PERCENTAGE || 18),
 };

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { adminLogout, adminProfile, markAllAdminNotificationsRead, updateAdminProfile, updateAdminProfileImage, updateAdminPassword } from "../../controller/admin/auth.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { adminStorage } from "./storages.js";
+import { adminStorage } from "../storages.js";
 
 const router = Router();
 

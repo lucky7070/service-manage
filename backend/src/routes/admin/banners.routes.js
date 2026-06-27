@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createBanner, deleteBanner, getBanner, updateBanner } from "../../controller/admin/banner.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { bannerStorage } from "./storages.js";
+import { bannerStorage } from "../storages.js";
 
 const router = Router();
 

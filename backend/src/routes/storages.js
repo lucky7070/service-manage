@@ -1,4 +1,4 @@
-import { Storage } from "../../libraries/storage.js";
+import { Storage } from "../libraries/storage.js";
 
 export const adminStorage = new Storage({ dir: "admins", isImage: true, isDoc: false, fileSize: 2 });
 export const appSettingStorage = new Storage({ dir: "application", isImage: true, isDoc: false, fileSize: 5 });

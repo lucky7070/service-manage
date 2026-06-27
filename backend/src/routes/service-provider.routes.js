@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead } from "../controller/service-provider.controller.js";
-import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/service-provider-services.controller.js";
-import { createProviderSubscriptionOrder, listProviderSubscriptionHistory, updateProviderSubscriptionPayment } from "../controller/providerSubscription.controller.js";
+import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead } from "../controller/provider/service-provider.controller.js";
+import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/provider/service-provider-services.controller.js";
+import { createProviderSubscriptionOrder, listProviderSubscriptionHistory, updateProviderSubscriptionPayment } from "../controller/provider/providerSubscription.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
 import { Storage } from "../libraries/storage.js";
-import { bookingChatStorage } from "./admin/storages.js";
+import { bookingChatStorage } from "./storages.js";
 
 const router = Router();
 const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: true, isDoc: true, fileSize: 5 });
@@ -14,7 +14,7 @@ const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provider-wor
 
 router.post("/send-otp", otpRateLimiter, sendOtp);
 router.post("/login", validator("service-provider-login"), login);
-router.post("/register", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }]), validator("service-provider-register"), register);
+router.post("/register", serviceProviderStorage.fields([{ name: "image", maxCount: 1 }, { name: "panCardDocument", maxCount: 1 }, { name: "aadharDocument", maxCount: 1 }, { name: "policeVerification", maxCount: 1 }]), validator("service-provider-register"), register);
 
 router.use(requireServiceProviderAuth);
 router.get("/dashboard", getServiceProviderDashboard);

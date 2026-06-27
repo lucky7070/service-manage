@@ -443,7 +443,7 @@ export const listFeedbackRatingTags = async (req, res) => {
 
 export const listSubscriptions = async (req, res) => {
     try {
-        const rows = await Subscription.find({ deletedAt: null, isActive: true }, { name: 1, subscriptionId: 1, slug: 1, image: 1, description: 1, price: 1, interval: 1, intervalCount: 1, features: 1 }).sort({ name: 1 }).lean();
+        const rows = await Subscription.find({ deletedAt: null, isActive: true }, { name: 1, subscriptionId: 1, slug: 1, image: 1, description: 1, price: 1, interval: 1, intervalCount: 1, features: 1 }).sort({ name: 1 });
         return res.success(rows);
     } catch (error) {
         return res.someThingWentWrong(error);

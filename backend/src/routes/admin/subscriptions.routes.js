@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { createSubscription, deleteSubscription, getSingleSubscription, getSubscription, updateSubscription } from "../../controller/admin/subscription.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { subscriptionStorage } from "./storages.js";
+import { subscriptionStorage } from "../storages.js";
 
 const router = Router();
 

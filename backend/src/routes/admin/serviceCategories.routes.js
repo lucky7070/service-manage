@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { listServiceCategoriesForSelect, createServiceCategory, updateServiceCategory, deleteServiceCategory, getServiceCategory, getSingleServiceCategory } from "../../controller/admin/serviceCategory.controller.js";
 import { validator } from "../../libraries/validator.js";
-import { serviceCategoryStorage } from "./storages.js";
+import { serviceCategoryStorage } from "../storages.js";
 
 const router = Router();
 
