@@ -23,6 +23,7 @@ import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import RegistrationDocument from "@/components/admin/RegistrationDocument";
+import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
 
 type ServiceProvider = {
     _id: string;
@@ -93,17 +94,13 @@ const validationSchema = Yup.object().shape({
     email: Yup.string().email("Invalid email.").required("Email is required."),
     panCardNumber: Yup.string().matches(/^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/, "PAN format: ABCDE1234F").required("PAN is required."),
     aadharNumber: Yup.string().matches(/^[0-9]{12}$/, "Aadhar must be 12 digits.").required("Aadhar is required."),
-    experienceYears: Yup.mixed().test("exp", "0–80 years", (v) => {
-        if (v === "" || v === undefined || v === null) return true;
-        const n = Number(v);
-        return !Number.isNaN(n) && n >= 0 && n <= 80;
-    }),
+    experienceYears: Yup.number().typeError("Experience years must be numeric.").min(0, "Experience must be 0 or more.").max(80, "Experience cannot exceed 80 years.").required("Experience years is required."),
     cityId: Yup.string().required("City is required."),
     serviceCategoryId: Yup.string().required("Service category is required."),
-    image: Yup.mixed().required("Image is required."),
-    panCardDocument: Yup.mixed().required("PAN card document is required."),
-    aadharDocument: Yup.mixed().required("Aadhar document is required."),
-    policeVerification: Yup.mixed().nullable(),
+    image: Yup.mixed().required("Image is required.").test("image-type", "Image must be JPEG, PNG, WebP, or GIF.", checkImageType).test("image-size", "Image must be less than 5MB.", checkDocSize),
+    panCardDocument: Yup.mixed().required("PAN card document is required.").test("pan-card-document-type", "PAN card document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("pan-card-document-size", "PAN card document must be less than 5MB.", checkDocSize),
+    aadharDocument: Yup.mixed().required("Aadhar document is required.").test("aadhar-document-type", "Aadhar document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("aadhar-document-size", "Aadhar document must be less than 5MB.", checkDocSize),
+    policeVerification: Yup.mixed().nullable().optional().test("police-verification-type", "Police verification document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("police-verification-size", "Police verification document must be less than 5MB.", checkDocSize),
     experienceDescription: Yup.string().max(5000, "Too long.").nullable(),
 });
 
@@ -436,7 +433,7 @@ export default function AdminServiceProvidersPage() {
                         {({ isSubmitting, values, setFieldValue }) => (
                             <Form className="space-y-3">
                                 <div className="space-y-2">
-                                    <Label>Profile Photo <span className="font-normal text-slate-500">(optional)</span></Label>
+                                    <Label>Profile Photo</Label>
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
                                             {imagePreview && typeof imagePreview === 'string' ? (
@@ -546,6 +543,7 @@ export default function AdminServiceProvidersPage() {
                                     <div className="space-y-2">
                                         <Label>Police verification <span className="font-normal text-slate-500">(optional)</span></Label>
                                         <InputFile accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" value={typeof values.policeVerification === 'string' ? values.policeVerification : undefined} onChange={(e) => setFieldValue('policeVerification', e.target.files?.[0] ?? null)} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="policeVerification" component="small" />
                                     </div>
                                 </div>
                                 <div className="space-y-2">

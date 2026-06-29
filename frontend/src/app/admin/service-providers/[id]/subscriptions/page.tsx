@@ -29,9 +29,15 @@ type AssignedRow = {
     startDate: string;
     endDate: string;
     status: "active" | "inactive";
+    amount: number;
+    taxPercentage: number;
+    taxAmount: number;
     paymentAmount: number;
+    paymentGatewayTransactionStatus: "success" | "failed" | "pending";
+    paymentGatewayTransactionMessage: string | null;
     assignedBy?: string | null;
     createdAt?: string;
+    source: "admin" | "self";
 };
 
 type AssignFormValues = {
@@ -51,10 +57,6 @@ const assignSchema = Yup.object({
 function formatBilling(interval: string, count: number) {
     const unit = count === 1 ? interval : `${interval}s`;
     return `${count} ${unit}`;
-}
-
-function sortByStartDate(rows: AssignedRow[]) {
-    return [...rows].sort((a, b) => moment(a.startDate).valueOf() - moment(b.startDate).valueOf());
 }
 
 function getAssignmentMeta(row: AssignedRow) {
@@ -166,7 +168,6 @@ export default function ServiceProviderSubscriptionsPage() {
     };
 
     const menuPortalTarget = typeof window !== "undefined" ? document.body : null;
-    const timelineRows = sortByStartDate(rows);
 
     return (
         <section className="space-y-4">
@@ -217,7 +218,7 @@ export default function ServiceProviderSubscriptionsPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {timelineRows.map((row) => {
+                        {rows.map((row) => {
                             const assignment = getAssignmentMeta(row);
 
                             return (
@@ -238,7 +239,12 @@ export default function ServiceProviderSubscriptionsPage() {
                                         </Badge>
                                         <p className="mt-1 max-w-xs text-xs text-slate-500">{assignment.note}</p>
                                     </td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">₹ {Number(row.paymentAmount || 0).toLocaleString("en-IN")}</td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <span className="font-semibold block">₹ {Number(row.paymentAmount || 0).toLocaleString("en-IN")}</span>
+                                        {row.taxPercentage > 0 && <span className="text-xs text-slate-500">
+                                            ₹ {Number(row.amount || 0).toLocaleString("en-IN")}  + {Number(row.taxAmount || 0).toLocaleString("en-IN")} ( Tax {row.taxPercentage}% )
+                                        </span>}
+                                    </td>
                                     <td className="px-3 py-2">
                                         <Badge variant={row.status === "active" ? "success" : "secondary"} size="sm" className="capitalize">
                                             {row.status === "active" ? "Active" : "Un Paid"}

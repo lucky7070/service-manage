@@ -5,9 +5,10 @@ import { Button, Input, Label, OtpField, Textarea, FrontAsyncSelect } from "@/co
 import * as Yup from "yup"
 import { toast } from "react-toastify";
 import AxiosHelper from "@/helpers/AxiosHelper"
-import { AlLOWED_SIZE_MB, DOCUMENT_MIME_TYPES, IMAGE_MIME_TYPES, OTP_REGEXP, PHONE_REGEXP } from "@/config";
+import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
 import { useMemo, useState } from "react"
 import { ArrowRight } from "lucide-react";
+import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
 
 const ProRegistrationForm = () => {
 
@@ -44,42 +45,10 @@ const ProRegistrationForm = () => {
             aadharNumber: Yup.string().trim().matches(/^[0-9]{12}$/, "Aadhar must be exactly 12 digits.").required("Aadhar number is required."),
             experienceYears: Yup.number().typeError("Experience years must be numeric.").min(0, "Experience must be 0 or more.").max(80, "Experience cannot exceed 80 years.").required("Experience years is required."),
             experienceDescription: Yup.string().trim().max(5000, "Description is too long."),
-            image: Yup.mixed().required("Profile image is required.").test("file-type", "Profile image must be JPEG, PNG, WebP, or GIF.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return IMAGE_MIME_TYPES.includes(value.type as typeof IMAGE_MIME_TYPES[number]);
-            }).test("file-size", "Profile image must be less than 5MB.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
-            }),
-            panCardDocument: Yup.mixed().required("PAN card document is required.").test("file-type", "PAN card document must be JPEG, PNG, WebP, or GIF, or PDF.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return DOCUMENT_MIME_TYPES.includes(value.type as typeof DOCUMENT_MIME_TYPES[number]);
-            }).test("file-size", "PAN card document must be less than 5MB.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
-            }),
-            aadharDocument: Yup.mixed().required("Aadhar document is required.").test("file-type", "Aadhar document must be JPEG, PNG, WebP, or GIF, or PDF.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return DOCUMENT_MIME_TYPES.includes(value.type as typeof DOCUMENT_MIME_TYPES[number]);
-            }).test("file-size", "Aadhar document must be less than 5MB.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
-            }),
-            policeVerification: Yup.mixed().nullable().optional().test("file-type", "Police verification document must be JPEG, PNG, WebP, or GIF, or PDF.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return DOCUMENT_MIME_TYPES.includes(value.type as typeof DOCUMENT_MIME_TYPES[number]);
-            }).test("file-size", "Police verification document must be less than 5MB.", (value) => {
-                if (value == null || value === "") return true;
-                if (!(value instanceof File)) return false;
-                return value.size <= AlLOWED_SIZE_MB * 1024 * 1024;
-            }),
+            image: Yup.mixed().required("Profile image is required.").test("file-type", "Profile image must be JPEG, PNG, WebP, or GIF.", checkImageType).test("file-size", "Profile image must be less than 5MB.", checkDocSize),
+            panCardDocument: Yup.mixed().required("PAN card document is required.").test("file-type", "PAN card document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("file-size", "PAN card document must be less than 5MB.", checkDocSize),
+            aadharDocument: Yup.mixed().required("Aadhar document is required.").test("file-type", "Aadhar document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("file-size", "Aadhar document must be less than 5MB.", checkDocSize),
+            policeVerification: Yup.mixed().nullable().optional().test("file-type", "Police verification document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("file-size", "Police verification document must be less than 5MB.", checkDocSize),
         };
         if (step === "details") {
             return Yup.object(base);
@@ -100,9 +69,6 @@ const ProRegistrationForm = () => {
             toast.error(data?.message || "Could not send OTP.");
         }
     };
-
-
-
 
     return <div className="rounded-2xl bg-background p-8 text-foreground">
         <h2 className="mb-6 text-2xl font-bold">Register as a Pro</h2>

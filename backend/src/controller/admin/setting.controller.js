@@ -1,4 +1,4 @@
-import { config } from "../../config/index.js";
+import language from "../../languages/english.js";
 import { Setting } from "../../models/index.js";
 
 const TYPE_REQUIRED_FIELDS = {
@@ -8,7 +8,8 @@ const TYPE_REQUIRED_FIELDS = {
     4: ["razorpay_key", "razorpay_secret", "merchant_id"],
     5: ["sms_key", "sms_url", "sms_hash", "sms_sender"],
     6: ["force_update_android", "force_update_ios", "app_version_android", "app_version_ios", "app_url_android", "app_url_ios", "force_update_message_android", "force_update_message_ios", "maintenance", "maintenance_toggle", "information_banner_toggle"],
-    7: ["refer_amount", "signup_rewards"]
+    7: ["force_update_android_pro", "force_update_ios_pro", "app_version_android_pro", "app_version_ios_pro", "app_url_android_pro", "app_url_ios_pro", "force_update_message_android_pro", "force_update_message_ios_pro", "maintenance_pro", "maintenance_toggle_pro", "information_banner_toggle_pro"],
+    8: ["refer_amount", "signup_rewards", "job_start_geofence_meters"]
 };
 
 export const getGeneralSettings = async (req, res) => {
@@ -59,7 +60,7 @@ export const updateSettingsByType = async (req, res) => {
         if (missing.length) {
             return res.status(422).json({
                 status: false,
-                message: MISSING_REQUIRED_FIELDS,
+                message: language.MISSING_REQUIRED_FIELDS,
                 data: missing.reduce((acc, key) => ({ ...acc, [key]: "This field is required." }), {})
             });
         }
