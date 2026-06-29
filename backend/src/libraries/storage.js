@@ -106,3 +106,28 @@ export const deleteFile = (deleteFile) => {
         return false;
     }
 }
+
+const toUploadRelativePath = (filePath) => {
+    return filePath.replaceAll('\\', '/').replaceAll('public/uploads/', '');
+}
+
+export const cleanRequestFiles = (req) => {
+    try {
+
+        if (req.file?.path) {
+            deleteFile(toUploadRelativePath(req.file.path));
+        } else if (Array.isArray(req.files)) {
+            req.files.forEach((file) => file?.path && deleteFile(toUploadRelativePath(file.path)));
+        } else if (req.files && typeof req.files === "object") {
+            Object.values(req.files).forEach((group) => {
+                if (Array.isArray(group)) {
+                    group.forEach((file) => file?.path && deleteFile(toUploadRelativePath(file.path)));
+                }
+            });
+        }
+
+        return true;
+    } catch (error) {
+        return false;
+    }
+}

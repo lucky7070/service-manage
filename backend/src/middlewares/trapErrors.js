@@ -1,5 +1,6 @@
 import { validationResult } from "express-validator";
 import language from "../languages/english.js";
+import { cleanRequestFiles } from "../libraries/storage.js";
 
 export const trapErrors = (req, res, next) => {
 
@@ -15,6 +16,7 @@ export const trapErrors = (req, res, next) => {
     }
 
     if (merged.length) {
+        cleanRequestFiles(req);
         const errJson = merged.filter((row) => row.path).reduce((acc, row) => {
             acc[row.path] = row.msg;
             return acc;
