@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Briefcase, CalendarCheck, CheckCircle2, MapPin, Star } from "lucide-react";
+import { ArrowLeft, Briefcase, CalendarCheck, MapPin, Star } from "lucide-react";
 import Image from "@/components/ui/Image";
 import { getPublicServiceProvider } from "@/lib/api.server";
 import { resolveFileUrl } from "@/helpers/utils";
 import { ProviderWorkPhotoCarousel } from "@/components/front/provider-work-photo-carousel";
 import BookingWidget from "@/components/front/booking-widget";
+import { VerifiedProfessionalBadge } from "@/components/front/verified-professional-badge";
 
 const BookPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
 
@@ -32,10 +33,13 @@ const BookPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
                             <h1 className="mt-4 text-2xl font-bold text-gray-900">{provider.name}</h1>
                             <p className="mt-1 text-sm text-gray-500">{provider.serviceCategoryName || "Service Provider"}</p>
 
-                            <div className="mt-4 inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
-                                <CheckCircle2 className="h-4 w-4" />
-                                Verified Professional
-                            </div>
+                            <VerifiedProfessionalBadge
+                                verification={{
+                                    isPanCardVerified: Boolean(provider.isPanCardVerified),
+                                    isAadharVerified: Boolean(provider.isAadharVerified),
+                                    isPoliceVerificationVerified: Boolean(provider.isPoliceVerificationVerified),
+                                }}
+                            />
                         </div>
 
                         <div className="mt-6 space-y-3 text-sm text-gray-600">

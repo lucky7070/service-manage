@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getGeneralSettings } from "../controller/admin/setting.controller.js";
 import { listServiceCategories, listServiceCategoriesForHome, getServiceCategoryBySlug, listCities, listStates, listCitiesWithState, listTestimonials, submitEnquiry, getPrivacyPolicy, getTermsAndConditions, getAboutContent, listFeaturedServiceProviders, listServiceProviders, getPublicServiceProvider, listServiceTypesByCategorySlug, listFeedbackRatingTags, getCookies, listSubscriptions } from "../controller/common.controller.js";
+import { razorpayWebhook } from "../controller/razorpayWebhook.controller.js";
 import { validator } from "../libraries/validator.js";
 
 const router = Router();
@@ -25,5 +26,6 @@ router.get("/terms-and-conditions", getTermsAndConditions);
 router.get("/cookies", getCookies);
 router.get("/feedback-rating-tags", listFeedbackRatingTags);
 router.get("/subscriptions-list", listSubscriptions);
+router.post("/webhooks/razorpay", razorpayWebhook);
 
 export default router;

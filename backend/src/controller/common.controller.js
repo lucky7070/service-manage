@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag, Subscription } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
-import moment from "moment";
+import { PROVIDER_FILTER, PROVIDER_PIPELINE } from "../helpers/subscriptionAssignment.js";
 
 export const listStates = async (req, res) => {
     try {
@@ -195,14 +195,12 @@ export const listServiceProviders = async (req, res) => {
 
         if (!city || !serviceCategory) return res.datatableNoRecords({ city, serviceCategory });
 
-        const filter = { cityId: city._id, serviceCategoryId: serviceCategory._id, deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true };
+        const filter = { ...PROVIDER_FILTER, cityId: city._id, serviceCategoryId: serviceCategory._id };
         if (query) filter.name = { $regex: escapeRegex(String(query)), $options: "i" };
 
-        const todayDate = moment().startOf("day").toDate();
         const pipeline = [
             { $match: filter },
-            { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
-            { $unwind: { path: "$subscription" } },
+            ...PROVIDER_PIPELINE,
             {
                 $project: {
                     _id: 1,
@@ -236,24 +234,21 @@ export const listServiceProviders = async (req, res) => {
 export const getPublicServiceProvider = async (req, res) => {
     try {
 
-        const filter = { deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true };
         if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-            filter._id = ObjectId(req.params.id);
+            PROVIDER_FILTER._id = ObjectId(req.params.id);
         } else {
-            filter.slug = req.params.id;
+            PROVIDER_FILTER.slug = req.params.id;
         }
 
-        if (!filter._id && !filter.slug) return res.noRecords();
+        if (!PROVIDER_FILTER._id && !PROVIDER_FILTER.slug) return res.noRecords();
 
-        const todayDate = moment().startOf("day").toDate();
         const [doc] = await ServiceProvider.aggregate([
-            { $match: filter },
+            { $match: PROVIDER_FILTER },
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
             { $unwind: { path: "$city" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
             { $unwind: { path: "$serviceCategory" } },
-            { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
-            { $unwind: { path: "$subscription" } },
+            ...PROVIDER_PIPELINE,
             {
                 $lookup: {
                     from: "serviceproviderphotos", localField: "_id", foreignField: "providerId", as: "photos",
@@ -286,6 +281,9 @@ export const getPublicServiceProvider = async (req, res) => {
                     serviceCategoryId: "$serviceCategory._id",
                     serviceCategoryName: "$serviceCategory.name",
                     serviceCategorySlug: "$serviceCategory.slug",
+                    isPanCardVerified: { $cond: [{ $eq: ["$panCardNumber", null] }, false, true] },
+                    isAadharVerified: { $cond: [{ $eq: ["$aadharNumber", null] }, false, true] },
+                    isPoliceVerificationVerified: { $cond: [{ $eq: ["$policeVerification", null] }, false, true] },
                     photos: { $map: { input: '$photos', as: 'photo', in: '$$photo.photoUrl' } }
                 }
             }

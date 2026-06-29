@@ -21,6 +21,7 @@ export const SETTINGS_SEED_ROWS = [
     [3, "smtp_pass", "SMTP Password", "text", "change_me_smtp_password"],
     [4, "razorpay_key", "Razor Key", "text", "change_me_razorpay_key"],
     [4, "razorpay_secret", "Razor Secret", "text", "change_me_razorpay_secret"],
+    [4, "razorpay_webhook_secret", "Razor Webhook Secret", "text", "change_me_razorpay_webhook_secret"],
     [4, "merchant_id", "Razor Merchant Id", "text", "change_me_razorpay_merchant_id"],
     [5, "sms_key", "SMS API Key", "text", "change_me_sms_api_key"],
     [5, "sms_url", "SMS API URL", "text", "https://api.bulksmsadmin.com/BulkSMSapi/keyApiSendSMS/sendSMS"],

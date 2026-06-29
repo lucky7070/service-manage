@@ -5,6 +5,7 @@ import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../../hel
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../../helpers/bookingRating.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingChatMessage, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
+import { FILTER_ACTIVE_SUBSCRIPTION } from "../../helpers/subscriptionAssignment.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
     const match = { customerId, deletedAt: null };
@@ -245,8 +246,7 @@ export const createCustomerBooking = async (req, res) => {
         const provider = await ServiceProvider.findOne({ _id: ObjectId(req.body.providerId), deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true });
         if (!provider) return res.noRecords(false, "Service provider not found.");
 
-        const todayDate = moment().startOf("day").toDate();
-        const subscription = await AssignedSubscription.findOne({ providerId: provider._id, status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } });
+        const subscription = await AssignedSubscription.findOne({ providerId: provider._id, ...FILTER_ACTIVE_SUBSCRIPTION });
         if (!subscription) return res.clientError("Provider is not active. Please contact support.", 400);
 
         const selectedServiceTypeIds = [...new Set((req.body.serviceTypeId || []).map((value) => String(value)))].map((value) => ObjectId(value)).filter(Boolean);

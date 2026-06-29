@@ -2,7 +2,11 @@ import { config } from "../config/index.js";
 
 export const licenseCheck = (request, response, next) => {
     const licenseKey = request.headers["x-api-key"];
-    if (request.originalUrl.startsWith("/uploads/") || licenseKey === config.xApiKey) {
+    if (
+        licenseKey === config.xApiKey
+        || request.originalUrl.startsWith("/uploads/")
+        || request.originalUrl.startsWith("/api/webhooks/")
+    ) {
         next();
     } else {
         response.status(401).json({

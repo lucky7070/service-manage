@@ -146,6 +146,9 @@ export type PublicServiceProvider = {
     serviceCategoryId: string;
     serviceCategoryName: string;
     serviceCategorySlug: string;
+    isPanCardVerified: boolean;
+    isAadharVerified: boolean;
+    isPoliceVerificationVerified: boolean;
     photos: Array<string>;
     providerServices: Array<{
         _id: string;

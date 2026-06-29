@@ -56,7 +56,7 @@ const COLLECTION_DESCRIPTION = [
     "4. **On site:** `POST .../start` (when status `confirmed` and price agreed).",
     "5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.",
     "6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.",
-    "7. **Subscription purchase history:** **`GET /subscriptions-list`** (public plans) → **`GET /service-provider/subscriptions`** (your plan history) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**.",
+    "7. **Subscription purchase history:** **`GET /subscriptions-list`** (public plans) → **`GET /service-provider/subscriptions`** (your plan history) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**. Razorpay **`POST /webhooks/razorpay`** also updates payment status server-side.",
     "8. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.",
     "9. **Sockets:** join with `role: \"provider\"`.",
     "",
@@ -106,6 +106,9 @@ function req(name, method, urlPath, opts = {}) {
     }
     if (opts.description) {
         item.request.description = opts.description;
+    }
+    if (opts.headers?.length) {
+        item.request.header.push(...opts.headers);
     }
     return item;
 }
@@ -249,6 +252,25 @@ const open = [
     }),
     req("Subscription plans list (public)", "GET", "/subscriptions-list", {
         description: "Active subscription plans for provider purchase. Use **`_id`** as **`subscriptionId`** in **`POST /service-provider/subscriptions/purchase`**.",
+    }),
+    req("Razorpay webhook — subscription payment status", "POST", "/webhooks/razorpay", {
+        noApiKey: true,
+        headers: [{ key: "X-Razorpay-Signature", value: "signature_from_razorpay_dashboard", type: "text" }],
+        body: {
+            event: "payment.captured",
+            payload: {
+                payment: {
+                    entity: {
+                        id: "pay_xxxxxxxx",
+                        order_id: "order_xxxxxxxx",
+                        status: "captured",
+                        amount: 59000,
+                    },
+                },
+            },
+        },
+        description:
+            "Razorpay server callback (no **x-api-key**). Configure webhook URL in Razorpay dashboard: `{API}/api/webhooks/razorpay`. Subscribe to **`payment.captured`** and **`payment.failed`**. Signature verified with **`RAZORPAY_WEBHOOK_SECRET`** env or admin **`razorpay_webhook_secret`** (falls back to **`razorpay_secret`**). Updates **`AssignedSubscription`** matched by **`paymentGatewayOrderId`** = payment **`order_id`**.",
     }),
     req(
         "Submit enquiry (contact)",

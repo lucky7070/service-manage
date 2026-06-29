@@ -3,6 +3,7 @@ import { AssignedSubscription, Subscription } from "../../models/index.js";
 import { ObjectId } from "../../helpers/utils.js";
 import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline } from "../../helpers/subscriptionAssignment.js";
 import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature } from "../../helpers/razorpay.js";
+import { syncAssignedSubscriptionFromRazorpayPayment } from "../../helpers/subscriptionPayment.js";
 
 export const createProviderSubscriptionOrder = async (req, res) => {
     const session = await mongoose.startSession();
@@ -167,30 +168,10 @@ export const updateProviderSubscriptionPayment = async (req, res) => {
             return res.clientError("Payment order mismatch.", 422);
         }
 
-        if (payment.status === "failed") {
-            assignment.paymentGatewayTransactionStatus = "failed";
-            assignment.paymentGatewayTransactionMessage = "Payment failed.";
-            await assignment.save({ session });
-            await session.commitTransaction();
-            return res.clientError("Payment failed.", 422);
-        }
+        const result = await syncAssignedSubscriptionFromRazorpayPayment({ assignment, payment, session });
+        await session.commitTransaction();
 
-        if (payment.amount !== rupeesToPaise(assignment.paymentAmount)) {
-            assignment.paymentGatewayTransactionStatus = "failed";
-            assignment.paymentGatewayTransactionMessage = "Payment amount mismatch.";
-            await assignment.save({ session });
-            await session.commitTransaction();
-            return res.clientError("Payment amount mismatch.", 422);
-        }
-
-        if (payment.status === "captured") {
-            assignment.paymentGatewayOrderId = razorpayOrderId;
-            assignment.paymentGatewayTransactionStatus = "success";
-            assignment.paymentGatewayTransactionMessage = "Payment successful.";
-            assignment.status = "active";
-            await assignment.save({ session });
-            await session.commitTransaction();
-
+        if (result.ok) {
             return res.successUpdate({
                 assignmentId: assignment._id,
                 voucherNo: assignment.voucherNo,
@@ -199,13 +180,17 @@ export const updateProviderSubscriptionPayment = async (req, res) => {
                 startDate: assignment.startDate,
                 endDate: assignment.endDate,
             }, "Payment successful.");
-        } else {
-            assignment.paymentGatewayTransactionStatus = "pending";
-            assignment.paymentGatewayTransactionMessage = "Payment not captured yet.";
-            await assignment.save({ session });
-            await session.commitTransaction();
-            return res.clientError("Payment not captured yet. Please try again.", 422);
         }
+
+        if (result.reason === "failed") {
+            return res.clientError(assignment.paymentGatewayTransactionMessage || "Payment failed.", 422);
+        }
+
+        if (result.reason === "amount_mismatch") {
+            return res.clientError("Payment amount mismatch.", 422);
+        }
+
+        return res.clientError(assignment.paymentGatewayTransactionMessage || "Payment not captured yet. Please try again.", 422);
     } catch (error) {
         if (session.inTransaction()) await session.abortTransaction();
         if (error?.status === 503) return res.clientError(error.message, 503);

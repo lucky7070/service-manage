@@ -1,5 +1,13 @@
 import moment from "moment";
 import { AssignedSubscription } from "../models/index.js";
+import { startOfDay } from "./utils.js";
+
+export const PROVIDER_FILTER = { deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true };
+export const FILTER_ACTIVE_SUBSCRIPTION = { status: "active", startDate: { $lte: startOfDay() }, endDate: { $gte: startOfDay() } };
+export const PROVIDER_PIPELINE = [
+    { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: FILTER_ACTIVE_SUBSCRIPTION }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
+    { $unwind: { path: "$subscription" } },
+];
 
 export const computeSubscriptionEndDate = (startDate, interval, intervalCount = 1) => {
     const start = moment(startDate).startOf("day");
@@ -21,7 +29,7 @@ export const resolveProviderPurchaseSchedule = async (providerId, plan, session)
     const today = moment().startOf("day");
     let startDate = today.toDate();
 
-    const currentActiveAssignment = await AssignedSubscription.findOne({ providerId, status: "active", startDate: { $lte: startDate }, endDate: { $gte: startDate } }).session(session).lean();
+    const currentActiveAssignment = await AssignedSubscription.findOne({ providerId, ...FILTER_ACTIVE_SUBSCRIPTION }).session(session).lean();
     if (currentActiveAssignment) {
         startDate = moment(currentActiveAssignment.endDate).add(1, "day").startOf("day").toDate();
     }

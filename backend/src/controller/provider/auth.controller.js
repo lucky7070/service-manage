@@ -12,6 +12,7 @@ import { parseBookingChatPayload } from "../../helpers/bookingChat.js";
 import { getSettings } from "../../helpers/database.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingChatMessage, notifyBookingQuoteSent, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
+import { FILTER_ACTIVE_SUBSCRIPTION } from "../../helpers/subscriptionAssignment.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -66,7 +67,6 @@ const bookingAggregation = (filter) => {
 }
 
 const getProfile = async (user) => {
-    const todayDate = moment().startOf("day").toDate();
     const [profile] = await ServiceProvider.aggregate([
         { $match: { _id: user._id, deletedAt: null } },
         { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
@@ -76,7 +76,7 @@ const getProfile = async (user) => {
         {
             $lookup: {
                 from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [
-                    { $match: { status: "active", startDate: { $lte: todayDate }, endDate: { $gte: todayDate } } },
+                    { $match: FILTER_ACTIVE_SUBSCRIPTION },
                     { $lookup: { from: "subscriptions", localField: "subscriptionId", foreignField: "_id", as: "plan" } },
                     { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
                     { $sort: { createdAt: -1 } },

@@ -18,6 +18,7 @@ export const generateRandomString = (length) => {
 };
 
 export const now = () => moment().toDate();
+export const startOfDay = () => moment().startOf("day").toDate();
 
 export const orderId = (seq, prefix, width = 6) => {
     const padded = String(seq).padStart(width, "0");

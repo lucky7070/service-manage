@@ -22,4 +22,16 @@ export const verifyRazorpayPaymentSignature = ({ orderId, paymentId, signature, 
     return expected === signature;
 };
 
+export const verifyRazorpayWebhookSignature = ({ body, signature, secret }) => {
+    if (!body || !signature || !secret) return false;
+    const payload = typeof body === "string" ? body : JSON.stringify(body);
+    const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+    return expected === signature;
+};
+
+export const getRazorpayWebhookSecret = async () => {
+    const settings = await getSettings(["razorpay_webhook_secret", "razorpay_secret"]);
+    return String(settings.razorpay_webhook_secret || settings.razorpay_secret || "").trim();
+};
+
 export const rupeesToPaise = (amount) => Math.round(Number(amount) * 100);
