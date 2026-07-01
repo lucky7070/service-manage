@@ -21,5 +21,4 @@ export function getInformationBannerImageUri(settings: GeneralSettings) {
     if (!isInformationBannerEnabled(settings)) return "";
     return resolveSettingsAssetUrl(settings.information_banner, settings.uploadUrl);
 }
-
 export { COOLDOWN_MS as INFORMATION_BANNER_COOLDOWN_MS };

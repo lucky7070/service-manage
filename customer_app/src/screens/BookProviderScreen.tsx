@@ -17,6 +17,7 @@ import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
 import { screenStyles } from "../theme/screenStyles";
+import Badge from "../components/ui/Badge";
 
 const schema = Yup.object({
     serviceTypeIds: Yup.array().of(Yup.string().required()).min(1, "Select at least one service."),
@@ -121,7 +122,12 @@ export default function BookProviderScreen() {
 
                                 return (
                                     <View style={screenStyles.formCard}>
-                                        <Text style={screenStyles.sectionTitle}>Services</Text>
+                                        <View style={styles.servicesHeader}>
+                                            <Text style={screenStyles.sectionTitle}>Services</Text>
+                                            <Badge>
+                                                <Text style={styles.servicesHeaderCount}>{values.serviceTypeIds.length} selected</Text>
+                                            </Badge>
+                                        </View>
                                         <ServiceTypePicker
                                             items={services}
                                             selectedIds={values.serviceTypeIds}
@@ -180,6 +186,9 @@ export default function BookProviderScreen() {
 
 const styles = StyleSheet.create({
     flex: { flex: 1 },
+    servicesHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+    servicesHeaderTitle: { fontSize: 16, fontWeight: "600", color: colors.foreground },
+    servicesHeaderCount: { fontSize: 12, color: colors.white, fontWeight: "600", letterSpacing: 0.2 },
     summary: {
         backgroundColor: colors.muted,
         borderRadius: radius.x2,

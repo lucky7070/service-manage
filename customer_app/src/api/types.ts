@@ -287,6 +287,9 @@ export type PublicProviderDetail = {
     serviceCategoryId?: string;
     serviceCategoryName?: string;
     serviceCategorySlug?: string;
+    isPanCardVerified?: boolean;
+    isAadharVerified?: boolean;
+    isPoliceVerificationVerified?: boolean;
     providerServices: ProviderServiceRow[];
 };
 

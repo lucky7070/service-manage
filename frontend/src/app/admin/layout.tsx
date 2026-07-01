@@ -13,6 +13,7 @@ import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 import { setLoading, setMobileSidebarOpen } from "@/store/slices/appSlice";
 import { compareRoute } from "@/helpers/utils";
 import NotAuthorized from "@/components/admin/NotAuthorized";
+import DeveloperCredit from "@/components/DeveloperCredit";
 import { deleteAuthCookie } from "./actions";
 import "@/app/admin/admin.css";
 
@@ -64,8 +65,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <AdminTopbar />
                 <AdminBreadcrumb />
                 <div className="flex-1 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900/95">{children}</div>
-                <footer className="rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-center text-xs text-slate-500 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-400">
-                    {settings.copyright?.trim() || `Copyright © ${new Date().getFullYear()}. All rights reserved.`}
+                <footer className="flex justify-between items-center flex-col md:flex-row rounded-2xl border border-indigo-100 bg-white/90 px-4 py-3 text-center text-xs text-slate-500 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-400">
+                    <p>{settings.copyright?.trim() || `Copyright © ${new Date().getFullYear()}. All rights reserved.`}</p>
+                    <DeveloperCredit variant="admin" className="mt-1.5 text-[11px] md:mt-0" />
                 </footer>
             </div>
         </section>

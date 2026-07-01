@@ -122,6 +122,7 @@ export const FOOTER_LINKS: Array<{ label: string, list: Array<{ name: string, hr
             { name: "Terms and Conditions", href: "/terms-and-conditions" },
             { name: "Privacy Policy", href: "/privacy-policy" },
             { name: "Partner with Us", href: "/join-pro" },
+            { name: "Cookies", href: "/cookies" },
         ]
     },
     {
@@ -324,4 +325,9 @@ export const HOME_HOW_IT_WORKS_STEPS: HomeHowItWorksStep[] = [
 ];
 
 export const CUSTOMER_TESTIMONIAL_SECTION_TRUST_LINE = `Trusted by over ${PLATFORM_MARKETING.happyCustomersFormatted} happy customers across India`;
+
+export const DEVELOPER_CREDIT = {
+    name: "Adiyogi Technosoft Pvt. Ltd.",
+    href: "https://adiyogitechnosoft.com",
+} as const;
 

@@ -7,6 +7,7 @@ import { resolveFileUrl } from "@/helpers/utils"
 import Image from "@/components/ui/Image"
 import { MeteorIconsFacebook, MeteorIconsX, MeteorIconsInstagram, MeteorIconsLinkedin } from "@/icons"
 import { FOOTER_LINKS } from "@/config/constants"
+import DeveloperCredit from "@/components/DeveloperCredit"
 
 export function Footer() {
 
@@ -81,12 +82,10 @@ export function Footer() {
                 </div>
 
                 {/* Bottom bar */}
-                <div className="mt-10 flex flex-col items-center gap-4 border-t border-gray-800 pt-6 text-center text-sm md:flex-row md:justify-between">
-                    <p className="text-gray-400">{settings.copyright || `Copyright © ${new Date().getFullYear()}. All rights reserved.`}</p>
-                    <div className="flex gap-6">
-                        <Link href="/terms-and-conditions" className="text-gray-400 transition-colors hover:text-primary">Terms</Link>
-                        <Link href="/privacy-policy" className="text-gray-400 transition-colors hover:text-primary">Privacy</Link>
-                        <Link href="/cookies" className="text-gray-400 transition-colors hover:text-primary">Cookies</Link>
+                <div className="mt-10 border-t border-gray-800 pt-6">
+                    <div className="flex flex-col items-center gap-1 text-center text-sm md:flex-row md:justify-between">
+                        <p className="text-gray-400">{settings.copyright || `Copyright © ${new Date().getFullYear()}. All rights reserved.`}</p>
+                        <DeveloperCredit variant="front" className="text-center" />
                     </div>
                 </div>
             </div>

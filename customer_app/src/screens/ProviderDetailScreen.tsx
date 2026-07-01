@@ -6,11 +6,13 @@ import { fetchPublicProvider, resolveUploadUrl, type PublicProviderDetail } from
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import DetailHeader from "../components/ui/DetailHeader";
+import VerifiedProfessionalBadge from "../components/provider/VerifiedProfessionalBadge";
 import ImageGalleryModal from "../components/ui/ImageGalleryModal";
 import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
 import { screenStyles } from "../theme/screenStyles";
+import { useMaxListHeight } from "../helpers/useMaxListHeight";
 
 const GRID_COLUMNS = 3;
 const GRID_GAP = 5;
@@ -21,6 +23,7 @@ export default function ProviderDetailScreen() {
     const route = useRoute<RouteProp<MainStackParamList, "ProviderDetail">>();
     const { providerSlug } = route.params;
     const { width: screenWidth } = useWindowDimensions();
+    const serviceListMaxHeight = useMaxListHeight();
 
     const [provider, setProvider] = useState<PublicProviderDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -45,14 +48,9 @@ export default function ProviderDetailScreen() {
 
     useFocusEffect(useCallback(() => { void load(); }, [load]));
 
-    const ratingLabel = provider?.averageRating != null && provider.averageRating !== "N/A"
-        ? String(provider.averageRating)
-        : "New";
+    const ratingLabel = provider?.averageRating != null && provider.averageRating !== "N/A" ? String(provider.averageRating) : "New";
 
-    const photoUrls = useMemo(
-        () => (provider?.photos || []).map((photo) => resolveUploadUrl(photo)),
-        [provider?.photos]
-    );
+    const photoUrls = useMemo(() => (provider?.photos || []).map((photo) => resolveUploadUrl(photo)), [provider?.photos]);
 
     const openGallery = (index: number) => {
         setGalleryIndex(index);
@@ -85,10 +83,13 @@ export default function ProviderDetailScreen() {
                             <View style={styles.heroMeta}>
                                 <Text style={styles.name}>{provider.name}</Text>
                                 <Text style={styles.category}>{provider.serviceCategoryName}</Text>
-                                <View style={styles.badge}>
-                                    <Feather name="check-circle" size={14} color={colors.emerald} />
-                                    <Text style={styles.badgeText}>Verified professional</Text>
-                                </View>
+                                <VerifiedProfessionalBadge
+                                    verification={{
+                                        isPanCardVerified: Boolean(provider.isPanCardVerified),
+                                        isAadharVerified: Boolean(provider.isAadharVerified),
+                                        isPoliceVerificationVerified: Boolean(provider.isPoliceVerificationVerified),
+                                    }}
+                                />
                             </View>
                         </View>
                         <View style={styles.stats}>
@@ -127,7 +128,12 @@ export default function ProviderDetailScreen() {
                                 <Feather name="layers" size={18} color={colors.foreground} />
                                 <Text style={styles.sectionTitle}>Services offered</Text>
                             </View>
-                            <View style={styles.serviceList}>
+                            <ScrollView
+                                style={{ maxHeight: serviceListMaxHeight }}
+                                contentContainerStyle={styles.serviceList}
+                                nestedScrollEnabled
+                                showsVerticalScrollIndicator
+                            >
                                 {provider.providerServices.map((service) => (
                                     <View key={service.serviceTypeId} style={styles.serviceRow}>
                                         <View style={styles.serviceMain}>
@@ -137,7 +143,7 @@ export default function ProviderDetailScreen() {
                                         <Text style={styles.servicePrice}>₹{Number(service.price ?? service.basePrice ?? 0).toLocaleString("en-IN")}</Text>
                                     </View>
                                 ))}
-                            </View>
+                            </ScrollView>
                         </Card>
                     ) : null}
 
@@ -188,8 +194,6 @@ const styles = StyleSheet.create({
     heroMeta: { flex: 1, gap: 4 },
     name: { fontSize: 22, fontWeight: "800", color: colors.foreground },
     category: { fontSize: 14, color: colors.mutedForeground },
-    badge: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 },
-    badgeText: { fontSize: 12, fontWeight: "700", color: colors.emerald },
     stats: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
     stat: { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.muted, borderRadius: radius.x2, paddingHorizontal: 10, paddingVertical: 6 },
     statText: { fontSize: 12, fontWeight: "600", color: colors.foreground },

@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing } from "../../theme/colors";
+import { useMaxListHeight } from "../../helpers/useMaxListHeight";
 
 export type ServiceTypeOption = {
     id: string;
@@ -18,13 +19,20 @@ type ServiceTypePickerProps = {
 };
 
 export default function ServiceTypePicker({ items, selectedIds, onToggle, error, emptyLabel = "No services available." }: ServiceTypePickerProps) {
+    const listMaxHeight = useMaxListHeight();
     if (!items.length) {
         return <Text style={styles.empty}>{emptyLabel}</Text>;
     }
 
     return (
         <View style={styles.wrap}>
-            <View style={styles.grid}>
+            <ScrollView
+                style={{ maxHeight: listMaxHeight }}
+                contentContainerStyle={styles.grid}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+                keyboardShouldPersistTaps="handled"
+            >
                 {items.map((item) => {
                     const checked = selectedIds.includes(item.id);
                     return (
@@ -46,7 +54,7 @@ export default function ServiceTypePicker({ items, selectedIds, onToggle, error,
                         </Pressable>
                     );
                 })}
-            </View>
+            </ScrollView>
             {error ? <Text style={styles.error}>{error}</Text> : null}
         </View>
     );
