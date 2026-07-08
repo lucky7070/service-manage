@@ -11,11 +11,11 @@
     "web": "expo start --web",
     "prebuild:prod": "cross-env NODE_ENV=production expo prebuild --clean && node scripts/patch-android-signing.mjs",
     "patch:android-signing": "node scripts/patch-android-signing.mjs",
-    "apk:local-dev": "node scripts/patch-android-signing.mjs && cross-env NODE_ENV=development cmd /c \"cd android && gradlew.bat assembleRelease\"",
-    "apk:local": "node scripts/patch-android-signing.mjs && cross-env NODE_ENV=production cmd /c \"cd android && gradlew.bat assembleRelease\"",
+    "apk:local-dev": "node scripts/patch-android-signing.mjs && node scripts/refresh-android-release-bundle.mjs && cross-env NODE_ENV=development cmd /c \"cd android && gradlew.bat assembleRelease\"",
+    "apk:local": "node scripts/patch-android-signing.mjs && node scripts/refresh-android-release-bundle.mjs && cross-env NODE_ENV=production cmd /c \"cd android && gradlew.bat assembleRelease\"",
     "apk:preview": "eas build -p android --profile preview",
-    "aab:local-dev": "node scripts/patch-android-signing.mjs && cross-env NODE_ENV=development cmd /c \"cd android && gradlew.bat bundleRelease\"",
-    "aab:local": "node scripts/patch-android-signing.mjs && cross-env NODE_ENV=production cmd /c \"cd android && gradlew.bat bundleRelease\"",
+    "aab:local-dev": "node scripts/patch-android-signing.mjs && node scripts/refresh-android-release-bundle.mjs && cross-env NODE_ENV=development cmd /c \"cd android && gradlew.bat bundleRelease\"",
+    "aab:local": "node scripts/patch-android-signing.mjs && node scripts/refresh-android-release-bundle.mjs && cross-env NODE_ENV=production cmd /c \"cd android && gradlew.bat bundleRelease\"",
     "aab:production": "eas build -p android --profile production"
   },
   "dependencies": {
