@@ -19,6 +19,7 @@ import enquiriesRoutes from "./enquiries.routes.js";
 import testimonialsRoutes from "./testimonials.routes.js";
 import cmsPagesRoutes from "./cmsPages.routes.js";
 import subscriptionsRoutes from "./subscriptions.routes.js";
+import purchasedPlansRoutes from "./purchasedPlans.routes.js";
 import ourContentRoutes from "./ourContent.routes.js";
 
 const router = Router();
@@ -44,6 +45,7 @@ router.use(enquiriesRoutes);
 router.use(testimonialsRoutes);
 router.use(cmsPagesRoutes);
 router.use(subscriptionsRoutes);
+router.use(purchasedPlansRoutes);
 router.use(ourContentRoutes);
 
 export default router;

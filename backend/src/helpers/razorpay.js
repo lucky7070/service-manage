@@ -55,3 +55,18 @@ export const getRazorpayOrderStatus = async (orderId) => {
         return null;
     }
 };
+
+export const getRazorpayGatewaySnapshot = async (orderId) => {
+    const { client } = await getRazorpayClient();
+
+    // Get the order    
+    const order = await client.orders.fetch(orderId);
+
+    // Get all payments for the order and sort them by created_at in descending order
+    const payments = await client.orders.fetchPayments(orderId);
+    const sortedPayments = payments?.items?.sort((a, b) => b.created_at - a.created_at) || [];
+
+    return { order, latestPayment: sortedPayments[0] || null, payments: sortedPayments };
+};
+
+export const paiseToRupees = (amount) => Number(amount || 0) / 100;

@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 
 try {
 
-    await connectDb();
+    await connectDb("cron");
     await syncRazorpayPendingPayments();
 
     console.log("[cron] Done.");

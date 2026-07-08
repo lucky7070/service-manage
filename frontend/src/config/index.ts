@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
+import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Receipt, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -229,6 +229,7 @@ export const PERMISSIONS = [
             { id: 454, label: "View Subscriptions" },
             { id: 455, label: "Assign Subscription to Provider" },
             { id: 457, label: "View Provider Subscriptions" },
+            { id: 458, label: "View Purchased Plans" },
         ]
     },
 
@@ -262,6 +263,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/our-values", label: "Our Values", icon: Heart, permission_id: 434 },
             { href: "/admin/our-milestones", label: "Our Milestones", icon: History, permission_id: 444 },
             { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, permission_id: 454 },
+            { href: "/admin/purchased-plan", label: "Purchased plans", icon: Receipt, permission_id: 458 },
             { href: "/admin/cms-pages", label: "CMS Pages", icon: FileText, permission_id: 414 },
         ]
     },
@@ -432,5 +434,10 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/subscriptions",
         permission_id: 454,
         items: [{ label: "Subscriptions" }]
+    },
+    {
+        path: "/admin/purchased-plan",
+        permission_id: 458,
+        items: [{ label: "Purchased plans" }]
     },
 ];

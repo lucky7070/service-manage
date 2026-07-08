@@ -40,12 +40,15 @@ export const resolveProviderPurchaseSchedule = async (providerId, plan, session)
 
 export const buildAssignedSubscriptionListPipeline = (match) => [
     { $match: match },
+    { $lookup: { from: "serviceproviders", localField: "providerId", foreignField: "_id", as: "provider" } },
     { $lookup: { from: "subscriptions", localField: "subscriptionId", foreignField: "_id", as: "plan" } },
     { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
+    { $unwind: { path: "$provider" } },
     {
         $project: {
             _id: 1,
             voucherNo: 1,
+            providerId: 1,
             subscriptionId: 1,
             startDate: 1,
             endDate: 1,
@@ -54,11 +57,15 @@ export const buildAssignedSubscriptionListPipeline = (match) => [
             taxPercentage: { $ifNull: ["$taxPercentage", 0] },
             taxAmount: { $ifNull: ["$taxAmount", 0] },
             paymentAmount: { $ifNull: ["$paymentAmount", 0] },
+            paymentGatewayOrderId: 1,
+            paymentGatewayTransactionId: 1,
             paymentGatewayTransactionStatus: 1,
             paymentGatewayTransactionMessage: 1,
             assignedBy: 1,
             createdAt: 1,
             source: { $cond: [{ $ifNull: ["$assignedBy", false] }, "admin", "self"] },
+            providerName: { $ifNull: ["$provider.name", ""] },
+            providerMobile: { $ifNull: ["$provider.mobile", ""] },
             planName: { $ifNull: ["$plan.name", ""] },
             planCode: { $ifNull: ["$plan.subscriptionId", ""] },
             planPrice: { $ifNull: ["$plan.price", 0] },
