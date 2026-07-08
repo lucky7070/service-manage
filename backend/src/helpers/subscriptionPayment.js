@@ -5,7 +5,7 @@ export const syncAssignedSubscriptionFromRazorpayPayment = async ({ assignment, 
     const razorpayPaymentId = String(payment?.id || "").trim();
     const paymentStatus = String(payment?.status || "").trim();
 
-    if (!razorpayOrderId || !razorpayPaymentId) {
+    if (!razorpayOrderId || !razorpayPaymentId || !paymentStatus) {
         return { ok: false, reason: "invalid_payment", assignment };
     }
 

@@ -22,6 +22,7 @@ const Schema = new mongoose.Schema({
 
 Schema.index({ providerId: 1, createdAt: -1 });
 Schema.index({ providerId: 1, status: 1 });
+Schema.index({ paymentGatewayTransactionStatus: 1, createdAt: 1 });
 
 Schema.pre("save", async function onSave(next) {
     if (this.isNew && !this.voucherNo) {

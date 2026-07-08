@@ -13,7 +13,7 @@ export const razorpayWebhook = async (req, res) => {
         const signature = String(req.headers["x-razorpay-signature"] || "").trim();
         const body = req.body;
 
-        logger.info("Razorpay webhook received:", { signature, body });
+        logger.webhook("Razorpay webhook received:", { signature, body });
         if (!signature || !body || typeof body !== "object") {
             return res.status(400).json({ status: false, message: "Invalid webhook payload.", data: [] });
         }

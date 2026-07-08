@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import Razorpay from "razorpay";
 import { getSettings } from "./database.js";
+import logger from "./logger.js";
 
 export const getRazorpayClient = async () => {
     const settings = await getSettings(["razorpay_key", "razorpay_secret"]);
@@ -35,3 +36,22 @@ export const getRazorpayWebhookSecret = async () => {
 };
 
 export const rupeesToPaise = (amount) => Math.round(Number(amount) * 100);
+
+export const getRazorpayOrderStatus = async (orderId) => {
+    try {
+        const { client } = await getRazorpayClient();
+        const { items, count } = await client.orders.fetchPayments(orderId);
+        if (!items.length) return null;
+        if (count === 1) return items[0];
+
+        const PAYMENT_STATUS_PRIORITY = { captured: 5, authorized: 4, failed: 3, created: 2, };
+        return [...items].sort((left, right) => {
+            const byStatus = (PAYMENT_STATUS_PRIORITY[right.status] || 0) - (PAYMENT_STATUS_PRIORITY[left.status] || 0);
+            if (byStatus !== 0) return byStatus;
+            return Number(right.created_at || 0) - Number(left.created_at || 0);
+        })[0];
+    } catch (error) {
+        logger.error('Error getting Razorpay : ', error);
+        return null;
+    }
+};

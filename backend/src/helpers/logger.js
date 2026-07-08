@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import moment from "moment";
 import { fileURLToPath } from "url";
 
 // Define log levels
@@ -13,12 +14,15 @@ const levels = {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Define the log file path
-const logFilePath = path.join(__dirname, "../../public/logger/app.log");
-fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+const logFilePath = (fileName = 'app') => {
+    const logFilePath = path.join(__dirname, `../../public/logger/${fileName}.log`);
+    fs.mkdirSync(path.dirname(logFilePath), { recursive: true });
+    return logFilePath;
+}
 
 // Helper to format the log message
 function formatMessage(level, message) {
-    const timestamp = new Date().toISOString();
+    const timestamp = moment().format();
     return `[${timestamp}] ${level}: ${message}`;
 }
 
@@ -46,7 +50,7 @@ function formatContext(context) {
 
 // Logger function
 const logger = {
-    log: (level, message, context = null) => {
+    log: (level, message, context = null, fileName = 'app') => {
         if (!levels[level]) {
             throw new Error(`Invalid log level: ${level}`);
         }
@@ -59,7 +63,7 @@ const logger = {
         console.log(logEntry);
 
         // Append to the log file
-        fs.appendFile(logFilePath, `${logEntry}\n`, (err) => {
+        fs.appendFile(logFilePath(fileName), `${logEntry}\n`, (err) => {
             if (err) console.error("Failed to write to log file:", err);
         });
     },
@@ -67,8 +71,9 @@ const logger = {
     error: (message, context = null) => logger.log("error", message, context),
     warn: (message, context = null) => logger.log("warn", message, context),
     info: (message, context = null) => logger.log("info", message, context),
-    debug: (message, context = null) => logger.log("debug", message, context)
+    debug: (message, context = null) => logger.log("debug", message, context),
+    cron: (message, context = null) => logger.log("info", message, context, 'cron'),
+    webhook: (message, context = null) => logger.log("info", message, context, 'webhook')
 };
 
 export default logger;
-
