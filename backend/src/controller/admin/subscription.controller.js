@@ -2,6 +2,7 @@ import moment from "moment";
 import { Subscription } from "../../models/index.js";
 import { escapeRegex, ObjectId } from "../../helpers/utils.js";
 import { deleteFile } from "../../libraries/storage.js";
+import { ensureRazorpayPlanId } from "../../helpers/razorpay.js";
 
 const parseFeatures = (raw) => {
     if (raw == null || raw === "") return [];
@@ -30,20 +31,28 @@ export const createSubscription = async (req, res) => {
             return res.clientError("At least one feature with name and description is required.", 422, [{ field: "features", message: "At least one feature with name and description is required." }]);
         }
 
-        const image = req.file ? `/subscriptions/${req.file.filename}` : "/subscriptions/default.png";
-
-        const doc = await Subscription.create({
+        const toCreate = {
             name: String(name).trim(),
-            slug: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            image,
             description: String(description).trim(),
             price: Number(price),
-            interval: String(interval),
+            interval: String(interval).toLowerCase(),
             intervalCount: Math.max(Number(intervalCount) || 1, 1),
             features: featureRows,
             isActive: Number(status) === 1
+        }
+
+        if (req.file) toCreate.image = `/subscriptions/${req.file.filename}`;
+
+        toCreate.razorpayPlanId = await ensureRazorpayPlanId({
+            name: toCreate.name,
+            description: toCreate.description,
+            price: toCreate.price,
+            interval: toCreate.interval,
+            intervalCount: toCreate.intervalCount,
+            features: toCreate.features
         });
 
+        const doc = await Subscription.create(toCreate);
         return res.successInsert(doc);
     } catch (error) {
         if (error?.code === 11000) {
@@ -64,25 +73,33 @@ export const updateSubscription = async (req, res) => {
             return res.clientError("At least one feature with name and description is required.", 422, [{ field: "features", message: "At least one feature with name and description is required." }]);
         }
 
-        let image = doc.image;
-        if (req.file) {
-            if (doc.image && doc.image !== "/subscriptions/default.png") deleteFile(doc.image);
-            image = `/subscriptions/${req.file.filename}`;
+        const toUpdate = {
+            name: String(name).trim(),
+            description: String(description).trim(),
+            price: Number(price),
+            interval: String(interval).toLowerCase(),
+            intervalCount: Math.max(Number(intervalCount) || 1, 1),
+            features: featureRows,
+            isActive: Number(status) === 1
         }
 
-        await Subscription.updateOne(
-            { _id: doc._id },
-            {
-                name: String(name).trim(),
-                description: String(description).trim(),
-                image,
-                price: Number(price),
-                interval: String(interval),
-                intervalCount: Math.max(Number(intervalCount) || 1, 1),
-                features: featureRows,
-                isActive: Number(status) === 1
-            }
-        );
+        if (req.file) {
+            if (doc.image && doc.image !== "/subscriptions/default.png") deleteFile(doc.image);
+            toUpdate.image = `/subscriptions/${req.file.filename}`;
+        }
+
+        if (!doc.razorpayPlanId || toUpdate.price !== doc.price || toUpdate.interval !== doc.interval || toUpdate.intervalCount !== doc.intervalCount) {
+            toUpdate.razorpayPlanId = await ensureRazorpayPlanId({
+                name: toUpdate.name,
+                description: toUpdate.description,
+                price: toUpdate.price,
+                interval: toUpdate.interval,
+                intervalCount: toUpdate.intervalCount,
+                features: toUpdate.features
+            });
+        }
+
+        await Subscription.updateOne({ _id: doc._id }, { $set: toUpdate });
 
         return res.successUpdate(doc);
     } catch (error) {

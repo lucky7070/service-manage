@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead } from "../controller/provider/auth.controller.js";
 import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/provider/services.controller.js";
-import { createProviderSubscriptionOrder, listProviderSubscriptionHistory, updateProviderSubscriptionPayment } from "../controller/provider/subscription.controller.js";
+import { createProviderSubscriptionOrder, createProviderAutopaySubscription, listProviderSubscriptionHistory, updateProviderSubscriptionPayment, updateProviderAutopaySubscriptionPayment } from "../controller/provider/subscription.controller.js";
 import { validator } from "../libraries/validator.js";
 import { requireServiceProviderAuth } from "../middlewares/serviceProviderAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
@@ -46,5 +46,7 @@ router.put("/work-photos/reorder", reorderWorkPhotos);
 router.get("/subscriptions", listProviderSubscriptionHistory);
 router.post("/subscriptions/purchase", validator("provider-subscription-purchase"), createProviderSubscriptionOrder);
 router.post("/subscriptions/purchase/payment", validator("provider-subscription-payment"), updateProviderSubscriptionPayment);
+router.post("/subscriptions/autopay/purchase", validator("provider-autopay-subscription-purchase"), createProviderAutopaySubscription);
+router.post("/subscriptions/autopay/purchase/payment", validator("provider-autopay-subscription-payment"), updateProviderAutopaySubscriptionPayment);
 
 export default router;

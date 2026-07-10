@@ -6,6 +6,7 @@ const Schema = new mongoose.Schema({
     voucherNo: { type: String, trim: true, index: true, default: null },
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", required: true, index: true },
     subscriptionId: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription", required: true, index: true },
+    autopaySubscriptionId: { type: mongoose.Schema.Types.ObjectId, ref: "AutopaySubscription", default: null, index: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     status: { type: String, enum: ["active", "inactive"], default: "active", index: true },
@@ -23,6 +24,7 @@ const Schema = new mongoose.Schema({
 Schema.index({ providerId: 1, createdAt: -1 });
 Schema.index({ providerId: 1, status: 1 });
 Schema.index({ paymentGatewayTransactionStatus: 1, createdAt: 1 });
+Schema.index({ autopaySubscriptionId: 1, paymentGatewayTransactionStatus: 1 });
 
 Schema.pre("save", async function onSave(next) {
     if (this.isNew && !this.voucherNo) {

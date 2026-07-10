@@ -6,6 +6,7 @@ import { config } from "../config/index.js";
 const Schema = new mongoose.Schema(
     {
         subscriptionId: { type: String, unique: true, index: true, default: null },
+        razorpayPlanId: { type: String, unique: true, index: true, required: true },
         name: { type: String, required: true, trim: true, unique: true },
         slug: { type: String, required: true, trim: true, unique: true },
         image: { type: String, default: '/subscriptions/default.png' },

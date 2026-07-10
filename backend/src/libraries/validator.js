@@ -93,6 +93,7 @@ const subscriptionFeatures = check("features", "At least one feature with name a
 });
 const assignSubscriptionId = check("subscriptionId", "Subscription plan is required.").trim().notEmpty().isMongoId().withMessage('Invalid subscription plan ID.');
 const razorpayOrderId = check("razorpay_order_id", "Razorpay order ID is required.").trim().notEmpty().withMessage('Razorpay order ID is required.');
+const razorpaySubscriptionId = check("razorpay_subscription_id", "Razorpay subscription ID is required.").trim().notEmpty().withMessage("Razorpay subscription ID is required.");
 const razorpayPaymentId = check("razorpay_payment_id", "Razorpay payment ID is required.").trim().notEmpty().withMessage('Razorpay payment ID is required.');
 const razorpaySignature = check("razorpay_signature", "Razorpay signature is required.").trim().notEmpty().withMessage('Razorpay signature is required.');
 const pageSlug = check("pageSlug", "Page slug is required.").trim().notEmpty().isLength({ min: 2, max: 150 }).withMessage('Page slug must be between 2 to 150 characters long.').matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
@@ -309,6 +310,12 @@ export const validator = (method) => {
             break;
         case "provider-subscription-payment":
             output = [razorpayOrderId, razorpayPaymentId, razorpaySignature];
+            break;
+        case "provider-autopay-subscription-purchase":
+            output = [assignSubscriptionId];
+            break;
+        case "provider-autopay-subscription-payment":
+            output = [razorpaySubscriptionId, razorpayPaymentId, razorpaySignature];
             break;
         case "enquiry-resolve":
             output = [id, isResolved];

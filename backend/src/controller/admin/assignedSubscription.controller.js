@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { AssignedSubscription, ServiceProvider, Subscription } from "../../models/index.js";
+import { AssignedSubscription, AutopaySubscription, ServiceProvider, Subscription } from "../../models/index.js";
 import { ObjectId, escapeRegex } from "../../helpers/utils.js";
 import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline } from "../../helpers/subscriptionAssignment.js";
-import { getRazorpayGatewaySnapshot, paiseToRupees } from "../../helpers/razorpay.js";
+import { getRazorpayGatewaySnapshot, getRazorpaySubscriptionStatus, getRazorpaySubscriptionLatestPayment, paiseToRupees } from "../../helpers/razorpay.js";
 import { syncAssignedSubscriptionFromRazorpayPayment } from "../../helpers/subscriptionPayment.js";
 
 const formatGatewayPayment = (payment) => {
@@ -26,12 +26,54 @@ const formatGatewayPayment = (payment) => {
 
 export const getPurchasedPlanGatewayStatus = async (req, res) => {
     try {
-        let assignment = await AssignedSubscription.findById(ObjectId(req.params.id)).lean();
+        let assignment = await AssignedSubscription.findById(ObjectId(req.params.id));
         if (!assignment) return res.noRecords();
 
         const orderId = String(assignment.paymentGatewayOrderId || "").trim();
-        if (!orderId) {
-            return res.clientError("No Razorpay order is linked to this purchase.", 422);
+        const autopay = assignment.autopaySubscriptionId ? await AutopaySubscription.findById(assignment.autopaySubscriptionId) : null;
+        const subscriptionId = String(autopay?.razorpaySubscriptionId || "").trim();
+
+        if (!orderId && !subscriptionId) {
+            return res.clientError("No Razorpay payment reference is linked to this purchase.", 422);
+        }
+
+        if (subscriptionId) {
+            const [subscription, latestPayment] = await Promise.all([
+                getRazorpaySubscriptionStatus(subscriptionId),
+                getRazorpaySubscriptionLatestPayment(subscriptionId),
+            ]);
+
+            if (assignment.paymentGatewayTransactionStatus === "pending" && latestPayment) {
+                const result = await syncAssignedSubscriptionFromRazorpayPayment({ assignment, payment: latestPayment, autopay });
+                if (result.ok) assignment = result.assignment;
+                if (result.autopay) autopay = result.autopay;
+            }
+
+            return res.success({
+                assignment: {
+                    _id: assignment._id,
+                    voucherNo: assignment.voucherNo,
+                    paymentAmount: assignment.paymentAmount,
+                    autopaySubscriptionId: assignment.autopaySubscriptionId,
+                    razorpaySubscriptionId: autopay?.razorpaySubscriptionId || null,
+                    paymentGatewayTransactionId: assignment.paymentGatewayTransactionId,
+                    paymentGatewayTransactionStatus: assignment.paymentGatewayTransactionStatus,
+                    paymentGatewayTransactionMessage: assignment.paymentGatewayTransactionMessage,
+                    mandateStatus: autopay?.mandateStatus || null,
+                    autoRenew: Boolean(autopay?.autoRenew),
+                    status: assignment.status,
+                },
+                subscription: subscription ? {
+                    id: subscription.id,
+                    status: subscription.status,
+                    planId: subscription.plan_id,
+                    paidCount: Number(subscription.paid_count || 0),
+                    remainingCount: Number(subscription.remaining_count || 0),
+                    chargeAt: subscription.charge_at ? new Date(Number(subscription.charge_at) * 1000).toISOString() : null,
+                } : null,
+                latestPayment: formatGatewayPayment(latestPayment),
+                payments: latestPayment ? [formatGatewayPayment(latestPayment)].filter(Boolean) : [],
+            }, "Gateway status fetched.");
         }
 
         const { order, payments, latestPayment } = await getRazorpayGatewaySnapshot(orderId);

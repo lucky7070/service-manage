@@ -1,4 +1,5 @@
 import { Subscription } from "../models/index.js";
+import { ensureRazorpayPlanId, planAmountWithTaxPaise } from "../helpers/razorpay.js";
 
 const PROVIDER_PLAN_FEATURES = [
     {
@@ -83,16 +84,36 @@ export async function seedSubscriptions() {
             deletedAt: null
         };
 
+        const pricingChanged = existing && (existing.price !== row.price || existing.interval !== row.interval || existing.intervalCount !== row.intervalCount);
+        if (!existing?.razorpayPlanId || pricingChanged) {
+            payload.razorpayPlanId = await ensureRazorpayPlanId({
+                name: row.name,
+                description: row.description,
+                price: row.price,
+                interval: row.interval,
+                intervalCount: row.intervalCount,
+                features: row.features
+            });
+        }
+
         if (existing) {
             await Subscription.updateOne({ _id: existing._id }, { $set: payload });
             updated += 1;
             continue;
         }
 
+        const razorpayPlanId = payload.razorpayPlanId || await ensureRazorpayPlanId({
+            name: row.name,
+            description: row.description,
+            price: row.price,
+            interval: row.interval,
+            intervalCount: row.intervalCount,
+            features: row.features
+        });
         await Subscription.create({
             name: row.name,
             slug: `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            ...payload
+            razorpayPlanId, ...payload
         });
         created += 1;
     }
