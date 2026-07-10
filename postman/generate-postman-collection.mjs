@@ -412,14 +412,19 @@ const serviceProvider = [
             fd.text("aadharNumber", "123456789012"),
             fd.text("experienceYears", "3"),
             fd.text("experienceDescription", "Field service experience."),
+            fd.text("referralCode", "SP000001"),
             fd.text("otp", "123456"),
             fd.file("image"),
             fd.file("panCardDocument"),
             fd.file("aadharDocument"),
         ],
-        description: "Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF).",
+        description: "Replace cityId, serviceCategoryId, and otp with real values. Optional **`referralCode`** is the referrer provider **`userId`**. Attach files for image, panCardDocument (PDF), aadharDocument (PDF).",
     }),
     req("Profile (auth)", "GET", "/service-provider/profile"),
+    req("My referrals (auth)", "GET", "/service-provider/referrals?pageNo=1&limit=10", {
+        description:
+            "Paginated list of service providers referred by the logged-in provider (`referredBy`). Optional query: **`query`** (name/mobile/email/userId), **`sortBy`** (`name`|`mobile`|`email`|`userId`|`createdAt`|`profileStatus`), **`sortOrder`** (`asc`|`desc`).",
+    }),
     req("My priced services (auth)", "GET", "/service-provider/services", {
         description:
             "**`ProviderService`** aggregate for logged-in SP: **`record`** rows + **`provider`** mini summary. Requires **`serviceCategoryId`** set on profile.",

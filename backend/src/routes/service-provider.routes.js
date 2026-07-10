@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead } from "../controller/provider/auth.controller.js";
+import { sendOtp, register, login, profile, logout, deleteServiceProviderAccount, getServiceProviderDashboard, getProviderNotificationUnreadCount, getWorkPhotos, uploadWorkPhotos, deleteWorkPhoto, reorderWorkPhotos, listProviderBookings, listProviderNotifications, getProviderBooking, listProviderBookingMessages, sendProviderBookingMessage, setBookingQuote, cancelProviderBooking, startProviderBooking, sendBookingCompletionOtp, completeProviderBooking, submitProviderBookingFeedback, markAllProviderNotificationsRead, listMyReferrals } from "../controller/provider/auth.controller.js";
 import { createMyProviderService, deleteMyProviderService, listMyProviderServices, listMyServiceTypeOptions, updateMyProviderService } from "../controller/provider/services.controller.js";
 import { createProviderSubscriptionOrder, createProviderAutopaySubscription, listProviderSubscriptionHistory, updateProviderSubscriptionPayment, updateProviderAutopaySubscriptionPayment } from "../controller/provider/subscription.controller.js";
 import { validator } from "../libraries/validator.js";
@@ -22,6 +22,7 @@ router.get("/notifications/unread-count", getProviderNotificationUnreadCount);
 router.get("/notifications", listProviderNotifications);
 router.put("/notifications/read-all", markAllProviderNotificationsRead);
 router.get("/profile", profile);
+router.get("/referrals", listMyReferrals);
 router.delete("/profile", deleteServiceProviderAccount);
 router.post("/logout", logout);
 router.get("/services", listMyProviderServices);

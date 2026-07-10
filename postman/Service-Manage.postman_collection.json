@@ -972,6 +972,12 @@
                   "enabled": true
                 },
                 {
+                  "key": "referralCode",
+                  "value": "SP000001",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
                   "key": "otp",
                   "value": "123456",
                   "type": "text",
@@ -994,7 +1000,7 @@
                 }
               ]
             },
-            "description": "Replace cityId, serviceCategoryId, and otp with real values. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
+            "description": "Replace cityId, serviceCategoryId, and otp with real values. Optional **`referralCode`** is the referrer provider **`userId`**. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
           }
         },
         {
@@ -1009,6 +1015,21 @@
               }
             ],
             "url": "{{baseUrl}}/service-provider/profile"
+          }
+        },
+        {
+          "name": "My referrals (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/service-provider/referrals?pageNo=1&limit=10",
+            "description": "Paginated list of service providers referred by the logged-in provider (`referredBy`). Optional query: **`query`** (name/mobile/email/userId), **`sortBy`** (`name`|`mobile`|`email`|`userId`|`createdAt`|`profileStatus`), **`sortOrder`** (`asc`|`desc`)."
           }
         },
         {

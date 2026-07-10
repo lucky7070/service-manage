@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../../config/constants.js";
-import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters } from "../../helpers/utils.js";
+import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters, escapeRegex } from "../../helpers/utils.js";
 import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City } from "../../models/index.js";
 import { deleteFile } from "../../libraries/storage.js";
 import { pickPushFields } from "../../helpers/pushFields.js";
@@ -288,6 +288,76 @@ export const register = async (req, res) => {
 export const profile = async (req, res) => {
     try {
         return res.success(await getProfile(req.serviceProvider), "User profile fetched successfully");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listMyReferrals = async (req, res) => {
+    try {
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 10;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const sortBy = ["name", "mobile", "email", "userId", "createdAt", "profileStatus"].includes(String(req.query.sortBy))
+            ? String(req.query.sortBy)
+            : "createdAt";
+        const sortOrder = String(req.query.sortOrder || "desc").toLowerCase() === "asc" ? 1 : -1;
+        const query = String(req.query.query || "").trim();
+
+        const filter = {
+            referredBy: req.serviceProvider._id,
+            deletedAt: null
+        };
+
+        if (query) {
+            const q = escapeRegex(query);
+            filter.$or = [
+                { name: { $regex: q, $options: "i" } },
+                { mobile: { $regex: q, $options: "i" } },
+                { email: { $regex: q, $options: "i" } },
+                { userId: { $regex: q, $options: "i" } }
+            ];
+        }
+
+        const pipeline = [
+            { $match: filter },
+            { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+            { $unwind: { path: "$city", preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+            {
+                $project: {
+                    _id: 1,
+                    userId: 1,
+                    name: 1,
+                    mobile: 1,
+                    email: 1,
+                    image: 1,
+                    cityId: 1,
+                    serviceCategoryId: 1,
+                    cityName: { $ifNull: ["$city.name", ""] },
+                    serviceCategoryName: { $ifNull: ["$category.name", ""] },
+                    profileStatus: 1,
+                    isVerified: 1,
+                    isActive: 1,
+                    experienceYears: 1,
+                    createdAt: 1
+                }
+            }
+        ];
+
+        const [results, totalCount] = await Promise.all([
+            ServiceProvider.aggregate([
+                ...pipeline,
+                { $sort: { [sortBy]: sortOrder } },
+                { $skip: (pageNo - 1) * limit },
+                { $limit: limit }
+            ]),
+            ServiceProvider.aggregate([...pipeline, { $count: "total_count" }])
+        ]);
+        const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
+
+        if (results.length > 0) return res.pagination(results, total_count, limit, pageNo);
+        return res.datatableNoRecords();
     } catch (error) {
         return res.someThingWentWrong(error);
     }
