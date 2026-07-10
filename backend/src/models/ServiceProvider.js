@@ -20,6 +20,7 @@ const Schema = new mongoose.Schema(
         policeVerification: { type: String, default: null },
         experienceYears: { type: Number, default: 0 },
         experienceDescription: { type: String, default: null },
+        referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", default: null },
         registerFrom: { type: String, enum: ["front", "admin"], default: "admin", index: true },
         profileStatus: {
             type: String,

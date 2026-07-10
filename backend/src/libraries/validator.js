@@ -133,6 +133,7 @@ const year = check("year", "Year is required.").trim().notEmpty().isLength({ min
 const event = check("event", "Event is required.").trim().notEmpty().isLength({ min: 3, max: 5000 }).withMessage('Event must be between 3 to 5000 characters long.');
 const fcmTokenOptional = check("fcmToken").optional({ values: "falsy" }).trim().isLength({ min: 10, max: 4096 }).withMessage('FCM token must be between 10 to 4096 characters long.');
 const deviceIdOptional = check("deviceId").optional({ values: "falsy" }).trim().isLength({ min: 3, max: 200 }).withMessage('Device ID must be between 3 to 200 characters long.');
+const referralCodeOptional = check("referralCode").optional({ values: "falsy" }).trim().isLength({ min: 2, max: 20 }).withMessage("Referral code must be between 2 to 20 characters long.");
 
 const addressId = param("addressId", "Invalid address ID.").exists().notEmpty().isMongoId();
 const addressLine1 = check("addressLine1", "Address line 1 is required.").trim().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Address line 1 must be between 2 to 100 characters long.');
@@ -327,7 +328,7 @@ export const validator = (method) => {
             output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
             break;
         case "service-provider-register":
-            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument, fcmTokenOptional, deviceIdOptional];
+            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument, referralCodeOptional, fcmTokenOptional, deviceIdOptional];
             break;
         case "service-provider-login":
             output = [mobile, otp, fcmTokenOptional, deviceIdOptional];

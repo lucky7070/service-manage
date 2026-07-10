@@ -6,7 +6,7 @@ import * as Yup from "yup"
 import { toast } from "react-toastify";
 import AxiosHelper from "@/helpers/AxiosHelper"
 import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ArrowRight } from "lucide-react";
 import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
 
@@ -15,6 +15,15 @@ const ProRegistrationForm = () => {
     const [step, setStep] = useState<"details" | "otp">("details");
     const [city, setCity] = useState<{ value: string; label: string } | null>(null);
     const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
+    const [referralCode, setReferralCode] = useState("");
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            const code = String(new URLSearchParams(window.location.search).get("refer") || "").trim().toUpperCase();
+            setReferralCode(code);
+        }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     const loadCityOptions = async (inputValue: string) => {
         const { data } = await AxiosHelper.getData("/cities-with-state", { query: inputValue, limit: 20 });
@@ -45,6 +54,7 @@ const ProRegistrationForm = () => {
             aadharNumber: Yup.string().trim().matches(/^[0-9]{12}$/, "Aadhar must be exactly 12 digits.").required("Aadhar number is required."),
             experienceYears: Yup.number().typeError("Experience years must be numeric.").min(0, "Experience must be 0 or more.").max(80, "Experience cannot exceed 80 years.").required("Experience years is required."),
             experienceDescription: Yup.string().trim().max(5000, "Description is too long."),
+            referralCode: Yup.string().trim().max(20, "Referral code is too long."),
             image: Yup.mixed().required("Profile image is required.").test("file-type", "Profile image must be JPEG, PNG, WebP, or GIF.", checkImageType).test("file-size", "Profile image must be less than 5MB.", checkDocSize),
             panCardDocument: Yup.mixed().required("PAN card document is required.").test("file-type", "PAN card document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("file-size", "PAN card document must be less than 5MB.", checkDocSize),
             aadharDocument: Yup.mixed().required("Aadhar document is required.").test("file-type", "Aadhar document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("file-size", "Aadhar document must be less than 5MB.", checkDocSize),
@@ -83,12 +93,14 @@ const ProRegistrationForm = () => {
                 aadharNumber: "",
                 experienceYears: "",
                 experienceDescription: "",
+                referralCode,
                 image: null,
                 panCardDocument: null,
                 aadharDocument: null,
                 policeVerification: null,
                 otp: ""
             }}
+            enableReinitialize
             validationSchema={validationSchema}
             onSubmit={async (values, { resetForm, setFieldValue, setErrors }) => {
                 if (step === "details") {
@@ -185,6 +197,11 @@ const ProRegistrationForm = () => {
                             <Label>Experience Description</Label>
                             <Field as={Textarea} name="experienceDescription" rows={4} placeholder="Briefly describe your experience" maxLength={5000} disabled={locked} />
                             <ErrorMessage name="experienceDescription" component="small" className="mt-1 block text-xs text-rose-600" />
+                        </div>
+                        <div>
+                            <Label>Referral Code <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                            <Field as={Input} name="referralCode" type="text" placeholder="Enter referrer User ID" maxLength={20} disabled={locked} readOnly={!!referralCode} />
+                            <ErrorMessage name="referralCode" component="small" className="mt-1 block text-xs text-rose-600" />
                         </div>
                         <div>
                             <Label required>Profile Image</Label>

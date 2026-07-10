@@ -182,7 +182,7 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
     try {
-        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "", otp } = req.body;
+        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "", otp, referralCode = "" } = req.body;
 
         const verify = await OtpVerification.findOne({
             phoneNumber: String(mobile).trim(),
@@ -216,6 +216,20 @@ export const register = async (req, res) => {
             }
 
             return res.clientError("This Aadhar number is already registered.", 409, [{ field: "aadharNumber", message: "Aadhar already registered." }]);
+        }
+
+        let referredBy = null;
+        const normalizedReferralCode = String(referralCode || "").trim().toUpperCase();
+        if (normalizedReferralCode) {
+            const referrer = await ServiceProvider.findOne({
+                userId: normalizedReferralCode,
+                deletedAt: null,
+                isActive: true
+            });
+            if (!referrer) {
+                return res.clientError("Invalid referral code", 422, [{ field: "referralCode", message: "Invalid referral code" }]);
+            }
+            referredBy = referrer._id;
         }
 
         const checkServiceCategory = await ServiceCategory.findOne({ _id: ObjectId(serviceCategoryId), deletedAt: null });
@@ -252,6 +266,7 @@ export const register = async (req, res) => {
             policeVerification,
             experienceYears: Number(experienceYears ?? 0),
             experienceDescription: String(experienceDescription).trim() || null,
+            referredBy,
             registerFrom: "front",
             profileStatus: "pending",
             isVerified: false,
