@@ -13,6 +13,7 @@ const Schema = new mongoose.Schema(
         image: { type: String, default: "/service-provider/default.png" },
         cityId: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null, index: true },
         serviceCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceCategory", default: null, index: true },
+        franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: "Franchise", default: null, index: true },
         panCardNumber: { type: String, sparse: true, default: null },
         aadharNumber: { type: String, sparse: true, default: null },
         panCardDocument: { type: String, default: null },
@@ -21,7 +22,7 @@ const Schema = new mongoose.Schema(
         experienceYears: { type: Number, default: 0 },
         experienceDescription: { type: String, default: null },
         referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", default: null },
-        registerFrom: { type: String, enum: ["front", "admin"], default: "admin", index: true },
+        registerFrom: { type: String, enum: ["front", "admin", "franchise"], default: "admin", index: true },
         profileStatus: {
             type: String,
             enum: SERVICE_PROVIDER_PROFILE_STATUSES,

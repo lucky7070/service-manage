@@ -9,6 +9,7 @@ export const config = {
     jwtSecret: String(process.env.JWT_SECRET),
     customerJwtSecret: String(process.env.CUSTOMER_JWT_SECRET),
     serviceProviderJwtSecret: String(process.env.SERVICE_PROVIDER_JWT_SECRET),
+    franchiseJwtSecret: String(process.env.FRANCHISE_JWT_SECRET),
     otpExpiryMinutes: Number(process.env.OTP_EXPIRY_MINUTES || 10),
     frontendUrl: String(process.env.FRONTEND_URL || "").split(",").map((s) => s.trim()).filter(Boolean),
     isProduction: String(process.env.NODE_ENV || "development").toLowerCase() === "production",

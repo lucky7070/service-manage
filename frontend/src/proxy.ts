@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { AUTH_PAGES, AUTH_PAGES_USER } from "@/config";
+import { AUTH_PAGES, AUTH_PAGES_FRANCHISE, AUTH_PAGES_USER } from "@/config";
 
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
@@ -18,6 +18,23 @@ export function proxy(request: NextRequest) {
         if (!token) {
             const url = request.nextUrl.clone();
             url.pathname = "/admin/login";
+            return NextResponse.redirect(url);
+        }
+    }
+
+    if (pathname.startsWith("/franchise")) {
+        const token = request.cookies.get("franchise_token")?.value;
+        if (AUTH_PAGES_FRANCHISE.includes(pathname) && token && pathname !== "/franchise/logout") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/franchise/dashboard";
+            return NextResponse.redirect(url);
+        }
+
+        if (AUTH_PAGES_FRANCHISE.includes(pathname)) return NextResponse.next();
+
+        if (!token) {
+            const url = request.nextUrl.clone();
+            url.pathname = "/franchise/login";
             return NextResponse.redirect(url);
         }
     }
@@ -43,6 +60,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/admin/:path*", "/user/:path*", '/login']
+    matcher: ["/admin/:path*", "/franchise/:path*", "/user/:path*", "/login"]
 };
 

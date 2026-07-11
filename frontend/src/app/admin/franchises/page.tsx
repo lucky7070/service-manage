@@ -1,0 +1,379 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ErrorMessage, Field, Form, Formik } from "formik";
+import { debounce } from "lodash";
+import * as Yup from "yup";
+import moment from "moment";
+import Swal from "sweetalert2/dist/sweetalert2.js";
+import { toast } from "react-toastify";
+import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
+import { Badge, Button, Input, Label, Modal, Select, Option, InputFile } from "@/components/ui";
+import AdminPagination from "@/components/admin/AdminPagination";
+import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
+import AdminTableHeader from "@/components/admin/AdminTableHeader";
+import PermissionBlock from "@/components/admin/PermissionBlock";
+import { PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
+import Image from "@/components/ui/Image";
+import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+
+type FranchiseRecord = {
+    _id: string;
+    userId?: string;
+    name: string;
+    mobile: string;
+    email?: string | null;
+    image?: string | null;
+    status: number;
+    createdAt?: string;
+};
+
+type FranchiseRecordResponse = {
+    count: number;
+    record: FranchiseRecord[];
+    totalPages: number;
+    pagination: number[];
+};
+
+type SortBy = "userId" | "name" | "status" | "mobile" | "email" | "createdAt";
+type SortOrder = "asc" | "desc";
+
+const validationSchema = Yup.object().shape({
+    name: Yup.string().min(2, "Too Short!").max(100, "Too Long!").required("Name Required.").trim(),
+    mobile: Yup.string().matches(PHONE_REGEXP, PHONE_ERROR_MESSAGE).length(10, "Mobile number must be exactly 10 digits.").required("Mobile Required."),
+    email: Yup.string().email("Invalid email").max(100, "Too Long!").required("Email Required."),
+    status: Yup.number().required("Status required"),
+    password: Yup.string().optional().nullable().transform((v) => (v === "" ? null : v)).test("password-required-on-add", "Password is required", function (value) {
+        const { _id } = this.parent as { _id: string };
+        if (!_id) return Boolean(value);
+        return true;
+    }).test("password-length", "Password must be between 5 and 50 chars", function (value) {
+        if (!value) return true;
+        return value.length >= 5 && value.length <= 50;
+    })
+});
+
+export default function FranchisesPage() {
+    const debouncedFetchRef = useRef(debounce(() => { }, 0));
+    const [open, setOpen] = useState<null | "add" | "edit">(null);
+    const [data, setData] = useState<FranchiseRecordResponse>({ count: 0, record: [], totalPages: 0, pagination: [] });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1 }>({
+        limit: 10,
+        pageNo: 1,
+        query: "",
+        sortBy: "createdAt",
+        sortOrder: "desc",
+        status: ""
+    });
+    const [initialValues, setInitialValues] = useState<FranchiseRecord & { password?: string }>({
+        _id: "",
+        name: "",
+        mobile: "",
+        email: "",
+        status: 1,
+        createdAt: "",
+        password: "",
+        image: null
+    });
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    const fetchFranchises = useCallback(async () => {
+        const { data } = await AxiosHelperAdmin.getData("/franchises", param);
+        if (data?.status && data?.data?.record) {
+            setData(data.data);
+        } else {
+            setData({ count: 0, record: [], totalPages: 0, pagination: [] });
+        }
+    }, [param]);
+
+    useEffect(() => {
+        debouncedFetchRef.current = debounce(() => { fetchFranchises(); }, 500);
+        debouncedFetchRef.current();
+        return () => {
+            debouncedFetchRef.current.cancel();
+        };
+    }, [fetchFranchises]);
+
+    const handleDelete = async (id: string) => {
+        const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
+        if (isConfirmed) {
+            const { data } = await AxiosHelperAdmin.deleteData(`/franchises/${id}`);
+            if (data?.status) {
+                toast.success(data.message);
+                fetchFranchises();
+            } else {
+                toast.error(data?.message);
+            }
+        }
+    };
+
+    const onSort = (nextSortBy: SortBy) => {
+        setParam((prev) => {
+            const nextOrder: SortOrder = prev.sortBy === nextSortBy ? (prev.sortOrder === "asc" ? "desc" : "asc") : "asc";
+            return { ...prev, pageNo: 1, sortBy: nextSortBy, sortOrder: nextOrder };
+        });
+    };
+
+    return (
+        <section className="space-y-4">
+            <AdminPageHeader
+                title="Franchises"
+                subtitle="Create and manage franchise accounts."
+                action={
+                    <PermissionBlock permission_id={461}>
+                        <Button
+                            type="button"
+                            variant="primary"
+                            size="md"
+                            onClick={() => {
+                                setImagePreview(null);
+                                setInitialValues({ _id: "", name: "", mobile: "", email: "", status: 1, createdAt: "", password: "", image: null });
+                                setOpen("add");
+                            }}
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                            Create Franchise
+                        </Button>
+                    </PermissionBlock>
+                }
+            />
+
+            <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
+                <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+                    <Input
+                        value={param.query}
+                        onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
+                        className="max-w-xs"
+                        placeholder="Search Franchise..."
+                    />
+
+                    <div className="flex items-center gap-2">
+                        <Select
+                            value={param.status}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
+                            }}
+                            className="max-w-[180px]"
+                        >
+                            <Option value="">All</Option>
+                            <Option value={1}>Active</Option>
+                            <Option value={0}>Inactive</Option>
+                        </Select>
+
+                        <div className="text-sm text-slate-500 dark:text-slate-400">Total: {data.count}</div>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                        <thead className="bg-[#edf3ff] text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            <tr>
+                                <th className="px-3 py-2 w-14"> </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("userId")} name="User ID" active={param.sortBy === "userId"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("name")} name="Name" active={param.sortBy === "name"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("mobile")} name="Mobile" active={param.sortBy === "mobile"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("email")} name="Email" active={param.sortBy === "email"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("status")} name="Status" active={param.sortBy === "status"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("createdAt")} name="Created Date" active={param.sortBy === "createdAt"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.record.map((row) => {
+                                const thumb = resolveFileUrl(row.image);
+                                return (
+                                    <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
+                                        <td className="px-3 py-2 align-middle">
+                                            <div className="relative h-9 w-9 overflow-hidden rounded-full border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                                {thumb ? (
+                                                    <Image src={thumb} alt="" className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                        <ImageIcon className="h-4 w-4" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.userId || "—"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.mobile}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.email || "-"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <Badge variant={row.status === 1 ? "success" : "secondary"} size="sm">
+                                                {row.status === 1 ? "Active" : "Inactive"}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "-"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <div className="flex justify-end gap-1.5 sm:gap-2">
+                                                <PermissionBlock permission_id={462}>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        onClick={() => {
+                                                            setInitialValues({ ...row, password: "", image: row.image || null });
+                                                            setImagePreview(resolveFileUrl(row.image) || null);
+                                                            setOpen("edit");
+                                                        }}
+                                                        title="Edit franchise"
+                                                        aria-label="Edit franchise"
+                                                    >
+                                                        <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                    </Button>
+                                                </PermissionBlock>
+                                                <PermissionBlock permission_id={463}>
+                                                    <Button size="sm" variant="danger" onClick={() => handleDelete(row._id)} title="Delete franchise" aria-label="Delete franchise">
+                                                        <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                    </Button>
+                                                </PermissionBlock>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+
+                            <AdminNoTableRecords show={data.record.length === 0} />
+                        </tbody>
+                    </table>
+                </div>
+
+                <AdminPagination data={data} param={param} setParam={setParam} />
+            </div>
+
+            <Modal
+                show={!!open}
+                onClose={() => setOpen(null)}
+                title={open === "add" ? "Create Franchise" : "Update Franchise"}
+                subTitle="Basic franchise account details."
+                size="lg"
+            >
+                <div className="space-y-4">
+                    <Formik
+                        initialValues={initialValues}
+                        enableReinitialize
+                        validationSchema={validationSchema}
+                        onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
+                            if (open === "add") {
+                                const { data } = await AxiosHelperAdmin.postData("/franchises", values, true);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchFranchises();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            } else {
+                                const { data } = await AxiosHelperAdmin.putData(`/franchises/${values._id}`, values, true);
+                                if (data.status) {
+                                    toast.success(data.message);
+                                    setOpen(null);
+                                    fetchFranchises();
+                                    resetForm();
+                                } else {
+                                    toast.error(data.message);
+                                    setErrors(data.data || {});
+                                }
+                            }
+
+                            setSubmitting(false);
+                        }}
+                    >
+                        {({ isSubmitting, setFieldValue }) => (
+                            <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                            {(imagePreview || resolveFileUrl(typeof initialValues.image === "string" ? initialValues.image : null)) ? (
+                                                <Image src={imagePreview || resolveFileUrl(typeof initialValues.image === "string" ? initialValues.image : null) || ""} alt="Profile photo" className="h-full w-full object-cover" />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                    <ImageIcon className="h-8 w-8" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="franchise-image">Profile photo <span className="font-normal text-slate-500">(optional)</span></Label>
+                                            <InputFile
+                                                id="franchise-image"
+                                                accept="image/jpeg,image/png,image/webp,image/gif"
+                                                onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) {
+                                                        setFieldValue("image", f);
+                                                        setImagePreview(URL.createObjectURL(f));
+                                                    } else {
+                                                        setFieldValue("image", null);
+                                                        setImagePreview(resolveFileUrl(typeof initialValues.image === "string" ? initialValues.image : null));
+                                                    }
+                                                }}
+                                            />
+                                            <ErrorMessage className="text-xs text-rose-600" name="image" component="small" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 space-y-3">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="franchise-name">Name</Label>
+                                        <Field as={Input} id="franchise-name" name="name" placeholder="e.g. City Franchise" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="name" component="small" />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="franchise-mobile">Mobile</Label>
+                                        <Field as={Input} id="franchise-mobile" name="mobile" placeholder="e.g. 9876543210" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="mobile" component="small" />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="franchise-email">Email</Label>
+                                        <Field as={Input} id="franchise-email" name="email" type="email" autoComplete="off" placeholder="e.g. franchise@email.com" />
+                                        <ErrorMessage className="text-xs text-rose-600" name="email" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="franchise-password">Password</Label>
+                                        <Field as={Input} id="franchise-password" name="password" type="password" autoComplete="new-password" placeholder={open === "edit" ? "Leave blank to keep current" : "Create password"} />
+                                        <ErrorMessage className="text-xs text-rose-600" name="password" component="small" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="franchise-status">Status</Label>
+                                        <Field as={Select} id="franchise-status" name="status">
+                                            <Option value={1}>Active</Option>
+                                            <Option value={0}>Inactive</Option>
+                                        </Field>
+                                        <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
+                                        Cancel
+                                    </Button>
+                                    <Button disabled={isSubmitting} type="submit" variant="primary" size="md">
+                                        {isSubmitting ? "Saving..." : "Save"}
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
+                </div>
+            </Modal>
+        </section>
+    );
+}

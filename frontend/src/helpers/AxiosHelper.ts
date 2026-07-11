@@ -10,6 +10,12 @@ export const getAxios = (key?: number) => {
                 baseURL: envConfig.apiUrlAdmin,
                 headers: { "x-api-key": envConfig.apiLicence }
             });
+        case 2:
+            return axios.create({
+                withCredentials: true,
+                baseURL: envConfig.apiUrlFranchise,
+                headers: { "x-api-key": envConfig.apiLicence }
+            });
         default:
             return axios.create({
                 withCredentials: true,

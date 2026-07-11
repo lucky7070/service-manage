@@ -309,7 +309,7 @@ export default function PurchasedPlansPage() {
                             </dl>
                         </section>
 
-                        <section className="rounded-xl border border-indigo-100 p-4 dark:border-slate-700">
+                        {gatewayData.order ? <section className="rounded-xl border border-indigo-100 p-4 dark:border-slate-700">
                             <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">Razorpay order</h3>
                             <dl className="grid gap-2 sm:grid-cols-2">
                                 <div><dt className="text-slate-500">Order status</dt><dd className="font-medium capitalize">{gatewayData.order.status}</dd></div>
@@ -320,7 +320,7 @@ export default function PurchasedPlansPage() {
                                 <div><dt className="text-slate-500">Created</dt><dd>{gatewayData.order.createdAt ? moment(gatewayData.order.createdAt).format("DD-MM-YYYY hh:mm A") : "—"}</dd></div>
                                 <div className="sm:col-span-2"><dt className="text-slate-500">Receipt</dt><dd className="font-mono text-xs">{gatewayData.order.receipt || "—"}</dd></div>
                             </dl>
-                        </section>
+                        </section> : null}
 
                         {gatewayData.latestPayment ? (
                             <section className="rounded-xl border border-indigo-100 p-4 dark:border-slate-700">

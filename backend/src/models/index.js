@@ -2,6 +2,7 @@ export { Counter } from "./Counter.js";
 export { Customer } from "./Customer.js";
 export { ServiceProvider } from "./ServiceProvider.js";
 export { Admin } from "./Admin.js";
+export { Franchise } from "./Franchise.js";
 export { ServiceProviderPhoto } from "./ServiceProviderPhoto.js";
 export { Country } from "./Country.js";
 export { State } from "./State.js";

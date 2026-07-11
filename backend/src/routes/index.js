@@ -2,6 +2,7 @@ import { Router } from "express";
 import customerRoutes from "./customer.routes.js";
 import adminRoutes from "./admin/index.js";
 import adminAuthRoutes from "./adminAuth.routes.js";
+import franchiseRoutes from "./franchise.routes.js";
 import openRoutes from "./open.routes.js";
 import serviceProviderRoutes from "./service-provider.routes.js";
 
@@ -13,5 +14,7 @@ router.use("/service-provider", serviceProviderRoutes);
 
 router.use("/admin", adminAuthRoutes);
 router.use("/admin", adminRoutes);
+
+router.use("/franchise", franchiseRoutes);
 
 export default router;

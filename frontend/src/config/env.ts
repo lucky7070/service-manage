@@ -1,6 +1,7 @@
 const envConfig = {
     authCookieDomain: String(process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN || "").trim(),
     apiUrlAdmin: String(process.env.NEXT_PUBLIC_API_URL_ADMIN),
+    apiUrlFranchise: String(process.env.NEXT_PUBLIC_API_URL_FRANCHISE || String(process.env.NEXT_PUBLIC_API_URL_ADMIN || "").replace(/\/admin\/?$/, "/franchise")),
     apiUrl: String(process.env.NEXT_PUBLIC_API_URL),
     uploadUrl: String(process.env.NEXT_PUBLIC_UPLOAD_URL),
     apiLicence: String(process.env.NEXT_PUBLIC_API_LICENCE),

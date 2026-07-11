@@ -275,6 +275,12 @@ export const validator = (method) => {
         case "admin-update":
             output = [name, mobile, roleId, email, passwordOptional, status];
             break;
+        case "franchise":
+            output = [name, mobile, email, password, status];
+            break;
+        case "franchise-update":
+            output = [name, mobile, email, passwordOptional, status];
+            break;
         case "admin-profile":
             output = [name, mobile, email];
             break;

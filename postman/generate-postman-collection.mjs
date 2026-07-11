@@ -133,6 +133,7 @@ function moduleForAdminUrl(url) {
     if (u.includes("/admin/settings")) return "Settings";
     if (u.includes("/admin/roles")) return "Roles";
     if (u.includes("/admin/admins")) return "Sub admins";
+    if (u.includes("/admin/franchises")) return "Franchises";
     if (u.includes("/admin/countries") || u.includes("/admin/states") || u.includes("/admin/cities")) return "Geography";
     if (u.includes("/admin/customers")) return "Customers";
     if (u.includes("/admin/service-providers")) return "Service providers";
@@ -156,6 +157,7 @@ const ADMIN_MODULE_ORDER = [
     "Settings",
     "Roles",
     "Sub admins",
+    "Franchises",
     "Geography",
     "Customers",
     "Service providers",
@@ -534,6 +536,83 @@ const adminAuth = [
     }),
 ];
 
+const franchiseAuth = [
+    req("Franchise login", "POST", "/franchise/login", {
+        body: { identifier: "franchise@example.com", password: "Franchise1!" },
+        description: "Sets **`franchise_token`** cookie. Use email or mobile as **`identifier`**.",
+    }),
+];
+
+const franchise = [
+    req("Franchise dashboard", "GET", "/franchise/dashboard"),
+    req("Franchise profile", "GET", "/franchise/profile"),
+    req("Update franchise profile", "PUT", "/franchise/profile", {
+        body: { name: "City Franchise", mobile: "9876543210", email: "franchise@example.com" },
+    }),
+    req("Update franchise password", "PUT", "/franchise/profile/password", {
+        body: { current_password: "Franchise1!", new_password: "Franchise2!", confirm_password: "Franchise2!" },
+    }),
+    req("Update franchise profile image (multipart)", "PUT", "/franchise/profile/image", {
+        formdata: [fd.file("image")],
+    }),
+    req("Franchise service providers", "GET", "/franchise/service-providers?pageNo=1&limit=10", {
+        description: "Only providers owned by the logged-in franchise (`franchiseId`). Optional **`query`**, **`profileStatus`**, **`sortBy`**, **`sortOrder`**.",
+    }),
+    req("Create franchise service provider (multipart)", "POST", "/franchise/service-providers", {
+        formdata: [
+            fd.text("name", "Demo Provider"),
+            fd.text("mobile", "9876543210"),
+            fd.text("email", "provider@example.com"),
+            fd.text("cityId", OID),
+            fd.text("serviceCategoryId", OID),
+            fd.text("panCardNumber", "ABCDE1234F"),
+            fd.text("aadharNumber", "123456789012"),
+            fd.text("experienceYears", "3"),
+            fd.text("experienceDescription", "Field service experience."),
+            fd.file("image"),
+            fd.file("panCardDocument"),
+            fd.file("aadharDocument"),
+        ],
+        description: "Creates provider with **`franchiseId`** of the logged-in franchise and **`registerFrom: franchise`**.",
+    }),
+    req("Update franchise service provider (multipart)", "PUT", `/franchise/service-providers/${OID}`, {
+        formdata: [
+            fd.text("name", "Demo Provider"),
+            fd.text("mobile", "9876543210"),
+            fd.text("email", "provider@example.com"),
+            fd.text("cityId", OID),
+            fd.text("serviceCategoryId", OID),
+            fd.text("panCardNumber", "ABCDE1234F"),
+            fd.text("aadharNumber", "123456789012"),
+            fd.text("experienceYears", "3"),
+            fd.file("image"),
+        ],
+        description: "Only updates providers owned by this franchise.",
+    }),
+    req("Delete franchise service provider", "DELETE", `/franchise/service-providers/${OID}`),
+    req("Franchise service provider detail", "GET", `/franchise/service-providers/${OID}`),
+    req("Franchise provider work photos", "GET", `/franchise/service-providers/${OID}/photos`),
+    req("Upload franchise provider work photos", "POST", `/franchise/service-providers/${OID}/photos`, {
+        formdata: [fd.file("photos")],
+        description: "Form field **`photos`** (multiple). Provider must belong to the franchise.",
+    }),
+    req("Reorder franchise provider work photos", "PUT", `/franchise/service-providers/${OID}/photos/reorder`, {
+        body: { orderedIds: [OID] },
+    }),
+    req("Delete franchise provider work photo", "DELETE", `/franchise/service-providers/${OID}/photos/${OID}`),
+    req("Franchise provider services", "GET", `/franchise/service-providers/${OID}/services`),
+    req("Add franchise provider service", "POST", `/franchise/service-providers/${OID}/services`, {
+        body: { serviceTypeId: OID, price: 499, status: 1 },
+    }),
+    req("Update franchise provider service", "PUT", `/franchise/service-providers/${OID}/services/${OID}`, {
+        body: { serviceTypeId: OID, price: 599, status: 1 },
+    }),
+    req("Delete franchise provider service", "DELETE", `/franchise/service-providers/${OID}/services/${OID}`),
+    req("Franchise provider plan history", "GET", `/franchise/service-providers/${OID}/subscriptions`),
+    req("Franchise service type options", "GET", "/franchise/service-types?categoryId=&query=&limit=20"),
+    req("Franchise logout", "POST", "/franchise/logout"),
+];
+
 const admin = [
     req("Dashboard stats", "GET", "/admin/dashboard-stats"),
     req("Bookings list", "GET", "/admin/bookings?pageNo=1&limit=10&status=&query="),
@@ -608,6 +687,30 @@ const admin = [
     }),
     req("Delete admin", "DELETE", "/admin/admins/:id"),
     req("Get admin", "GET", "/admin/admins/:id"),
+    req("List franchises", "GET", "/admin/franchises?pageNo=1&limit=10"),
+    req("Create franchise (multipart)", "POST", "/admin/franchises", {
+        formdata: [
+            fd.text("name", "City Franchise"),
+            fd.text("mobile", "9876543210"),
+            fd.text("email", "franchise@example.com"),
+            fd.text("password", "Franchise1!"),
+            fd.text("status", "1"),
+            fd.file("image"),
+        ],
+        description: "Optional **`image`**. Password required on create.",
+    }),
+    req("Update franchise (multipart)", "PUT", "/admin/franchises/:id", {
+        formdata: [
+            fd.text("name", "City Franchise"),
+            fd.text("mobile", "9876543210"),
+            fd.text("email", "franchise@example.com"),
+            fd.text("status", "1"),
+            fd.file("image"),
+        ],
+        description: "Password optional on update. Optional **`image`**.",
+    }),
+    req("Delete franchise", "DELETE", "/admin/franchises/:id"),
+    req("Get franchise", "GET", "/admin/franchises/:id"),
     req("Create country", "POST", "/admin/countries", { body: { name: "India", status: 1 } }),
     req("Update country", "PUT", "/admin/countries/:id", { body: { name: "India", status: 1 } }),
     req("Delete country", "DELETE", "/admin/countries/:id"),
@@ -976,6 +1079,12 @@ collection.item.push(
     folder("Admin auth", "Sets **`admin_token`**. Run before **Admin (authenticated)**.", adminAuth)
 );
 collection.item.push(folder("Admin (authenticated)", "Requires **admin** cookie. Route modules are grouped into subfolders below.", admin));
+collection.item.push(
+    folder("Franchise auth", "Sets **`franchise_token`**. Run before **Franchise (authenticated)**.", franchiseAuth)
+);
+collection.item.push(
+    folder("Franchise (authenticated)", "Requires **franchise** cookie. Dashboard, profile, service-provider list.", franchise)
+);
 
 regroupAdminAuthenticatedFolder(collection);
 const out = path.join(__dirname, "Service-Manage.postman_collection.json");

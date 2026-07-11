@@ -221,11 +221,7 @@ export const register = async (req, res) => {
         let referredBy = null;
         const normalizedReferralCode = String(referralCode || "").trim().toUpperCase();
         if (normalizedReferralCode) {
-            const referrer = await ServiceProvider.findOne({
-                userId: normalizedReferralCode,
-                deletedAt: null,
-                isActive: true
-            });
+            const referrer = await ServiceProvider.findOne({ userId: normalizedReferralCode, deletedAt: null, isActive: true });
             if (!referrer) {
                 return res.clientError("Invalid referral code", 422, [{ field: "referralCode", message: "Invalid referral code" }]);
             }

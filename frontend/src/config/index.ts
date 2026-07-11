@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Receipt, Settings, Shield, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
+import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Receipt, Settings, Shield, Store, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -36,6 +36,7 @@ export const OTP_REGEXP = /^\d{6}$/;
 export const PHONE_ERROR_MESSAGE = "Enter a valid Indian mobile number.";
 export const SERVICE_PROVIDER_PROFILE_STATUSES: ProfileStatus[] = ["pending", "approved", "rejected", "suspended"];
 export const AUTH_PAGES = ["/admin/login", "/admin/forgot-password"];
+export const AUTH_PAGES_FRANCHISE = ["/franchise/login", "/franchise/logout"];
 export const AUTH_PAGES_USER = ["/login"];
 
 export const PERMISSIONS = [
@@ -63,6 +64,15 @@ export const PERMISSIONS = [
             { id: 203, label: "Delete Admin" },
             { id: 204, label: "View Admin" },
             { id: 205, label: "Assign Permission" },
+        ]
+    },
+    {
+        name: "Franchise Management",
+        permissions: [
+            { id: 461, label: "Create Franchise" },
+            { id: 462, label: "Update Franchise" },
+            { id: 463, label: "Delete Franchise" },
+            { id: 464, label: "View Franchise" },
         ]
     },
     {
@@ -243,11 +253,13 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
         children: [
             { href: "/admin/roles", label: "Roles", icon: UserCog, permission_id: 104 },
             { href: "/admin/admins", label: "Sub Admins", icon: Users, permission_id: 204 },
+            { href: "/admin/franchises", label: "Franchises", icon: Store, permission_id: 464 },
             { href: "/admin/customers", label: "Customers", icon: UserCircle, permission_id: 334 },
             { href: "/admin/service-providers", label: "Service providers", icon: HardHat, permission_id: 374 },
         ]
     },
     { href: "/admin/enquiries", label: "Enquiries", icon: MailQuestionMark, permission_id: 401 },
+    { href: "/admin/purchased-plan", label: "Purchased plans", icon: Receipt, permission_id: 458 },
     { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, permission_id: 345 },
     { href: "/admin/service-leads", label: "Booking leads", icon: ClipboardList, permission_id: 346 },
     {
@@ -263,7 +275,6 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/our-values", label: "Our Values", icon: Heart, permission_id: 434 },
             { href: "/admin/our-milestones", label: "Our Milestones", icon: History, permission_id: 444 },
             { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard, permission_id: 454 },
-            { href: "/admin/purchased-plan", label: "Purchased plans", icon: Receipt, permission_id: 458 },
             { href: "/admin/cms-pages", label: "CMS Pages", icon: FileText, permission_id: 414 },
         ]
     },
@@ -277,6 +288,33 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
         ]
     },
     { href: "/admin/settings", label: "Settings", icon: Settings, permission_id: 100 },
+];
+
+export const FRANCHISE_MENU: SidebarItem[] = [
+    { href: "/franchise/dashboard", label: "Dashboard", icon: LayoutDashboard, permission_id: true },
+    { href: "/franchise/service-providers", label: "Service providers", icon: HardHat, permission_id: true },
+    { href: "/franchise/profile", label: "Profile", icon: UserCircle, permission_id: true },
+];
+
+export const FRANCHISE_ROUTE_BREADCRUMBS: RoutePermissionRule[] = [
+    { path: "/franchise/dashboard", permission_id: true, items: [{ label: "Dashboard" }] },
+    { path: "/franchise/service-providers", permission_id: true, items: [{ label: "Service providers" }] },
+    {
+        path: "/franchise/service-providers/:slug/images",
+        permission_id: true,
+        items: [{ label: "Service providers", href: "/franchise/service-providers" }, { label: "Work Photos" }]
+    },
+    {
+        path: "/franchise/service-providers/:slug/services",
+        permission_id: true,
+        items: [{ label: "Service providers", href: "/franchise/service-providers" }, { label: "Provider Services" }]
+    },
+    {
+        path: "/franchise/service-providers/:slug/subscriptions",
+        permission_id: true,
+        items: [{ label: "Service providers", href: "/franchise/service-providers" }, { label: "Plan purchase history" }]
+    },
+    { path: "/franchise/profile", permission_id: true, items: [{ label: "Profile" }] },
 ];
 
 export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
@@ -299,6 +337,11 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/admins",
         permission_id: 204,
         items: [{ label: "Sub Admins" }]
+    },
+    {
+        path: "/admin/franchises",
+        permission_id: 464,
+        items: [{ label: "Franchises" }]
     },
     {
         path: "/admin/admins/permissions/:slug",

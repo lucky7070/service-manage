@@ -108,6 +108,7 @@ export const getPurchasedPlanGatewayStatus = async (req, res) => {
             payments: payments.map(formatGatewayPayment).filter(Boolean),
         }, "Gateway status fetched.");
     } catch (error) {
+        if (error.statusCode === 400) return res.clientError(error.error.description, 400);
         if (error?.status === 503) return res.clientError(error.message, 503);
         return res.someThingWentWrong(error);
     }

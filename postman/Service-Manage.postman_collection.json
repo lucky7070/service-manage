@@ -2233,6 +2233,157 @@
           ]
         },
         {
+          "name": "Franchises",
+          "item": [
+            {
+              "name": "List franchises",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/franchises?pageNo=1&limit=10"
+              }
+            },
+            {
+              "name": "Create franchise (multipart)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/franchises",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "City Franchise",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "mobile",
+                      "value": "9876543210",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "franchise@example.com",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "password",
+                      "value": "Franchise1!",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "description": "Optional **`image`**. Password required on create."
+              }
+            },
+            {
+              "name": "Update franchise (multipart)",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/franchises/:id",
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "name",
+                      "value": "City Franchise",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "mobile",
+                      "value": "9876543210",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "email",
+                      "value": "franchise@example.com",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "description": "Password optional on update. Optional **`image`**."
+              }
+            },
+            {
+              "name": "Delete franchise",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/franchises/:id"
+              }
+            },
+            {
+              "name": "Get franchise",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/franchises/:id"
+              }
+            }
+          ]
+        },
+        {
           "name": "Geography",
           "item": [
             {
@@ -4644,6 +4795,561 @@
         }
       ],
       "description": "Requires **admin** cookie. Route modules are grouped into subfolders below."
+    },
+    {
+      "name": "Franchise auth",
+      "item": [
+        {
+          "name": "Franchise login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"franchise@example.com\",\n  \"password\": \"Franchise1!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sets **`franchise_token`** cookie. Use email or mobile as **`identifier`**."
+          }
+        }
+      ],
+      "description": "Sets **`franchise_token`**. Run before **Franchise (authenticated)**."
+    },
+    {
+      "name": "Franchise (authenticated)",
+      "item": [
+        {
+          "name": "Franchise dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/dashboard"
+          }
+        },
+        {
+          "name": "Franchise profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/profile"
+          }
+        },
+        {
+          "name": "Update franchise profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"City Franchise\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"franchise@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update franchise password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/profile/password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"Franchise1!\",\n  \"new_password\": \"Franchise2!\",\n  \"confirm_password\": \"Franchise2!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update franchise profile image (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/profile/image",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Franchise service providers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers?pageNo=1&limit=10",
+            "description": "Only providers owned by the logged-in franchise (`franchiseId`). Optional **`query`**, **`profileStatus`**, **`sortBy`**, **`sortOrder`**."
+          }
+        },
+        {
+          "name": "Create franchise service provider (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Demo Provider",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "mobile",
+                  "value": "9876543210",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "provider@example.com",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "cityId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "serviceCategoryId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "panCardNumber",
+                  "value": "ABCDE1234F",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "aadharNumber",
+                  "value": "123456789012",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceYears",
+                  "value": "3",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceDescription",
+                  "value": "Field service experience.",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "panCardDocument",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "aadharDocument",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Creates provider with **`franchiseId`** of the logged-in franchise and **`registerFrom: franchise`**."
+          }
+        },
+        {
+          "name": "Update franchise service provider (multipart)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Demo Provider",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "mobile",
+                  "value": "9876543210",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "email",
+                  "value": "provider@example.com",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "cityId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "serviceCategoryId",
+                  "value": "507f1f77bcf86cd799439011",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "panCardNumber",
+                  "value": "ABCDE1234F",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "aadharNumber",
+                  "value": "123456789012",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "experienceYears",
+                  "value": "3",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Only updates providers owned by this franchise."
+          }
+        },
+        {
+          "name": "Delete franchise service provider",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011"
+          }
+        },
+        {
+          "name": "Franchise service provider detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011"
+          }
+        },
+        {
+          "name": "Franchise provider work photos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/photos"
+          }
+        },
+        {
+          "name": "Upload franchise provider work photos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/photos",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photos",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "description": "Form field **`photos`** (multiple). Provider must belong to the franchise."
+          }
+        },
+        {
+          "name": "Reorder franchise provider work photos",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/photos/reorder",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderedIds\": [\n    \"507f1f77bcf86cd799439011\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete franchise provider work photo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/photos/507f1f77bcf86cd799439011"
+          }
+        },
+        {
+          "name": "Franchise provider services",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/services"
+          }
+        },
+        {
+          "name": "Add franchise provider service",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/services",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceTypeId\": \"507f1f77bcf86cd799439011\",\n  \"price\": 499,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update franchise provider service",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/services/507f1f77bcf86cd799439011",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceTypeId\": \"507f1f77bcf86cd799439011\",\n  \"price\": 599,\n  \"status\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete franchise provider service",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/services/507f1f77bcf86cd799439011"
+          }
+        },
+        {
+          "name": "Franchise provider plan history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-providers/507f1f77bcf86cd799439011/subscriptions"
+          }
+        },
+        {
+          "name": "Franchise service type options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/service-types?categoryId=&query=&limit=20"
+          }
+        },
+        {
+          "name": "Franchise logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/franchise/logout"
+          }
+        }
+      ],
+      "description": "Requires **franchise** cookie. Dashboard, profile, service-provider list."
     }
   ]
 }

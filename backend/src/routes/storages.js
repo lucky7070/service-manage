@@ -1,6 +1,7 @@
 import { Storage } from "../libraries/storage.js";
 
 export const adminStorage = new Storage({ dir: "admins", isImage: true, isDoc: false, fileSize: 2 });
+export const franchiseStorage = new Storage({ dir: "franchises", isImage: true, isDoc: false, fileSize: 2 });
 export const appSettingStorage = new Storage({ dir: "application", isImage: true, isDoc: false, fileSize: 5 });
 export const customerStorage = new Storage({ dir: "customers", isImage: true, isDoc: false, fileSize: 2 });
 export const serviceCategoryStorage = new Storage({ dir: "service-categories", isImage: true, isDoc: false, fileSize: 2 });

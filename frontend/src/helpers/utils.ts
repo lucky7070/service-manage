@@ -1,4 +1,4 @@
-import { ADMIN_ROUTE_PERMISSIONS, AdminBreadcrumbItem } from "@/config";
+import { ADMIN_ROUTE_PERMISSIONS, FRANCHISE_ROUTE_BREADCRUMBS, type AdminBreadcrumbItem } from "@/config";
 import envConfig from "@/config/env";
 import { SweetAlertOptions } from "sweetalert2";
 
@@ -168,6 +168,27 @@ export const getAdminBreadcrumbItems = (pathname: string): AdminBreadcrumbItem[]
     const routeSegments = adminIndex >= 0 ? segments.slice(adminIndex + 1) : segments;
 
     let cumulative = "/admin";
+    return routeSegments.map((segment, idx) => {
+        cumulative += `/${segment}`;
+        const isLast = idx === routeSegments.length - 1;
+        const isIdLike = /^[a-f0-9]{24}$/i.test(segment);
+        return {
+            label: isIdLike ? "Details" : titleCaseSegment(segment),
+            href: isLast ? undefined : cumulative
+        };
+    });
+};
+
+export const getFranchiseBreadcrumbItems = (pathname: string): AdminBreadcrumbItem[] => {
+    const matched = FRANCHISE_ROUTE_BREADCRUMBS.find((rule) => compareRoute(pathname, rule.path));
+    if (matched) return matched.items;
+    if (!pathname.startsWith("/franchise")) return [];
+
+    const segments = pathname.split("/").filter(Boolean);
+    const franchiseIndex = segments.indexOf("franchise");
+    const routeSegments = franchiseIndex >= 0 ? segments.slice(franchiseIndex + 1) : segments;
+
+    let cumulative = "/franchise";
     return routeSegments.map((segment, idx) => {
         cumulative += `/${segment}`;
         const isLast = idx === routeSegments.length - 1;
