@@ -100,10 +100,10 @@ export const resolveAssignmentForPaymentWebhook = async ({ payment, session = nu
     }
 
     if (razorpayOrderId) {
-        const byOrder = await withSession(AssignedSubscription.findOne({ paymentGatewayOrderId: razorpayOrderId }), session);
-        if (byOrder) {
-            const autopay = byOrder.autopaySubscriptionId ? await withSession(AutopaySubscription.findById(byOrder.autopaySubscriptionId), session) : null;
-            return { assignment: byOrder, autopay };
+        const existing = await withSession(AssignedSubscription.findOne({ paymentGatewayOrderId: razorpayOrderId }), session);
+        if (existing) {
+            const autopay = existing.autopaySubscriptionId ? await withSession(AutopaySubscription.findById(existing.autopaySubscriptionId), session) : null;
+            return { assignment: existing, autopay };
         }
     }
 
@@ -236,6 +236,8 @@ export const processSubscriptionMandateUpdate = async ({ razorpaySubscriptionId,
         cancelled: "cancelled",
         halted: "halted",
         pending: "pending",
+        paused: "paused",
+        resumed: "active",
     };
 
     const mandateStatus = mandateStatusMap[String(status).toLowerCase()];
@@ -262,7 +264,7 @@ export const processSubscriptionMandateUpdate = async ({ razorpaySubscriptionId,
     autopay.mandateStatus = mandateStatus;
     if (!autopay.razorpaySubscriptionId) autopay.razorpaySubscriptionId = rzpSubscriptionId;
 
-    if (mandateStatus === "cancelled" || mandateStatus === "halted") {
+    if (mandateStatus === "cancelled" || mandateStatus === "halted" || mandateStatus === "paused") {
         autopay.autoRenew = false;
         autopay.cancelledAt = new Date();
     } else if (mandateStatus === "active") {

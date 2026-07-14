@@ -5,7 +5,7 @@ import Provider from "./provider";
 import "@/app/(frontend)/front.css";
 
 export const metadata: Metadata = {
-    title: "Service Hub",
+    title: "Serva Work",
     description: "Book trusted plumbers, electricians, salon and cleaning services."
 };
 

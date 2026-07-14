@@ -12,7 +12,7 @@ import { parseBookingChatPayload } from "../../helpers/bookingChat.js";
 import { getSettings } from "../../helpers/database.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingChatMessage, notifyBookingQuoteSent, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
-import { FILTER_ACTIVE_SUBSCRIPTION } from "../../helpers/subscriptionAssignment.js";
+import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -76,7 +76,7 @@ const getProfile = async (user) => {
         {
             $lookup: {
                 from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [
-                    { $match: FILTER_ACTIVE_SUBSCRIPTION },
+                    { $match: getActiveSubscriptionFilter() },
                     { $lookup: { from: "subscriptions", localField: "subscriptionId", foreignField: "_id", as: "plan" } },
                     { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
                     { $sort: { createdAt: -1 } },

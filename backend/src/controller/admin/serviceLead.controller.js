@@ -3,7 +3,7 @@ import { ObjectId, escapeRegex } from "../../helpers/utils.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 import moment from "moment";
-import { FILTER_ACTIVE_SUBSCRIPTION } from "../../helpers/subscriptionAssignment.js";
+import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
 
 export const listServiceLeads = async (req, res) => {
     try {
@@ -136,7 +136,7 @@ export const assignServiceLead = async (req, res) => {
         });
         if (!provider) return res.clientError("Provider not found or does not match this lead's city and service category.", 422, [{ field: "providerId", message: "Invalid provider for this lead." }]);
 
-        const subscription = await AssignedSubscription.findOne({ providerId: provider._id, ...FILTER_ACTIVE_SUBSCRIPTION });
+        const subscription = await AssignedSubscription.findOne({ providerId: provider._id, ...getActiveSubscriptionFilter() });
         if (!subscription) return res.clientError("Provider is not active. Please assign a subscription to the provider.", 400);
 
         const selectedServiceTypeIds = lead.serviceTypeId.map((x) => x);

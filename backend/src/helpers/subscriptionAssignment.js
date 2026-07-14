@@ -2,10 +2,10 @@ import moment from "moment";
 import { AssignedSubscription } from "../models/index.js";
 import { startOfDay } from "./utils.js";
 
-export const PROVIDER_FILTER = { deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true };
-export const FILTER_ACTIVE_SUBSCRIPTION = { status: "active", startDate: { $lte: startOfDay() }, endDate: { $gte: startOfDay() } };
-export const PROVIDER_PIPELINE = [
-    { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: FILTER_ACTIVE_SUBSCRIPTION }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
+export const PROVIDER_FILTER = Object.freeze({ deletedAt: null, isActive: true, profileStatus: "approved", isVerified: true });
+export const getActiveSubscriptionFilter = () => ({ status: "active", startDate: { $lte: startOfDay() }, endDate: { $gte: startOfDay() } });
+export const getProviderPipeline = () => [
+    { $lookup: { from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [{ $match: getActiveSubscriptionFilter() }, { $sort: { createdAt: -1 } }, { $limit: 1 }] } },
     { $unwind: { path: "$subscription" } },
 ];
 
@@ -29,7 +29,7 @@ export const resolveProviderPurchaseSchedule = async (providerId, plan, session)
     const today = moment().startOf("day");
     let startDate = today.toDate();
 
-    const currentActiveAssignment = await AssignedSubscription.findOne({ providerId, ...FILTER_ACTIVE_SUBSCRIPTION }).session(session).lean();
+    const currentActiveAssignment = await AssignedSubscription.findOne({ providerId, ...getActiveSubscriptionFilter() }).session(session).lean();
     if (currentActiveAssignment) {
         startDate = moment(currentActiveAssignment.endDate).add(1, "day").startOf("day").toDate();
     }

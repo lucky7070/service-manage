@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag, Subscription } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
-import { PROVIDER_FILTER, PROVIDER_PIPELINE } from "../helpers/subscriptionAssignment.js";
+import { PROVIDER_FILTER, getProviderPipeline } from "../helpers/subscriptionAssignment.js";
 
 export const listStates = async (req, res) => {
     try {
@@ -141,7 +141,7 @@ export const listFeaturedServiceProviders = async (req, res) => {
         const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 12) : 8;
 
         const rows = await ServiceProvider.aggregate([
-            { $match: { deletedAt: null, isActive: true, isFeatured: true, profileStatus: "approved", isVerified: true } },
+            { $match: { deletedAt: null, isActive: true,  profileStatus: "approved" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
             { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
             {
@@ -200,7 +200,7 @@ export const listServiceProviders = async (req, res) => {
 
         const pipeline = [
             { $match: filter },
-            ...PROVIDER_PIPELINE,
+            ...getProviderPipeline(),
             {
                 $project: {
                     _id: 1,
@@ -233,22 +233,24 @@ export const listServiceProviders = async (req, res) => {
 
 export const getPublicServiceProvider = async (req, res) => {
     try {
+        const providerFilter = { ...PROVIDER_FILTER };
+        const idOrSlug = String(req.params.id || "").trim();
 
-        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-            PROVIDER_FILTER._id = ObjectId(req.params.id);
+        if (mongoose.Types.ObjectId.isValid(idOrSlug)) {
+            providerFilter._id = ObjectId(idOrSlug);
+        } else if (idOrSlug) {
+            providerFilter.slug = idOrSlug;
         } else {
-            PROVIDER_FILTER.slug = req.params.id;
+            return res.noRecords();
         }
 
-        if (!PROVIDER_FILTER._id && !PROVIDER_FILTER.slug) return res.noRecords();
-
         const [doc] = await ServiceProvider.aggregate([
-            { $match: PROVIDER_FILTER },
+            { $match: providerFilter },
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
             { $unwind: { path: "$city" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
             { $unwind: { path: "$serviceCategory" } },
-            ...PROVIDER_PIPELINE,
+            ...getProviderPipeline(),
             {
                 $lookup: {
                     from: "serviceproviderphotos", localField: "_id", foreignField: "providerId", as: "photos",

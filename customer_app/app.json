@@ -2,7 +2,7 @@
     "expo": {
         "name": "Serva Services",
         "slug": "serva-services",
-        "version": "1.0.2",
+        "version": "1.0.3",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
         "userInterfaceStyle": "light",
@@ -18,7 +18,7 @@
         },
         "android": {
             "package": "com.serva.services",
-            "versionCode": 3,
+            "versionCode": 4,
             "adaptiveIcon": {
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#ffffff"

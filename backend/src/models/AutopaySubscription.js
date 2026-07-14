@@ -6,7 +6,7 @@ const Schema = new mongoose.Schema({
     razorpayPlanId: { type: String, trim: true, index: true, default: null },
     razorpaySubscriptionId: { type: String, trim: true, unique: true, sparse: true, index: true, default: null },
     autoRenew: { type: Boolean, default: true, index: true },
-    mandateStatus: { type: String, enum: ["pending", "active", "cancelled", "halted"], default: "pending", index: true },
+    mandateStatus: { type: String, enum: ["pending", "active", "cancelled", "halted", "paused"], default: "pending", index: true },
     currentStart: { type: Date, default: null },
     currentEnd: { type: Date, default: null },
     paidCount: { type: Number, default: 0 },

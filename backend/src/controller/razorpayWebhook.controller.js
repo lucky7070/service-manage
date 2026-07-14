@@ -4,7 +4,7 @@ import { syncAssignedSubscriptionFromRazorpayPayment, processSubscriptionCharged
 import logger from "../helpers/logger.js";
 
 const PAYMENT_EVENTS = new Set(["payment.captured", "payment.failed"]);
-const SUBSCRIPTION_EVENTS = new Set(["subscription.authenticated", "subscription.activated", "subscription.charged", "subscription.cancelled", "subscription.halted", "subscription.pending"]);
+const SUBSCRIPTION_EVENTS = new Set(["subscription.authenticated", "subscription.activated", "subscription.paused", "subscription.resumed", "subscription.charged", "subscription.cancelled", "subscription.halted", "subscription.pending"]);
 
 const handlePaymentWebhook = async ({ body, session }) => {
     const payment = body?.payload?.payment?.entity;
@@ -68,7 +68,7 @@ const handleSubscriptionWebhook = async ({ body, session }) => {
         };
     }
 
-    if (["subscription.cancelled", "subscription.halted", "subscription.pending"].includes(eventType)) {
+    if (["subscription.cancelled", "subscription.paused", "subscription.resumed", "subscription.halted", "subscription.pending"].includes(eventType)) {
         const status = eventType.split(".")[1];
         const result = await processSubscriptionMandateUpdate({ razorpaySubscriptionId, status, subscription, session });
         return {
@@ -105,6 +105,11 @@ const handleSubscriptionWebhook = async ({ body, session }) => {
     return { status: 200, message: "Subscription event ignored.", data: { event: eventType } };
 };
 
+const logResponse = (res, response, statusCode = 200) => {
+    logger.webhook("Razorpay webhook processed:", { statusCode, response });
+    return res.status(statusCode).json(response);
+};
+
 export const razorpayWebhook = async (req, res) => {
     const session = await mongoose.startSession();
 
@@ -116,31 +121,26 @@ export const razorpayWebhook = async (req, res) => {
             return res.status(400).json({ status: false, message: "Invalid webhook payload.", data: [] });
         }
 
-        const secret = await getRazorpayWebhookSecret();
-        if (!secret) {
-            return res.status(503).json({ status: false, message: "Razorpay webhook is not configured.", data: [] });
-        }
-
-        if (!verifyRazorpayWebhookSignature({ body: rawBody, signature, secret })) {
-            return res.status(400).json({ status: false, message: "Invalid webhook signature.", data: [] });
-        }
-
         let body;
         try {
             body = JSON.parse(rawBody.toString("utf8"));
         } catch {
-            return res.status(400).json({ status: false, message: "Invalid webhook payload.", data: [] });
+            return logResponse(res, { status: false, message: "Invalid webhook payload.", data: rawBody.toString("utf8") }, 400);
+        }
+
+        logger.webhook("Razorpay webhook verified:", { body, signature });
+        const secret = await getRazorpayWebhookSecret();
+        if (!secret) {
+            return logResponse(res, { status: false, message: "Razorpay webhook is not configured.", data: [] }, 503);
+        }
+
+        if (!verifyRazorpayWebhookSignature({ body: rawBody, signature, secret })) {
+            return logResponse(res, { status: false, message: "Invalid webhook signature.", data: [] }, 400);
         }
 
         const eventType = String(body?.event || "").trim();
-        logger.webhook("Razorpay webhook verified:", {
-            event: eventType,
-            paymentId: body?.payload?.payment?.entity?.id || null,
-            subscriptionId: body?.payload?.subscription?.entity?.id || null,
-        });
-
         if (!PAYMENT_EVENTS.has(eventType) && !SUBSCRIPTION_EVENTS.has(eventType)) {
-            return res.status(200).json({ status: true, message: "Event ignored.", data: { event: eventType } });
+            return logResponse(res, { status: true, message: "Event ignored.", data: { event: eventType } }, 200);
         }
 
         await session.startTransaction();
@@ -149,8 +149,7 @@ export const razorpayWebhook = async (req, res) => {
             : await handleSubscriptionWebhook({ body, session });
         await session.commitTransaction();
 
-        logger.webhook("Razorpay webhook processed:", { event: eventType, response });
-        return res.status(response.status).json({ status: true, message: response.message, data: response.data });
+        return logResponse(res, { status: true, statusCode: response.status, message: response.message, data: response.data }, 200);
     } catch (error) {
         if (session.inTransaction()) await session.abortTransaction();
         logger.error("Razorpay webhook error:", error);
