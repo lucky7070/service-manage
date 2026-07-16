@@ -8,9 +8,9 @@ import * as Yup from "yup";
 import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
-import Link from "next/link";
+import AdminActionsDropdown from "@/components/admin/AdminActionsDropdown";
 import { CircleCheckBig, CreditCard, ImageIcon, Images, Pencil, Plus, Trash2, Wrench } from "lucide-react";
-
+import Link from "next/link";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, Textarea } from "@/components/ui";
@@ -52,6 +52,7 @@ type ServiceProvider = {
     isVerified?: boolean;
     isActive?: boolean;
     createdAt?: string;
+    currentSubscription?: string;
 };
 
 type ServiceProviderRecord = {
@@ -259,23 +260,15 @@ export default function AdminServiceProvidersPage() {
                                     <AdminTableHeader onClick={() => onSort("userId")} name="User ID" active={param.sortBy === "userId"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
-                                    <AdminTableHeader onClick={() => onSort("name")} name="Name" active={param.sortBy === "name"} sortOrder={param.sortOrder} />
-                                </th>
-                                <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("mobile")} name="Mobile" active={param.sortBy === "mobile"} sortOrder={param.sortOrder} />
-                                </th>
-                                <th className="px-3 py-2">
-                                    <AdminTableHeader onClick={() => onSort("email")} name="Email" active={param.sortBy === "email"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("cityId")} name="City" active={param.sortBy === "cityId"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
-                                    <AdminTableHeader onClick={() => onSort("serviceCategoryId")} name="Service category" active={param.sortBy === "serviceCategoryId"} sortOrder={param.sortOrder} />
-                                </th>
-                                <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("profileStatus")} name="Profile status" active={param.sortBy === "profileStatus"} sortOrder={param.sortOrder} />
                                 </th>
+                                <th className="px-3 py-2">Current subscription</th>
                                 <th className="px-3 py-2">Featured</th>
                                 <th className="px-3 py-2">Verified</th>
                                 <th className="px-3 py-2">
@@ -299,12 +292,18 @@ export default function AdminServiceProvidersPage() {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-3 py-2 font-mono text-xs text-slate-600 dark:text-slate-300">{row.userId || "—"}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.mobile}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.email}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.cityName || "—"}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.serviceCategoryName || "—"}</td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <p>{row.name}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{row.userId || "—"}</p>
+                                    </td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <p>{row.mobile}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{row.email || "—"}</p>
+                                    </td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <p>{row.cityName || "—"}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{row.serviceCategoryName || "—"}</p>
+                                    </td>
                                     <td className="px-3 py-2">
                                         <Badge
                                             className="capitalize"
@@ -320,6 +319,9 @@ export default function AdminServiceProvidersPage() {
                                             {row.profileStatus}
                                         </Badge>
                                     </td>
+                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                        <p className="">{row.currentSubscription ? <Link className="text-indigo-600 dark:text-indigo-400 font-semibold" href={`/admin/service-providers/${row._id}/subscriptions`} target="_blank">{row.currentSubscription}</Link> : "—"}</p>
+                                    </td>
                                     <td className="px-3 py-2">
                                         <Badge variant={row.isFeatured ? "success" : "secondary"} size="sm">
                                             {row.isFeatured ? "Yes" : "No"}
@@ -332,53 +334,53 @@ export default function AdminServiceProvidersPage() {
                                     </td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "—"}</td>
                                     <td className="px-3 py-2">
-                                        <div className="flex justify-end gap-1.5 sm:gap-2">
-                                            <PermissionBlock permission_id={378}>
-                                                <Link
-                                                    href={`/admin/service-providers/${row._id}/images`}
-                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-secondary-200 px-3 text-xs font-medium text-secondary-900 transition-all hover:bg-secondary-300 dark:bg-secondary-700 dark:text-white dark:hover:bg-secondary-600"
-                                                    title="Work Photos"
-                                                    aria-label="Work Photos"
-                                                >
-                                                    <Images className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Link>
-                                            </PermissionBlock>
-                                            <PermissionBlock permission_id={3740}>
-                                                <Link
-                                                    href={`/admin/service-providers/${row._id}/services`}
-                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 px-3 text-xs font-medium text-primary-800 transition-all hover:bg-primary-200 dark:bg-primary-900/40 dark:text-primary-200"
-                                                    title="Provider Services"
-                                                    aria-label="Provider Services"
-                                                >
-                                                    <Wrench className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Link>
-                                            </PermissionBlock>
-                                            <PermissionBlock permission_id={457}>
-                                                <Link
-                                                    href={`/admin/service-providers/${row._id}/subscriptions`}
-                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 px-3 text-xs font-medium text-emerald-800 transition-all hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200"
-                                                    title="Provider Subscriptions"
-                                                    aria-label="Provider Subscriptions"
-                                                >
-                                                    <CreditCard className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Link>
-                                            </PermissionBlock>
-                                            <PermissionBlock permission_id={372}>
-                                                <Button size="sm" variant="primary" onClick={() => openStatusModal(row)} title="Update status" aria-label="Update status">
-                                                    <CircleCheckBig className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                            </PermissionBlock>
-                                            <PermissionBlock permission_id={372}>
-                                                <Button size="sm" variant="secondary" onClick={() => openEdit(row)} title="Edit" aria-label="Edit">
-                                                    <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                            </PermissionBlock>
-                                            <PermissionBlock permission_id={373}>
-                                                <Button size="sm" variant="danger" onClick={() => handleDelete(row._id)} title="Delete" aria-label="Delete">
-                                                    <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                            </PermissionBlock>
-                                        </div>
+                                        <AdminActionsDropdown
+                                            items={[
+                                                {
+                                                    key: "images",
+                                                    label: "Work Photos",
+                                                    icon: Images,
+                                                    href: `/admin/service-providers/${row._id}/images`,
+                                                    permissionId: 378,
+                                                },
+                                                {
+                                                    key: "services",
+                                                    label: "Services",
+                                                    icon: Wrench,
+                                                    href: `/admin/service-providers/${row._id}/services`,
+                                                    permissionId: 3740,
+                                                },
+                                                {
+                                                    key: "subscriptions",
+                                                    label: "Subscriptions",
+                                                    icon: CreditCard,
+                                                    href: `/admin/service-providers/${row._id}/subscriptions`,
+                                                    permissionId: 457,
+                                                },
+                                                {
+                                                    key: "status",
+                                                    label: "Update Status",
+                                                    icon: CircleCheckBig,
+                                                    permissionId: 372,
+                                                    onClick: () => openStatusModal(row),
+                                                },
+                                                {
+                                                    key: "edit",
+                                                    label: "Edit",
+                                                    icon: Pencil,
+                                                    permissionId: 372,
+                                                    onClick: () => openEdit(row),
+                                                },
+                                                {
+                                                    key: "delete",
+                                                    label: "Delete",
+                                                    icon: Trash2,
+                                                    permissionId: 373,
+                                                    danger: true,
+                                                    onClick: () => handleDelete(row._id),
+                                                },
+                                            ]}
+                                        />
                                     </td>
                                 </tr>
                             })}

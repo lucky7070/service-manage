@@ -2,7 +2,7 @@
 
 import { Bell, CheckCheck, ChevronDown, LogOut, Menu, PanelLeftClose, PanelLeftOpen, Search, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { deleteAuthCookie } from "@/app/admin/actions";
@@ -20,6 +20,8 @@ export default function AdminTopbar() {
 
     const [open, setOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const profileMenuRef = useRef<HTMLDivElement>(null);
+    const notificationMenuRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const dispatch = useAppDispatch();
     const admin = useAppSelector((state) => state.admin);
@@ -29,6 +31,27 @@ export default function AdminTopbar() {
     const profileImage = resolveFileUrl(admin.image) || "";
     const notifications = admin.notifications || [];
     const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+    useEffect(() => {
+        if (!open && !notificationOpen) return;
+
+        const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+            const target = event.target as Node;
+            if (open && profileMenuRef.current && !profileMenuRef.current.contains(target)) {
+                setOpen(false);
+            }
+            if (notificationOpen && notificationMenuRef.current && !notificationMenuRef.current.contains(target)) {
+                setNotificationOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handlePointerDown);
+        document.addEventListener("touchstart", handlePointerDown);
+        return () => {
+            document.removeEventListener("mousedown", handlePointerDown);
+            document.removeEventListener("touchstart", handlePointerDown);
+        };
+    }, [open, notificationOpen]);
 
     const handleLogout = async () => {
         const { data } = await AxiosHelperAdmin.postData("/logout", {});
@@ -89,12 +112,15 @@ export default function AdminTopbar() {
 
             <div className="ml-auto flex items-center gap-3">
                 <ThemeToggle />
-                <div className="relative">
+                <div className="relative" ref={notificationMenuRef}>
                     <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => setNotificationOpen((v) => !v)}
+                        onClick={() => {
+                            setNotificationOpen((v) => !v);
+                            setOpen(false);
+                        }}
                         className="relative rounded-xl border border-indigo-100 bg-white p-2 text-slate-600 hover:bg-indigo-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                         aria-label="Notifications"
                     >
@@ -134,12 +160,15 @@ export default function AdminTopbar() {
                     ) : null}
                 </div>
 
-                <div className="relative">
+                <div className="relative" ref={profileMenuRef}>
                     <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => setOpen((v) => !v)}
+                        onClick={() => {
+                            setOpen((v) => !v);
+                            setNotificationOpen(false);
+                        }}
                         className="h-12 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 shadow-xs hover:bg-slate-50 focus-visible:ring-1 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:bg-slate-800"
                     >
                         {profileImage ? (
@@ -158,7 +187,7 @@ export default function AdminTopbar() {
 
                     {open ? (
                         <div className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-                            <Link href="/admin/profile">
+                            <Link href="/admin/profile" onClick={() => setOpen(false)}>
                                 <Button
                                     type="button"
                                     variant="ghost"

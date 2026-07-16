@@ -37,6 +37,12 @@ type PurchasedPlanRow = {
     paymentGatewayTransactionMessage?: string | null;
     source: "admin" | "self";
     createdAt?: string;
+    autopaySubscriptionId: string | null;
+    razorpaySubscriptionId: string | null;
+    autoRenew: boolean;
+    mandateStatus: "active" | "inactive" | "expired" | "failed" | "revoked" | "cancelled" | "pending" | "not_started" | "processing" | "unknown";
+    planPrice: number;
+    planImage: string;
 };
 
 type PurchasedPlanRecord = {
@@ -46,41 +52,16 @@ type PurchasedPlanRecord = {
     pagination: number[];
 };
 
-type GatewayPaymentDetail = {
-    id: string;
-    orderId?: string;
-    status: string;
-    method?: string | null;
-    amount: number;
-    currency?: string;
-    errorCode?: string | null;
-    errorDescription?: string | null;
-    createdAt?: string | null;
-};
-
 type GatewayStatusPayload = {
-    assignment: {
-        voucherNo?: string;
-        paymentAmount?: number;
-        paymentGatewayOrderId?: string | null;
-        paymentGatewayTransactionId?: string | null;
-        paymentGatewayTransactionStatus?: string;
-        paymentGatewayTransactionMessage?: string | null;
-        status?: string;
-    };
-    order: {
-        id: string;
-        status: string;
-        amount: number;
-        amountPaid: number;
-        amountDue: number;
-        currency?: string;
-        receipt?: string | null;
-        attempts?: number;
-        createdAt?: string | null;
-    };
-    latestPayment: GatewayPaymentDetail | null;
-    payments: GatewayPaymentDetail[];
+    status: string;
+    invoice_id: string;
+    created_at: number;
+    method: string;
+    description: string;
+    error_description: string;
+    error_code: string;
+    refund_status: string | null;
+    amount_refunded: number;
 };
 
 const paymentStatuses = ["success", "failed", "pending"] as const;
@@ -140,6 +121,7 @@ export default function PurchasedPlansPage() {
 
         const { data } = await AxiosHelperAdmin.getData(`/purchased-plans/${row._id}/gateway-status`);
         if (data.status && data.data) {
+            console.log(data.data);
             setGatewayData(data.data as GatewayStatusPayload);
         } else {
             toast.error(data.message || "Could not fetch gateway status.");
@@ -268,7 +250,7 @@ export default function PurchasedPlansPage() {
                                             onClick={() => void fetchGatewayStatus(row)}
                                         >
                                             <RefreshCw className="h-4 w-4" />
-                                            Gateway
+                                            Details
                                         </Button>
                                     </td>
                                 </tr>
@@ -287,104 +269,49 @@ export default function PurchasedPlansPage() {
                 onClose={closeGatewayModal}
                 title="Payment gateway status"
                 subTitle={gatewayRow ? `${gatewayRow.voucherNo || "Purchase"} · ${gatewayRow.providerName || "Provider"}` : undefined}
-                size="lg"
+                size="xxl"
                 scrollable
             >
-                {gatewayLoading ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-8 ">
-                        {/* <Loader2 className="h-15 w-15 animate-spin text-purple-400" /> */}
-                        <Loader />
-                        <p className="text-center text-sm text-slate-500">Fetching live status from Razorpay…</p>
-                    </div>
-                ) : gatewayData ? (
-                    <div className="space-y-5 text-sm">
-                        <section className="rounded-xl border border-indigo-100 bg-[#f8faff] p-4 dark:border-slate-700 dark:bg-slate-800/60">
-                            <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">Saved in system</h3>
-                            <dl className="grid gap-2 sm:grid-cols-2">
-                                <div><dt className="text-slate-500">Payment status</dt><dd className="font-medium capitalize">{gatewayData.assignment.paymentGatewayTransactionStatus || "—"}</dd></div>
-                                <div><dt className="text-slate-500">Plan status</dt><dd className="font-medium capitalize">{gatewayData.assignment.status || "—"}</dd></div>
-                                <div><dt className="text-slate-500">Order ID</dt><dd className="font-mono text-xs">{gatewayData.assignment.paymentGatewayOrderId || "—"}</dd></div>
-                                <div><dt className="text-slate-500">Payment ID</dt><dd className="font-mono text-xs">{gatewayData.assignment.paymentGatewayTransactionId || "—"}</dd></div>
-                                <div className="sm:col-span-2"><dt className="text-slate-500">Message</dt><dd>{gatewayData.assignment.paymentGatewayTransactionMessage || "—"}</dd></div>
-                            </dl>
-                        </section>
+                <div className="space-y-5 text-sm">
+                    {gatewayRow ? <section className="rounded-xl border border-indigo-100 bg-[#f8faff] p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                        <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">Saved in system</h3>
+                        <dl className="grid gap-2 sm:grid-cols-2">
+                            <div><dt className="text-slate-500">Payment status</dt><dd className="font-medium capitalize">{gatewayRow.paymentGatewayTransactionStatus || "—"}</dd></div>
+                            <div><dt className="text-slate-500">Plan status</dt><dd className="font-medium capitalize">{gatewayRow.status || "—"}</dd></div>
+                            <div><dt className="text-slate-500">Order ID</dt><dd className="font-mono text-xs">{gatewayRow.paymentGatewayOrderId || "—"}</dd></div>
+                            <div><dt className="text-slate-500">Payment ID</dt><dd className="font-mono text-xs">{gatewayRow.paymentGatewayTransactionId || "—"}</dd></div>
+                            <div className="sm:col-span-2"><dt className="text-slate-500">Message</dt><dd>{gatewayRow.paymentGatewayTransactionMessage || "—"}</dd></div>
+                        </dl>
+                    </section> : null}
 
-                        {gatewayData.order ? <section className="rounded-xl border border-indigo-100 p-4 dark:border-slate-700">
-                            <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">Razorpay order</h3>
-                            <dl className="grid gap-2 sm:grid-cols-2">
-                                <div><dt className="text-slate-500">Order status</dt><dd className="font-medium capitalize">{gatewayData.order.status}</dd></div>
-                                <div><dt className="text-slate-500">Attempts</dt><dd>{gatewayData.order.attempts ?? 0}</dd></div>
-                                <div><dt className="text-slate-500">Amount</dt><dd>₹ {Number(gatewayData.order.amount || 0).toLocaleString("en-IN")}</dd></div>
-                                <div><dt className="text-slate-500">Amount paid</dt><dd>₹ {Number(gatewayData.order.amountPaid || 0).toLocaleString("en-IN")}</dd></div>
-                                <div><dt className="text-slate-500">Amount due</dt><dd>₹ {Number(gatewayData.order.amountDue || 0).toLocaleString("en-IN")}</dd></div>
-                                <div><dt className="text-slate-500">Created</dt><dd>{gatewayData.order.createdAt ? moment(gatewayData.order.createdAt).format("DD-MM-YYYY hh:mm A") : "—"}</dd></div>
-                                <div className="sm:col-span-2"><dt className="text-slate-500">Receipt</dt><dd className="font-mono text-xs">{gatewayData.order.receipt || "—"}</dd></div>
-                            </dl>
-                        </section> : null}
+                    {(gatewayRow && gatewayRow.autopaySubscriptionId) ? <section className="rounded-xl border border-indigo-100 bg-[#f8faff] p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                        <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">Auto pay details</h3>
+                        <dl className="grid gap-2 sm:grid-cols-2">
+                            <div><dt className="text-slate-500">Auto pay status</dt><dd className="font-medium capitalize">{gatewayRow.autoRenew ? "Enabled" : "Disabled"}</dd></div>
+                            <div><dt className="text-slate-500">Mandate status</dt><dd className="font-medium capitalize">{gatewayRow.mandateStatus || "—"}</dd></div>
+                            <div><dt className="text-slate-500">Auto pay subscription ID</dt><dd className="font-mono text-xs">{gatewayRow.razorpaySubscriptionId || "—"}</dd></div>
+                        </dl>
+                    </section> : null}
 
-                        {gatewayData.latestPayment ? (
-                            <section className="rounded-xl border border-indigo-100 p-4 dark:border-slate-700">
-                                <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">Latest payment</h3>
-                                <dl className="grid gap-2 sm:grid-cols-2">
-                                    <div><dt className="text-slate-500">Payment ID</dt><dd className="font-mono text-xs">{gatewayData.latestPayment.id}</dd></div>
-                                    <div><dt className="text-slate-500">Status</dt><dd className="font-medium capitalize">{gatewayData.latestPayment.status}</dd></div>
-                                    <div><dt className="text-slate-500">Method</dt><dd className="capitalize">{gatewayData.latestPayment.method || "—"}</dd></div>
-                                    <div><dt className="text-slate-500">Amount</dt><dd>₹ {Number(gatewayData.latestPayment.amount || 0).toLocaleString("en-IN")}</dd></div>
-                                    {gatewayData.latestPayment.errorDescription ? (
-                                        <div className="sm:col-span-2"><dt className="text-slate-500">Error</dt><dd className="text-rose-600">{gatewayData.latestPayment.errorDescription}</dd></div>
-                                    ) : null}
-                                </dl>
-                            </section>
-                        ) : null}
-
-                        <section className="rounded-xl border border-indigo-100 p-4 dark:border-slate-700">
-                            <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">All payment attempts ({gatewayData.payments.length})</h3>
-                            {gatewayData.payments.length ? (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full text-xs">
-                                        <thead className="bg-slate-100 text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                            <tr>
-                                                <th className="px-2 py-2">Payment ID</th>
-                                                <th className="px-2 py-2">Status</th>
-                                                <th className="px-2 py-2">Method</th>
-                                                <th className="px-2 py-2">Amount</th>
-                                                <th className="px-2 py-2">Created</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {gatewayData.payments.map((payment) => (
-                                                <tr key={payment.id} className="border-t border-slate-200 dark:border-slate-700">
-                                                    <td className="px-2 py-2 font-mono">{payment.id}</td>
-                                                    <td className="px-2 py-2 capitalize">{payment.status}</td>
-                                                    <td className="px-2 py-2 capitalize">{payment.method || "—"}</td>
-                                                    <td className="px-2 py-2">₹ {Number(payment.amount || 0).toLocaleString("en-IN")}</td>
-                                                    <td className="px-2 py-2">{payment.createdAt ? moment(payment.createdAt).format("DD-MM-YYYY hh:mm A") : "—"}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <p className="text-slate-500">No payment attempts found for this order.</p>
-                            )}
-                        </section>
-
-                        {gatewayRow?.paymentGatewayOrderId ? (
-                            <div className="flex justify-end">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    size="sm"
-                                    disabled={gatewayLoading}
-                                    onClick={() => void fetchGatewayStatus(gatewayRow)}
-                                >
-                                    <RefreshCw className="h-4 w-4" />
-                                    Refresh status
-                                </Button>
-                            </div>
-                        ) : null}
-                    </div>
-                ) : null}
+                    {gatewayLoading ? (
+                        <div className="flex flex-col items-center justify-center gap-2 py-8 ">
+                            <Loader />
+                            <p className="text-center text-sm text-slate-500">Fetching live status from Razorpay…</p>
+                        </div>
+                    ) : gatewayData ? <section className="rounded-xl border border-indigo-100 bg-[#f8faff] p-4 dark:border-slate-700 dark:bg-slate-800/60">
+                        <h3 className="mb-3 font-semibold text-slate-800 dark:text-slate-100">Payment gateway details</h3>
+                        <dl className="grid gap-2 sm:grid-cols-2">
+                            <div><dt className="text-slate-500">Payment status</dt><dd className="font-medium capitalize">{gatewayData.status || "—"}</dd></div>
+                            <div><dt className="text-slate-500">Invoice ID</dt><dd className="font-mono text-xs">{gatewayData.invoice_id || "—"}</dd></div>
+                            <div><dt className="text-slate-500">Created</dt><dd>{gatewayData.created_at ? moment(gatewayData.created_at * 1000).format("DD-MM-YYYY hh:mm A") : "—"}</dd></div>
+                            <div><dt className="text-slate-500">Method</dt><dd className="font-medium capitalize">{gatewayData.method || "—"}</dd></div>
+                            <div className="sm:col-span-2"><dt className="text-slate-500">Message</dt><dd>{gatewayData.description || "—"}</dd></div>
+                            {gatewayData.error_description ? <div className="sm:col-span-2"><dt className="text-slate-500">Error description</dt><dd>{gatewayData.error_code} : {gatewayData.error_description}</dd></div> : null}
+                            {gatewayData.refund_status ? <div><dt className="text-slate-500">Refund status</dt><dd className="font-medium capitalize">{gatewayData.refund_status || "—"}</dd></div> : null}
+                            {gatewayData.amount_refunded ? <div><dt className="text-slate-500">Amount refunded</dt><dd>₹ {Number(gatewayData.amount_refunded || 0).toLocaleString("en-IN")}</dd></div> : null}
+                        </dl>
+                    </section> : null}
+                </div>
             </Modal>
         </section>
     );

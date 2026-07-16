@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { AssignedSubscription, AutopaySubscription, ServiceProvider, Subscription } from "../../models/index.js";
 import { ObjectId, escapeRegex } from "../../helpers/utils.js";
 import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline } from "../../helpers/subscriptionAssignment.js";
-import { getRazorpayGatewaySnapshot, getRazorpaySubscriptionStatus, getRazorpaySubscriptionLatestPayment, paiseToRupees } from "../../helpers/razorpay.js";
+import { getRazorpayGatewaySnapshot, getRazorpaySubscriptionStatus, getRazorpaySubscriptionLatestPayment, paiseToRupees, getRazorpayOrderStatus } from "../../helpers/razorpay.js";
 import { syncAssignedSubscriptionFromRazorpayPayment } from "../../helpers/subscriptionPayment.js";
 
 const formatGatewayPayment = (payment) => {
@@ -29,84 +29,12 @@ export const getPurchasedPlanGatewayStatus = async (req, res) => {
         let assignment = await AssignedSubscription.findById(ObjectId(req.params.id));
         if (!assignment) return res.noRecords();
 
-        const orderId = String(assignment.paymentGatewayOrderId || "").trim();
-        const autopay = assignment.autopaySubscriptionId ? await AutopaySubscription.findById(assignment.autopaySubscriptionId) : null;
-        const subscriptionId = String(autopay?.razorpaySubscriptionId || "").trim();
+        if (!assignment.paymentGatewayOrderId) return res.clientError("Payment order ID not found.", 400);
 
-        if (!orderId && !subscriptionId) {
-            return res.clientError("No Razorpay payment reference is linked to this purchase.", 422);
-        }
+        const payment = await getRazorpayOrderStatus(assignment.paymentGatewayOrderId);
+        if (!payment) return res.clientError("Razorpay payment not found.", 400);
 
-        if (subscriptionId) {
-            const [subscription, latestPayment] = await Promise.all([
-                getRazorpaySubscriptionStatus(subscriptionId),
-                getRazorpaySubscriptionLatestPayment(subscriptionId),
-            ]);
-
-            if (assignment.paymentGatewayTransactionStatus === "pending" && latestPayment) {
-                const result = await syncAssignedSubscriptionFromRazorpayPayment({ assignment, payment: latestPayment, autopay });
-                if (result.ok) assignment = result.assignment;
-                if (result.autopay) autopay = result.autopay;
-            }
-
-            return res.success({
-                assignment: {
-                    _id: assignment._id,
-                    voucherNo: assignment.voucherNo,
-                    paymentAmount: assignment.paymentAmount,
-                    autopaySubscriptionId: assignment.autopaySubscriptionId,
-                    razorpaySubscriptionId: autopay?.razorpaySubscriptionId || null,
-                    paymentGatewayTransactionId: assignment.paymentGatewayTransactionId,
-                    paymentGatewayTransactionStatus: assignment.paymentGatewayTransactionStatus,
-                    paymentGatewayTransactionMessage: assignment.paymentGatewayTransactionMessage,
-                    mandateStatus: autopay?.mandateStatus || null,
-                    autoRenew: Boolean(autopay?.autoRenew),
-                    status: assignment.status,
-                },
-                subscription: subscription ? {
-                    id: subscription.id,
-                    status: subscription.status,
-                    planId: subscription.plan_id,
-                    paidCount: Number(subscription.paid_count || 0),
-                    remainingCount: Number(subscription.remaining_count || 0),
-                    chargeAt: subscription.charge_at ? new Date(Number(subscription.charge_at) * 1000).toISOString() : null,
-                } : null,
-                latestPayment: formatGatewayPayment(latestPayment),
-                payments: latestPayment ? [formatGatewayPayment(latestPayment)].filter(Boolean) : [],
-            }, "Gateway status fetched.");
-        }
-
-        const { order, payments, latestPayment } = await getRazorpayGatewaySnapshot(orderId);
-        if (assignment.paymentGatewayTransactionStatus === "pending") {
-            const result = await syncAssignedSubscriptionFromRazorpayPayment({ assignment, payment: latestPayment });
-            if (result.ok) assignment = result.assignment;
-        }
-
-        return res.success({
-            assignment: {
-                _id: assignment._id,
-                voucherNo: assignment.voucherNo,
-                paymentAmount: assignment.paymentAmount,
-                paymentGatewayOrderId: assignment.paymentGatewayOrderId,
-                paymentGatewayTransactionId: assignment.paymentGatewayTransactionId,
-                paymentGatewayTransactionStatus: assignment.paymentGatewayTransactionStatus,
-                paymentGatewayTransactionMessage: assignment.paymentGatewayTransactionMessage,
-                status: assignment.status,
-            },
-            order: {
-                id: order.id,
-                status: order.status,
-                amount: paiseToRupees(order.amount),
-                amountPaid: paiseToRupees(order.amount_paid),
-                amountDue: paiseToRupees(order.amount_due),
-                currency: order.currency || "INR",
-                receipt: order.receipt || null,
-                attempts: Number(order.attempts || 0),
-                createdAt: order.created_at ? new Date(Number(order.created_at) * 1000).toISOString() : null,
-            },
-            latestPayment: formatGatewayPayment(latestPayment),
-            payments: payments.map(formatGatewayPayment).filter(Boolean),
-        }, "Gateway status fetched.");
+        return res.success(payment, "Gateway status fetched.");
     } catch (error) {
         if (error.statusCode === 400) return res.clientError(error.error.description, 400);
         if (error?.status === 503) return res.clientError(error.message, 503);
@@ -200,20 +128,28 @@ export const assignSubscriptionToProvider = async (req, res) => {
             return res.noRecords();
         }
 
-        const plan = await Subscription.findOne({ _id: ObjectId(req.body.subscriptionId), deletedAt: null, isActive: true }).session(session).lean();
+        const plan = await Subscription.findOne({ _id: ObjectId(req.body.subscriptionId), deletedAt: null, isActive: true }).session(session);
         if (!plan) {
             if (session.inTransaction()) await session.abortTransaction();
             return res.clientError("Active subscription plan not found.", 422, [{ field: "subscriptionId", message: "Active subscription plan not found." }]);
         }
 
         const { startDate, endDate } = await resolveProviderPurchaseSchedule(provider._id, plan, session);
+        const amount = Number(plan.price) || 0;
+        const taxPercentage = Number(plan.taxPercentage) || 0;
+        const taxAmount = amount * taxPercentage / 100;
+        const paymentAmount = Number(plan.priceWithTax) || (amount + taxAmount);
+
         const [doc] = await AssignedSubscription.create([{
             providerId: provider._id,
             subscriptionId: plan._id,
             startDate,
             endDate,
             status: "active",
-            paymentAmount: Number(plan.price) || 0,
+            amount,
+            taxAmount,
+            taxPercentage,
+            paymentAmount,
             paymentGatewayTransactionStatus: "success",
             assignedBy: req.admin._id,
         }], { session });

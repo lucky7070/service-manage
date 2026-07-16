@@ -2,6 +2,7 @@ import moment from "moment";
 import { City, ServiceProvider, ServiceCategory, ServiceProviderPhoto } from "../../models/index.js";
 import { escapeRegex, ObjectId, toBoolean } from "../../helpers/utils.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
+import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
 
 export const createServiceProvider = async (req, res) => {
     try {
@@ -114,7 +115,7 @@ export const updateServiceProviderStatus = async (req, res) => {
                 const label = nextProfileStatus === "suspended" ? "Suspension" : "Rejection";
                 return res.clientError(`${label} reason is required.`, 422, [{ field: "rejectionReason", message: `${label} reason is required.` }]);
             }
-            
+
             updateDoc.rejectionReason = rejectionReason;
         }
 
@@ -182,7 +183,17 @@ export const getServiceProvider = async (req, res) => {
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
             { $unwind: { path: "$city" } },
             { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, city: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
+            {
+                $lookup: {
+                    from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [
+                        { $match: getActiveSubscriptionFilter() },
+                        { $sort: { createdAt: -1 } },
+                        { $limit: 1 },
+                    ]
+                }
+            },
+            { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
+            { $project: { userId: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];

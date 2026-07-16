@@ -3,7 +3,7 @@ import moment from "moment";
 import { config } from "../../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters, escapeRegex } from "../../helpers/utils.js";
-import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City } from "../../models/index.js";
+import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City, Franchise } from "../../models/index.js";
 import { deleteFile } from "../../libraries/storage.js";
 import { pickPushFields } from "../../helpers/pushFields.js";
 import { sendOTP } from "../../libraries/sms.js";
@@ -219,13 +219,22 @@ export const register = async (req, res) => {
         }
 
         let referredBy = null;
+        let franchiseId = null;
         const normalizedReferralCode = String(referralCode || "").trim().toUpperCase();
         if (normalizedReferralCode) {
-            const referrer = await ServiceProvider.findOne({ userId: normalizedReferralCode, deletedAt: null, isActive: true });
-            if (!referrer) {
-                return res.clientError("Invalid referral code", 422, [{ field: "referralCode", message: "Invalid referral code" }]);
+            if (String(normalizedReferralCode).startsWith("F")) {
+                const referrer = await Franchise.findOne({ userId: normalizedReferralCode, deletedAt: null, isActive: true });
+                if (!referrer) {
+                    return res.clientError("Invalid referral code", 422, [{ field: "referralCode", message: "Invalid referral code" }]);
+                }
+                franchiseId = referrer._id;
+            } else {
+                const referrer = await ServiceProvider.findOne({ userId: normalizedReferralCode, deletedAt: null, isActive: true });
+                if (!referrer) {
+                    return res.clientError("Invalid referral code", 422, [{ field: "referralCode", message: "Invalid referral code" }]);
+                }
+                referredBy = referrer._id;
             }
-            referredBy = referrer._id;
         }
 
         const checkServiceCategory = await ServiceCategory.findOne({ _id: ObjectId(serviceCategoryId), deletedAt: null });
@@ -263,6 +272,7 @@ export const register = async (req, res) => {
             experienceYears: Number(experienceYears ?? 0),
             experienceDescription: String(experienceDescription).trim() || null,
             referredBy,
+            franchiseId,
             registerFrom: "front",
             profileStatus: "pending",
             isVerified: false,
