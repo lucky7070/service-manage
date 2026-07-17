@@ -12,7 +12,7 @@ export const selectClassNames = {
     indicatorSeparator: () => "hidden",
     dropdownIndicator: () => "text-muted-foreground",
     clearIndicator: () => "text-muted-foreground",
-    menu: () => "mt-1 rounded-md border border-input bg-background shadow-lg",
+    menu: () => "mt-1 rounded-md border border-input bg-background shadow-lg z-50",
     menuList: () => "py-1",
     option: (state: { isFocused: boolean; isSelected: boolean }) =>
         `cursor-pointer px-3 py-2 text-sm ${state.isFocused ? "bg-muted text-foreground" : "text-foreground"} ${state.isSelected ? "bg-muted" : ""}`,
@@ -33,6 +33,7 @@ export type FrontAsyncSelectProps = {
     onChange: (option: FrontSelectOption | null) => void;
     placeholder?: string;
     isDisabled?: boolean;
+    menuPortalTarget?: HTMLElement | null;
 };
 
 export default function FrontAsyncSelect({
@@ -46,7 +47,8 @@ export default function FrontAsyncSelect({
     loadOptions,
     onChange,
     placeholder = "Search...",
-    isDisabled = false
+    isDisabled = false,
+    menuPortalTarget = typeof document !== "undefined" ? document.body : null,
 }: FrontAsyncSelectProps) {
     return (
         <AsyncSelect<FrontSelectOption, false>
@@ -61,6 +63,11 @@ export default function FrontAsyncSelect({
             isDisabled={isDisabled}
             placeholder={placeholder}
             value={value}
+            menuPortalTarget={menuPortalTarget}
+            menuPosition="fixed"
+            styles={
+                menuPortalTarget ? { menuPortal: (base) => ({ ...base, zIndex: 10000 }) } : undefined
+            }
             onChange={(option) => onChange(option)}
         />
     );

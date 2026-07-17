@@ -29,9 +29,10 @@ export const resolveProviderPurchaseSchedule = async (providerId, plan, session)
     const today = moment().startOf("day");
     let startDate = today.toDate();
 
-    const currentActiveAssignment = await AssignedSubscription.findOne({ providerId, ...getActiveSubscriptionFilter() }).session(session).lean();
-    if (currentActiveAssignment) {
-        startDate = moment(currentActiveAssignment.endDate).add(1, "day").startOf("day").toDate();
+    const latestAssignment = await AssignedSubscription.findOne({ providerId, $or: [{ status: "active" }, { paymentGatewayTransactionStatus: "success" }] }).sort({ endDate: -1 }).session(session).lean();
+    if (latestAssignment?.endDate) {
+        const nextStart = moment(latestAssignment.endDate).add(1, "day").startOf("day");
+        if (nextStart.isAfter(today)) startDate = nextStart.toDate();
     }
 
     const endDate = computeSubscriptionEndDate(startDate, plan.interval, plan.intervalCount);

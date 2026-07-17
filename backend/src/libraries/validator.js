@@ -160,7 +160,10 @@ const providerId = check("providerId", "Provider is required.").exists().notEmpt
 const serviceTypeIds = check("serviceTypeId", "At least one service type is required.").exists().isArray({ min: 1 }).withMessage('At least one service type is required.');
 const serviceTypeIdItems = check("serviceTypeId.*", "Invalid service type.").isMongoId().withMessage('Invalid service type ID.');
 const bookingAddressId = check("addressId", "Address is required.").exists().notEmpty().isMongoId().withMessage('Invalid address ID.');
-const scheduledTime = check("scheduledTime", "Scheduled date and time is required.").exists().notEmpty().isISO8601().toDate();
+const scheduledTime = check("scheduledTime", "Scheduled date and time is required.").exists().notEmpty().isISO8601().withMessage("Invalid scheduled date and time.").custom((value) => {
+    if (new Date(value) < new Date()) throw new Error('Date and time must be in the future');
+    return true;
+}).toDate();
 const issueDescription = check("issueDescription").optional({ values: "falsy" }).trim().isLength({ max: 5000 }).withMessage('Issue description must be between 0 to 5000 characters long.');
 const quotedPrice = check("quotedPrice", "Quoted price must be greater than 0.").exists().notEmpty().isFloat({ min: 0.01 }).withMessage('Quoted price must be greater than 0.');
 const chatMessage = check("message").optional({ values: "falsy" }).trim().isLength({ max: 5000 }).withMessage('Message must be between 0 to 5000 characters long.').custom((value, { req }) => {

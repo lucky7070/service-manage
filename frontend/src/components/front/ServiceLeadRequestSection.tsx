@@ -4,11 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import moment from "moment";
 import { ClipboardList, Home, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
-import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input, Label, Select, Textarea, } from "@/components/front/ui";
+import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Input, Label, Textarea, } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import { useAppSelector } from "@/store/hooks";
+import { cn } from "@/helpers/utils";
 
 type ServiceTypeRow = {
     _id: string;
@@ -21,10 +23,18 @@ type ServiceTypeRow = {
 type AddressRow = {
     _id: string;
     addressLine1: string;
+    addressLine2?: string;
+    landmark?: string;
     cityName?: string;
+    stateName?: string;
     pincode?: string;
+    locationType?: string;
     isDefault?: boolean;
 };
+
+function formatAddressMeta(address: AddressRow) {
+    return [address.addressLine2, address.cityName, address.stateName, address.pincode].filter(Boolean).join(", ");
+}
 
 type Props = {
     cityId: string;
@@ -33,9 +43,16 @@ type Props = {
     categoryName: string;
 };
 
-const schema = Yup.object({
+const validationSchema = Yup.object({
     serviceTypeIds: Yup.array().of(Yup.string().required()).min(1, "Select at least one service / issue type."),
-    scheduledTime: Yup.string().required("Scheduled date and time is required."),
+    scheduledTime: Yup.string()
+        .required("Scheduled date and time is required.")
+        .test("min-now", "Scheduled date and time must be now or later.", (value) => {
+            if (!value) return false;
+            const scheduled = moment(value);
+            if (!scheduled.isValid()) return false;
+            return scheduled.isSameOrAfter(moment());
+        }),
     addressId: Yup.string().required("Service address is required."),
     issueDescription: Yup.string().max(5000).optional(),
 });
@@ -93,7 +110,7 @@ export default function ServiceLeadRequestSection({ cityId, serviceCategoryId, c
             <Button
                 type="button"
                 variant="outline"
-                className="inline-flex items-center gap-2 rounded-full border-primary/40 text-sm font-medium text-primary hover:bg-orange-50"
+                className="inline-flex items-center gap-2 rounded-full border-primary/40 text-sm font-medium text-primary hover:bg-orange-50 hover:text-orange-600"
                 onClick={() => void handleOpen()}
             >
                 <ClipboardList className="h-4 w-4" />
@@ -116,7 +133,7 @@ export default function ServiceLeadRequestSection({ cityId, serviceCategoryId, c
                             addressId: "",
                             issueDescription: "",
                         }}
-                        validationSchema={schema}
+                        validationSchema={validationSchema}
                         onSubmit={async (values, { setSubmitting, setErrors, resetForm }) => {
                             const { data } = await AxiosHelper.postData("/customer/service-leads", {
                                 cityId,
@@ -150,7 +167,7 @@ export default function ServiceLeadRequestSection({ cityId, serviceCategoryId, c
                             <Form className="space-y-5">
                                 <div>
                                     <Label>Issue type / services</Label>
-                                    <div className="mt-2 grid gap-2">
+                                    <div className="mt-2 grid gap-2 max-h-80 overflow-y-auto pr-1">
                                         {loadingMeta ? (
                                             <p className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Loader2 className="h-4 w-4 animate-spin" /> Loading services…
@@ -163,9 +180,7 @@ export default function ServiceLeadRequestSection({ cityId, serviceCategoryId, c
                                                         key={st._id}
                                                         type="button"
                                                         onClick={() => {
-                                                            const next = checked
-                                                                ? values.serviceTypeIds.filter((id) => id !== st._id)
-                                                                : [...values.serviceTypeIds, st._id];
+                                                            const next = checked ? values.serviceTypeIds.filter((id) => id !== st._id) : [...values.serviceTypeIds, st._id];
                                                             void setFieldValue("serviceTypeIds", next);
                                                         }}
                                                         className={`rounded-2xl border p-3 text-left transition ${checked ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`}
@@ -173,50 +188,79 @@ export default function ServiceLeadRequestSection({ cityId, serviceCategoryId, c
                                                         <div className="flex items-start justify-between gap-3">
                                                             <div>
                                                                 <p className="font-semibold">{st.name}</p>
-                                                                {st.description ? (
-                                                                    <p className="mt-1 truncate text-xs text-muted-foreground">{st.description}</p>
-                                                                ) : null}
+                                                                {st.description ? <p className="mt-1 truncate text-xs text-muted-foreground">{st.description}</p> : null}
                                                             </div>
-                                                            {st.basePrice != null ? (
-                                                                <span className="font-semibold text-primary">₹{Number(st.basePrice).toFixed(2)}</span>
-                                                            ) : null}
+                                                            {st.basePrice != null ? <span className="font-semibold text-primary">₹{Number(st.basePrice).toFixed(2)}</span> : null}
                                                         </div>
                                                     </button>
                                                 );
                                             })
-                                        ) : (
-                                            <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">No service types for this category.</p>
-                                        )}
+                                        ) : <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">No service types for this category.</p>}
                                     </div>
                                     <ErrorMessage name="serviceTypeIds" component="small" className="mt-1 block text-xs text-rose-600" />
                                 </div>
 
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="lead-schedule">Scheduled date &amp; time</Label>
-                                        <Field as={Input} id="lead-schedule" name="scheduledTime" type="datetime-local" />
-                                        <ErrorMessage name="scheduledTime" component="small" className="mt-1 block text-xs text-rose-600" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="lead-address">Service address</Label>
-                                        <Field as={Select} id="lead-address" name="addressId" disabled={loadingMeta}>
-                                            <option value="">{loadingMeta ? "Loading…" : "Select address"}</option>
-                                            {addresses.map((a) => (
-                                                <option key={a._id} value={a._id}>
-                                                    {a.addressLine1}, {a.cityName || ""} {a.pincode || ""}
-                                                </option>
-                                            ))}
-                                        </Field>
-                                        <ErrorMessage name="addressId" component="small" className="mt-1 block text-xs text-rose-600" />
-                                    </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="lead-schedule">Scheduled date &amp; time</Label>
+                                    <Field as={Input} id="lead-schedule" name="scheduledTime" type="datetime-local" min={moment().seconds(0).milliseconds(0).format("YYYY-MM-DDTHH:mm")} />
+                                    <ErrorMessage name="scheduledTime" component="small" className="mt-1 block text-xs text-rose-600" />
                                 </div>
 
-                                {!addresses.length && !loadingMeta ? (
-                                    <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                                        <Home className="h-4 w-4 shrink-0" />
-                                        Add an address from My Account before submitting a request.
-                                    </div>
-                                ) : null}
+                                <div className="space-y-2">
+                                    <Label>Service address</Label>
+                                    {loadingMeta ? (
+                                        <div className="flex items-center gap-2 rounded-2xl border border-border p-3 text-sm text-muted-foreground">
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Loading addresses...
+                                        </div>
+                                    ) : addresses.length ? (
+                                        <div className="grid max-h-52 gap-2 overflow-y-auto pr-1">
+                                            {addresses.map((address) => {
+                                                const selected = values.addressId === address._id;
+                                                const meta = formatAddressMeta(address);
+                                                return (
+                                                    <button
+                                                        key={address._id}
+                                                        type="button"
+                                                        onClick={() => void setFieldValue("addressId", address._id)}
+                                                        className={cn(
+                                                            "min-w-0 rounded-2xl border p-3 text-left transition",
+                                                            selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-start gap-3">
+                                                            <span className={cn(
+                                                                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                                                                selected ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                                                            )}>
+                                                                <Home className="h-4 w-4" />
+                                                            </span>
+                                                            <div className="min-w-0 flex-1">
+                                                                {address.locationType ? (
+                                                                    <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                                                        {address.locationType}
+                                                                    </p>
+                                                                ) : null}
+                                                                <p className="wrap-break-word text-sm font-semibold leading-snug text-foreground">
+                                                                    {address.addressLine1}
+                                                                </p>
+                                                                {meta ? (
+                                                                    <p className="mt-1 wrap-break-word text-xs capitalize text-muted-foreground">{meta}</p>
+                                                                ) : null}
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                                            <Home className="h-4 w-4 shrink-0" />
+                                            Add an address from My Account before submitting a request.
+                                        </div>
+                                    )}
+                                    <ErrorMessage name="addressId" component="small" className="mt-1 block text-xs text-rose-600" />
+                                </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="lead-issue">Issue description</Label>
