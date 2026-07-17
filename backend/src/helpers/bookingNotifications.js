@@ -6,7 +6,8 @@ import { getBookingPresence } from "../socket/index.js";
 const ACTOR_LABELS = {
     customer: "The customer",
     provider: "The service provider",
-    admin: "Admin"
+    admin: "Admin",
+    system: "The system"
 };
 
 const buildStatusMessage = (status, actorType, recipientType, bookingNumber) => {
@@ -21,7 +22,12 @@ const buildStatusMessage = (status, actorType, recipientType, bookingNumber) => 
     if (status === "confirmed") return `${actor} confirmed ${ref}. Status: ${label}.`;
     if (status === "in_progress") return `${actor} started work on ${ref}. Status: ${label}.`;
     if (status === "completed") return `${ref} has been marked as ${label}.`;
-    if (status === "cancelled") return `${actor} cancelled ${ref}.`;
+    if (status === "cancelled") {
+        if (actorType === "system") {
+            return `${ref} was automatically cancelled because the job was left open too long without being completed.`;
+        }
+        return `${actor} cancelled ${ref}.`;
+    }
     return `${actor} updated ${ref}. Status: ${label}.`;
 };
 

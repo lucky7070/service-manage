@@ -34,7 +34,7 @@ type BookingRecord = {
     pagination: number[];
 };
 
-const statuses = ["pending", "price_pending", "price_agreed", "confirmed", "in_progress", "completed", "cancelled"];
+const statuses = ["price_pending", "confirmed", "in_progress", "completed", "cancelled"];
 
 export default function AdminBookingsPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));

@@ -31,7 +31,7 @@ type BookingData = {
     current_page: number;
 };
 
-const statuses = ["pending", "price_pending", "price_agreed", "confirmed", "in_progress", "completed", "cancelled"];
+const statuses = ["price_pending", "confirmed", "in_progress", "completed", "cancelled"];
 
 export default function CustomerBookingsPage() {
     const [data, setData] = useState<BookingData>({ record: [], count: 0, totalPages: 0, current_page: 1 });

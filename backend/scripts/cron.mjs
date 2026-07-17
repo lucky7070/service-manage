@@ -1,18 +1,19 @@
 /**
  *
  * Usage:
- *   npm run cron    # sync razorpay pending payments
+ *   npm run cron    # sync razorpay pending payments + stale in-progress auto-cancel
  *
  */
 import "dotenv/config";
 import { syncRazorpayPendingPayments } from "../src/jobs/syncRazorpayPendingPayments.js";
+import { autoCancelStaleInProgressBookings } from "../src/jobs/autoCancelStaleInProgressBookings.js";
 import { connectDb } from "../src/libraries/db.js";
 import mongoose from "mongoose";
 
 try {
-
     await connectDb("cron");
     await syncRazorpayPendingPayments();
+    await autoCancelStaleInProgressBookings();
 
     console.log("[cron] Done.");
 } catch (err) {

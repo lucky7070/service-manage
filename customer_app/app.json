@@ -25,6 +25,7 @@
             },
             "usesCleartextTraffic": true,
             "edgeToEdgeEnabled": true,
+            "softwareKeyboardLayoutMode": "resize",
             "predictiveBackGestureEnabled": false
         },
         "web": {

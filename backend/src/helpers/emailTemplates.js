@@ -100,9 +100,7 @@ export const renderEmailLayout = ({
 
 export const formatBookingStatus = (status) => {
     const BOOKING_STATUS_LABELS = {
-        pending: "Pending",
         price_pending: "Awaiting quote",
-        price_agreed: "Price agreed",
         confirmed: "Confirmed",
         in_progress: "In progress",
         completed: "Completed",

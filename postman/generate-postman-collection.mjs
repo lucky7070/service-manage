@@ -40,7 +40,7 @@ const COLLECTION_DESCRIPTION = [
     "4. **Addresses:** `/customer/addresses` — need at least one address to create a booking.",
     "5. **Discovery (no auth):** **Open (public)** — settings, categories, cities, **`GET /featured-service-providers`** (homepage grid; approved verified providers with **`isFeatured`**), providers by city/category, **`GET /service-types-by-category/:categorySlug`**, **`GET /feedback-rating-tags?tagFor=provider`** for rating chips.",
     "6. **Booking** vs **lead:** **`POST /customer/bookings`** assigns a chosen provider immediately. **`POST /customer/service-leads`** creates an open **service lead** (city + category + types + address); admin assigns a provider via **`PUT /admin/service-leads/:id/assign`**.",
-    "7. **Statuses** (poll `GET /customer/bookings/:id`): `pending` → `price_pending` → **`PUT .../accept-quote`** → `price_agreed` / `confirmed` → provider **`POST .../start`** → `in_progress` → provider completion OTP → **`completed`**. Terminal: `cancelled`.",
+    "7. **Statuses** (poll `GET /customer/bookings/:id`): create → `price_pending` → **`PUT .../accept-quote`** → `confirmed` → provider **`POST .../start`** → `in_progress` → provider completion OTP → **`completed`**. Terminal: `cancelled`.",
     "8. **Chat (REST):** booking messages endpoints.",
     "9. **Realtime (optional):** Socket.IO on API server — emit **`booking:join`** `{ bookingId, role: \"customer\" }`, listen for **`booking:presence`**, **`booking:typing`**, emit **`booking:leave`** with booking id when leaving chat.",
     "10. **After `completed`:** `POST /customer/bookings/:id/feedback`. Detail payload may include **customerFeedback**.",

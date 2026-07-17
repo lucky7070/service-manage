@@ -14,6 +14,7 @@ import BookingProviderRatingSection, { type CustomerBookingFeedback } from "@/co
 import AccountNav from "@/components/front/user/AccountNav";
 import { Button, Textarea } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
+import { bookingChatClosedMessage, isBookingChatOpen } from "@/helpers/customerBookingStatus";
 import { cn, getSweetAlertConfigFront } from "@/helpers/utils";
 import { socket } from "@/lib/socket";
 
@@ -261,7 +262,7 @@ export default function CustomerBookingDetailPage() {
 
     const sendMessage = useCallback(async () => {
         const text = message.trim();
-        if ((!text && !pendingImage) || submitting || !id) return;
+        if ((!text && !pendingImage) || submitting || !id || !isBookingChatOpen(booking.status)) return;
 
         stickToBottomRef.current = true;
         stopLocalTypingSignal();
@@ -286,7 +287,7 @@ export default function CustomerBookingDetailPage() {
             toast.error(data.message || "Could not send message.");
         }
         setSubmitting(false);
-    }, [message, pendingImage, submitting, id, stopLocalTypingSignal, clearPendingImage]);
+    }, [message, pendingImage, submitting, id, booking.status, stopLocalTypingSignal, clearPendingImage]);
 
     const onImageSelected = (file: File | null) => {
         if (!file) return;
@@ -374,7 +375,7 @@ export default function CustomerBookingDetailPage() {
                             <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <h2 className="text-xl font-bold">Quote & Price</h2>
-                                    {!["completed", "cancelled"].includes(booking.status) ? (
+                                    {!["in_progress", "completed", "cancelled"].includes(booking.status) ? (
                                         <Button
                                             type="button"
                                             variant="destructive"
@@ -456,6 +457,11 @@ export default function CustomerBookingDetailPage() {
                                     />
                                 </div>
                                 {providerTyping ? <ChatTypingIndicator label="Provider is typing" className="mt-3 px-0.5" /> : null}
+                                {!isBookingChatOpen(booking.status) ? (
+                                    <p className="mt-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+                                        {bookingChatClosedMessage(booking.status)}
+                                    </p>
+                                ) : null}
                                 {pendingImagePreview ? (
                                     <div className="mt-3 flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-3">
                                         <div className="h-20 w-20 overflow-hidden rounded-lg border border-border bg-background">
@@ -483,7 +489,7 @@ export default function CustomerBookingDetailPage() {
                                         type="button"
                                         variant="outline"
                                         onClick={() => imageInputRef.current?.click()}
-                                        disabled={submitting}
+                                        disabled={submitting || !isBookingChatOpen(booking.status)}
                                         aria-label="Share image"
                                         title="Share image"
                                     >
@@ -494,15 +500,18 @@ export default function CustomerBookingDetailPage() {
                                         onChange={(event) => onMessageChange(event.target.value)}
                                         onKeyDown={onComposerKeyDown}
                                         onBlur={() => stopLocalTypingSignal()}
-                                        placeholder="Type your message…"
+                                        placeholder={isBookingChatOpen(booking.status) ? "Type your message…" : "Chat is closed"}
                                         className="min-h-20 resize-y py-2 leading-normal md:text-sm"
                                         rows={3}
+                                        disabled={!isBookingChatOpen(booking.status)}
                                     />
-                                    <Button type="button" onClick={() => void sendMessage()} disabled={submitting || (!message.trim() && !pendingImage)}>
+                                    <Button type="button" onClick={() => void sendMessage()} disabled={submitting || !isBookingChatOpen(booking.status) || (!message.trim() && !pendingImage)}>
                                         {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send
                                     </Button>
                                 </div>
-                                <p className="mt-1.5 text-xs text-muted-foreground">Press Enter to send · Shift+Enter for a new line · Share photos with the image button</p>
+                                {isBookingChatOpen(booking.status) ? (
+                                    <p className="mt-1.5 text-xs text-muted-foreground">Press Enter to send · Shift+Enter for a new line · Share photos with the image button</p>
+                                ) : null}
                             </div>
                         </>}
                     </div>

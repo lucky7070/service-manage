@@ -19,8 +19,8 @@ const Schema = new mongoose.Schema({
     cityId: { type: mongoose.Schema.Types.ObjectId, ref: "City", required: true, default: null },
     status: {
         type: String,
-        enum: ["pending", "price_pending", "price_agreed", "confirmed", "in_progress", "completed", "cancelled"],
-        default: "pending",
+        enum: ["price_pending", "confirmed", "in_progress", "completed", "cancelled"],
+        default: "price_pending",
         index: true
     },
     issueDescription: { type: String, default: null },
@@ -32,7 +32,7 @@ const Schema = new mongoose.Schema({
     startTime: { type: Date, default: null },
     completionTime: { type: Date, default: null },
     cancellationReason: { type: String, default: null },
-    cancelledBy: { type: String, enum: ["customer", "provider", "admin"], default: null },
+    cancelledBy: { type: String, enum: ["customer", "provider", "admin", "system"], default: null },
     addressId: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true, default: null },
     location: {
         addressLine1: { type: String, default: null },

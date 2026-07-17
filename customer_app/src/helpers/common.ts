@@ -29,7 +29,6 @@ export function bookingStatusBadgeStyle(status: string) {
             return { background: "rgba(244,244,243,0.9)", border: colors.border, color: colors.mutedForeground };
         case "in_progress":
         case "confirmed":
-        case "price_agreed":
             return { background: "rgba(240,116,26,0.1)", border: "rgba(240,116,26,0.2)", color: colors.primary };
         case "price_pending":
             return { background: "rgba(245,158,11,0.06)", border: "rgba(245,158,11,0.12)", color: colors.amber };
@@ -41,7 +40,11 @@ export function bookingStatusBadgeStyle(status: string) {
 export function bookingAccentStripeColor(status: string) {
     if (status === "cancelled") return colors.mutedForeground;
     if (status === "completed") return colors.emerald;
-    if (status === "pending") return colors.mutedForeground;
     if (status === "price_pending") return colors.amber;
     return colors.primary;
+}
+
+const BOOKING_CHAT_OPEN_STATUSES = ["price_pending", "confirmed", "in_progress"] as const;
+export function isBookingChatOpen(status: string) {
+    return (BOOKING_CHAT_OPEN_STATUSES as readonly string[]).includes(status);
 }

@@ -10,18 +10,15 @@ import PageHero from "../components/ui/PageHero";
 import PaginationBar from "../components/ui/PaginationBar";
 import Screen from "../components/ui/Screen";
 import StatusBadge from "../components/ui/StatusBadge";
-import { bookingAccentStripeColor } from "../helpers/common";
+import { bookingAccentStripeColor, isBookingChatOpen, useRootNavigation } from "../helpers/common";
 import { formatDateTimeShort } from "../helpers/date";
 import { chatButtonStyles } from "../config/constant";
-import { useRootNavigation } from "../helpers/common";
 import { colors } from "../theme/colors";
 import { screenStyles } from "../theme/screenStyles";
 
 const statusFilters = [
     { value: "", label: "All" },
-    { value: "pending", label: "Pending" },
     { value: "price_pending", label: "Price pending" },
-    { value: "price_agreed", label: "Price agreed" },
     { value: "confirmed", label: "Confirmed" },
     { value: "in_progress", label: "In progress" },
     { value: "completed", label: "Completed" },
@@ -106,7 +103,7 @@ export default function BookingsScreen() {
                                                     bookingId: booking._id,
                                                     bookingNumber: booking.bookingNumber,
                                                     providerName: booking.providerName,
-                                                    chatDisabled: booking.status === "cancelled",
+                                                    chatDisabled: !isBookingChatOpen(booking.status),
                                                 })}
                                                 style={chatButtonStyles.btn}
                                                 hitSlop={6}

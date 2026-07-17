@@ -1,6 +1,6 @@
 import moment from "moment";
 import { Address, Booking, ChatMessage, City, AssignedSubscription, Ledger, Notification, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../../models/index.js";
-import { parseBookingChatPayload } from "../../helpers/bookingChat.js";
+import { bookingChatClosedMessage, isBookingChatOpen, parseBookingChatPayload } from "../../helpers/bookingChat.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../../helpers/bookingRating.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
@@ -201,7 +201,7 @@ export const getCustomerDashboard = async (req, res) => {
 
         const bookingStats = {
             total: statusRows.reduce((sum, row) => sum + row.count, 0),
-            pending: 0,
+            price_pending: 0,
             confirmed: 0,
             in_progress: 0,
             completed: 0,
@@ -265,6 +265,11 @@ export const createCustomerBooking = async (req, res) => {
         const address = await Address.findOne({ _id: ObjectId(req.body.addressId), customerId, deletedAt: null }).populate("city", "name").populate("state", "name");
         if (!address) return res.noRecords(false, "Address not found.");
 
+        const openBooking = await Booking.findOne({ customerId, providerId: provider._id, deletedAt: null, status: { $nin: ["completed", "cancelled"] } }).select("_id bookingNumber status").lean();
+        if (openBooking) {
+            return res.clientError("You already have an open booking with this provider. Complete or cancel it before creating another.", 409);
+        }
+
         const booking = await Booking.create({
             customerId,
             providerId: provider._id,
@@ -315,17 +320,19 @@ export const getCustomerBooking = async (req, res) => {
 
 export const acceptCustomerBookingQuote = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
-        if (!booking) return res.noRecords(false, "Booking not found.");
-        if (!booking.quotedPrice || booking.status !== "price_pending") return res.clientError("No pending quote found for this booking.", 400);
+        const bookingId = ObjectId(req.params.bookingId);
+        const previousBooking = await Booking.findOne({ _id: bookingId, customerId: req.customer._id, deletedAt: null }, { status: 1 }).lean();
+        if (!previousBooking) return res.noRecords(false, "Booking not found.");
 
-        const previousStatus = booking.status;
-        booking.agreedPrice = booking.quotedPrice;
-        booking.finalPrice = booking.quotedPrice;
-        booking.status = "confirmed";
-        await booking.save();
+        const booking = await Booking.findOneAndUpdate(
+            { _id: bookingId, customerId: req.customer._id, deletedAt: null, status: "price_pending", quotedPrice: { $gt: 0 }, },
+            [{ $set: { agreedPrice: "$quotedPrice", finalPrice: "$quotedPrice", status: "confirmed" } }],
+            { new: true }
+        );
+        if (!booking) return res.clientError("No pending quote found for this booking.", 400);
+
         await bookingStatusMail(booking._id);
-        await notifyBookingStatusChange({ booking, previousStatus, actorType: "customer" });
+        await notifyBookingStatusChange({ booking, previousStatus: previousBooking.status, actorType: "customer" });
         return res.successUpdate(booking, "Quote accepted successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -334,18 +341,19 @@ export const acceptCustomerBookingQuote = async (req, res) => {
 
 export const cancelCustomerBooking = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
-        if (!booking) return res.noRecords(false, "Booking not found.");
-        if (["in_progress", "completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be cancelled.", 400);
+        const bookingId = ObjectId(req.params.bookingId);
+        const previousBooking = await Booking.findOne({ _id: bookingId, customerId: req.customer._id, deletedAt: null }, { status: 1 }).lean();
+        if (!previousBooking) return res.noRecords(false, "Booking not found.");
 
-        const previousStatus = booking.status;
-        booking.status = "cancelled";
-        booking.cancelledBy = "customer";
-        booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by customer").trim();
-        await booking.save();
+        const booking = await Booking.findOneAndUpdate(
+            { _id: bookingId, customerId: req.customer._id, deletedAt: null, status: { $nin: ["in_progress", "completed", "cancelled"] } },
+            { $set: { status: "cancelled", cancelledBy: "customer", cancellationReason: String(req.body?.cancellationReason || "Cancelled by customer").trim() } },
+            { new: true }
+        );
+        if (!booking) return res.clientError("This booking cannot be cancelled.", 400);
 
         await bookingStatusMail(booking._id);
-        await notifyBookingStatusChange({ booking, previousStatus, actorType: "customer" });
+        await notifyBookingStatusChange({ booking, previousStatus: previousBooking.status, actorType: "customer" });
         return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -354,26 +362,27 @@ export const cancelCustomerBooking = async (req, res) => {
 
 export const completeCustomerBooking = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null, });
-        if (!booking) return res.noRecords(false, "Booking not found.");
-
-        if (booking.status !== "in_progress" || !booking.startTime) {
+        const bookingId = ObjectId(req.params.bookingId);
+        const completedAt = now();
+        const booking = await Booking.findOneAndUpdate(
+            { _id: bookingId, customerId: req.customer._id, deletedAt: null, status: "in_progress", startTime: { $ne: null }, completionTime: null },
+            { $set: { completionTime: completedAt, status: "completed" } },
+            { new: true }
+        );
+        if (!booking) {
+            const existing = await Booking.findOne({ _id: bookingId, customerId: req.customer._id, deletedAt: null }, { status: 1, completionTime: 1 }).lean();
+            if (!existing) return res.noRecords(false, "Booking not found.");
+            if (existing.completionTime || existing.status === "completed") {
+                return res.clientError("This booking is already completed.", 409);
+            }
             return res.clientError("You can only mark the job complete while it is in progress and after the provider has started.", 400);
         }
 
-        if (booking.completionTime) {
-            return res.clientError("This booking is already completed.", 409);
-        }
-
         await OtpVerification.deleteMany({ purpose: "booking_completion", bookingId: booking._id });
-
-        const previousStatus = booking.status;
-        booking.completionTime = now();
-        booking.status = "completed";
-        await booking.save();
+        await ServiceProvider.updateOne({ _id: booking.providerId }, { $inc: { totalCompletedServices: 1 } });
 
         await bookingStatusMail(booking._id);
-        await notifyBookingStatusChange({ booking, previousStatus, actorType: "customer" });
+        await notifyBookingStatusChange({ booking, previousStatus: "in_progress", actorType: "customer" });
         return res.successUpdate(booking, "Job marked complete.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -396,6 +405,9 @@ export const sendCustomerBookingMessage = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), customerId: req.customer._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
+        if (!isBookingChatOpen(booking.status)) {
+            return res.clientError(bookingChatClosedMessage(booking.status), 400);
+        }
 
         const payload = parseBookingChatPayload(req);
         if (payload.error) return res.clientError(payload.error, 422, [{ field: "message", message: payload.error }]);

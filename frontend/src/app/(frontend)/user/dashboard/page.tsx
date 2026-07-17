@@ -28,7 +28,7 @@ type DashboardData = {
 
 const statCards = [
     { key: "total", label: "Total Bookings", icon: CalendarCheck },
-    { key: "pending", label: "Pending", icon: Clock3 },
+    { key: "price_pending", label: "Awaiting quote", icon: Clock3 },
     { key: "completed", label: "Completed", icon: CheckCircle2 },
     { key: "cancelled", label: "Cancelled", icon: XCircle }
 ];
@@ -39,7 +39,7 @@ export default function CustomerDashboardPage() {
     const user = useAppSelector((state) => state.user);
     const [dashboard, setDashboard] = useState<DashboardData>({
         addressCount: 0,
-        bookingStats: { total: 0, pending: 0, confirmed: 0, in_progress: 0, completed: 0, cancelled: 0 },
+        bookingStats: { total: 0, price_pending: 0, confirmed: 0, in_progress: 0, completed: 0, cancelled: 0 },
         recentBookings: []
     });
     const [loading, setLoading] = useState(true);

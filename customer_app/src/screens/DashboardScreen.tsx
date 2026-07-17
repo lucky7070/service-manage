@@ -15,8 +15,7 @@ import { fetchDashboard, type DashboardData } from "../api";
 import { useAuth } from "../context/AuthContext";
 import BookServiceSearch from "../components/booking/BookServiceSearch";
 import { useMainNavigation } from "../navigation/MainNavContext";
-import { useRootNavigation } from "../helpers/common";
-import { bookingAccentStripeColor } from "../helpers/common";
+import { bookingAccentStripeColor, isBookingChatOpen, useRootNavigation } from "../helpers/common";
 import { formatDateTimeShort } from "../helpers/date";
 import EmptyState from "../components/ui/EmptyState";
 import Screen from "../components/ui/Screen";
@@ -40,13 +39,6 @@ const quickActions: QuickAction[] = [
     { route: "ReferEarn", label: "Refer & earn", subtitle: "Get rewards", icon: "gift", gradient: ["#F59E0B", "#D97706"], highlight: true },
     { route: "Addresses", label: "Addresses", subtitle: "Saved places", icon: "map-pin", gradient: ["#10B981", "#059669"] },
     { route: "Ledger", label: "Wallet", subtitle: "Transactions", icon: "credit-card", gradient: ["#0EA5E9", "#0284C7"] },
-];
-
-const statCards = [
-    { key: "total", label: "Total bookings", icon: "layers" as const, tone: colors.primary, bg: "rgba(240,116,26,0.1)" },
-    { key: "pending", label: "In progress", icon: "clock" as const, tone: colors.amber, bg: "rgba(245,158,11,0.1)" },
-    { key: "completed", label: "Completed", icon: "check-circle" as const, tone: colors.emerald, bg: "rgba(4,120,87,0.1)" },
-    { key: "cancelled", label: "Cancelled", icon: "x-circle" as const, tone: colors.rose, bg: "rgba(225,29,72,0.08)" },
 ];
 
 function getGreeting() {
@@ -119,9 +111,7 @@ export default function DashboardScreen() {
                         </LinearGradient>
                         <Text style={styles.quickLabel}>{action.label}</Text>
                         <Text style={styles.quickSub}>
-                            {action.route === "Addresses" && dashboard?.addressCount != null
-                                ? `${dashboard.addressCount} saved`
-                                : action.subtitle}
+                            {action.route === "Addresses" && dashboard?.addressCount != null ? `${dashboard.addressCount} saved` : action.subtitle}
                         </Text>
                     </Pressable>
                 ))}
@@ -163,7 +153,7 @@ export default function DashboardScreen() {
                                                 bookingId: booking._id,
                                                 bookingNumber: booking.bookingNumber,
                                                 providerName: booking.providerName,
-                                                chatDisabled: booking.status === "cancelled",
+                                                chatDisabled: !isBookingChatOpen(booking.status),
                                             })}
                                             style={chatButtonStyles.btn}
                                             hitSlop={6}

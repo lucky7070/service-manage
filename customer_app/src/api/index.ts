@@ -197,7 +197,7 @@ export async function fetchCitiesWithState(query = "") {
 }
 
 export async function fetchServiceCategories(query = "") {
-    const { data } = await AxiosHelper.getData("/service-categories-list", { query, limit: 20, status: 1 });
+    const { data } = await AxiosHelper.getData("/service-categories-list", { query, limit: 100, status: 1 });
     return data as ApiResponse<SlugOption[]>;
 }
 

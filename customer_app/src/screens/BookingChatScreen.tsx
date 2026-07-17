@@ -43,7 +43,7 @@ export default function BookingChatScreen() {
     };
 
     const statusLine = chatDisabled
-        ? "Chat is closed for cancelled bookings."
+        ? "Chat is closed for this booking."
         : providerTyping
             ? "Provider is typing…"
             : providerOnline

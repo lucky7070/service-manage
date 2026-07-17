@@ -9,6 +9,7 @@ import InformationBannerOverlay from "./src/components/InformationBannerOverlay"
 import AppNavigator from "./src/navigation/AppNavigator";
 import ForceUpdateScreen from "./src/screens/ForceUpdateScreen";
 import MaintenanceScreen from "./src/screens/MaintenanceScreen";
+import ConnectionErrorScreen from "./src/screens/ConnectionErrorScreen";
 import { colors } from "./src/theme/colors";
 
 function AppBootstrap() {
@@ -23,6 +24,15 @@ function AppBootstrap() {
         setRetryingSettings(true);
         void refreshSettings().finally(() => setRetryingSettings(false));
     };
+
+    if (!settingsBoot && !settings.application_name) {
+        return (
+            <>
+                <ConnectionErrorScreen onRetry={onRetrySettings} retrying={retryingSettings} />
+                <StatusBar style="dark" />
+            </>
+        );
+    }
 
     if (settingsBoot || authBoot) {
         return (

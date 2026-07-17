@@ -157,6 +157,11 @@ export const assignServiceLead = async (req, res) => {
         const address = await Address.findOne({ _id: lead.addressId, customerId, deletedAt: null }).populate("city", "name").populate("state", "name");
         if (!address) return res.clientError("Customer address for this lead is no longer available.", 400);
 
+        const openBooking = await Booking.findOne({ customerId, providerId: provider._id, deletedAt: null, status: { $nin: ["completed", "cancelled"] } }).select("_id bookingNumber status").lean();
+        if (openBooking) {
+            return res.clientError("This customer already has an open booking with this provider. Complete or cancel it before assigning another.", 409);
+        }
+
         const booking = await Booking.create({
             customerId,
             providerId: provider._id,

@@ -81,7 +81,7 @@ export const listServiceCategories = async (req, res) => {
     try {
         const query = String(req.query.query || "").trim();
         const limitRaw = Number(req.query.limit);
-        const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 20) : 20;
+        const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 20;
 
         const filter = { deletedAt: null, isActive: true };
         if (query) filter.name = { $regex: escapeRegex(query), $options: "i" };
@@ -141,7 +141,7 @@ export const listFeaturedServiceProviders = async (req, res) => {
         const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 12) : 8;
 
         const rows = await ServiceProvider.aggregate([
-            { $match: { deletedAt: null, isActive: true,  profileStatus: "approved" } },
+            { $match: { deletedAt: null, isActive: true, profileStatus: "approved" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
             { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
             {

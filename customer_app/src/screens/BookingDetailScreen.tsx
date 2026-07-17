@@ -11,7 +11,7 @@ import StatusBadge from "../components/ui/StatusBadge";
 import type { MainStackParamList } from "../api/types";
 import { chatButtonStyles } from "../config/constant";
 import { formatDateTime } from "../helpers/date";
-import { useRootNavigation } from "../helpers/common";
+import { isBookingChatOpen, useRootNavigation } from "../helpers/common";
 import { colors, radius, spacing } from "../theme/colors";
 import { screenStyles } from "../theme/screenStyles";
 
@@ -204,7 +204,7 @@ export default function BookingDetailScreen() {
                     <Card large elevated style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Text style={styles.sectionTitle}>Quote & price</Text>
-                            {!["completed", "cancelled"].includes(booking.status) ? (
+                            {!["in_progress", "completed", "cancelled"].includes(booking.status) ? (
                                 <Button label="Cancel" variant="destructive" onPress={onCancel} loading={submitting} style={styles.cancelBtn} />
                             ) : null}
                         </View>
@@ -263,7 +263,7 @@ export default function BookingDetailScreen() {
                                         bookingId: bookingId,
                                         bookingNumber: booking.bookingNumber,
                                         providerName: booking.providerName,
-                                        chatDisabled: booking.status === "cancelled",
+                                        chatDisabled: !isBookingChatOpen(booking.status),
                                     })}
                                     style={chatButtonStyles.btn}
                                 >

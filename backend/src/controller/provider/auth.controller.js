@@ -8,7 +8,7 @@ import { deleteFile } from "../../libraries/storage.js";
 import { pickPushFields } from "../../helpers/pushFields.js";
 import { sendOTP } from "../../libraries/sms.js";
 import { refreshCustomerAverageRating, resolveQuickTagIds } from "../../helpers/bookingRating.js";
-import { parseBookingChatPayload } from "../../helpers/bookingChat.js";
+import { bookingChatClosedMessage, isBookingChatOpen, parseBookingChatPayload } from "../../helpers/bookingChat.js";
 import { getSettings } from "../../helpers/database.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingChatMessage, notifyBookingQuoteSent, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
@@ -409,6 +409,11 @@ export const logout = async (req, res) => {
 
 export const deleteServiceProviderAccount = async (req, res) => {
     try {
+        const activeJob = await Booking.findOne({ providerId: req.serviceProvider._id, status: "in_progress", deletedAt: null }).select("_id").lean();
+        if (activeJob) {
+            return res.clientError("You have a job in progress. Complete it before deleting your account.", 400);
+        }
+
         await req.serviceProvider.updateOne({
             deletedAt: now(),
             isActive: false,
@@ -562,19 +567,21 @@ export const listProviderBookings = async (req, res) => {
 
 export const cancelProviderBooking = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
-        if (!booking) return res.noRecords(false, "Booking not found.");
-        if (["completed", "cancelled"].includes(booking.status)) {
+        const bookingId = ObjectId(req.params.bookingId);
+        const previousBooking = await Booking.findOne({ _id: bookingId, providerId: req.serviceProvider._id, deletedAt: null }, { status: 1 }).lean();
+        if (!previousBooking) return res.noRecords(false, "Booking not found.");
+
+        const booking = await Booking.findOneAndUpdate(
+            { _id: bookingId, providerId: req.serviceProvider._id, deletedAt: null, status: { $nin: ["completed", "cancelled"] } },
+            { $set: { status: "cancelled", cancelledBy: "provider", cancellationReason: String(req.body?.cancellationReason || "Cancelled by service provider").trim(), ...(previousBooking.status === "in_progress" ? { startTime: null } : {}) } },
+            { new: true }
+        );
+        if (!booking) {
             return res.clientError("This booking cannot be cancelled.", 400);
         }
 
-        const previousStatus = booking.status;
-        booking.status = "cancelled";
-        booking.cancelledBy = "provider";
-        booking.cancellationReason = String(req.body?.cancellationReason || "Cancelled by service provider").trim();
-        await booking.save();
         await bookingStatusMail(booking._id);
-        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
+        await notifyBookingStatusChange({ booking, previousStatus: previousBooking.status, actorType: "provider" });
         return res.successUpdate(booking, "Booking cancelled successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -583,17 +590,20 @@ export const cancelProviderBooking = async (req, res) => {
 
 export const setBookingQuote = async (req, res) => {
     try {
-        const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
-        if (!booking) return res.noRecords(false, "Booking not found.");
-        if (["completed", "cancelled"].includes(booking.status)) return res.clientError("This booking cannot be quoted.", 400);
+        const bookingId = ObjectId(req.params.bookingId);
+        const previousBooking = await Booking.findOne({ _id: bookingId, providerId: req.serviceProvider._id, deletedAt: null }, { status: 1 }).lean();
+        if (!previousBooking) return res.noRecords(false, "Booking not found.");
 
-        const previousStatus = booking.status;
-        booking.quotedPrice = Number(req.body.quotedPrice);
-        booking.status = "price_pending";
-        await booking.save();
+        const booking = await Booking.findOneAndUpdate(
+            { _id: bookingId, providerId: req.serviceProvider._id, deletedAt: null, status: "price_pending" },
+            { $set: { quotedPrice: Number(req.body.quotedPrice), status: "price_pending" } },
+            { new: true }
+        );
+        if (!booking) return res.clientError("This booking cannot be quoted.", 400);
+
         await bookingStatusMail(booking._id);
-        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
-        if (previousStatus === booking.status) {
+        await notifyBookingStatusChange({ booking, previousStatus: previousBooking.status, actorType: "provider" });
+        if (previousBooking.status === booking.status) {
             await notifyBookingQuoteSent({ booking, actorType: "provider" });
         }
         return res.successUpdate(booking, "Quote sent successfully.");
@@ -617,6 +627,11 @@ export const startProviderBooking = async (req, res) => {
 
         if (booking.startTime != null || booking.status === "in_progress") {
             return res.clientError("Job has already been started.", 409);
+        }
+
+        const activeJob = await Booking.findOne({ providerId: req.serviceProvider._id, status: "in_progress", deletedAt: null, _id: { $ne: booking._id } }).select("_id").lean();
+        if (activeJob) {
+            return res.clientError("You already have a job in progress. Complete it before starting another.", 409);
         }
 
         const jobLat = booking.location?.latitude || null;
@@ -652,13 +667,33 @@ export const startProviderBooking = async (req, res) => {
             return res.clientError(`You must be within ${radiusM} m of the customer's service address to start the job (device is about ${Math.round(metersApart)} m away).`, 400);
         }
 
-        const previousStatus = booking.status;
-        booking.startTime = now();
-        booking.status = "in_progress";
-        await booking.save();
-        await bookingStatusMail(booking._id);
-        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
-        return res.successUpdate(booking, "Job started.");
+        const startedAt = now();
+        const updatedBooking = await Booking.findOneAndUpdate(
+            { _id: booking._id, providerId: req.serviceProvider._id, deletedAt: null, status: "confirmed", startTime: null, agreedPrice: { $gt: 0 } },
+            { $set: { startTime: startedAt, status: "in_progress" } },
+            { new: true }
+        );
+        if (!updatedBooking) {
+            return res.clientError("This booking cannot be started.", 409);
+        }
+
+        const otherActiveJob = await Booking.findOne({
+            providerId: req.serviceProvider._id,
+            status: "in_progress",
+            deletedAt: null,
+            _id: { $ne: updatedBooking._id },
+        }).select("_id").lean();
+        if (otherActiveJob) {
+            await Booking.updateOne(
+                { _id: updatedBooking._id, status: "in_progress", startTime: startedAt },
+                { $set: { status: "confirmed", startTime: null } }
+            );
+            return res.clientError("You already have a job in progress. Complete it before starting another.", 409);
+        }
+
+        await bookingStatusMail(updatedBooking._id);
+        await notifyBookingStatusChange({ booking: updatedBooking, previousStatus: "confirmed", actorType: "provider" });
+        return res.successUpdate(updatedBooking, "Job started.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -732,14 +767,21 @@ export const completeProviderBooking = async (req, res) => {
         }
 
         await verify.deleteOne();
-        const previousStatus = booking.status;
-        booking.completionTime = now();
-        booking.status = "completed";
-        await booking.save();
 
-        await bookingStatusMail(booking._id);
-        await notifyBookingStatusChange({ booking, previousStatus, actorType: "provider" });
-        return res.successUpdate(booking, "Booking completed successfully.");
+        const updatedBooking = await Booking.findOneAndUpdate(
+            { _id: booking._id, providerId: req.serviceProvider._id, deletedAt: null, status: "in_progress", startTime: { $ne: null }, completionTime: null },
+            { $set: { completionTime: now(), status: "completed" } },
+            { new: true }
+        );
+        if (!updatedBooking) {
+            return res.clientError("This booking is already completed.", 409);
+        }
+
+        await ServiceProvider.updateOne({ _id: updatedBooking.providerId }, { $inc: { totalCompletedServices: 1 } });
+
+        await bookingStatusMail(updatedBooking._id);
+        await notifyBookingStatusChange({ booking: updatedBooking, previousStatus: "in_progress", actorType: "provider" });
+        return res.successUpdate(updatedBooking, "Booking completed successfully.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -761,6 +803,9 @@ export const sendProviderBookingMessage = async (req, res) => {
     try {
         const booking = await Booking.findOne({ _id: ObjectId(req.params.bookingId), providerId: req.serviceProvider._id, deletedAt: null });
         if (!booking) return res.noRecords(false, "Booking not found.");
+        if (!isBookingChatOpen(booking.status)) {
+            return res.clientError(bookingChatClosedMessage(booking.status), 400);
+        }
 
         const payload = parseBookingChatPayload(req);
         if (payload.error) return res.clientError(payload.error, 422, [{ field: "message", message: payload.error }]);

@@ -6,7 +6,6 @@ export function bookingStatusBadgeClass(status: string) {
             return "border border-border bg-muted/90 text-muted-foreground";
         case "in_progress":
         case "confirmed":
-        case "price_agreed":
             return "border border-primary/20 bg-primary/10 text-primary";
         case "price_pending":
             return "border border-amber-500/12 bg-amber-500/[0.06] text-amber-950 dark:text-amber-500/85";
@@ -18,7 +17,17 @@ export function bookingStatusBadgeClass(status: string) {
 export function bookingAccentStripeClass(status: string) {
     if (status === "cancelled") return "from-muted-foreground/35 to-muted-foreground/15";
     if (status === "completed") return "from-emerald-600/30 to-emerald-600/10";
-    if (status === "pending") return "from-muted-foreground/45 to-muted-foreground/20";
     if (status === "price_pending") return "from-amber-600/25 to-amber-600/8";
     return "from-primary to-primary/70";
+}
+
+const BOOKING_CHAT_OPEN_STATUSES = ["price_pending", "confirmed", "in_progress"] as const;
+export function isBookingChatOpen(status: string) {
+    return (BOOKING_CHAT_OPEN_STATUSES as readonly string[]).includes(status);
+}
+
+export function bookingChatClosedMessage(status: string) {
+    if (status === "completed") return "Chat is closed for completed bookings.";
+    if (status === "cancelled") return "Chat is closed for cancelled bookings.";
+    return "Chat is not available for this booking.";
 }
