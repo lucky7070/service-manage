@@ -232,7 +232,7 @@ export default function ProfileScreen() {
                                 <Text style={styles.formTitle}>Edit profile</Text>
                                 <Text style={styles.formSub}>Update your personal details. Mobile number cannot be changed here.</Text>
 
-                                <FormField name="name" label="Full name" required />
+                                <FormField name="name" label="Full name" required autoCapitalize="words" maxLength={100} />
                                 <Input label="Mobile" value={user.mobile ? `+91 ${user.mobile}` : ""} editable={false} />
                                 <FormField name="email" label="Email" keyboardType="email-address" autoCapitalize="none" />
                                 <DateField
@@ -264,7 +264,7 @@ export default function ProfileScreen() {
                                         style={styles.actionBtn}
                                     />
                                     <Button
-                                        label={isSubmitting ? "Saving…" : "Save changes"}
+                                        label={isSubmitting ? "Saving…" : "Save"}
                                         onPress={() => handleSubmit()}
                                         loading={isSubmitting}
                                         style={styles.actionBtn}

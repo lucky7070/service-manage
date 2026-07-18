@@ -2,6 +2,8 @@ import * as Yup from "yup";
 import { parseDate } from "../helpers/date";
 
 const indianMobile = /^[6-9]\d{9}$/;
+const personNamePattern = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+const personNameField = (requiredMessage: string, minMessage: string) => Yup.string().trim().matches(personNamePattern, "Name can only contain letters (A-Z) and spaces.").min(2, minMessage).max(100, "Name must be at most 100 characters.").required(requiredMessage);
 
 export const authDetailsSchema = (isLogin: boolean) =>
     Yup.object({
@@ -11,7 +13,7 @@ export const authDetailsSchema = (isLogin: boolean) =>
             .required("Mobile number is required."),
         name: isLogin
             ? Yup.string().optional()
-            : Yup.string().trim().min(2, "Full name is required.").required("Full name is required."),
+            : personNameField("Full name is required.", "Full name must be at least 2 characters."),
         referralCode: Yup.string().trim().optional(),
     });
 
@@ -43,7 +45,7 @@ export const addressSchema = Yup.object({
 });
 
 export const profileSchema = Yup.object({
-    name: Yup.string().trim().min(2, "Name must be at least 2 characters.").required("Name is required."),
+    name: personNameField("Name is required.", "Name must be at least 2 characters."),
     email: Yup.string().trim().email("Invalid email.").nullable().transform((v) => v || null),
     dateOfBirth: Yup.string().nullable().transform((v) => v || null).test("valid-date", "Enter a valid date.", (value) => !value || parseDate(value)?.isValid() === true),
     preferredLanguage: Yup.string().oneOf(["en", "hi"]).required(),

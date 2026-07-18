@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { orderId, slugify, generateOtp } from "../helpers/utils.js";
+import { getter, orderId, slugify, generateOtp, setter } from "../helpers/utils.js";
 import { Counter } from "./Counter.js";
 import { config } from "../config/index.js";
 
@@ -11,7 +11,7 @@ const Schema = new mongoose.Schema(
         slug: { type: String, required: true, trim: true, unique: true },
         image: { type: String, default: '/subscriptions/default.png' },
         description: { type: String, required: true, trim: true },
-        price: { type: Number, required: true, min: 0 },
+        price: { type: Number, required: true, min: 0, set: setter, get: getter },
         interval: { type: String, enum: ['day', 'month', 'year'], required: true },
         intervalCount: { type: Number, default: 1 },
         features: [{

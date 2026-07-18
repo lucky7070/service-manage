@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import { getter, setter } from "../helpers/utils.js";
 
 const Schema = new mongoose.Schema({
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", required: true, index: true, default: null },
     serviceTypeId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceType", required: true, index: true, default: null },
-    price: { type: Number, default: null },
+    price: { type: Number, default: null, set: setter, get: getter },
     isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 

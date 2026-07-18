@@ -44,7 +44,7 @@ export const axiosResponse = (data: unknown, status: number = 200): AxiosRespons
 });
 
 export const errorData = (error: AxiosError): AxiosResponse<unknown> => {
-    if (env.logErrorsInConsole) console.log(error?.response);
+    if (env.logErrorsInConsole) console.error(`Axios Error:`, error?.response);
     if (["ERR_NETWORK", "ECONNREFUSED", "ECONNABORTED"].includes(error.code ?? "")) {
         return axiosResponse({
             status: false,

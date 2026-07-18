@@ -5,7 +5,7 @@ import { Button, Input, Label, OtpField, Textarea, FrontAsyncSelect } from "@/co
 import * as Yup from "yup"
 import { toast } from "react-toastify";
 import AxiosHelper from "@/helpers/AxiosHelper"
-import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
+import { OTP_REGEXP, PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_REGEXP } from "@/config";
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight } from "lucide-react";
 import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
@@ -45,7 +45,12 @@ const ProRegistrationForm = () => {
 
     const validationSchema = useMemo(() => {
         const base = {
-            name: Yup.string().trim().min(2, "Full name must be at least 2 characters.").required("Full name is required."),
+            name: Yup.string()
+                .trim()
+                .min(2, "Full name must be at least 2 characters.")
+                .max(100, "Full name must be at most 100 characters.")
+                .matches(PERSON_NAME_REGEXP, PERSON_NAME_ERROR_MESSAGE)
+                .required("Full name is required."),
             mobile: Yup.string().trim().required("Mobile number is required.").matches(PHONE_REGEXP, "Enter a valid Indian mobile number."),
             email: Yup.string().trim().email("Enter a valid email address.").required("Email is required."),
             cityId: Yup.string().trim().required("City is required."),

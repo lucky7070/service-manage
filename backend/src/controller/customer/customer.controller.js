@@ -450,7 +450,7 @@ export const submitCustomerBookingFeedback = async (req, res) => {
             return res.clientError(e.message || "Invalid quick tags.", 422, [{ field: "quickTags", message: e.message || "Invalid quick tags." }]);
         }
 
-        const star = Number.parseInt(String(req.body.starRating), 5);
+        const star = Number.parseInt(String(req.body.starRating || 1), 10);
         const reviewText = String(req.body.reviewText ?? "").trim() || null;
 
         const doc = await Rating.create({

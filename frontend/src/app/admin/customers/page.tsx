@@ -18,7 +18,7 @@ import AdminPagination from "@/components/admin/AdminPagination";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
-import { PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
+import { PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 
 type Customer = {
@@ -45,7 +45,12 @@ type SortBy = "userId" | "name" | "mobile" | "email" | "dateOfBirth" | "status" 
 type SortOrder = "asc" | "desc";
 
 const validationSchema = Yup.object().shape({
-    name: Yup.string().min(2, "Too Short!").max(100, "Too Long!").required("Name is required.").trim(),
+    name: Yup.string()
+        .trim()
+        .min(2, "Too Short!")
+        .max(100, "Too Long!")
+        .matches(PERSON_NAME_REGEXP, PERSON_NAME_ERROR_MESSAGE)
+        .required("Name is required."),
     mobile: Yup.string().matches(PHONE_REGEXP, PHONE_ERROR_MESSAGE).length(10, 'Mobile number must be exactly 10 digits.').required("Mobile is required."),
     email: Yup.string().email("Invalid email.").required("Email is required."),
     dateOfBirth: Yup.string().required("Date of birth is required."),

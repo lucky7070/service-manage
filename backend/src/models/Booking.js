@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Counter } from "./Counter.js";
-import { orderId } from "../helpers/utils.js";
+import { getter, orderId, setter } from "../helpers/utils.js";
 
 const Schema = new mongoose.Schema({
     bookingNumber: { type: String, unique: true, index: true, default: null },
@@ -25,9 +25,9 @@ const Schema = new mongoose.Schema({
     },
     issueDescription: { type: String, default: null },
     bookingTime: { type: Date, default: Date.now },
-    quotedPrice: { type: Number, default: null },
-    agreedPrice: { type: Number, default: null },
-    finalPrice: { type: Number, default: null },
+    quotedPrice: { type: Number, default: null, set: setter, get: getter },
+    agreedPrice: { type: Number, default: null, set: setter, get: getter },
+    finalPrice: { type: Number, default: null, set: setter, get: getter },
     scheduledTime: { type: Date, default: null },
     startTime: { type: Date, default: null },
     completionTime: { type: Date, default: null },

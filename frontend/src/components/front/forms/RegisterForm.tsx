@@ -8,7 +8,7 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { Button, Input, OtpField, Label } from "@/components/front/ui";
 import AxiosHelper from "@/helpers/AxiosHelper";
-import { OTP_REGEXP, PHONE_REGEXP } from "@/config";
+import { OTP_REGEXP, PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_REGEXP } from "@/config";
 import { Phone, User } from "lucide-react";
 import { useAppDispatch } from "@/store/hooks";
 import { updateUser, type UserState } from "@/store/slices/userSlice";
@@ -22,7 +22,12 @@ type RegisterValues = {
 };
 
 const baseValidation = {
-    name: Yup.string().trim().min(2, "Full name must be at least 2 characters.").required("Full name is required."),
+    name: Yup.string()
+        .trim()
+        .min(2, "Full name must be at least 2 characters.")
+        .max(100, "Full name must be at most 100 characters.")
+        .matches(PERSON_NAME_REGEXP, PERSON_NAME_ERROR_MESSAGE)
+        .required("Full name is required."),
     mobile: Yup.string().trim().required("Mobile number is required.").matches(PHONE_REGEXP, "Enter a valid Indian mobile number."),
     referralCode: Yup.string().trim().max(20, "Referral code is too long."),
     acceptedTerms: Yup.boolean().oneOf([true], "You must accept Terms and Privacy Policy.")
@@ -96,7 +101,7 @@ export default function RegisterForm() {
                         <Label>Full Name</Label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Field as={Input} className="pl-10" type="text" placeholder="John Doe" name="name" disabled={loading || step === "otp"} maxLength={50} />
+                            <Field as={Input} className="pl-10" type="text" placeholder="John Doe" name="name" disabled={loading || step === "otp"} maxLength={100} />
                         </div>
                         <ErrorMessage name="name" component="small" className="mt-1 block text-red-600" />
                     </div>

@@ -230,7 +230,7 @@ export default function BookingDetailScreen() {
                         </Card>
                     ) : null}
 
-                    {booking.customerFeedback && <Card large elevated style={styles.section}>
+                    {booking.status === "completed" && <Card large elevated style={styles.section}>
                         <BookingFeedbackSection
                             bookingId={bookingId}
                             providerName={booking.providerName}

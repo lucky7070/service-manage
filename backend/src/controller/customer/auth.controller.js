@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import moment from "moment";
 import { config } from "../../config/index.js";
-import { JWT_CONFIG, PHONE_REGEXP } from "../../config/constants.js";
+import { JWT_CONFIG, PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_REGEXP } from "../../config/constants.js";
 import { generateOtp, now, nowPlusMinutes } from "../../helpers/utils.js";
 import { OtpVerification, Customer } from "../../models/index.js";
 import { sendOTP } from "../../libraries/sms.js";
@@ -53,7 +53,10 @@ export const sendOtp = async (req, res) => {
 export const register = async (req, res) => {
     try {
         const { name = "New Customer", mobile, otp, referralCode = "" } = req.body;
-        if (!String(name ?? "").trim()) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required" }]);
+        const trimmedName = String(name ?? "").trim();
+        if (!trimmedName) return res.clientError("Name is required.", 422, [{ field: "name", message: "Required" }]);
+        if (trimmedName.length < 2 || trimmedName.length > 100) return res.clientError("Name must be between 2 to 100 characters long.", 422, [{ field: "name", message: "Name must be between 2 to 100 characters long." }]);
+        if (!PERSON_NAME_REGEXP.test(trimmedName)) return res.clientError(PERSON_NAME_ERROR_MESSAGE, 422, [{ field: "name", message: PERSON_NAME_ERROR_MESSAGE }]);
         if (!mobile) return res.clientError("Mobile is required.", 422, [{ field: "mobile", message: "Required" }]);
         if (!PHONE_REGEXP.test(String(mobile).trim())) return res.clientError("Enter a valid Indian mobile number.", 422, [{ field: "mobile", message: "Enter a valid Indian mobile number." }]);
 
@@ -75,7 +78,7 @@ export const register = async (req, res) => {
                 referredBy = referrer._id;
             }
 
-            user = await Customer.create({ mobile: verify.phoneNumber, name, isVerified: true, referredBy, registerFrom: String(req.body.registerFrom || "").trim().toLowerCase() || "website", ...pickPushFields(req.body) });
+            user = await Customer.create({ mobile: verify.phoneNumber, name: trimmedName, isVerified: true, referredBy, registerFrom: String(req.body.registerFrom || "").trim().toLowerCase() || "website", ...pickPushFields(req.body) });
 
             const settings = await getSettings(["signup_rewards", "refer_amount"]);
             const signupReward = Number(settings.signup_rewards || 0);

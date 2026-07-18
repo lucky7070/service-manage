@@ -15,8 +15,15 @@ import { getSweetAlertConfigFront, resolveFileUrl } from "@/helpers/utils";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { resetUser, updateUser, type UserState } from "@/store/slices/userSlice";
 
+import { PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP } from "@/config";
+
 const validationSchema = Yup.object().shape({
-    name: Yup.string().trim().min(2, "Name must be at least 2 characters.").max(100, "Name is too long.").required("Name is required."),
+    name: Yup.string()
+        .trim()
+        .min(2, "Name must be at least 2 characters.")
+        .max(100, "Name is too long.")
+        .matches(PERSON_NAME_REGEXP, PERSON_NAME_ERROR_MESSAGE)
+        .required("Name is required."),
     email: Yup.string().trim().email("Invalid email.").nullable(),
     dateOfBirth: Yup.string().nullable(),
     preferredLanguage: Yup.string().oneOf(["en", "hi"]).required("Preferred language is required.")
@@ -166,7 +173,7 @@ export default function CustomerProfilePage() {
                                         <div className="grid gap-4 sm:grid-cols-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="profile-name" required>Full Name</Label>
-                                                <Field as={Input} id="profile-name" name="name" placeholder="Your full name" />
+                                                <Field as={Input} id="profile-name" name="name" placeholder="Your full name" maxLength={100} />
                                                 <ErrorMessage className="mt-1 block text-xs text-rose-600" name="name" component="small" />
                                             </div>
 

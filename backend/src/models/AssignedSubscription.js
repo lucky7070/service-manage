@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Counter } from "./Counter.js";
-import { orderId } from "../helpers/utils.js";
+import { getter, orderId, setter } from "../helpers/utils.js";
 
 const Schema = new mongoose.Schema({
     voucherNo: { type: String, trim: true, index: true, default: null },
@@ -10,10 +10,10 @@ const Schema = new mongoose.Schema({
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     status: { type: String, enum: ["active", "inactive"], default: "active", index: true },
-    amount: { type: Number, required: true, default: 0 },
-    taxAmount: { type: Number, required: true, default: 0 },
+    amount: { type: Number, required: true, default: 0, set: setter, get: getter },
+    taxAmount: { type: Number, required: true, default: 0, set: setter, get: getter },
     taxPercentage: { type: Number, required: true, default: 0 },
-    paymentAmount: { type: Number, required: true, default: 0 },
+    paymentAmount: { type: Number, required: true, default: 0, set: setter, get: getter },
     paymentGatewayOrderId: { type: String, trim: true, index: true, default: null },
     paymentGatewayTransactionId: { type: String, trim: true, index: true, default: null },
     paymentGatewayTransactionStatus: { type: String, enum: ["success", "failed", "pending"], default: "pending", index: true },

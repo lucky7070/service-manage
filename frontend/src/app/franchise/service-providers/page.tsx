@@ -21,7 +21,7 @@ import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import Image from "@/components/ui/Image";
-import { PHONE_ERROR_MESSAGE, PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "@/config";
+import { PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_ERROR_MESSAGE, PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "@/config";
 import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
 
 type ProviderRecord = {
@@ -76,7 +76,12 @@ const INITIAL_VALUES: ProviderRecord = {
 };
 
 const validationSchema = Yup.object().shape({
-    name: Yup.string().min(2, "Too short.").max(100, "Too long.").required("Name is required.").trim(),
+    name: Yup.string()
+        .trim()
+        .min(2, "Too short.")
+        .max(100, "Too long.")
+        .matches(PERSON_NAME_REGEXP, PERSON_NAME_ERROR_MESSAGE)
+        .required("Name is required."),
     mobile: Yup.string().matches(PHONE_REGEXP, PHONE_ERROR_MESSAGE).length(10, "10 digits required.").required("Mobile is required."),
     email: Yup.string().email("Invalid email.").required("Email is required."),
     panCardNumber: Yup.string().matches(/^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/, "PAN format: ABCDE1234F").required("PAN is required."),

@@ -73,3 +73,15 @@ export const escapeHtml = (value = "") => {
 }
 
 export const slugify = (s) => String(s || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
+
+export const setter = (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    const n = Number.parseFloat(value);
+    return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+};
+
+export const getter = (value) => {
+    if (value === null || value === undefined || value === "") return null;
+    const n = Number.parseFloat(value);
+    return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+};

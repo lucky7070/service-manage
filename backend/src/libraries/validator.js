@@ -1,10 +1,11 @@
 import { check, param } from "express-validator";
-import { BANNER_TYPES, PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
+import { BANNER_TYPES, PHONE_REGEXP, PERSON_NAME_REGEXP, PERSON_NAME_ERROR_MESSAGE, SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
 import { trapErrors } from "../middlewares/trapErrors.js";
 
 const email = check("email", "Valid email is required.").exists().notEmpty().isEmail().withMessage('Invalid email.').isLength({ min: 2, max: 100 }).withMessage('Email must be between 2 to 100 characters long.').trim().normalizeEmail().toLowerCase();
 const password = check("password", "Password must be greater then 5 digit.!!").exists().notEmpty().isLength({ min: 5, max: 50 }).withMessage('Password must be between 5 to 50 characters long.').trim();
 const name = check("name", "Name is required.").exists().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 to 100 characters long.').trim();
+const personName = check("name", "Name is required.").exists().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 to 100 characters long.').matches(PERSON_NAME_REGEXP).withMessage(PERSON_NAME_ERROR_MESSAGE).trim();
 const status = check("status", "Status is required.").exists().notEmpty().isIn([0, 1, "0", "1"]).withMessage('Status must be 0 or 1.');
 const mobile = check("mobile", "Enter a valid Indian mobile number.").trim().notEmpty().matches(PHONE_REGEXP).withMessage("Enter a valid Indian mobile number.").isInt().customSanitizer(value => String(value)).isLength({ min: 10, max: 10 }).withMessage('mobile must be exactly 10 digits').trim();
 const roleId = check("roleId", "Role ID is required.").exists().notEmpty().isMongoId().withMessage('Invalid role ID.');
@@ -204,10 +205,10 @@ export const validator = (method) => {
             output = [countryId, stateId, name, status, slug];
             break;
         case "customer":
-            output = [name, mobile, email, dateOfBirth, status];
+            output = [personName, mobile, email, dateOfBirth, status];
             break;
         case "customer-profile-update":
-            output = [name, email, dateOfBirth, preferredLanguage];
+            output = [personName, email, dateOfBirth, preferredLanguage];
             break;
         case "customer-profile-image":
             output = [imageRequired];
@@ -267,7 +268,7 @@ export const validator = (method) => {
             output = [name, status, slug, nameHiCategory, descriptionOptional, displayOrder];
             break;
         case "service-provider":
-            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, image, panCardDocument, aadharDocument];
+            output = [personName, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, image, panCardDocument, aadharDocument];
             break;
         case "service-provider-status":
             output = [id, profileStatus, isVerified, rejectionReason];
@@ -337,7 +338,7 @@ export const validator = (method) => {
             output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
             break;
         case "service-provider-register":
-            output = [name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument, referralCodeOptional, fcmTokenOptional, deviceIdOptional];
+            output = [personName, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument, referralCodeOptional, fcmTokenOptional, deviceIdOptional];
             break;
         case "service-provider-login":
             output = [mobile, otp, fcmTokenOptional, deviceIdOptional];

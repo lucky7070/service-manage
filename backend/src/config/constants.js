@@ -7,6 +7,8 @@ export const BANNER_TYPES = ["homepage", "category"];
 
 // Indian mobile: optional +91 / leading 0, then 10-digit starting with 6–9.
 export const PHONE_REGEXP = /^(?:(?:\+|0{0,2})91(\s*|[-])?|[0]?)?([6789]\d{2}([ -]?)\d{3}([ -]?)\d{4})$/;
+export const PERSON_NAME_REGEXP = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+export const PERSON_NAME_ERROR_MESSAGE = "Name can only contain letters (A-Z) and spaces.";
 
 export const COOKIE_OPTIONS = {
     path: "/",
