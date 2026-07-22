@@ -9,7 +9,7 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import AdminActionsDropdown from "@/components/admin/AdminActionsDropdown";
-import { CircleCheckBig, CreditCard, ImageIcon, Images, Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import { CircleCheckBig, CreditCard, ImageIcon, Images, MapPin, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import Link from "next/link";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
@@ -24,6 +24,7 @@ import AsyncSelect from "@/components/ui/AsyncSelect";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import RegistrationDocument from "@/components/admin/RegistrationDocument";
 import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
+import AssignProviderAreasForm from "@/components/admin/AssignProviderAreasForm";
 
 type ServiceProvider = {
     _id: string;
@@ -46,6 +47,7 @@ type ServiceProvider = {
     isFeatured?: boolean;
 
     cityName?: string;
+    areaIds: string[];
     serviceCategoryName?: string;
 
     userId?: string;
@@ -65,7 +67,7 @@ type ServiceProviderRecord = {
 type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, policeVerification: null, profileStatus: "pending", rejectionReason: "", isFeatured: false };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", areaIds: [], serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, policeVerification: null, profileStatus: "pending", rejectionReason: "", isFeatured: false };
 
 const statusValidationSchema = Yup.object().shape({
     profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
@@ -112,13 +114,20 @@ const validationSchema = Yup.object().shape({
 
 export default function AdminServiceProvidersPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
-    const [open, setOpen] = useState<null | "add" | "edit" | "status">(null);
+    const [open, setOpen] = useState<null | "add" | "edit" | "status" | "areas">(null);
     const [data, setData] = useState<ServiceProviderRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "" });
     const [initialValues, setInitialValues] = useState<ServiceProvider>(INITIAL_VALUES);
+    const [areasInitialValues, setAreasInitialValues] = useState<{ _id: string; areaIds: string[] }>({ _id: "", areaIds: [] });
+    const [areasProvider, setAreasProvider] = useState<ServiceProvider | null>(null);
+    const [areaSearchQuery, setAreaSearchQuery] = useState("");
+    const [areasLoading, setAreasLoading] = useState(false);
+    const [areasTotalCount, setAreasTotalCount] = useState(0);
+    const debouncedAreaSearchRef = useRef(debounce((_cityId: string, _query: string) => { }, 350));
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [city, setCity] = useState<{ value: string; label: string } | null>(null);
     const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
+    const [areaOptions, setAreaOptions] = useState<{ _id: string; name: string }[]>([]);
 
     const loadCityOptions = async (inputValue: string) => {
         const { data } = await AxiosHelper.getData("/cities-with-state", { query: inputValue, limit: 20 });
@@ -128,6 +137,41 @@ export default function AdminServiceProvidersPage() {
             return [];
         }
     };
+
+    const loadAreasForCity = useCallback(async (cityId: string, query = "") => {
+        if (!cityId) {
+            setAreaOptions([]);
+            setAreasTotalCount(0);
+            return;
+        }
+
+        setAreasLoading(true);
+        try {
+            const { data } = await AxiosHelperAdmin.getData("/areas", { cityId, status: 1, limit: 500, pageNo: 1, sortBy: "name", sortOrder: "asc", query: query.trim() });
+            if (data?.status && Array.isArray(data?.data?.record)) {
+                const next = data.data.record.map((area: { _id: string; name: string }) => ({ _id: area._id, name: area.name }));
+                setAreaOptions(next);
+                setAreasTotalCount(Number(data.data.count || next.length));
+            } else {
+                setAreaOptions([]);
+                setAreasTotalCount(0);
+            }
+        } finally {
+            setAreasLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        debouncedAreaSearchRef.current = debounce((cityId: string, query: string) => {
+            loadAreasForCity(cityId, query);
+        }, 350);
+    }, [loadAreasForCity]);
+
+    useEffect(() => {
+        if (open !== "areas" || !areasProvider?.cityId) return;
+        debouncedAreaSearchRef.current(String(areasProvider.cityId), areaSearchQuery);
+        return () => { debouncedAreaSearchRef.current.cancel(); };
+    }, [open, areasProvider?.cityId, areaSearchQuery]);
 
     const loadServiceCategoryOptions = async (inputValue: string) => {
         const { data } = await AxiosHelper.getData("/service-categories-list", { query: inputValue, limit: 20 });
@@ -185,6 +229,7 @@ export default function AdminServiceProvidersPage() {
             mobile: String(data.mobile ?? ""),
             email: String(data.email ?? ""),
             cityId: String(data.cityId ?? ""),
+            areaIds: Array.isArray(data.areaIds) ? data.areaIds.map(String) : [],
             serviceCategoryId: String(data.serviceCategoryId ?? ""),
             panCardNumber: String(data.panCardNumber ?? ""),
             aadharNumber: String(data.aadharNumber ?? ""),
@@ -202,6 +247,29 @@ export default function AdminServiceProvidersPage() {
         setServiceCategory({ value: String(data.serviceCategoryId ?? ""), label: String(data.serviceCategoryName ?? "") });
 
         if (typeof data.image === 'string') setImagePreview(resolveFileUrl(data.image));
+    };
+
+    const openAreasModal = (row: ServiceProvider) => {
+        if (!row.cityId) {
+            toast.error("Set provider city before assigning areas.");
+            return;
+        }
+
+        // const nameMap: Record<string, string> = {};
+        const ids = Array.isArray(row.areaIds) ? row.areaIds.map(String) : [];
+
+        // setAreaNameById(nameMap);
+        setAreaSearchQuery("");
+        setAreasProvider(row);
+        setAreasInitialValues({ _id: String(row._id), areaIds: ids });
+        setOpen("areas");
+    };
+
+    const closeAreasModal = () => {
+        setOpen(null);
+        setAreasProvider(null);
+        setAreaSearchQuery("");
+        debouncedAreaSearchRef.current.cancel();
     };
 
     const openStatusModal = (row: ServiceProvider) => {
@@ -224,6 +292,9 @@ export default function AdminServiceProvidersPage() {
                     <PermissionBlock permission_id={371}>
                         <Button type="button" variant="primary" size="md" onClick={() => {
                             setInitialValues(INITIAL_VALUES);
+                            setCity(null);
+                            setServiceCategory(null);
+                            setImagePreview(null);
                             setOpen("add");
                         }}>
                             <Plus className="h-3.5 w-3.5" />
@@ -245,7 +316,7 @@ export default function AdminServiceProvidersPage() {
                         <Select
                             value={param.profileStatus}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, profileStatus: e.target.value === "" ? "" : (e.target.value as ProfileStatus) }))}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All statuses</Option>
                             {SERVICE_PROVIDER_PROFILE_STATUSES.map((k) => (
@@ -361,6 +432,13 @@ export default function AdminServiceProvidersPage() {
                                                     icon: CreditCard,
                                                     href: `/admin/service-providers/${row._id}/subscriptions`,
                                                     permissionId: 457,
+                                                },
+                                                {
+                                                    key: "areas",
+                                                    label: "Assign Areas",
+                                                    icon: MapPin,
+                                                    permissionId: 372,
+                                                    onClick: () => openAreasModal(row),
                                                 },
                                                 {
                                                     key: "status",
@@ -574,6 +652,29 @@ export default function AdminServiceProvidersPage() {
                         )}
                     </Formik>
                 </div>
+            </Modal>
+
+            <Modal
+                show={open === "areas"}
+                onClose={closeAreasModal}
+                title="Assign service areas"
+                subTitle={areasProvider ? `${areasProvider.name} · ${areasProvider.cityName || "City"}` : "Select areas for the provider's city."}
+                size="lg"
+                scrollable
+            >
+                <AssignProviderAreasForm
+                    areaOptions={areaOptions}
+                    areasLoading={areasLoading}
+                    areasTotalCount={areasTotalCount}
+                    searchQuery={areaSearchQuery}
+                    onSearchChange={setAreaSearchQuery}
+                    onCancel={closeAreasModal}
+                    onSaved={() => {
+                        closeAreasModal();
+                        fetchRows();
+                    }}
+                    initialValues={areasInitialValues}
+                />
             </Modal>
 
             <Modal

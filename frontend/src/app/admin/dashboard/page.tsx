@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, CircleHelp, Globe, HardHat, ImageIcon, Layers, Map, Quote, Shield, Tags, UserCog, UserCircle, Wrench } from "lucide-react";
+import { Building2, CircleHelp, Globe, HardHat, ImageIcon, Layers, Map, MapPin, Quote, Shield, Tags, UserCog, UserCircle, Wrench } from "lucide-react";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import PermissionBlock from "@/components/admin/PermissionBlock";
@@ -13,6 +13,7 @@ type DashboardCountState = {
     countries: number;
     states: number;
     cities: number;
+    areas: number;
     customers: number;
     predefinedRatingTags: number;
     faqs: number;
@@ -37,6 +38,7 @@ const DASHBOARD_CARDS: DashboardCard[] = [
     { key: "countries", title: "Countries", href: "/admin/countries", permissionId: 304, icon: Globe },
     { key: "states", title: "States", href: "/admin/states", permissionId: 314, icon: Map },
     { key: "cities", title: "Cities", href: "/admin/cities", permissionId: 324, icon: Building2 },
+    { key: "areas", title: "Areas", href: "/admin/areas", permissionId: 328, icon: MapPin },
     { key: "customers", title: "Customers", href: "/admin/customers", permissionId: 334, icon: UserCircle },
     { key: "serviceProviders", title: "Service providers", href: "/admin/service-providers", permissionId: 374, icon: HardHat },
     { key: "predefinedRatingTags", title: "Rating Tags", href: "/admin/rating-tags", permissionId: 344, icon: Tags },
@@ -54,6 +56,7 @@ export default function AdminDashboardPage() {
         countries: 0,
         states: 0,
         cities: 0,
+        areas: 0,
         customers: 0,
         predefinedRatingTags: 0,
         faqs: 0,
@@ -74,6 +77,7 @@ export default function AdminDashboardPage() {
                     countries: Number(data.data.countries || 0),
                     states: Number(data.data.states || 0),
                     cities: Number(data.data.cities || 0),
+                    areas: Number(data.data.areas || 0),
                     customers: Number(data.data.customers || 0),
                     predefinedRatingTags: Number(data.data.predefinedRatingTags || 0),
                     faqs: Number(data.data.faqs || 0),

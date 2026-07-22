@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const Schema = new mongoose.Schema(
     {
-        icon: { type: String, required: true },
+        icon: { type: String, required: true, trim: true },
         title: { type: String, required: true, trim: true, maxlength: 200 },
         description: { type: String, required: true, trim: true, maxlength: 5000 },
         displayOrder: { type: Number, default: 0, min: 0, index: true },

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const Schema = new mongoose.Schema({
-    name: { type: String, required: true, default: null },
+    name: { type: String, required: true, trim: true },
     permissions: { type: [Number], default: [] },  // 101, 102
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null }

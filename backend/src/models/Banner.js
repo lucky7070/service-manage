@@ -7,7 +7,7 @@ const Schema = new mongoose.Schema(
         bannerTitleHi: { type: String, default: null },
         bannerSubtitle: { type: String, default: null },
         bannerSubtitleHi: { type: String, default: null },
-        bannerImage: { type: String, required: true, default: null },
+        bannerImage: { type: String, required: true, trim: true },
         bannerType: { type: String, enum: BANNER_TYPES, default: "homepage", index: true },
         link: { type: String, default: null },
         displayOrder: { type: Number, default: 0, index: true },

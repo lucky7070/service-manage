@@ -12,6 +12,7 @@ import { CreditCard, ImageIcon, Images, Pencil, Plus, Trash2, Wrench } from "luc
 import Link from "next/link";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import AdminActionsDropdown from "@/components/admin/AdminActionsDropdown";
 import AxiosHelperFranchise from "@/helpers/AxiosHelperFranchise";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, Textarea } from "@/components/ui";
@@ -42,8 +43,10 @@ type ProviderRecord = {
     experienceDescription?: string;
     cityName?: string;
     serviceCategoryName?: string;
+    currentSubscription?: string | null;
     profileStatus?: string;
     isVerified?: boolean;
+    isFeatured?: boolean;
     isActive?: boolean;
     createdAt?: string;
 };
@@ -246,24 +249,19 @@ export default function FranchiseServiceProvidersPage() {
                     <table className="min-w-full text-sm">
                         <thead className="bg-[#edf3ff] text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             <tr>
-                                <th className="px-3 py-2 w-14"> </th>
+                                <th className="px-3 py-2 w-14"></th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("userId")} name="User ID" active={param.sortBy === "userId"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
-                                    <AdminTableHeader onClick={() => onSort("name")} name="Name" active={param.sortBy === "name"} sortOrder={param.sortOrder} />
-                                </th>
-                                <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("mobile")} name="Mobile" active={param.sortBy === "mobile"} sortOrder={param.sortOrder} />
                                 </th>
-                                <th className="px-3 py-2">
-                                    <AdminTableHeader onClick={() => onSort("email")} name="Email" active={param.sortBy === "email"} sortOrder={param.sortOrder} />
-                                </th>
                                 <th className="px-3 py-2">City</th>
-                                <th className="px-3 py-2">Category</th>
                                 <th className="px-3 py-2">
-                                    <AdminTableHeader onClick={() => onSort("profileStatus")} name="Status" active={param.sortBy === "profileStatus"} sortOrder={param.sortOrder} />
+                                    <AdminTableHeader onClick={() => onSort("profileStatus")} name="Profile status" active={param.sortBy === "profileStatus"} sortOrder={param.sortOrder} />
                                 </th>
+                                <th className="px-3 py-2">Current subscription</th>
+                                <th className="px-3 py-2">Verified</th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("createdAt")} name="Created" active={param.sortBy === "createdAt"} sortOrder={param.sortOrder} />
                                 </th>
@@ -286,55 +284,87 @@ export default function FranchiseServiceProvidersPage() {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.userId || "—"}</td>
-                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
-                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.mobile}</td>
-                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.email || "-"}</td>
-                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.cityName || "-"}</td>
-                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.serviceCategoryName || "-"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <p>{row.name}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{row.userId || "—"}</p>
+                                        </td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <p>{row.mobile}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{row.email || "—"}</p>
+                                        </td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <p>{row.cityName || "—"}</p>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">{row.serviceCategoryName || "—"}</p>
+                                        </td>
                                         <td className="px-3 py-2">
                                             <Badge
                                                 className="capitalize"
-                                                variant={row.profileStatus === "approved" ? "success" : row.profileStatus === "pending" ? "warning" : "secondary"}
+                                                variant={
+                                                    row.profileStatus === "approved" ? "success"
+                                                        : row.profileStatus === "pending" ? "secondary"
+                                                            : row.profileStatus === "suspended" ? "warning"
+                                                                : row.profileStatus === "rejected" ? "danger"
+                                                                    : "secondary"
+                                                }
                                                 size="sm"
                                             >
                                                 {row.profileStatus || "—"}
                                             </Badge>
                                         </td>
-                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "-"}</td>
-                                        <td className="px-3 py-2">
-                                            <div className="flex justify-end gap-1.5 sm:gap-2">
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            {row.currentSubscription ? (
                                                 <Link
-                                                    href={`/franchise/service-providers/${row._id}/images`}
-                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-secondary-200 px-3 text-xs font-medium text-secondary-900 transition-all hover:bg-secondary-300 dark:bg-secondary-700 dark:text-white dark:hover:bg-secondary-600"
-                                                    title="Work Photos"
-                                                    aria-label="Work Photos"
-                                                >
-                                                    <Images className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Link>
-                                                <Link
-                                                    href={`/franchise/service-providers/${row._id}/services`}
-                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-primary-100 px-3 text-xs font-medium text-primary-800 transition-all hover:bg-primary-200 dark:bg-primary-900/40 dark:text-primary-200"
-                                                    title="Provider Services"
-                                                    aria-label="Provider Services"
-                                                >
-                                                    <Wrench className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Link>
-                                                <Link
+                                                    className="font-semibold text-indigo-600 dark:text-indigo-400"
                                                     href={`/franchise/service-providers/${row._id}/subscriptions`}
-                                                    className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 px-3 text-xs font-medium text-emerald-800 transition-all hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200"
-                                                    title="Plan purchase history"
-                                                    aria-label="Plan purchase history"
                                                 >
-                                                    <CreditCard className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                    {row.currentSubscription}
                                                 </Link>
-                                                <Button size="sm" variant="secondary" onClick={() => openEdit(row)} title="Edit" aria-label="Edit">
-                                                    <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                                <Button size="sm" variant="danger" onClick={() => handleDelete(row._id)} title="Delete" aria-label="Delete">
-                                                    <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                            </div>
+                                            ) : "—"}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <Badge variant={row.isVerified ? "success" : "warning"} size="sm">
+                                                {row.isVerified ? "Yes" : "No"}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            {row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "—"}
+                                        </td>
+                                        <td className="px-3 py-2">
+                                            <AdminActionsDropdown
+                                                items={[
+                                                    {
+                                                        key: "images",
+                                                        label: "Work Photos",
+                                                        icon: Images,
+                                                        href: `/franchise/service-providers/${row._id}/images`,
+                                                    },
+                                                    {
+                                                        key: "services",
+                                                        label: "Services",
+                                                        icon: Wrench,
+                                                        href: `/franchise/service-providers/${row._id}/services`,
+                                                    },
+                                                    {
+                                                        key: "subscriptions",
+                                                        label: "Subscriptions",
+                                                        icon: CreditCard,
+                                                        href: `/franchise/service-providers/${row._id}/subscriptions`,
+                                                    },
+                                                    {
+                                                        key: "edit",
+                                                        label: "Edit",
+                                                        icon: Pencil,
+                                                        onClick: () => openEdit(row),
+                                                    },
+                                                    {
+                                                        key: "delete",
+                                                        label: "Delete",
+                                                        icon: Trash2,
+                                                        danger: true,
+                                                        onClick: () => handleDelete(row._id),
+                                                    },
+                                                ]}
+                                            />
                                         </td>
                                     </tr>
                                 );

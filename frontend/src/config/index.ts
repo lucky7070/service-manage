@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPinned, MailQuestionMark, Receipt, Settings, Shield, Store, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
+import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPin, MapPinned, MailQuestionMark, Receipt, Settings, Shield, Store, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -103,6 +103,15 @@ export const PERMISSIONS = [
             { id: 322, label: "Update City" },
             { id: 323, label: "Delete City" },
             { id: 324, label: "View City" },
+        ]
+    },
+    {
+        name: "Area Management",
+        permissions: [
+            { id: 325, label: "Create Area" },
+            { id: 326, label: "Update Area" },
+            { id: 327, label: "Delete Area" },
+            { id: 328, label: "View Area" },
         ]
     },
     {
@@ -288,6 +297,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
             { href: "/admin/countries", label: "Countries", icon: Globe, permission_id: 304 },
             { href: "/admin/states", label: "States", icon: Map, permission_id: 314 },
             { href: "/admin/cities", label: "Cities", icon: Building2, permission_id: 324 },
+            { href: "/admin/areas", label: "Areas", icon: MapPin, permission_id: 328 },
         ]
     },
     { href: "/admin/settings", label: "Settings", icon: Settings, permission_id: 100 },
@@ -370,6 +380,11 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/cities",
         permission_id: 324,
         items: [{ label: "Cities" }]
+    },
+    {
+        path: "/admin/areas",
+        permission_id: 328,
+        items: [{ label: "Areas" }]
     },
     {
         path: "/admin/customers",

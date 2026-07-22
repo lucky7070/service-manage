@@ -1,15 +1,16 @@
-import { Admin, Banner, City, Country, Customer, Faq, PredefinedRatingTag, Role, ServiceCategory, ServiceProvider, ServiceType, State, Testimonial } from "../../models/index.js";
+import { Admin, Area, Banner, City, Country, Customer, Faq, PredefinedRatingTag, Role, ServiceCategory, ServiceProvider, ServiceType, State, Testimonial } from "../../models/index.js";
 
 export const getDashboardStats = async (req, res) => {
     try {
         const filter = { isActive: true, deletedAt: null };
 
-        const [roles, admins, countries, states, cities, customers, predefinedRatingTags, faqs, banners, serviceCategories, serviceTypes, serviceProviders, testimonials] = await Promise.all([
+        const [roles, admins, countries, states, cities, areas, customers, predefinedRatingTags, faqs, banners, serviceCategories, serviceTypes, serviceProviders, testimonials] = await Promise.all([
             Role.countDocuments(filter),
             Admin.countDocuments(filter),
             Country.countDocuments(filter),
             State.countDocuments(filter),
             City.countDocuments(filter),
+            Area.countDocuments(filter),
             Customer.countDocuments(filter),
             PredefinedRatingTag.countDocuments(filter),
             Faq.countDocuments(filter),
@@ -26,6 +27,7 @@ export const getDashboardStats = async (req, res) => {
             countries,
             states,
             cities,
+            areas,
             customers,
             predefinedRatingTags,
             faqs,

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getCountry, createCountry, updateCountry, deleteCountry, getSingleCountry } from "../../controller/admin/country.controller.js";
 import { getState, createState, updateState, deleteState, getSingleState } from "../../controller/admin/state.controller.js";
 import { getCity, createCity, updateCity, deleteCity, getSingleCity } from "../../controller/admin/city.controller.js";
+import { getArea, createArea, updateArea, deleteArea, getSingleArea } from "../../controller/admin/area.controller.js";
 import { validator } from "../../libraries/validator.js";
 
 const router = Router();
@@ -23,5 +24,11 @@ router.put("/cities/:id", validator("city"), updateCity);
 router.delete("/cities/:id", deleteCity);
 router.get("/cities/:id", getSingleCity);
 router.get("/cities", getCity);
+
+router.post("/areas", validator("area"), createArea);
+router.put("/areas/:id", validator("area"), updateArea);
+router.delete("/areas/:id", deleteArea);
+router.get("/areas/:id", getSingleArea);
+router.get("/areas", getArea);
 
 export default router;

@@ -14,6 +14,7 @@ import {
     getFranchiseServiceProvider,
     createFranchiseServiceProvider,
     updateFranchiseServiceProvider,
+    updateFranchiseServiceProviderAreas,
     deleteFranchiseServiceProvider,
     getFranchiseServiceProviderPhotos,
     uploadFranchiseServiceProviderPhotos,
@@ -65,6 +66,7 @@ router.put(
     validator("service-provider"),
     updateFranchiseServiceProvider
 );
+router.put("/service-providers/:id/areas", validator("admin-service-provider-areas-update"), updateFranchiseServiceProviderAreas);
 router.get("/service-providers/:id/photos", getFranchiseServiceProviderPhotos);
 router.post("/service-providers/:id/photos", serviceProviderWorkPhotoStorage.array("photos", 20), uploadFranchiseServiceProviderPhotos);
 router.put("/service-providers/:id/photos/reorder", reorderFranchiseServiceProviderPhotos);

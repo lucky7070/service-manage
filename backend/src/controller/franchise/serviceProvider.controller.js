@@ -1,10 +1,11 @@
 import moment from "moment";
 import { City, ServiceCategory, ServiceProvider, ServiceProviderPhoto, ProviderService, AssignedSubscription } from "../../models/index.js";
 import { escapeRegex, ObjectId } from "../../helpers/utils.js";
+import { resolveAreaIdsForCity } from "../../helpers/providerAreas.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 import { deleteFile } from "../../libraries/storage.js";
 import { aggregateProviderServices, listActiveServiceTypesForCategory, loadServiceTypeForProviderCategory, parseProviderServicePrice } from "../../helpers/providerServiceOps.js";
-import { buildAssignedSubscriptionListPipeline } from "../../helpers/subscriptionAssignment.js";
+import { buildAssignedSubscriptionListPipeline, getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
 
 const ownedFilter = (franchiseId, extra = {}) => ({ franchiseId, deletedAt: null, ...extra });
 
@@ -17,14 +18,15 @@ const findOwnedProvider = async (franchiseId, providerId, projection = null) => 
 export const getFranchiseDashboard = async (req, res) => {
     try {
         const base = ownedFilter(req.franchise._id);
-        const [serviceProviders, pending, approved, rejected] = await Promise.all([
+        const [serviceProviders, pending, approved, rejected, referredProviders] = await Promise.all([
             ServiceProvider.countDocuments(base),
             ServiceProvider.countDocuments({ ...base, profileStatus: "pending" }),
             ServiceProvider.countDocuments({ ...base, profileStatus: "approved" }),
-            ServiceProvider.countDocuments({ ...base, profileStatus: "rejected" })
+            ServiceProvider.countDocuments({ ...base, profileStatus: "rejected" }),
+            ServiceProvider.countDocuments({ franchiseId: req.franchise._id, deletedAt: null, registerFrom: "front" })
         ]);
 
-        return res.success({ serviceProviders, pending, approved, rejected }, "Dashboard stats fetched successfully");
+        return res.success({ serviceProviders, pending, approved, rejected, referredProviders, referralCode: req.franchise.userId || null }, "Dashboard stats fetched successfully");
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -61,6 +63,20 @@ export const listFranchiseServiceProviders = async (req, res) => {
             { $unwind: { path: "$city", preserveNullAndEmptyArrays: true } },
             { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
             {
+                $lookup: {
+                    from: "assignedsubscriptions",
+                    localField: "_id",
+                    foreignField: "providerId",
+                    as: "subscription",
+                    pipeline: [
+                        { $match: getActiveSubscriptionFilter() },
+                        { $sort: { createdAt: -1 } },
+                        { $limit: 1 }
+                    ]
+                }
+            },
+            { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
+            {
                 $project: {
                     userId: 1,
                     name: 1,
@@ -78,8 +94,10 @@ export const listFranchiseServiceProviders = async (req, res) => {
                     experienceDescription: 1,
                     cityName: { $ifNull: ["$city.name", ""] },
                     serviceCategoryName: { $ifNull: ["$serviceCategory.name", ""] },
+                    currentSubscription: { $ifNull: ["$subscription.voucherNo", null] },
                     profileStatus: 1,
                     isVerified: 1,
+                    isFeatured: 1,
                     isActive: 1,
                     registerFrom: 1,
                     createdAt: 1
@@ -235,6 +253,20 @@ export const updateFranchiseServiceProvider = async (req, res) => {
         if (error.code === 11000) {
             return res.clientError("Duplicate mobile, email, PAN, or Aadhar.", 409);
         }
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const updateFranchiseServiceProviderAreas = async (req, res) => {
+    try {
+        const record = await ServiceProvider.findOne(ownedFilter(req.franchise._id, { _id: ObjectId(req.params.id) }));
+        if (!record) return res.noRecords();
+        if (!record.cityId) return res.clientError("Provider city is not set.", 422, [{ field: "cityId", message: "City must be set before assigning areas." }]);
+
+        const areaIds = await resolveAreaIdsForCity(req.body.areaIds, record.cityId);
+        await ServiceProvider.updateOne({ _id: record._id }, { areaIds });
+        return res.successUpdate(undefined, "Service areas updated.");
+    } catch (error) {
         return res.someThingWentWrong(error);
     }
 };

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const Schema = new mongoose.Schema(
     {
         customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true, index: true, default: null },
-        addressLine1: { type: String, required: true, default: null },
+        addressLine1: { type: String, required: true, trim: true },
         addressLine2: { type: String, default: null },
         landmark: { type: String, default: null },
         city: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null },

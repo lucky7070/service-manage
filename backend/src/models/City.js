@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 const Schema = new mongoose.Schema({
-    countryId: { type: mongoose.Schema.Types.ObjectId, ref: "Country", required: true, default: null },
-    stateId: { type: mongoose.Schema.Types.ObjectId, ref: "State", required: true, default: null },
-    name: { type: String, required: true, default: null },
+    countryId: { type: mongoose.Schema.Types.ObjectId, ref: "Country", required: true },
+    stateId: { type: mongoose.Schema.Types.ObjectId, ref: "State", required: true },
+    name: { type: String, required: true, trim: true },
     slug: { type: String, trim: true, lowercase: true, default: null },
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null }

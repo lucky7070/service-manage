@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-import { OurMilestone, OurValue, State, City, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag, Subscription } from "../models/index.js";
+import { OurMilestone, OurValue, State, City, Area, Enquiry, ServiceCategory, ServiceProvider, ProviderService, ServiceType, Testimonial, CmsPage, PredefinedRatingTag, Subscription } from "../models/index.js";
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
 import { PROVIDER_FILTER, getProviderPipeline } from "../helpers/subscriptionAssignment.js";
+import { parseIdList } from "../helpers/providerAreas.js";
 
 export const listStates = async (req, res) => {
     try {
@@ -55,6 +56,32 @@ export const listCitiesWithState = async (req, res) => {
         ]);
 
         return res.success(rows);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listAreas = async (req, res) => {
+    try {
+        const query = String(req.query.query || "").trim();
+        const citySlug = String(req.query.citySlug || "").trim().toLowerCase();
+        const cityIdRaw = ObjectId(req.query.cityId);
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 500) : 200;
+
+        let cityId = cityIdRaw;
+        if (!cityId && citySlug) {
+            const city = await City.findOne({ slug: citySlug, deletedAt: null, isActive: true }, { _id: 1 }).lean();
+            if (!city) return res.success([]);
+            cityId = city._id;
+        }
+
+        if (!cityId) return res.clientError("cityId or citySlug is required.", 422, [{ field: "cityId", message: "Required" }]);
+
+        const filter = { deletedAt: null, isActive: true, cityId };
+        if (query) filter.name = { $regex: escapeRegex(query), $options: "i" };
+
+        const rows = await Area.find(filter, { name: 1, cityId: 1 }).sort({ name: 1 }).limit(limit).lean();
+        return res.success(rows.map((row) => ({ _id: row._id, name: row.name, cityId: row.cityId })));
     } catch (error) {
         return res.someThingWentWrong(error);
     }
@@ -198,6 +225,11 @@ export const listServiceProviders = async (req, res) => {
         const filter = { ...PROVIDER_FILTER, cityId: city._id, serviceCategoryId: serviceCategory._id };
         if (query) filter.name = { $regex: escapeRegex(String(query)), $options: "i" };
 
+        const areaObjectIds = parseIdList(req.query.areaIds).map(ObjectId).filter(Boolean);
+        if (areaObjectIds.length > 0) {
+            filter.areaIds = { $in: areaObjectIds };
+        }
+
         const pipeline = [
             { $match: filter },
             ...getProviderPipeline(),
@@ -207,6 +239,7 @@ export const listServiceProviders = async (req, res) => {
                     name: 1,
                     slug: 1,
                     image: 1,
+                    areaIds: 1,
                     experienceYears: { $ifNull: ["$experienceYears", 0] },
                     totalCompletedServices: { $ifNull: ["$totalCompletedServices", 0] },
                     totalRating: { $ifNull: ["$totalRating", 0] },
@@ -222,9 +255,9 @@ export const listServiceProviders = async (req, res) => {
         const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
 
         if (results.length > 0) {
-            return res.pagination(results, total_count, limit, pageNo, 3, { city, serviceCategory });
+            return res.pagination(results, total_count, limit, pageNo, 3, { city, serviceCategory, selectedAreaIds: areaObjectIds.map(String) });
         } else {
-            return res.datatableNoRecords({ city, serviceCategory });
+            return res.datatableNoRecords({ city, serviceCategory, selectedAreaIds: areaObjectIds.map(String) });
         }
     } catch (error) {
         return res.someThingWentWrong(error);

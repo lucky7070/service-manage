@@ -101,11 +101,13 @@ export async function getServiceCategoryBySlug(slug: string): Promise<ServiceCat
 export type ProviderSearchResult = {
     city: { _id: string; name: string; slug: string };
     serviceCategory: { _id: string; name: string; slug: string };
+    selectedAreaIds?: string[];
     record: Array<{
         _id: string;
         name: string;
         slug: string;
         image: string;
+        areaIds?: string[];
         experienceYears: number;
         totalCompletedServices: number;
         totalRating: number;
@@ -118,10 +120,41 @@ export type ProviderSearchResult = {
     totalPages: number;
 };
 
-export async function getServiceProvidersBySlugs(city: string, serviceCategory: string, pageNo = 1, limit = 12): Promise<ProviderSearchResult | null> {
-    const { data } = await AxiosHelper.getData(`/service-providers/${city}/${serviceCategory}`, { pageNo, limit });
+export type PublicAreaOption = {
+    _id: string;
+    name: string;
+    cityId?: string;
+};
+
+export async function getAreasByCity(options: { cityId?: string; citySlug?: string; limit?: number } = {}): Promise<PublicAreaOption[]> {
+    const { data } = await AxiosHelper.getData("/areas-list", {
+        cityId: options.cityId || "",
+        citySlug: options.citySlug || "",
+        limit: options.limit ?? 200
+    });
+    if (data.status && Array.isArray(data.data)) {
+        return data.data as PublicAreaOption[];
+    }
+    return [];
+}
+
+export async function getServiceProvidersBySlugs(
+    city: string,
+    serviceCategory: string,
+    pageNo = 1,
+    limit = 12,
+    areaIds: string[] = []
+): Promise<ProviderSearchResult | null> {
+    const params: Record<string, string | number> = { pageNo, limit };
+    if (areaIds.length > 0) params.areaIds = areaIds.join(",");
+
+    const { data } = await AxiosHelper.getData(`/service-providers/${city}/${serviceCategory}`, params);
     if (data.status && data.data) {
-        return data.data as ProviderSearchResult;
+        const payload = data.data as ProviderSearchResult & { current_page?: number };
+        return {
+            ...payload,
+            pageNo: Number(payload.pageNo || payload.current_page || pageNo)
+        };
     }
 
     return null;

@@ -3,7 +3,7 @@ import moment from "moment";
 import { config } from "../../config/index.js";
 import { JWT_CONFIG, PHONE_REGEXP } from "../../config/constants.js";
 import { ObjectId, generateOtp, now, nowPlusMinutes, distanceMeters, escapeRegex } from "../../helpers/utils.js";
-import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City, Franchise } from "../../models/index.js";
+import { Booking, ChatMessage, Customer, Notification, OtpVerification, Rating, ServiceProvider, ServiceProviderPhoto, ServiceCategory, City, Franchise, Area } from "../../models/index.js";
 import { deleteFile } from "../../libraries/storage.js";
 import { pickPushFields } from "../../helpers/pushFields.js";
 import { sendOTP } from "../../libraries/sms.js";
@@ -13,6 +13,7 @@ import { getSettings } from "../../helpers/database.js";
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingChatMessage, notifyBookingQuoteSent, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
+import { resolveAreaIdsForCity } from "../../helpers/providerAreas.js";
 
 const bookingAggregation = (filter) => {
     return [
@@ -70,6 +71,7 @@ const getProfile = async (user) => {
     const [profile] = await ServiceProvider.aggregate([
         { $match: { _id: user._id, deletedAt: null } },
         { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+        { $lookup: { from: "areas", localField: "areaIds", foreignField: "_id", as: "areas" } },
         { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
         { $unwind: "$city" },
         { $unwind: "$category" },
@@ -94,6 +96,14 @@ const getProfile = async (user) => {
                 email: 1,
                 image: 1,
                 cityId: 1,
+                areaIds: 1,
+                areas: {
+                    $map: {
+                        input: "$areas",
+                        as: "area",
+                        in: { _id: "$$area._id", name: "$$area.name" }
+                    }
+                },
                 serviceCategoryId: 1,
                 cityName: { $ifNull: ["$city.name", "N/A"] },
                 serviceCategoryName: { $ifNull: ["$category.name", "N/A"] },
@@ -294,6 +304,37 @@ export const register = async (req, res) => {
 export const profile = async (req, res) => {
     try {
         return res.success(await getProfile(req.serviceProvider), "User profile fetched successfully");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listMyAreas = async (req, res) => {
+    try {
+        const provider = req.serviceProvider;
+        if (!provider?.cityId) return res.clientError("City is not set on your profile.", 422);
+
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 100) : 50;
+        const query = String(req.query.query || "").trim();
+        const filter = { cityId: ObjectId(provider.cityId), deletedAt: null, isActive: true };
+        if (query) filter.name = { $regex: escapeRegex(query), $options: "i" };
+
+        const areas = await Area.find(filter).select("_id name").sort({ name: 1 }).limit(limit).lean();
+        return res.success(areas.map((area) => ({ ...area, selected: provider.areaIds.includes(area._id.toString()) })));
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const updateMyAreas = async (req, res) => {
+    try {
+        const provider = await ServiceProvider.findOne({ _id: req.serviceProvider._id, deletedAt: null });
+        if (!provider) return res.noRecords();
+        if (!provider.cityId) return res.clientError("City is not set on your profile.", 422);
+
+        const areaIds = await resolveAreaIdsForCity(req.body.areaIds, provider.cityId);
+        await ServiceProvider.updateOne({ _id: provider._id }, { areaIds });
+        return res.successUpdate(await getProfile(provider), "Service areas updated.");
     } catch (error) {
         return res.someThingWentWrong(error);
     }

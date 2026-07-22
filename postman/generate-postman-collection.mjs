@@ -56,9 +56,10 @@ const COLLECTION_DESCRIPTION = [
     "4. **On site:** `POST .../start` (when status `confirmed` and price agreed).",
     "5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.",
     "6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.",
-    "7. **Subscription purchase history:** **`GET /subscriptions-list`** (public plans) → **`GET /service-provider/subscriptions`** (your plan history) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**. Razorpay **`POST /webhooks/razorpay`** also updates payment status server-side.",
-    "8. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.",
-    "9. **Sockets:** join with `role: \"provider\"`.",
+    "7. **Service areas:** **`GET /service-provider/areas`** (areas for your city) → **`PUT /service-provider/profile/areas`** with **`areaIds`** array. Profile **`GET /service-provider/profile`** returns **`areaIds`** + **`areas`**.",
+    "8. **Subscription purchase history:** **`GET /subscriptions-list`** (public plans) → **`GET /service-provider/subscriptions`** (your plan history) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**. Razorpay **`POST /webhooks/razorpay`** also updates payment status server-side.",
+    "9. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.",
+    "10. **Sockets:** join with `role: \"provider\"`.",
     "",
     "**Admin auth** then **Admin (authenticated)** — back-office, not typical consumer mobile.",
     "",
@@ -134,7 +135,7 @@ function moduleForAdminUrl(url) {
     if (u.includes("/admin/roles")) return "Roles";
     if (u.includes("/admin/admins")) return "Sub admins";
     if (u.includes("/admin/franchises")) return "Franchises";
-    if (u.includes("/admin/countries") || u.includes("/admin/states") || u.includes("/admin/cities")) return "Geography";
+    if (u.includes("/admin/countries") || u.includes("/admin/states") || u.includes("/admin/cities") || u.includes("/admin/areas")) return "Geography";
     if (u.includes("/admin/customers")) return "Customers";
     if (u.includes("/admin/service-providers")) return "Service providers";
     if (u.includes("/admin/rating-tags")) return "Rating tags";
@@ -222,8 +223,8 @@ const open = [
     req("Service categories list", "GET", "/service-categories-list?query=&limit=20"),
     req("Service categories (home)", "GET", "/service-categories-home"),
     req("Service category by slug", "GET", "/service-categories/plumbing"),
-    req("List providers by city + category slug", "GET", "/service-providers/jodhpur/electrician?pageNo=1&limit=12&query=", {
-        description: "Path segments are **city slug** and **service category slug** (lowercase). Adjust to match your seeded data.",
+    req("List providers by city + category slug", "GET", "/service-providers/jodhpur/electrician?pageNo=1&limit=12&query=&areaIds=", {
+        description: "Path segments are **city slug** and **service category slug** (lowercase). Optional **`areaIds`** (comma-separated Area ObjectIds) filters providers serving those areas; omit to list all in the city.",
     }),
     req("Featured providers (home)", "GET", "/featured-service-providers?limit=8", {
         description:
@@ -245,6 +246,9 @@ const open = [
     req("States list", "GET", "/states-list?query=&limit=20"),
     req("Cities list", "GET", `/cities-list?stateId=${OID}&query=&limit=20`),
     req("Cities with state (combined)", "GET", "/cities-with-state?query=&limit=20"),
+    req("Areas list by city", "GET", `/areas-list?cityId=${OID}&citySlug=&query=&limit=200`, {
+        description: "Active areas for a city. Pass **`cityId`** or **`citySlug`**. Used on public service listing pages for area filter badges.",
+    }),
     req("Testimonials (public)", "GET", "/testimonials?limit=6&from="),
     req("About content", "GET", "/about-content"),
     req("Privacy policy", "GET", "/privacy-policy"),
@@ -423,6 +427,13 @@ const serviceProvider = [
         description: "Replace cityId, serviceCategoryId, and otp with real values. Optional **`referralCode`** is the referrer provider **`userId`**. Attach files for image, panCardDocument (PDF), aadharDocument (PDF).",
     }),
     req("Profile (auth)", "GET", "/service-provider/profile"),
+    req("List my city areas (auth)", "GET", "/service-provider/areas?query=&limit=50", {
+        description: "Active areas for the logged-in provider **`cityId`**. Use ids in **`PUT /service-provider/profile/areas`**.",
+    }),
+    req("Update my service areas (auth)", "PUT", "/service-provider/profile/areas", {
+        body: { areaIds: [OID] },
+        description: "Replace assigned **`areaIds`**. All ids must belong to the provider's city and be active. Empty array clears areas.",
+    }),
     req("My referrals (auth)", "GET", "/service-provider/referrals?pageNo=1&limit=10", {
         description:
             "Paginated list of service providers referred by the logged-in provider (`referredBy`). Optional query: **`query`** (name/mobile/email/userId), **`sortBy`** (`name`|`mobile`|`email`|`userId`|`createdAt`|`profileStatus`), **`sortOrder`** (`asc`|`desc`).",
@@ -573,7 +584,7 @@ const franchise = [
             fd.file("panCardDocument"),
             fd.file("aadharDocument"),
         ],
-        description: "Creates provider with **`franchiseId`** of the logged-in franchise and **`registerFrom: franchise`**.",
+        description: "Creates provider with **`franchiseId`** of the logged-in franchise and **`registerFrom: franchise`**. Assign areas separately via **`PUT /franchise/service-providers/:id/areas`**.",
     }),
     req("Update franchise service provider (multipart)", "PUT", `/franchise/service-providers/${OID}`, {
         formdata: [
@@ -588,6 +599,10 @@ const franchise = [
             fd.file("image"),
         ],
         description: "Only updates providers owned by this franchise.",
+    }),
+    req("Assign franchise provider areas", "PUT", `/franchise/service-providers/${OID}/areas`, {
+        body: { areaIds: [OID] },
+        description: "Separate from provider create/update. Areas must belong to the provider's **`cityId`**.",
     }),
     req("Delete franchise service provider", "DELETE", `/franchise/service-providers/${OID}`),
     req("Franchise service provider detail", "GET", `/franchise/service-providers/${OID}`),
@@ -726,6 +741,11 @@ const admin = [
     req("Delete city", "DELETE", "/admin/cities/:id"),
     req("Get city", "GET", "/admin/cities/:id"),
     req("List cities", "GET", "/admin/cities"),
+    req("Create area", "POST", "/admin/areas", { body: { countryId: OID, stateId: OID, cityId: OID, name: "Andheri", status: 1 } }),
+    req("Update area", "PUT", "/admin/areas/:id", { body: { countryId: OID, stateId: OID, cityId: OID, name: "Andheri", status: 1 } }),
+    req("Delete area", "DELETE", "/admin/areas/:id"),
+    req("Get area", "GET", "/admin/areas/:id"),
+    req("List areas", "GET", "/admin/areas"),
     req("Create customer (multipart)", "POST", "/admin/customers", {
         formdata: [
             fd.text("name", "Test Customer"),
@@ -801,7 +821,7 @@ const admin = [
             fd.file("aadharDocument"),
         ],
         description:
-            "**`cityId`**, **`serviceCategoryId`** required. **`isFeatured`** `1` / `true` / `on` to show on homepage (**`GET /featured-service-providers`**). Omit checkbox in forms → send `0`.",
+            "**`cityId`**, **`serviceCategoryId`** required. **`isFeatured`** `1` / `true` / `on` to show on homepage (**`GET /featured-service-providers`**). Assign areas separately via **`PUT /admin/service-providers/:id/areas`**.",
     }),
     req("Update service provider (multipart)", "PUT", "/admin/service-providers/:id", {
         formdata: [
@@ -819,6 +839,10 @@ const admin = [
             fd.file("panCardDocument"),
             fd.file("aadharDocument"),
         ],
+    }),
+    req("Assign provider areas", "PUT", "/admin/service-providers/:id/areas", {
+        body: { areaIds: [OID] },
+        description: "Separate from provider create/update. Areas must belong to the provider's **`cityId`**. Empty array clears areas.",
     }),
     req("Update service provider status", "PUT", "/admin/service-providers/:id/status", {
         body: { profileStatus: "approved", isVerified: 1 },

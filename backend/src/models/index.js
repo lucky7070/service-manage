@@ -7,6 +7,7 @@ export { ServiceProviderPhoto } from "./ServiceProviderPhoto.js";
 export { Country } from "./Country.js";
 export { State } from "./State.js";
 export { City } from "./City.js";
+export { Area } from "./Area.js";
 export { ServiceCategory } from "./ServiceCategory.js";
 export { ServiceType } from "./ServiceType.js";
 export { ProviderService } from "./ProviderService.js";

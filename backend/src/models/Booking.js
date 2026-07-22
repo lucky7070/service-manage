@@ -6,7 +6,7 @@ const Schema = new mongoose.Schema({
     bookingNumber: { type: String, unique: true, index: true, default: null },
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true, index: true, default: null },
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceProvider", required: true, index: true, default: null },
-    serviceCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceCategory", required: true, default: null },
+    serviceCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceCategory", required: true },
     serviceTypeId: {
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: "ServiceType" }],
         required: true,
@@ -16,7 +16,7 @@ const Schema = new mongoose.Schema({
             message: "At least one service type is required."
         }
     },
-    cityId: { type: mongoose.Schema.Types.ObjectId, ref: "City", required: true, default: null },
+    cityId: { type: mongoose.Schema.Types.ObjectId, ref: "City", required: true },
     status: {
         type: String,
         enum: ["price_pending", "confirmed", "in_progress", "completed", "cancelled"],
@@ -33,7 +33,7 @@ const Schema = new mongoose.Schema({
     completionTime: { type: Date, default: null },
     cancellationReason: { type: String, default: null },
     cancelledBy: { type: String, enum: ["customer", "provider", "admin", "system"], default: null },
-    addressId: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true, default: null },
+    addressId: { type: mongoose.Schema.Types.ObjectId, ref: "Address", required: true },
     location: {
         addressLine1: { type: String, default: null },
         addressLine2: { type: String, default: null },

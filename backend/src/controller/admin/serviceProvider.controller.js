@@ -1,6 +1,7 @@
 import moment from "moment";
 import { City, ServiceProvider, ServiceCategory, ServiceProviderPhoto } from "../../models/index.js";
 import { escapeRegex, ObjectId, toBoolean } from "../../helpers/utils.js";
+import { resolveAreaIdsForCity } from "../../helpers/providerAreas.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
 
@@ -93,6 +94,20 @@ export const updateServiceProvider = async (req, res) => {
         if (error.code === 11000) {
             return res.clientError("Duplicate mobile, email, PAN, or Aadhar.", 409);
         }
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const updateServiceProviderAreas = async (req, res) => {
+    try {
+        const record = await ServiceProvider.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
+        if (!record) return res.noRecords();
+        if (!record.cityId) return res.clientError("Provider city is not set.", 422, [{ field: "cityId", message: "City must be set before assigning areas." }]);
+
+        const areaIds = await resolveAreaIdsForCity(req.body.areaIds, record.cityId);
+        await ServiceProvider.updateOne({ _id: record._id }, { areaIds });
+        return res.successUpdate(undefined, "Service areas updated.");
+    } catch (error) {
         return res.someThingWentWrong(error);
     }
 };
@@ -193,7 +208,7 @@ export const getServiceProvider = async (req, res) => {
                 }
             },
             { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
-            { $project: { userId: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
+            { $project: { userId: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];
@@ -224,6 +239,7 @@ export const getSingleServiceProvider = async (req, res) => {
             mobile: doc.mobile,
             email: doc.email ?? "",
             cityId: doc.cityId,
+            areaIds: Array.isArray(doc.areaIds) ? doc.areaIds : [],
             serviceCategoryId: doc.serviceCategoryId,
             panCardNumber: doc.panCardNumber ?? "",
             aadharNumber: doc.aadharNumber ?? "",

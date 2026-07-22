@@ -160,6 +160,19 @@ const price = check("price", "Price is required.").exists().notEmpty().isFloat({
 const providerId = check("providerId", "Provider is required.").exists().notEmpty().isMongoId().withMessage('Invalid provider ID.');
 const serviceTypeIds = check("serviceTypeId", "At least one service type is required.").exists().isArray({ min: 1 }).withMessage('At least one service type is required.');
 const serviceTypeIdItems = check("serviceTypeId.*", "Invalid service type.").isMongoId().withMessage('Invalid service type ID.');
+const areaIdsRequired = check("areaIds", "areaIds is required.").exists().customSanitizer((value) => {
+    if (value == null) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) return parsed;
+        } catch { /* fall through */ }
+        return value.includes(",") ? value.split(",").map((s) => s.trim()).filter(Boolean) : (value.trim() ? [value] : []);
+    }
+    return [value];
+}).isArray().withMessage("areaIds must be an array.");
+const areaIdItems = check("areaIds.*").optional().isMongoId().withMessage("Invalid area ID.");
 const bookingAddressId = check("addressId", "Address is required.").exists().notEmpty().isMongoId().withMessage('Invalid address ID.');
 const scheduledTime = check("scheduledTime", "Scheduled date and time is required.").exists().notEmpty().isISO8601().withMessage("Invalid scheduled date and time.").custom((value) => {
     if (new Date(value) < new Date()) throw new Error('Date and time must be in the future');
@@ -203,6 +216,9 @@ export const validator = (method) => {
             break;
         case "city":
             output = [countryId, stateId, name, status, slug];
+            break;
+        case "area":
+            output = [countryId, stateId, cityId, name, status];
             break;
         case "customer":
             output = [personName, mobile, email, dateOfBirth, status];
@@ -269,6 +285,12 @@ export const validator = (method) => {
             break;
         case "service-provider":
             output = [personName, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, image, panCardDocument, aadharDocument];
+            break;
+        case "service-provider-areas-update":
+            output = [areaIdsRequired, areaIdItems];
+            break;
+        case "admin-service-provider-areas-update":
+            output = [id, areaIdsRequired, areaIdItems];
             break;
         case "service-provider-status":
             output = [id, profileStatus, isVerified, rejectionReason];
