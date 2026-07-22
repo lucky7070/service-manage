@@ -2,7 +2,7 @@ import { check, param } from "express-validator";
 import { BANNER_TYPES, PHONE_REGEXP, PERSON_NAME_REGEXP, PERSON_NAME_ERROR_MESSAGE, SERVICE_PROVIDER_PROFILE_STATUSES } from "../config/constants.js";
 import { trapErrors } from "../middlewares/trapErrors.js";
 
-const email = check("email", "Valid email is required.").exists().notEmpty().isEmail().withMessage('Invalid email.').isLength({ min: 2, max: 100 }).withMessage('Email must be between 2 to 100 characters long.').trim().normalizeEmail().toLowerCase();
+const email = check("email", "Valid email is required.").exists().notEmpty().isEmail().withMessage('Invalid email.').isLength({ min: 2, max: 100 }).withMessage('Email must be between 2 to 100 characters long.').trim().normalizeEmail({ gmail_remove_dots: false }).toLowerCase();
 const password = check("password", "Password must be greater then 5 digit.!!").exists().notEmpty().isLength({ min: 5, max: 50 }).withMessage('Password must be between 5 to 50 characters long.').trim();
 const name = check("name", "Name is required.").exists().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 to 100 characters long.').trim();
 const personName = check("name", "Name is required.").exists().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Name must be between 2 to 100 characters long.').matches(PERSON_NAME_REGEXP).withMessage(PERSON_NAME_ERROR_MESSAGE).trim();
