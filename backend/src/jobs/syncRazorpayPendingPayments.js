@@ -1,7 +1,7 @@
 import logger from "../helpers/logger.js";
 import moment from "moment";
 import { AssignedSubscription, AutopaySubscription } from "../models/index.js";
-import { getRazorpayOrderStatus, getRazorpaySubscriptionLatestPayment, rupeesToPaise } from "../helpers/razorpay.js";
+import { getRazorpayOrderStatus, getRazorpaySubscription, getRazorpaySubscriptionLatestPayment, rupeesToPaise } from "../helpers/razorpay.js";
 
 const buildPendingPaymentUpdate = (assignment, payment) => {
     const obj = { paymentGatewayTransactionId: String(payment.id || "").trim() };
@@ -10,10 +10,10 @@ const buildPendingPaymentUpdate = (assignment, payment) => {
         obj.paymentGatewayTransactionMessage = String(payment.error_description || payment.error_reason || "Payment failed.").trim();
     } else if (Number(payment.amount) !== rupeesToPaise(assignment.paymentAmount)) {
         obj.paymentGatewayTransactionStatus = "failed";
-        obj.paymentGatewayTransactionMessage = "Payment amount mismatch.";
+        obj.paymentGatewayTransactionMessage = "Payment amount mismatch..!!";
     } else if (payment.status === "captured") {
         obj.paymentGatewayTransactionStatus = "success";
-        obj.paymentGatewayTransactionMessage = "Payment successful.";
+        obj.paymentGatewayTransactionMessage = "Payment successful..!!";
         obj.status = "active";
     }
 
@@ -22,7 +22,6 @@ const buildPendingPaymentUpdate = (assignment, payment) => {
 
 export const syncRazorpayPendingPayments = async () => {
     try {
-
         const batchSize = 10;
         const pendingAssignments = await AssignedSubscription.find({
             paymentGatewayTransactionStatus: "pending",
@@ -44,41 +43,50 @@ export const syncRazorpayPendingPayments = async () => {
                 try {
                     let payment = null;
                     const orderId = String(assignment.paymentGatewayOrderId || "").trim();
-                    let autopay = null;
 
-                    if (assignment.autopaySubscriptionId) {
-                        autopay = await AutopaySubscription.findById(assignment.autopaySubscriptionId).lean();
-                        const subscriptionId = String(autopay?.razorpaySubscriptionId || "").trim();
-                        if (subscriptionId) {
-                            payment = await getRazorpaySubscriptionLatestPayment(subscriptionId);
-                        }
-                    } else if (orderId) {
+                    if (orderId) {
                         payment = await getRazorpayOrderStatus(orderId);
+                    } else if (assignment._id) {
+                        payment = await getRazorpaySubscriptionLatestPayment(assignment._id);
                     }
 
                     if (!payment || !["captured", "failed"].includes(payment.status)) continue;
 
                     const obj = buildPendingPaymentUpdate(assignment, payment);
-                    if (obj) {
-                        toUpdate.push({ updateOne: { filter: { _id: assignment._id }, update: { $set: obj } } });
+                    if (!obj) continue;
 
-                        if (obj.paymentGatewayTransactionStatus === "success" && autopay) {
-                            autopayUpdates.push({
-                                updateOne: {
-                                    filter: { _id: autopay._id },
-                                    update: {
-                                        $set: {
-                                            mandateStatus: "active",
-                                            autoRenew: true,
-                                            currentStart: assignment.startDate,
-                                            currentEnd: assignment.endDate,
-                                        },
-                                        $inc: { paidCount: 1 },
-                                    },
-                                },
-                            });
+                    const isAutopay = Boolean(assignment.autopaySubscriptionId);
+                    const isSuccess = obj.paymentGatewayTransactionStatus === "success";
+
+                    // Autopay success: update assignment + mandate together, or skip both
+                    if (isAutopay && isSuccess) {
+                        const autopay = await AutopaySubscription.findById(assignment.autopaySubscriptionId).lean();
+                        const subscriptionId = String(autopay?.razorpaySubscriptionId || "").trim();
+                        const subscription = subscriptionId ? await getRazorpaySubscription(subscriptionId) : null;
+
+                        if (!autopay || !subscription) {
+                            logger.error(`Skipping assignment ${assignment._id}: autopay/subscription fetch failed.`);
+                            continue;
                         }
+
+                        toUpdate.push({ updateOne: { filter: { _id: assignment._id }, update: { $set: obj } } });
+                        autopayUpdates.push({
+                            updateOne: {
+                                filter: { _id: autopay._id },
+                                update: {
+                                    $set: {
+                                        mandateStatus: subscription.status,
+                                        autoRenew: subscription.status === "active",
+                                    },
+                                    $inc: { paidCount: 1 },
+                                },
+                            },
+                        });
+                        continue;
                     }
+
+                    // One-time order success/fail, or autopay failed — assignment only
+                    toUpdate.push({ updateOne: { filter: { _id: assignment._id }, update: { $set: obj } } });
                 } catch (error) {
                     logger.error("Error syncing Razorpay pending payment..!!", error);
                     continue;
@@ -91,6 +99,6 @@ export const syncRazorpayPendingPayments = async () => {
 
         logger.cron(`Razorpay pending ${toUpdate.length} payments synced successfully..!!`);
     } catch (error) {
-        logger.error('Razorpay pending payments sync failed..!!', error);
+        logger.error("Razorpay pending payments sync failed..!!", error);
     }
 };

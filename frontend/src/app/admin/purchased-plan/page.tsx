@@ -121,7 +121,6 @@ export default function PurchasedPlansPage() {
 
         const { data } = await AxiosHelperAdmin.getData(`/purchased-plans/${row._id}/gateway-status`);
         if (data.status && data.data) {
-            console.log(data.data);
             setGatewayData(data.data as GatewayStatusPayload);
         } else {
             toast.error(data.message || "Could not fetch gateway status.");
@@ -246,7 +245,7 @@ export default function PurchasedPlansPage() {
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            disabled={!row.paymentGatewayOrderId}
+                                            // disabled={!row.paymentGatewayOrderId}
                                             onClick={() => void fetchGatewayStatus(row)}
                                         >
                                             <RefreshCw className="h-4 w-4" />

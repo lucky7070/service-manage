@@ -29,9 +29,15 @@ export const getPurchasedPlanGatewayStatus = async (req, res) => {
         let assignment = await AssignedSubscription.findById(ObjectId(req.params.id));
         if (!assignment) return res.noRecords();
 
-        if (!assignment.paymentGatewayOrderId) return res.clientError("Payment order ID not found.", 400);
+        if (!assignment.paymentGatewayOrderId && !assignment._id) return res.clientError("Payment order ID or assignment ID not found.", 400);
 
-        const payment = await getRazorpayOrderStatus(assignment.paymentGatewayOrderId);
+        var payment = null;
+        if (assignment.paymentGatewayOrderId) {
+            payment = await getRazorpayOrderStatus(assignment.paymentGatewayOrderId);
+        } else if (req.params.id) {
+            payment = await getRazorpaySubscriptionLatestPayment(req.params.id);
+        }
+
         if (!payment) return res.clientError("Razorpay payment not found.", 400);
 
         return res.success(payment, "Gateway status fetched.");

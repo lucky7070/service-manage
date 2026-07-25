@@ -131,20 +131,33 @@ export const getRazorpaySubscriptionStatus = async (subscriptionId) => {
     }
 };
 
-export const getRazorpaySubscriptionLatestPayment = async (subscriptionId) => {
+export const getRazorpaySubscriptionLatestPayment = async (assignmentId) => {
     try {
         const { client } = await getRazorpayClient();
-        const { items = [] } = await client.payments.all({ subscription_id: subscriptionId, count: 10 });
+        const { items = [] } = await client.payments.all({ count: 100 });
         if (!items.length) return null;
 
+        const payments = items.filter(item => String(item.notes?.assignmentId || "").trim() === String(assignmentId || "").trim());
+        if (!payments.length) return null;
+
         const PAYMENT_STATUS_PRIORITY = { captured: 5, authorized: 4, failed: 3, created: 2 };
-        return [...items].sort((left, right) => {
+        return [...payments].sort((left, right) => {
             const byStatus = (PAYMENT_STATUS_PRIORITY[right.status] || 0) - (PAYMENT_STATUS_PRIORITY[left.status] || 0);
             if (byStatus !== 0) return byStatus;
             return Number(right.created_at || 0) - Number(left.created_at || 0);
-        })[0];
+        })[0] || null;
     } catch (error) {
         logger.error("Error fetching Razorpay subscription payment:", error);
+        return null;
+    }
+};
+
+export const getRazorpaySubscription = async (subscriptionId) => {
+    try {
+        const { client } = await getRazorpayClient();
+        return await client.subscriptions.fetch(subscriptionId);
+    } catch (error) {
+        logger.error("Error fetching Razorpay subscription:", error);
         return null;
     }
 };

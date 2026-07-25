@@ -261,6 +261,7 @@ export const createProviderAutopaySubscription = async (req, res) => {
                 assignmentId: String(assignment._id),
                 providerId: String(provider._id),
                 subscriptionId: String(plan._id),
+                voucherNo: String(assignment.voucherNo),
             },
             notify_info: {
                 notify_phone: provider.mobile,
