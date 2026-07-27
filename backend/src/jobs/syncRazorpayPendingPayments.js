@@ -23,17 +23,22 @@ const buildPendingPaymentUpdate = (assignment, payment) => {
 export const syncRazorpayPendingPayments = async () => {
     try {
         const batchSize = 10;
-        const pendingAssignments = await AssignedSubscription.find({
-            paymentGatewayTransactionStatus: "pending",
-            $or: [
-                { paymentGatewayOrderId: { $ne: null } },
-                { autopaySubscriptionId: { $ne: null } },
-            ],
-            createdAt: {
-                $lte: moment().subtract(15, "minutes").toDate(),
-                $gte: moment().subtract(3, "hours").toDate(),
+        const pendingAssignments = await AssignedSubscription.aggregate([
+            {
+                $match: {
+                    paymentGatewayTransactionStatus: "pending",
+                    $or: [
+                        { paymentGatewayOrderId: { $ne: null } },
+                        { autopaySubscriptionId: { $ne: null } },
+                    ],
+                    createdAt: {
+                        $lte: moment().subtract(15, "minutes").toDate(),
+                        $gte: moment().subtract(3, "hours").toDate(),
+                    },
+                },
             },
-        }).sort({ createdAt: 1 }).limit(batchSize).lean();
+            { $sample: { size: batchSize } },
+        ]);
 
         const toUpdate = [];
         const autopayUpdates = [];
