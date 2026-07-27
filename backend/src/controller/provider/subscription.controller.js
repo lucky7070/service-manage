@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import { config } from "../../config/index.js";
 import { AssignedSubscription, AutopaySubscription, Subscription } from "../../models/index.js";
 import { ObjectId } from "../../helpers/utils.js";
-import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline } from "../../helpers/subscriptionAssignment.js";
-import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature, createRazorpaySubscription, verifyRazorpaySubscriptionPaymentSignature } from "../../helpers/razorpay.js";
-import { syncAssignedSubscriptionFromRazorpayPayment, findAutopayByRazorpaySubscriptionId, findPendingAssignmentByAutopay } from "../../helpers/subscriptionPayment.js";
+import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline, providerEligibleForAutopayTrial, computeAutopayFirstChargeAt } from "../../helpers/subscriptionAssignment.js";
+import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature, createRazorpaySubscription, verifyRazorpaySubscriptionPaymentSignature, getRazorpaySubscription } from "../../helpers/razorpay.js";
+import { syncAssignedSubscriptionFromRazorpayPayment, findAutopayByRazorpaySubscriptionId, findPendingAssignmentByAutopay, activateTrialAssignmentOnMandate, isTrialMandateAuthAssignment } from "../../helpers/subscriptionPayment.js";
 
 export const createProviderSubscriptionOrder = async (req, res) => {
     const session = await mongoose.startSession();
@@ -219,13 +220,17 @@ export const createProviderAutopaySubscription = async (req, res) => {
             return res.clientError("Plan is not configured for autopay.", 422, [{ field: "subscriptionId", message: "Plan is not configured for autopay." }]);
         }
 
-        const paymentAmount = Number(plan.priceWithTax) || 0;
-        if (paymentAmount <= 0) {
+        const planPriceWithTax = Number(plan.priceWithTax) || 0;
+        if (planPriceWithTax <= 0) {
             if (session.inTransaction()) await session.abortTransaction();
             return res.clientError("Plan price must be greater than 0.", 422, [{ field: "subscriptionId", message: "Plan price must be greater than 0." }]);
         }
 
         const { startDate, endDate } = await resolveProviderPurchaseSchedule(provider._id, plan, session);
+        const useTrial = config.autopayFreeTrialEnabled; // && await providerEligibleForAutopayTrial(provider._id, session);
+
+        const paymentAmount = useTrial ? 0 : planPriceWithTax;
+        const firstChargeAt = useTrial ? computeAutopayFirstChargeAt(endDate) : null;
         const { key_id } = await getRazorpayClient();
 
         const [autopay] = await AutopaySubscription.create([{
@@ -237,6 +242,9 @@ export const createProviderAutopaySubscription = async (req, res) => {
             currentStart: startDate,
             currentEnd: endDate,
             paidCount: 0,
+            isTrial: useTrial,
+            trialEndsAt: useTrial ? endDate : null,
+            firstChargeAt,
         }], { session });
 
         const [assignment] = await AssignedSubscription.create([{
@@ -245,16 +253,18 @@ export const createProviderAutopaySubscription = async (req, res) => {
             startDate,
             endDate,
             status: "inactive",
-            amount: Number(plan.price) || 0,
-            taxAmount: Number(plan.price) * (plan.taxPercentage || 0) / 100,
+            amount: useTrial ? 0 : (Number(plan.price) || 0),
+            taxAmount: useTrial ? 0 : (Number(plan.price) * (plan.taxPercentage || 0) / 100),
             taxPercentage: plan.taxPercentage || 0,
             paymentAmount,
             paymentGatewayTransactionStatus: "pending",
+            paymentGatewayTransactionMessage: useTrial ? "Awaiting mandate for free trial." : null,
+            isTrial: useTrial,
             autopaySubscriptionId: autopay._id,
             assignedBy: null,
         }], { session });
 
-        const razorpaySubscription = await createRazorpaySubscription({
+        const razorpayPayload = {
             plan_id: plan.razorpayPlanId,
             notes: {
                 autopaySubscriptionId: String(autopay._id),
@@ -262,12 +272,17 @@ export const createProviderAutopaySubscription = async (req, res) => {
                 providerId: String(provider._id),
                 subscriptionId: String(plan._id),
                 voucherNo: String(assignment.voucherNo),
+                isTrial: useTrial ? "1" : "0",
             },
             notify_info: {
                 notify_phone: provider.mobile,
                 notify_email: provider.email || undefined,
             },
-        });
+        };
+
+        if (useTrial && firstChargeAt) razorpayPayload.start_at = Math.floor(new Date(firstChargeAt).getTime() / 1000);
+
+        const razorpaySubscription = await createRazorpaySubscription(razorpayPayload);
 
         autopay.razorpaySubscriptionId = razorpaySubscription.id;
         await autopay.save({ session });
@@ -282,6 +297,10 @@ export const createProviderAutopaySubscription = async (req, res) => {
             startDate: assignment.startDate,
             endDate: assignment.endDate,
             paymentAmount,
+            nextChargeAmount: planPriceWithTax,
+            isTrial: useTrial,
+            trialEndsAt: useTrial ? endDate : null,
+            firstChargeAt,
             status: assignment.status,
             autoRenew: autopay.autoRenew,
             autopaySubscriptionId: autopay._id,
@@ -289,7 +308,7 @@ export const createProviderAutopaySubscription = async (req, res) => {
             razorpayKey: key_id,
             razorpaySubscriptionId: razorpaySubscription.id,
             currency: "INR",
-        }, "Autopay subscription checkout created.");
+        }, useTrial ? "Free trial autopay checkout created. First charge after trial." : "Autopay subscription checkout created.");
     } catch (error) {
         if (session.inTransaction()) await session.abortTransaction();
         if (error?.status === 503) return res.clientError(error.message, 503);
@@ -354,12 +373,24 @@ export const updateProviderAutopaySubscriptionPayment = async (req, res) => {
             return res.clientError("Payment subscription mismatch.", 422);
         }
 
-        const result = await syncAssignedSubscriptionFromRazorpayPayment({
-            assignment,
-            payment,
-            session,
-            autopay,
-        });
+        let result;
+        if (isTrialMandateAuthAssignment(assignment)) {
+            const subscription = await getRazorpaySubscription(razorpaySubscriptionId);
+            result = await activateTrialAssignmentOnMandate({
+                assignment,
+                autopay,
+                subscription,
+                paymentId: razorpayPaymentId,
+                session,
+            });
+        } else {
+            result = await syncAssignedSubscriptionFromRazorpayPayment({
+                assignment,
+                payment,
+                session,
+                autopay,
+            });
+        }
         await session.commitTransaction();
 
         if (result.ok) {
@@ -371,9 +402,11 @@ export const updateProviderAutopaySubscriptionPayment = async (req, res) => {
                 status: assignment.status,
                 mandateStatus: autopay.mandateStatus,
                 autoRenew: autopay.autoRenew,
+                isTrial: Boolean(assignment.isTrial),
                 startDate: assignment.startDate,
                 endDate: assignment.endDate,
-            }, "Autopay payment successful.");
+                firstChargeAt: autopay.firstChargeAt || null,
+            }, assignment.isTrial ? "Free trial active. Plan price will charge after trial." : "Autopay payment successful.");
         }
 
         if (result.reason === "failed") {

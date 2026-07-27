@@ -18,6 +18,7 @@ const Schema = new mongoose.Schema({
     paymentGatewayTransactionId: { type: String, trim: true, index: true, default: null },
     paymentGatewayTransactionStatus: { type: String, enum: ["success", "failed", "pending"], default: "pending", index: true },
     paymentGatewayTransactionMessage: { type: String, default: null },
+    isTrial: { type: Boolean, default: false, index: true },
     assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", default: null }
 }, { timestamps: true });
 

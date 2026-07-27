@@ -39,6 +39,19 @@ export const resolveProviderPurchaseSchedule = async (providerId, plan, session)
     return { startDate, endDate };
 };
 
+/** First autopay cycle is free only if provider never had a successful assignment. */
+export const providerEligibleForAutopayTrial = async (providerId, session) => {
+    const prior = await AssignedSubscription.findOne({ providerId, paymentGatewayTransactionStatus: "success" }).session(session).select("_id").lean();
+    return !prior;
+};
+
+/** Unix timestamp for Razorpay start_at = first paid charge after free trial. */
+export const computeAutopayFirstChargeAt = (trialEndDate) => {
+    const firstCharge = moment(trialEndDate).add(1, "day").startOf("day");
+    const minStart = moment().add(1, "day").startOf("day");
+    return (firstCharge.isAfter(minStart) ? firstCharge : minStart).toDate();
+};
+
 export const buildAssignedSubscriptionListPipeline = (match) => [
     { $match: match },
     { $lookup: { from: "serviceproviders", localField: "providerId", foreignField: "_id", as: "provider" } },
@@ -61,6 +74,7 @@ export const buildAssignedSubscriptionListPipeline = (match) => [
             taxPercentage: { $ifNull: ["$taxPercentage", 0] },
             taxAmount: { $ifNull: ["$taxAmount", 0] },
             paymentAmount: { $ifNull: ["$paymentAmount", 0] },
+            isTrial: { $ifNull: ["$isTrial", false] },
             paymentGatewayOrderId: 1,
             razorpaySubscriptionId: { $ifNull: ["$autopay.razorpaySubscriptionId", null] },
             autoRenew: { $ifNull: ["$autopay.autoRenew", false] },

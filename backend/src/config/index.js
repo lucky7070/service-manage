@@ -22,4 +22,5 @@ export const config = {
     cookieDomain: String(process.env.COOKIE_DOMAIN || ""),
     enableGoogleDns: String(process.env.ENABLE_GOOGLE_DNS || "false").toLowerCase() === "true",
     taxPercentage: Number(process.env.TAX_PERCENTAGE || 18),
+    autopayFreeTrialEnabled: String(process.env.AUTOPAY_FREE_TRIAL_ENABLED || "false").toLowerCase() === "true",
 };

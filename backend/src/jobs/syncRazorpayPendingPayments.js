@@ -2,8 +2,15 @@ import logger from "../helpers/logger.js";
 import moment from "moment";
 import { AssignedSubscription, AutopaySubscription } from "../models/index.js";
 import { getRazorpayOrderStatus, getRazorpaySubscription, getRazorpaySubscriptionLatestPayment, rupeesToPaise } from "../helpers/razorpay.js";
+import {
+    activateTrialAssignmentOnMandate,
+    isTrialMandateAuthAssignment,
+    mapRazorpaySubscriptionStatusToMandate,
+} from "../helpers/subscriptionPayment.js";
 
 const buildPendingPaymentUpdate = (assignment, payment) => {
+    if (isTrialMandateAuthAssignment(assignment)) return null;
+
     const obj = { paymentGatewayTransactionId: String(payment.id || "").trim() };
     if (payment.status === "failed") {
         obj.paymentGatewayTransactionStatus = "failed";
@@ -42,10 +49,39 @@ export const syncRazorpayPendingPayments = async () => {
 
         const toUpdate = [];
         const autopayUpdates = [];
+        let trialSynced = 0;
 
         if (pendingAssignments.length > 0) {
             for (const assignment of pendingAssignments) {
                 try {
+                    if (isTrialMandateAuthAssignment(assignment) && assignment.autopaySubscriptionId) {
+                        const autopayDoc = await AutopaySubscription.findById(assignment.autopaySubscriptionId);
+                        if (!autopayDoc) continue;
+
+                        const subscriptionId = String(autopayDoc.razorpaySubscriptionId || "").trim();
+                        const subscription = subscriptionId ? await getRazorpaySubscription(subscriptionId) : null;
+                        const rzpStatus = String(subscription?.status || "").toLowerCase();
+
+                        if (!subscription || !["authenticated", "active", "activated"].includes(rzpStatus)) {
+                            continue;
+                        }
+
+                        const assignmentDoc = await AssignedSubscription.findById(assignment._id);
+                        if (!assignmentDoc || assignmentDoc.paymentGatewayTransactionStatus === "success") continue;
+
+                        const authPayment = await getRazorpaySubscriptionLatestPayment(String(assignment._id));
+                        const result = await activateTrialAssignmentOnMandate({
+                            assignment: assignmentDoc,
+                            autopay: autopayDoc,
+                            subscription,
+                            paymentId: authPayment?.id || null,
+                            session: null,
+                        });
+
+                        if (result.ok) trialSynced += 1;
+                        continue;
+                    }
+
                     let payment = null;
                     const orderId = String(assignment.paymentGatewayOrderId || "").trim();
 
@@ -63,7 +99,6 @@ export const syncRazorpayPendingPayments = async () => {
                     const isAutopay = Boolean(assignment.autopaySubscriptionId);
                     const isSuccess = obj.paymentGatewayTransactionStatus === "success";
 
-                    // Autopay success: update assignment + mandate together, or skip both
                     if (isAutopay && isSuccess) {
                         const autopay = await AutopaySubscription.findById(assignment.autopaySubscriptionId).lean();
                         const subscriptionId = String(autopay?.razorpaySubscriptionId || "").trim();
@@ -80,8 +115,8 @@ export const syncRazorpayPendingPayments = async () => {
                                 filter: { _id: autopay._id },
                                 update: {
                                     $set: {
-                                        mandateStatus: subscription.status,
-                                        autoRenew: subscription.status === "active",
+                                        mandateStatus: mapRazorpaySubscriptionStatusToMandate(subscription.status),
+                                        autoRenew: String(subscription.status || "").toLowerCase() === "active",
                                     },
                                     $inc: { paidCount: 1 },
                                 },
@@ -90,7 +125,6 @@ export const syncRazorpayPendingPayments = async () => {
                         continue;
                     }
 
-                    // One-time order success/fail, or autopay failed — assignment only
                     toUpdate.push({ updateOne: { filter: { _id: assignment._id }, update: { $set: obj } } });
                 } catch (error) {
                     logger.error("Error syncing Razorpay pending payment..!!", error);
@@ -102,7 +136,7 @@ export const syncRazorpayPendingPayments = async () => {
         if (toUpdate.length > 0) await AssignedSubscription.bulkWrite(toUpdate);
         if (autopayUpdates.length > 0) await AutopaySubscription.bulkWrite(autopayUpdates);
 
-        logger.cron(`Razorpay pending ${toUpdate.length} payments synced successfully..!!`);
+        logger.cron(`Razorpay pending ${toUpdate.length} payments synced (${trialSynced} trial mandates).`);
     } catch (error) {
         logger.error("Razorpay pending payments sync failed..!!", error);
     }

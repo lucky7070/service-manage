@@ -10,6 +10,9 @@ const Schema = new mongoose.Schema({
     currentStart: { type: Date, default: null },
     currentEnd: { type: Date, default: null },
     paidCount: { type: Number, default: 0 },
+    isTrial: { type: Boolean, default: false, index: true },
+    trialEndsAt: { type: Date, default: null },
+    firstChargeAt: { type: Date, default: null },
     cancelledAt: { type: Date, default: null },
 }, { timestamps: true });
 
