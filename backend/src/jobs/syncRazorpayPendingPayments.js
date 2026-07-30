@@ -75,6 +75,7 @@ export const syncRazorpayPendingPayments = async () => {
                             autopay: autopayDoc,
                             subscription,
                             paymentId: authPayment?.id || null,
+                            orderId: authPayment?.order_id || null,
                             session: null,
                         });
 

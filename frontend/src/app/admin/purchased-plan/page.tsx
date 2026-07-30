@@ -61,6 +61,7 @@ type GatewayStatusPayload = {
     error_description: string;
     error_code: string;
     refund_status: string | null;
+    amount: number;
     amount_refunded: number;
 };
 
@@ -116,19 +117,18 @@ export default function PurchasedPlansPage() {
     const fetchGatewayStatus = useCallback(async (row: PurchasedPlanRow) => {
         setGatewayRow(row);
         setGatewayModalOpen(true);
-        setGatewayLoading(true);
         setGatewayData(null);
-
-        const { data } = await AxiosHelperAdmin.getData(`/purchased-plans/${row._id}/gateway-status`);
-        if (data.status && data.data) {
-            setGatewayData(data.data as GatewayStatusPayload);
-        } else {
-            toast.error(data.message || "Could not fetch gateway status.");
-            setGatewayModalOpen(false);
-            setGatewayRow(null);
+        if (row.paymentGatewayOrderId) {
+            setGatewayLoading(true);
+            const { data } = await AxiosHelperAdmin.getData(`/purchased-plans/${row._id}/gateway-status`);
+            if (data.status && data.data) {
+                setGatewayData(data.data as GatewayStatusPayload);
+                setGatewayLoading(false);
+            } else {
+                toast.error(data.message || "Could not fetch gateway status.");
+                setGatewayLoading(false);
+            }
         }
-
-        setGatewayLoading(false);
     }, []);
 
     const closeGatewayModal = () => {
@@ -217,7 +217,7 @@ export default function PurchasedPlansPage() {
                                     </td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
                                         <span className="block font-semibold">₹ {Number(row.paymentAmount || 0).toLocaleString("en-IN")}</span>
-                                        {row.taxPercentage > 0 ? (
+                                        {row.taxPercentage > 0 && row.taxAmount > 0 ? (
                                             <span className="text-xs text-slate-500">
                                                 ₹ {Number(row.amount || 0).toLocaleString("en-IN")} + ₹ {Number(row.taxAmount || 0).toLocaleString("en-IN")} (tax {row.taxPercentage}%)
                                             </span>
@@ -307,7 +307,10 @@ export default function PurchasedPlansPage() {
                             <div className="sm:col-span-2"><dt className="text-slate-500">Message</dt><dd>{gatewayData.description || "—"}</dd></div>
                             {gatewayData.error_description ? <div className="sm:col-span-2"><dt className="text-slate-500">Error description</dt><dd>{gatewayData.error_code} : {gatewayData.error_description}</dd></div> : null}
                             {gatewayData.refund_status ? <div><dt className="text-slate-500">Refund status</dt><dd className="font-medium capitalize">{gatewayData.refund_status || "—"}</dd></div> : null}
-                            {gatewayData.amount_refunded ? <div><dt className="text-slate-500">Amount refunded</dt><dd>₹ {Number(gatewayData.amount_refunded || 0).toLocaleString("en-IN")}</dd></div> : null}
+                            {gatewayData.amount_refunded ? <div>
+                                <dt className="text-slate-500">Amount refunded</dt>
+                                <dd>₹ {(Number(gatewayData.amount_refunded || 0) / 100).toLocaleString("en-IN")} out of total ₹ {(Number(gatewayData.amount || 0) / 100).toLocaleString("en-IN")}</dd>
+                            </div> : null}
                         </dl>
                     </section> : null}
                 </div>

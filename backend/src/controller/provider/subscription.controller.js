@@ -1,10 +1,41 @@
 import mongoose from "mongoose";
+import moment from "moment";
 import { config } from "../../config/index.js";
 import { AssignedSubscription, AutopaySubscription, Subscription } from "../../models/index.js";
 import { ObjectId } from "../../helpers/utils.js";
 import { resolveProviderPurchaseSchedule, buildAssignedSubscriptionListPipeline, providerEligibleForAutopayTrial, computeAutopayFirstChargeAt } from "../../helpers/subscriptionAssignment.js";
-import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature, createRazorpaySubscription, verifyRazorpaySubscriptionPaymentSignature, getRazorpaySubscription } from "../../helpers/razorpay.js";
-import { syncAssignedSubscriptionFromRazorpayPayment, findAutopayByRazorpaySubscriptionId, findPendingAssignmentByAutopay, activateTrialAssignmentOnMandate, isTrialMandateAuthAssignment } from "../../helpers/subscriptionPayment.js";
+import { getRazorpayClient, rupeesToPaise, verifyRazorpayPaymentSignature, createRazorpaySubscription, verifyRazorpaySubscriptionPaymentSignature, getRazorpaySubscription, getRazorpaySubscriptionStatus } from "../../helpers/razorpay.js";
+import { syncAssignedSubscriptionFromRazorpayPayment, findAutopayByRazorpaySubscriptionId, findPendingAssignmentByAutopay, activateTrialAssignmentOnMandate, isTrialMandateAuthAssignment, withSession } from "../../helpers/subscriptionPayment.js";
+
+const getProviderPurchaseBlockReason = async (providerId, session = null) => {
+    const ACTIVE_AUTOPAY_MANDATE_STATUSES = ["authenticated", "active"];
+
+    const activeAutopay = await withSession(AutopaySubscription.findOne({ providerId, mandateStatus: { $in: ACTIVE_AUTOPAY_MANDATE_STATUSES } }).sort({ createdAt: -1 }), session);
+    if (!activeAutopay) return null;
+
+    const razorpaySubscriptionId = String(activeAutopay.razorpaySubscriptionId || "").trim();
+    if (!razorpaySubscriptionId) {
+        return "You already have an active autopay subscription.";
+    }
+
+    const subCheck = await getRazorpaySubscriptionStatus(razorpaySubscriptionId);
+    if (!subCheck) return null;
+
+    const rzpStatus = String(subCheck.status || "").toLowerCase();
+    if (ACTIVE_AUTOPAY_MANDATE_STATUSES.includes(rzpStatus)) {
+        return "You already have an active autopay subscription.";
+    }
+
+    const healedStatus = { cancelled: "cancelled", halted: "halted", paused: "paused", completed: "completed", expired: "expired" }[rzpStatus];
+    if (healedStatus) {
+        activeAutopay.mandateStatus = healedStatus;
+        activeAutopay.autoRenew = false;
+        activeAutopay.cancelledAt = activeAutopay.cancelledAt || new Date();
+        await activeAutopay.save({ session });
+    }
+
+    return null;
+};
 
 export const createProviderSubscriptionOrder = async (req, res) => {
     const session = await mongoose.startSession();
@@ -23,6 +54,12 @@ export const createProviderSubscriptionOrder = async (req, res) => {
         if (paymentAmount <= 0) {
             if (session.inTransaction()) await session.abortTransaction();
             return res.clientError("Plan price must be greater than 0.", 422, [{ field: "subscriptionId", message: "Plan price must be greater than 0." }]);
+        }
+
+        const purchaseBlockReason = await getProviderPurchaseBlockReason(provider._id, session);
+        if (purchaseBlockReason) {
+            if (session.inTransaction()) await session.abortTransaction();
+            return res.clientError(purchaseBlockReason, 422, [{ field: "subscriptionId", message: purchaseBlockReason }]);
         }
 
         const { startDate, endDate } = await resolveProviderPurchaseSchedule(provider._id, plan, session);
@@ -226,6 +263,12 @@ export const createProviderAutopaySubscription = async (req, res) => {
             return res.clientError("Plan price must be greater than 0.", 422, [{ field: "subscriptionId", message: "Plan price must be greater than 0." }]);
         }
 
+        const purchaseBlockReason = await getProviderPurchaseBlockReason(provider._id, session);
+        if (purchaseBlockReason) {
+            if (session.inTransaction()) await session.abortTransaction();
+            return res.clientError(purchaseBlockReason, 422, [{ field: "subscriptionId", message: purchaseBlockReason }]);
+        }
+
         const { startDate, endDate } = await resolveProviderPurchaseSchedule(provider._id, plan, session);
         const useTrial = config.autopayFreeTrialEnabled; // && await providerEligibleForAutopayTrial(provider._id, session);
 
@@ -344,7 +387,11 @@ export const updateProviderAutopaySubscriptionPayment = async (req, res) => {
             return res.noRecords();
         }
 
-        const assignment = await findPendingAssignmentByAutopay(autopay._id, session);
+        const assignment = await AssignedSubscription.findOne({
+            autopaySubscriptionId: autopay._id, $or: [
+                { paymentGatewayTransactionStatus: "pending" },
+                { paymentGatewayTransactionStatus: "success", createdAt: { $gte: moment().subtract(15, "minutes").toDate() } }]
+        }).sort({ createdAt: -1 }).session(session);
         if (!assignment) {
             if (session.inTransaction()) await session.abortTransaction();
             return res.noRecords();
@@ -381,6 +428,7 @@ export const updateProviderAutopaySubscriptionPayment = async (req, res) => {
                 autopay,
                 subscription,
                 paymentId: razorpayPaymentId,
+                orderId: payment?.order_id ? String(payment.order_id).trim() : null,
                 session,
             });
         } else {

@@ -12,7 +12,7 @@ const normalizePaymentStatus = (payment) => {
     return status;
 };
 
-const withSession = (query, session) => (session ? query.session(session) : query);
+export const withSession = (query, session) => (session ? query.session(session) : query);
 
 /** First cycle is free trial (local assignment); Razorpay still collects mandate auth (token amount). */
 export const isTrialMandateAuthAssignment = (assignment) =>
@@ -47,6 +47,7 @@ export const activateTrialAssignmentOnMandate = async ({
     autopay,
     subscription = null,
     paymentId = null,
+    orderId = null,
     session = null,
 }) => {
     if (!assignment || !autopay) {
@@ -57,13 +58,14 @@ export const activateTrialAssignmentOnMandate = async ({
         return { ok: false, message: "Not a free trial assignment." };
     }
 
-    if (assignment.paymentGatewayTransactionStatus === "success" && assignment.status === "active") {
+    if (assignment.paymentGatewayTransactionStatus === "success" && assignment.status === "active" && assignment.paymentGatewayTransactionId && assignment.paymentGatewayOrderId) {
         return { ok: true, alreadyProcessed: true, assignment, autopay };
     }
 
     if (paymentId) assignment.paymentGatewayTransactionId = String(paymentId).trim();
+    if (orderId) assignment.paymentGatewayOrderId = String(orderId).trim();
     assignment.paymentGatewayTransactionStatus = "success";
-    assignment.paymentGatewayTransactionMessage = "Free trial active. Mandate authorized; plan price charges after trial (Razorpay start_at).";
+    assignment.paymentGatewayTransactionMessage = "Free trial active. Mandate authorized; plan price charges after trial.";
     assignment.status = "active";
     await assignment.save({ session });
 
@@ -210,7 +212,7 @@ export const resolveAssignmentForPaymentWebhook = async ({ payment, session = nu
             const assignment = await findPendingAssignmentByAutopay(autopay._id, session);
             if (assignment) {
                 if (isTrialMandateAuthAssignment(assignment) && Number.isFinite(amountPaise) && amountPaise > 0) {
-                    const plan = await withSession(Subscription.findOne({ _id: assignment.subscriptionId, deletedAt: null }), session).lean();
+                    const plan = await withSession(Subscription.findOne({ _id: assignment.subscriptionId, deletedAt: null }), session);
                     if (isPaidPlanCyclePayment(payment, Number(plan?.priceWithTax) || 0)) {
                         return { assignment: null, autopay: null };
                     }
@@ -290,7 +292,7 @@ export const processSubscriptionCharged = async ({ razorpaySubscriptionId, payme
         return { ok: false, reason: "no_autopay" };
     }
 
-    const plan = await withSession(Subscription.findOne({ _id: autopay.subscriptionId, deletedAt: null }), session).lean();
+    const plan = await withSession(Subscription.findOne({ _id: autopay.subscriptionId, deletedAt: null }), session);
     const planPriceWithTax = Number(plan?.priceWithTax) || 0;
 
     let assignment = await findPendingAssignmentByAutopay(autopay._id, session);
