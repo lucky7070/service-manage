@@ -106,14 +106,14 @@ export default function AdminEnquiriesPage() {
                         className="max-w-xs"
                         placeholder="Search name, email, phone, subject..."
                     />
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.isResolved}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, isResolved: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All</Option>
                             <Option value={0}>Pending</Option>

@@ -48,7 +48,7 @@ export default function ServiceAreaFilter({ areas, selectedIds }: ServiceAreaFil
     return (
         <div className="mb-6 rounded-2xl border border-gray-100 bg-gray-50/80 p-4 sm:p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <MapPinned className="h-4 w-4" />
                     </div>

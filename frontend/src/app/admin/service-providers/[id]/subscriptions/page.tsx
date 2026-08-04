@@ -175,7 +175,7 @@ export default function ServiceProviderSubscriptionsPage() {
                 title="Provider Subscriptions"
                 subtitle={loading ? "Loading..." : providerName ? <>Assign plans for <span className="font-medium">{providerName}</span>.</> : "Assign provider subscription plans."}
                 action={
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Link href="/admin/service-providers" className="inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-100 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
                             <ArrowLeftIcon className="h-4 w-4" />
                             Back

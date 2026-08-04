@@ -195,7 +195,7 @@ export default function AdminAreasPage() {
                         className="max-w-xs"
                         placeholder="Search Area..."
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.status}
                             onChange={(e) => {

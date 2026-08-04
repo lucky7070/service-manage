@@ -8,6 +8,7 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
@@ -29,6 +30,7 @@ type FranchiseRecord = {
     image?: string | null;
     status: number;
     createdAt?: string;
+    referredProvidersCount?: number;
 };
 
 type FranchiseRecordResponse = {
@@ -38,7 +40,7 @@ type FranchiseRecordResponse = {
     pagination: number[];
 };
 
-type SortBy = "userId" | "name" | "status" | "mobile" | "email" | "createdAt";
+type SortBy = "userId" | "name" | "status" | "mobile" | "email" | "createdAt" | "referredProvidersCount";
 type SortOrder = "asc" | "desc";
 
 const validationSchema = Yup.object().shape({
@@ -150,14 +152,14 @@ export default function FranchisesPage() {
                         placeholder="Search Franchise..."
                     />
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All</Option>
                             <Option value={1}>Active</Option>
@@ -184,6 +186,9 @@ export default function FranchisesPage() {
                                 </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("email")} name="Email" active={param.sortBy === "email"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("referredProvidersCount")} name="Referred Providers" active={param.sortBy === "referredProvidersCount"} sortOrder={param.sortOrder} />
                                 </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("status")} name="Status" active={param.sortBy === "status"} sortOrder={param.sortOrder} />
@@ -214,6 +219,15 @@ export default function FranchisesPage() {
                                         <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
                                         <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.mobile}</td>
                                         <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.email || "-"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <Link
+                                                href={`/admin/service-providers?franchise=${row._id}`}
+                                                className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                                                title="View referred service providers"
+                                            >
+                                                {row.referredProvidersCount ?? 0} Providers
+                                            </Link>
+                                        </td>
                                         <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
                                             <Badge variant={row.status === 1 ? "success" : "secondary"} size="sm">
                                                 {row.status === 1 ? "Active" : "Inactive"}

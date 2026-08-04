@@ -146,14 +146,14 @@ export default function AdminStatesPage() {
                         className="max-w-xs"
                         placeholder="Search State..."
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All</Option>
                             <Option value={1}>Active</Option>

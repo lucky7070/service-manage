@@ -49,7 +49,7 @@ export default function AdminPermissionsPage({ params }: { params: Promise<{ slu
                 title={`${roleName} Permissions`}
                 subtitle="Assign access rights for this role."
                 action={
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Link href="/admin/roles">
                             <Button type="button" variant="secondary" size="md">
                                 <ArrowLeftIcon className="h-4 w-4" /> Go Back

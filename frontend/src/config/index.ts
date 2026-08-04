@@ -417,6 +417,11 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         items: [{ label: "Service providers" }]
     },
     {
+        path: "/admin/service-providers/deleted",
+        permission_id: 374,
+        items: [{ label: "Service providers", href: "/admin/service-providers" }, { label: "Deleted" }]
+    },
+    {
         path: "/admin/service-providers/:slug/images",
         permission_id: 378,
         items: [{ label: "Service Providers", href: "/admin/service-providers" }, { label: "Work Photos" }]

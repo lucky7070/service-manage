@@ -158,14 +158,16 @@ export const deleteServiceProvider = async (req, res) => {
 
 export const getServiceProvider = async (req, res) => {
     try {
-        let { limit, pageNo, query, profileStatus, cityId, serviceCategoryId, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+        let { limit, pageNo, query, profileStatus, cityId, serviceCategoryId, franchise, franchiseId, deleted, sortBy = "createdAt", sortOrder = "desc" } = req.query;
 
+        const showDeleted = Number(deleted) === 1 || String(deleted) === "true";
         limit = limit ? parseInt(limit, 10) : 10;
         pageNo = pageNo ? parseInt(pageNo, 10) : 1;
-        sortBy = ["name", "mobile", "email", "userId", "profileStatus", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
+        const allowedSort = showDeleted ? ["name", "mobile", "email", "userId", "profileStatus", "createdAt", "deletedAt"] : ["name", "mobile", "email", "userId", "profileStatus", "createdAt"];
+        sortBy = allowedSort.includes(String(sortBy)) ? String(sortBy) : (showDeleted ? "deletedAt" : "createdAt");
         sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
 
-        const filter = { deletedAt: null };
+        const filter = showDeleted ? { deletedAt: { $exists: true, $ne: null } } : { deletedAt: null };
         if (query) {
             const q = escapeRegex(String(query));
             filter.$or = [
@@ -192,11 +194,14 @@ export const getServiceProvider = async (req, res) => {
             filter.serviceCategoryId = ObjectId(serviceCategoryId);
         }
 
+        const franchiseFilterId = ObjectId(franchise || franchiseId);
+        if (franchiseFilterId) filter.franchiseId = franchiseFilterId;
+
         const pipeline = [
             { $match: filter },
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
-            { $unwind: { path: "$city" } },
+            { $unwind: { path: "$city", preserveNullAndEmptyArrays: showDeleted } },
             { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
             {
                 $lookup: {
@@ -208,7 +213,7 @@ export const getServiceProvider = async (req, res) => {
                 }
             },
             { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
-            { $project: { userId: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1 } }
+            { $project: { userId: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1, deletedAt: 1 } }
         ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];

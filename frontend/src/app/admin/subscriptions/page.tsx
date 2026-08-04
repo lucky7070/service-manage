@@ -172,7 +172,7 @@ export default function AdminSubscriptionsPage() {
                         className="max-w-xs"
                         placeholder="Search name / ID..."
                     />
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.interval}
                             onChange={(e) =>

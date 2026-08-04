@@ -155,14 +155,14 @@ export default function CustomerLedgerPage() {
                         className="max-w-xs"
                         placeholder="Search voucher or particulars..."
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.paymentType}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, paymentType: v === "" ? "" : (Number(v) as 1 | 2) }));
                             }}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All</Option>
                             <Option value={1}>Credit</Option>

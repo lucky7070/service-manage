@@ -20,7 +20,7 @@ export default function AdminPagination<T extends { limit: number; pageNo: numbe
                 Showing {startRow}-{endRow} of {data.count} results
             </div>
             <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                     <span className="text-sm text-slate-500 dark:text-slate-400">Rows</span>
                     <div className="relative">
                         <Select

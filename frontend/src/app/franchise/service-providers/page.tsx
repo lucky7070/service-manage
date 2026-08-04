@@ -230,11 +230,11 @@ export default function FranchiseServiceProvidersPage() {
                         className="max-w-xs"
                         placeholder="Search providers..."
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.profileStatus}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, profileStatus: e.target.value }))}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All statuses</Option>
                             {SERVICE_PROVIDER_PROFILE_STATUSES.map((status) => (

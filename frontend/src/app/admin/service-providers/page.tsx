@@ -9,8 +9,9 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import AdminActionsDropdown from "@/components/admin/AdminActionsDropdown";
-import { CircleCheckBig, CreditCard, ImageIcon, Images, MapPin, Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import { CircleCheckBig, CreditCard, ImageIcon, Images, MapPin, Pencil, Plus, Trash2, Wrench} from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, Textarea } from "@/components/ui";
@@ -113,10 +114,13 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function AdminServiceProvidersPage() {
+
+    const searchParams = useSearchParams();
+    const franchiseFromUrl = String(searchParams.get("franchise") || "").trim();
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit" | "status" | "areas">(null);
     const [data, setData] = useState<ServiceProviderRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "" });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; franchise: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "", franchise: franchiseFromUrl });
     const [initialValues, setInitialValues] = useState<ServiceProvider>(INITIAL_VALUES);
     const [areasInitialValues, setAreasInitialValues] = useState<{ _id: string; areaIds: string[] }>({ _id: "", areaIds: [] });
     const [areasProvider, setAreasProvider] = useState<ServiceProvider | null>(null);
@@ -172,6 +176,13 @@ export default function AdminServiceProvidersPage() {
         debouncedAreaSearchRef.current(String(areasProvider.cityId), areaSearchQuery);
         return () => { debouncedAreaSearchRef.current.cancel(); };
     }, [open, areasProvider?.cityId, areaSearchQuery]);
+
+    useEffect(() => {
+        setParam((prev) => {
+            if (prev.franchise === franchiseFromUrl) return prev;
+            return { ...prev, pageNo: 1, franchise: franchiseFromUrl };
+        });
+    }, [franchiseFromUrl]);
 
     const loadServiceCategoryOptions = async (inputValue: string) => {
         const { data } = await AxiosHelper.getData("/service-categories-list", { query: inputValue, limit: 20 });
@@ -289,18 +300,28 @@ export default function AdminServiceProvidersPage() {
                 title="Service providers"
                 subtitle="Onboard providers with KYC-style fields. Profile status is managed here; verification and live location are system-controlled."
                 action={
-                    <PermissionBlock permission_id={371}>
-                        <Button type="button" variant="primary" size="md" onClick={() => {
-                            setInitialValues(INITIAL_VALUES);
-                            setCity(null);
-                            setServiceCategory(null);
-                            setImagePreview(null);
-                            setOpen("add");
-                        }}>
-                            <Plus className="h-3.5 w-3.5" />
-                            Create service Provider
-                        </Button>
-                    </PermissionBlock>
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80">
+                        <PermissionBlock permission_id={374}>
+                            <Link href="/admin/service-providers/deleted">
+                                <Button type="button" variant="secondary" size="md">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Deleted
+                                </Button>
+                            </Link>
+                        </PermissionBlock>
+                        <PermissionBlock permission_id={371}>
+                            <Button type="button" variant="primary" size="md" onClick={() => {
+                                setInitialValues(INITIAL_VALUES);
+                                setCity(null);
+                                setServiceCategory(null);
+                                setImagePreview(null);
+                                setOpen("add");
+                            }}>
+                                <Plus className="h-3.5 w-3.5" />
+                                Create service Provider
+                            </Button>
+                        </PermissionBlock>
+                    </div>
                 }
             />
 
@@ -312,7 +333,8 @@ export default function AdminServiceProvidersPage() {
                         className="max-w-xs"
                         placeholder="Search name, mobile, email, user ID, PAN..."
                     />
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80">
+                        {param.franchise ? <Link href="/admin/service-providers" className="gap-1"><Button variant="secondary" size="sm">All</Button></Link> : null}
                         <Select
                             value={param.profileStatus}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, profileStatus: e.target.value === "" ? "" : (e.target.value as ProfileStatus) }))}

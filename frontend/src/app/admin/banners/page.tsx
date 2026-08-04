@@ -186,11 +186,11 @@ export default function AdminBannerPage() {
                         className="max-w-xs"
                         placeholder="Search by title/subtitle..."
                     />
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.bannerType}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, bannerType: e.target.value === "" ? "" : (e.target.value as BannerType) }))}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All types</Option>
                             <Option value="homepage">Homepage</Option>
@@ -202,7 +202,7 @@ export default function AdminBannerPage() {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All status</Option>
                             <Option value={1}>Active</Option>

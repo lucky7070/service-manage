@@ -27,7 +27,7 @@ export default function FranchiseLoginPage() {
             <ThemeToggle className="absolute right-3 top-3" />
             <div className="mx-auto grid max-w-4xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 md:grid-cols-2">
                 <div className="bg-linear-to-br from-slate-900 via-slate-800 to-indigo-900 p-8 text-white">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         {logoSrc ? <Image src={logoSrc} alt={`${appName} logo`} className="h-8 w-8 rounded object-cover" /> : null}
                         <p className="text-xs uppercase tracking-widest text-slate-300">{appName}</p>
                     </div>

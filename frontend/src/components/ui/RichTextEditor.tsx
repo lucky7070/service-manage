@@ -19,7 +19,7 @@ type Props = {
 export default function RichTextEditor({ value, onChange, placeholder = "Write something...", disabled = false }: Props) {
     const [showHtmlSource, setShowHtmlSource] = useState(false);
     const [htmlSource, setHtmlSource] = useState(value || "");
-    
+
     const lastEmittedHtml = useRef<string | null>(null);
 
     const editor = useEditor({
@@ -94,7 +94,7 @@ export default function RichTextEditor({ value, onChange, placeholder = "Write s
 
     return (
         <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                 <button
                     type="button"
                     disabled={disabled}

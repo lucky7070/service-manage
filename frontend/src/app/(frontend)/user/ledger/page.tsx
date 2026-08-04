@@ -88,7 +88,7 @@ export default function CustomerLedgerPage() {
                                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                     <Input value={params.query} onChange={(event) => setParams((prev) => ({ ...prev, query: String(event.target.value).trim(), pageNo: 1 }))} className="pl-10" placeholder="Search voucher or particulars..." />
                                 </div>
-                                <Select value={params.paymentType} onChange={(event) => { setParams((prev) => ({ ...prev, paymentType: event.target.value, pageNo: 1 })); }} className="lg:max-w-[180px]">
+                                <Select value={params.paymentType} onChange={(event) => { setParams((prev) => ({ ...prev, paymentType: event.target.value, pageNo: 1 })); }} className="lg:max-w-45">
                                     <option value="">All entries</option>
                                     <option value="1">Credit</option>
                                     <option value="2">Debit</option>

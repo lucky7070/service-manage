@@ -172,14 +172,14 @@ export default function AdminCustomersPage() {
                         className="max-w-xs"
                         placeholder="Search name, mobile, email, user ID..."
                     />
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Select
                             value={param.status}
                             onChange={(e) => {
                                 const v = e.target.value;
                                 setParam((prev) => ({ ...prev, pageNo: 1, status: v === "" ? "" : (Number(v) as 0 | 1) }));
                             }}
-                            className="max-w-[180px]"
+                            className="max-w-45"
                         >
                             <Option value="">All</Option>
                             <Option value={1}>Active</Option>
@@ -393,7 +393,7 @@ export default function AdminCustomersPage() {
                                     {open === "add" ? (
                                         <div className="space-y-2">
                                             <Label htmlFor="customer-signupReward">Add Signup Reward</Label>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                                                 <ToggleSwitch className="min-w-11" checked={values.signupReward ?? false} onCheckedChange={(checked) => setFieldValue("signupReward", checked)} />
                                                 <span className="mt-0.5 block text-xs font-normal text-slate-500 dark:text-slate-400">
                                                     Credits wallet using the signup reward amount.

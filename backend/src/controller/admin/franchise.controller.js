@@ -10,7 +10,7 @@ export const listFranchises = async (req, res) => {
 
         limit = limit ? parseInt(limit) : 10;
         pageNo = pageNo ? parseInt(pageNo) : 1;
-        sortBy = ["userId", "name", "status", "mobile", "email", "createdAt"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
+        sortBy = ["userId", "name", "status", "mobile", "email", "createdAt", "referredProvidersCount"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
         sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
 
         const filter = { deletedAt: null };
@@ -20,7 +20,19 @@ export const listFranchises = async (req, res) => {
 
         const pipeline = [
             { $match: filter },
-            { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, isActive: 1, createdAt: 1, status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] } } }
+            {
+                $lookup: {
+                    from: "serviceproviders",
+                    let: { franchiseId: "$_id" },
+                    pipeline: [
+                        { $match: { $expr: { $eq: ["$franchiseId", "$$franchiseId"] }, deletedAt: null } },
+                        { $count: "count" },
+                    ],
+                    as: "referredProviders",
+                },
+            },
+            { $addFields: { referredProvidersCount: { $ifNull: [{ $arrayElemAt: ["$referredProviders.count", 0] }, 0] }, status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] } }, },
+            { $project: { userId: 1, name: 1, mobile: 1, email: 1, image: 1, isActive: 1, createdAt: 1, status: 1, referredProvidersCount: 1, }, },
         ];
 
         if (query) {

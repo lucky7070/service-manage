@@ -61,7 +61,7 @@ export default function SubAdminPermissionsPage({ params }: { params: Promise<{ 
                 title={`${adminName} Permissions`}
                 subtitle="Assign access rights for this admin."
                 action={
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
                         <Link href="/admin/admins">
                             <Button type="button" variant="secondary" size="md">
                                 <ArrowLeftIcon className="h-4 w-4" /> Go Back
