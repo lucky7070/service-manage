@@ -12,24 +12,41 @@
             },
             "android": {
                 "buildType": "apk"
+            },
+            "ios": {
+                "simulator": true
             }
         },
         "preview": {
             "distribution": "internal",
             "env": {
+                "NODE_ENV": "production",
                 "EXPO_PUBLIC_APP_ENV": "production"
             },
             "android": {
                 "buildType": "apk"
+            },
+            "ios": {
+                "simulator": false,
+                "resourceClass": "m-medium"
             }
         },
         "production": {
+            "distribution": "store",
             "env": {
+                "NODE_ENV": "production",
                 "EXPO_PUBLIC_APP_ENV": "production"
             },
             "android": {
                 "buildType": "app-bundle"
+            },
+            "ios": {
+                "resourceClass": "m-medium",
+                "autoIncrement": "buildNumber"
             }
         }
+    },
+    "submit": {
+        "production": {}
     }
 }

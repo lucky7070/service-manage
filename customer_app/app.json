@@ -14,7 +14,11 @@
         },
         "ios": {
             "bundleIdentifier": "com.serva.services",
-            "supportsTablet": true
+            "buildNumber": "3",
+            "supportsTablet": true,
+            "infoPlist": {
+                "UIBackgroundModes": ["remote-notification"]
+            }
         },
         "android": {
             "package": "com.serva.services",

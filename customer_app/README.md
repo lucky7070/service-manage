@@ -24,11 +24,13 @@ The app uses **Bearer token** auth stored in SecureStore (the web app uses cooki
 - [Production builds — overview](#production-builds--overview)
 - [Build APK (share with testers)](#build-apk-share-with-testers)
 - [Build AAB (Google Play Store)](#build-aab-google-play-store)
-- [EAS cloud builds (optional)](#eas-cloud-builds-optional)
+- [Build iOS (App Store / TestFlight / internal)](#build-ios-app-store--testflight--internal)
+- [EAS cloud builds](#eas-cloud-builds)
 - [Scripts reference](#scripts-reference)
 - [Auth flow](#auth-flow)
 - [Project structure](#project-structure)
 - [Navigation](#navigation)
+- [Push notifications (FCM)](#push-notifications-fcm)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -78,6 +80,17 @@ java -version
 adb devices
 ```
 
+### iOS development / release
+
+| Goal | What you need |
+|------|----------------|
+| Local `npm run ios` / Xcode | **macOS** + **Xcode** (not available on Windows) |
+| Release / TestFlight / internal IPA | **EAS Build** (works from Windows or macOS) |
+| App Store / TestFlight upload | **Apple Developer Program** ($99/year) |
+| Push on iOS | Firebase iOS app + `GoogleService-Info.plist` + APNs key in Firebase |
+
+Windows developers: use **EAS cloud builds** for all iOS binaries. You cannot produce a device IPA with Xcode on Windows.
+
 ### Physical device testing (Expo Go)
 
 - Phone and PC on the **same Wi‑Fi**, **or**
@@ -94,7 +107,9 @@ Expo loads `EXPO_PUBLIC_*` variables at build time. This project uses **separate
 | File | When it loads | Purpose |
 |------|---------------|---------|
 | `.env.development` | `npm start`, `expo start`, dev builds | Local LAN IP, HTTP, debug logging |
-| `.env.production` | `NODE_ENV=production`, release APK, EAS builds | HTTPS URLs, production API key |
+| `.env.production` | `NODE_ENV=production`, release APK/AAB, EAS builds | HTTPS URLs, production API key |
+
+For **EAS**, keep `.env.production` on the machine that runs `eas build`. Root `.easignore` uploads that file (other `.env*` files stay excluded). Do not commit it — it is gitignored.
 
 **Load order (first match wins):**
 
@@ -239,10 +254,13 @@ Rules:
 ### 4. Firebase (push notifications)
 
 1. Firebase Console → project **home-serve-customer** → **Project settings** → **Your apps**
-2. Android app package: **`com.serva.services`**
-3. Download **`google-services.json`** → save as `customer_app/google-services.json`
+2. **Android:** package **`com.serva.services`** → download **`google-services.json`** → save as `customer_app/google-services.json`
+3. **iOS:** bundle ID **`com.serva.services`** → download **`GoogleService-Info.plist`** → save as `customer_app/GoogleService-Info.plist`
+4. For iOS push: Apple Developer → create an **APNs Auth Key** (`.p8`) → upload it in Firebase → **Cloud Messaging** → Apple app configuration
 
-Push notifications **do not work in Expo Go**. Use a native build (`npm run android`).
+Push notifications **do not work in Expo Go**. Use a native build (`npm run android`, `npm run ios`, or an EAS IPA/APK).
+
+Both Firebase files are **gitignored** but **included in EAS uploads** when present locally (see root `.easignore`). Without them, the app builds but push will fail on that platform.
 
 ### 5. Play Store signing (one time, if you use EAS or already published)
 
@@ -325,27 +343,36 @@ npx tsc --noEmit
 
 ## Production builds — overview
 
-| Goal | Command | Output | Signing |
-|------|---------|--------|---------|
-| Share APK with testers | `npm run apk:local` | `app-release.apk` | Upload keystore (if configured) |
-| **Google Play update** | `npm run aab:local` | `app-release.aab` | Upload keystore (required) |
-| Cloud build (optional) | `npm run apk:preview` / `aab:production` | Download from expo.dev | EAS keystore |
+| Goal | Command | Output | How to install |
+|------|---------|--------|----------------|
+| Share Android APK | `npm run apk:local` | `app-release.apk` | Sideload on Android |
+| **Google Play** | `npm run aab:local` | `app-release.aab` | Play Console |
+| iOS internal test IPA | `npm run ios:preview` | EAS IPA (ad hoc) | Register device UDID, then install link |
+| **iOS App Store / TestFlight** | `npm run ios:production` | EAS store IPA | **TestFlight** or App Store only |
+| Submit iOS to App Store Connect | `npm run ios:submit` | Uploaded build | TestFlight / review |
 
 **Before every release build:**
 
-1. Update `.env.production` with correct live URLs
-2. Ensure `google-services.json` exists
+1. Update `.env.production` with correct live HTTPS URLs + API key  
+   - Local Android Gradle: Expo loads this file at build time  
+   - EAS: keep `.env.production` on the machine that runs `eas build` (it is uploaded; other `.env*` files are not)
+2. Ensure Firebase client files exist for the platforms you ship:
+   - Android → `google-services.json`
+   - iOS → `GoogleService-Info.plist`
 3. Bump version in `app.json`:
-   - `expo.version` — e.g. `"1.0.1"` (shown to users)
-   - `expo.android.versionCode` — integer, **must increase** each Play upload (`2`, `3`, …)
+   - `expo.version` — e.g. `"1.0.4"` (shown to users on both stores)
+   - `expo.android.versionCode` — integer, **must increase** each Play upload
+   - `expo.ios.buildNumber` — string, **must increase** each App Store / TestFlight upload (production EAS profile can auto-increment this)
 
-**Regenerate native project** when you change plugins, `app.json`, or `google-services.json`:
+**Regenerate native Android project** when you change plugins, `app.json`, or `google-services.json`:
 
 ```powershell
 npm run prebuild:prod
 ```
 
 After `prebuild --clean`, re-add `SERVA_UPLOAD_*` lines to `android/gradle.properties` if they were removed.
+
+> **Windows note:** Local iOS Xcode builds are not supported. Use EAS (`ios:preview` / `ios:production`) for all iOS binaries.
 
 ---
 
@@ -447,25 +474,120 @@ Use the **same upload keystore** for every update. Google rejects AABs signed wi
 
 ---
 
-## EAS cloud builds (optional)
+## Build iOS (App Store / TestFlight / internal)
 
-Use only if you prefer building on Expo servers instead of local Gradle. Requires Expo account and [EAS env vars](https://docs.expo.dev/eas/environment-variables/) (`.env.production` is **not** uploaded).
+iOS release builds run on **Expo EAS** (cloud Mac). Bundle ID: **`com.serva.services`**.
+
+### What every developer should know
+
+1. **Store IPAs cannot be sideloaded.**  
+   A production (`distribution: store`) build installed via Files / Drive / link shows:  
+   *"This app cannot be installed because its integrity could not be verified."*  
+   Install store builds only through **TestFlight** or the **App Store**.
+
+2. **Internal / ad hoc IPAs need the device UDID registered** before the build (or rebuild after registering).
+
+3. **Apple Developer Program** is required for device installs, TestFlight, and App Store.
+
+4. First EAS iOS build: choose **Let EAS manage credentials** when prompted (distribution cert + provisioning profile).
+
+5. Keep `.env.production` and `GoogleService-Info.plist` on the machine that runs `eas build`.
+
+### One-time setup
 
 ```powershell
 cd customer_app
 npx eas login
-npm run apk:preview      # test APK (production env)
-npm run aab:production   # Play Store AAB (production env)
 ```
 
-Monorepo note: root `.easignore` excludes `frontend/`, `backend/`, and large folders from the upload.
+Confirm Apple team access and that App Store Connect has an app with bundle ID `com.serva.services` (create it if missing).
 
-| Profile | Output |
-|---------|--------|
-| `preview` | Internal test APK |
-| `production` | Play Store AAB (`buildType: app-bundle`) |
+### Option A — TestFlight / App Store (recommended for testers & release)
 
-For ongoing Play updates after your first EAS upload, **local `aab:local` is simpler** and does not require EAS cloud.
+```powershell
+cd customer_app
+
+# 1. Confirm .env.production + GoogleService-Info.plist
+# 2. Bump expo.version if shipping a user-visible release
+#    (ios.buildNumber auto-increments on the production profile)
+
+npm run ios:production
+npm run ios:submit
+```
+
+Then in [App Store Connect](https://appstoreconnect.apple.com):
+
+1. Wait until the build finishes processing  
+2. **TestFlight** → add internal/external testers → install via the **TestFlight** app on iPhone  
+3. For store release: create a version → select the build → submit for review  
+
+### Option B — Internal / ad hoc IPA (direct install, limited devices)
+
+Use when you need a quick install link without TestFlight. Device must be registered.
+
+```powershell
+cd customer_app
+
+# Register this iPhone (opens a registration page / QR — one-time per device)
+npx eas device:create
+
+# Build after the device is registered (old IPAs do not pick up new UDIDs)
+npm run ios:preview
+```
+
+Install from the Expo build page link/QR. On the phone:
+
+**Settings → General → VPN & Device Management** → trust the developer certificate if prompted.
+
+### Local iOS dev (macOS only)
+
+```powershell
+cd customer_app
+npm run ios
+```
+
+Requires Xcode, CocoaPods, and a simulator or signed device. On Windows this command is not a substitute for EAS release builds.
+
+### iOS troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| *Integrity could not be verified* | You installed a **store** IPA outside TestFlight/App Store, or an **ad hoc** IPA on an unregistered device. Use TestFlight for `ios:production`, or `eas device:create` + rebuild for `ios:preview`. |
+| Wrong / empty API URLs in the IPA | Ensure `.env.production` exists locally before `eas build` (root `.easignore` allows it) |
+| Push not working on iOS | Add `GoogleService-Info.plist`, APNs key in Firebase, rebuild, user re-login |
+| Provisioning / credentials errors | `npx eas credentials` → iOS → let EAS regenerate, or fix Apple team membership |
+| Build number rejected by App Store | Increase `expo.ios.buildNumber` in `app.json` (or rely on production `autoIncrement`) |
+
+---
+
+## EAS cloud builds
+
+Cloud builds are **required for iOS on Windows**, and optional for Android (local Gradle is preferred for Play updates).
+
+Requires an Expo account. Profiles live in `eas.json`.
+
+```powershell
+cd customer_app
+npx eas login
+
+# Android
+npm run apk:preview       # internal test APK
+npm run aab:production    # Play Store AAB
+
+# iOS
+npm run ios:preview       # ad hoc / internal IPA
+npm run ios:production    # App Store / TestFlight IPA
+npm run ios:submit        # upload last iOS production build to App Store Connect
+```
+
+Monorepo note: root `.easignore` excludes `frontend/`, `backend/`, and large folders from the upload. It **allows** `.env.production`, `google-services.json`, and `GoogleService-Info.plist` so EAS can bake production config and FCM.
+
+| Profile | Android | iOS |
+|---------|---------|-----|
+| `preview` | Internal APK | Ad hoc IPA (`distribution: internal`) |
+| `production` | Play AAB | Store IPA (`distribution: store`) + auto-increment `buildNumber` |
+
+For ongoing Play updates after your first upload, **local `aab:local` is simpler** and does not require EAS cloud.
 
 ---
 
@@ -475,7 +597,7 @@ For ongoing Play updates after your first EAS upload, **local `aab:local` is sim
 npm run start:prod
 ```
 
-Loads `.env.production` in dev mode — verify API URLs before `apk:local` or `aab:local`.
+Loads `.env.production` in dev mode — verify API URLs before `apk:local`, `aab:local`, or any EAS build.
 
 ---
 
@@ -484,18 +606,22 @@ Loads `.env.production` in dev mode — verify API URLs before `apk:local` or `a
 | Script | When to use | Output |
 |--------|-------------|--------|
 | `npm install` | First-time setup | Installs dependencies |
-| `npm start` | Daily development | Metro dev server (`.env.development`) |
+| `npm start` | Daily development | Metro (`.env.development`) |
 | `npm run start:prod` | Test production URLs in dev | Metro with `.env.production` |
-| `npm run android` | Dev on device/emulator | Debug build + installs app |
+| `npm run android` | Dev on Android device/emulator | Debug build + install |
 | `npm run android:prod` | Dev build with prod env | Same, production URLs |
-| `npm run prebuild:prod` | Before release or after native config change | Regenerates `android/` |
+| `npm run ios` | Dev on iOS (macOS + Xcode only) | Debug build + install |
+| `npm run prebuild:prod` | Before Android release / after native config change | Regenerates `android/` |
 | `npm run apk:local` | Share APK with testers | `android/.../app-release.apk` |
 | `npm run aab:local` | **Google Play upload** | `android/.../app-release.aab` |
-| `npm run apk:preview` | Optional EAS cloud test APK | Download from expo.dev |
-| `npm run aab:production` | Optional EAS cloud Play AAB | Download from expo.dev |
-| `npm run ios` | Dev on iOS (macOS only) | Xcode build |
+| `npm run apk:preview` | Optional EAS Android test APK | Download from expo.dev |
+| `npm run aab:production` | Optional EAS Play AAB | Download from expo.dev |
+| `npm run ios:preview` | Internal / ad hoc iOS IPA (EAS) | Download / install link from expo.dev |
+| `npm run ios:production` | **App Store / TestFlight IPA** (EAS) | Download from expo.dev |
+| `npm run ios:submit` | Upload iOS production build to App Store Connect | Appears in TestFlight after processing |
 | `npm run web` | Limited web preview | Browser |
 | `npx tsc --noEmit` | Before commit | TypeScript check |
+| `npx eas device:create` | Register an iPhone for ad hoc installs | Device added to Apple portal / EAS |
 
 ---
 
@@ -614,21 +740,27 @@ Stack screens are pushed from Dashboard / Bookings / Addresses flows. The accoun
 
 The backend sends FCM using the **`home-serve-customer`** Firebase project (service account JSON in `backend/.env`).
 
-The customer app **must** use the **Android client** config for the same project and package **`com.serva.services`**:
+The customer app must use the **same Firebase project** with client configs for package / bundle ID **`com.serva.services`**:
 
-1. Firebase Console → project **home-serve-customer** → **Project settings** → **Your apps**
-2. Add Android app with package **`com.serva.services`** (if missing)
-3. Download **`google-services.json`** → save as `customer_app/google-services.json`
-4. Rebuild the native app (Expo Go will **not** match the backend sender ID):
+### Android
 
-```powershell
-npm run prebuild:prod
-npm run android
-```
+1. Firebase Console → **Project settings** → **Your apps** → Android `com.serva.services`
+2. Download **`google-services.json`** → `customer_app/google-services.json`
+3. Rebuild (`npm run prebuild:prod` then `npm run android`, or a release/EAS build)
 
-5. Log in again so `fcmToken` is saved on the customer profile
+### iOS
 
-**SenderId mismatch** means the stored `fcmToken` was created by a different Firebase project or build (e.g. Expo Go, wrong `google-services.json`). Fix the app config, reinstall, and re-login.
+1. Firebase Console → add iOS app with bundle ID **`com.serva.services`** (if missing)
+2. Download **`GoogleService-Info.plist`** → `customer_app/GoogleService-Info.plist`
+3. Upload an **APNs Auth Key** (`.p8`) from Apple Developer into Firebase Cloud Messaging
+4. Rebuild with EAS (`ios:preview` / `ios:production`) or local `npm run ios` on macOS
+
+### After any push config change
+
+1. Install the new build (Expo Go will **not** match the backend sender ID)
+2. Log in again so `fcmToken` is saved on the customer profile
+
+**SenderId mismatch** means the stored `fcmToken` was created by a different Firebase project or build (e.g. Expo Go, wrong client file). Fix the config, reinstall, and re-login.
 
 ---
 
@@ -636,7 +768,7 @@ npm run android
 
 | Problem | Fix |
 |---------|-----|
-| FCM `SenderId mismatch` | Use `google-services.json` for `com.serva.services`, rebuild, re-login |
+| FCM `SenderId mismatch` | Use Firebase client files for `com.serva.services`, rebuild, re-login |
 | Network error / API unreachable on phone | LAN IP in `.env.development`, same Wi‑Fi, backend running |
 | App uses `localhost` on physical phone | Use PC LAN IP in `.env.development`, not `localhost` |
 | Wrong API key / 403 | Match `EXPO_PUBLIC_API_LICENCE` to backend `X_API_KEY` |
@@ -650,6 +782,9 @@ npm run android
 | EAS `ENOSPC` disk full | Free disk space on `C:`; delete `android/app/build`, temp files |
 | Play rejects AAB signing | Use same upload keystore as first upload (`SERVA_UPLOAD_*` in gradle.properties) |
 | `prebuild:prod` reset signing | Re-add `SERVA_UPLOAD_*` lines to `android/gradle.properties` |
+| iOS *integrity could not be verified* | Install store builds via **TestFlight** only; for ad hoc run `eas device:create` then rebuild `ios:preview` |
+| iOS push silent / missing | `GoogleService-Info.plist` + APNs key in Firebase, then rebuild and re-login |
+| Empty API URL in EAS iOS/Android build | Place `.env.production` in `customer_app/` before `eas build` |
 
 ---
 
@@ -658,3 +793,5 @@ npm run android
 - [Service Manage — root README](../README.md) — backend, seeders, Postman
 - [Expo environment variables](https://docs.expo.dev/guides/environment-variables/)
 - [EAS Build](https://docs.expo.dev/build/introduction/)
+- [EAS Submit (iOS)](https://docs.expo.dev/submit/ios/)
+- [Register devices for internal distribution](https://docs.expo.dev/build/internal-distribution/)

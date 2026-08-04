@@ -22,9 +22,13 @@
 **/.kotlin/
 
 # Secrets & local env
+# Allow `.env.production` + Firebase client configs in the EAS upload (needed at build time).
+# Keep them gitignored — they live only on the build machine.
 **/.env
-**/.env.*
-**/google-services.json
+**/.env.local
+**/.env.development
+**/.env.development.local
+**/.env.production.local
 **/*.jks
 **/*.p8
 **/*.p12
