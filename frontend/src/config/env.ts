@@ -8,6 +8,7 @@ const envConfig = {
     logErrorsInConsole: Boolean(process.env.NEXT_PUBLIC_LOG_ERRORS_IN_CONSOLE === "true"),
     environment: String(process.env.NODE_ENV),
     socketUrl: String(process.env.NEXT_PUBLIC_SOCKET_URL),
+    googleSiteVerification: String(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || ""),
 };
 
 export default envConfig;

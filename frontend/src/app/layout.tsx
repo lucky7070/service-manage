@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import Providers from "@/app/providers";
 import { getServerSettings } from "@/lib/api.server";
+import envConfig from "@/config/env";
 
 export const metadata: Metadata = {
     title: "Service Management Platform",
     description: "Book trusted plumbers, electricians, salon and cleaning services.",
+    verification: {
+        google: envConfig.googleSiteVerification,
+    },
     icons: {
         icon: [
             { url: "/favicon.ico", sizes: "any" },
