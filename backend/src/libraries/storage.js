@@ -93,6 +93,7 @@ export const deleteFile = (deleteFile) => {
             '/admins/default.png',
             '/service-provider/default.png',
             '/testimonials/default.png',
+            '/service-types/default.png',
             '/img-not-found.jpg'
         ].includes(deleteFile)) {
             deleteFile = `public/uploads/` + deleteFile;

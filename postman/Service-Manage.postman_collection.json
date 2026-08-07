@@ -3992,7 +3992,7 @@
           "name": "Service types",
           "item": [
             {
-              "name": "Create service type",
+              "name": "Create service type (multipart)",
               "request": {
                 "method": "POST",
                 "header": [
@@ -4000,26 +4000,65 @@
                     "key": "x-api-key",
                     "value": "{{xApiKey}}",
                     "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
                   }
                 ],
                 "url": "{{baseUrl}}/admin/service-types",
                 "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"categoryId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Leak repair\",\n  \"status\": 1\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "categoryId",
+                      "value": "507f1f77bcf86cd799439011",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "name",
+                      "value": "Leak repair",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "nameHi",
+                      "value": "",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "estimatedTimeMinutes",
+                      "value": "60",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "basePrice",
+                      "value": "299",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "description",
+                      "value": "Fix leaking taps and pipes.",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
                     }
-                  }
+                  ]
                 }
               }
             },
             {
-              "name": "Update service type",
+              "name": "Update service type (multipart)",
               "request": {
                 "method": "PUT",
                 "header": [
@@ -4027,21 +4066,60 @@
                     "key": "x-api-key",
                     "value": "{{xApiKey}}",
                     "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
                   }
                 ],
                 "url": "{{baseUrl}}/admin/service-types/:id",
                 "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"categoryId\": \"507f1f77bcf86cd799439011\",\n  \"name\": \"Leak repair\",\n  \"status\": 1\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "categoryId",
+                      "value": "507f1f77bcf86cd799439011",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "name",
+                      "value": "Leak repair",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "nameHi",
+                      "value": "",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "estimatedTimeMinutes",
+                      "value": "60",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "basePrice",
+                      "value": "299",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "description",
+                      "value": "Fix leaking taps and pipes.",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "1",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "image",
+                      "type": "file",
+                      "src": []
                     }
-                  }
+                  ]
                 }
               }
             },

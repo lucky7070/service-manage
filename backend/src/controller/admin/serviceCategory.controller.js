@@ -116,7 +116,7 @@ export const getServiceCategory = async (req, res) => {
                     slug: 1,
                     name: 1,
                     nameHi: 1,
-                    image: 1,
+                    image: { $ifNull: ["$image", "/service-categories/default.png"] },
                     description: 1,
                     displayOrder: 1,
                     status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },

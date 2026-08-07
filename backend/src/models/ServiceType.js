@@ -8,6 +8,7 @@ const Schema = new mongoose.Schema({
     estimatedTimeMinutes: { type: Number, default: null },
     basePrice: { type: Number, default: null, set: setter, get: getter },
     description: { type: String, default: null },
+    image: { type: String, default: '/service-types/default.png' },
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null }
 }, { timestamps: true });

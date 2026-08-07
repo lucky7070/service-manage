@@ -1,6 +1,7 @@
 import moment from "moment";
 import { ServiceCategory, ServiceType } from "../../models/index.js";
 import { escapeRegex, ObjectId } from "../../helpers/utils.js";
+import { deleteFile } from "../../libraries/storage.js";
 
 const parseOptionalNumber = (v) => {
     if (v === undefined || v === null || v === "") return null;
@@ -32,7 +33,8 @@ export const createServiceType = async (req, res) => {
             estimatedTimeMinutes: parseOptionalNumber(estimatedTimeMinutes),
             basePrice: parseOptionalNumber(basePrice),
             description: description?.trim() || null,
-            isActive: Number(status) === 1
+            isActive: Number(status) === 1,
+            image: req.file ? `/service-types/${req.file.filename}` : '/service-types/default.png'
         });
         return res.successInsert(doc);
     } catch (error) {
@@ -61,6 +63,12 @@ export const updateServiceType = async (req, res) => {
         });
         if (exists) throw new Error(`Service type "${normalizedName}" already exists in this category.`);
 
+        let image = doc.image;
+        if (req.file) {
+            if (doc.image) deleteFile(doc.image);
+            image = `/service-types/${req.file.filename}`;
+        }
+
         await ServiceType.updateOne(
             { _id: doc._id },
             {
@@ -70,7 +78,8 @@ export const updateServiceType = async (req, res) => {
                 estimatedTimeMinutes: parseOptionalNumber(estimatedTimeMinutes),
                 basePrice: parseOptionalNumber(basePrice),
                 description: description?.trim() || null,
-                isActive: Number(status) === 1
+                isActive: Number(status) === 1,
+                image: image || '/service-types/default.png'
             }
         );
         return res.successUpdate(doc);
@@ -84,6 +93,7 @@ export const deleteServiceType = async (req, res) => {
         const doc = await ServiceType.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!doc) return res.noRecords();
 
+        if (doc.image) deleteFile(doc.image);
         await doc.updateOne({ deletedAt: moment().toISOString() });
         return res.successDelete(doc);
     } catch (error) {
@@ -123,6 +133,7 @@ export const getServiceType = async (req, res) => {
                     estimatedTimeMinutes: 1,
                     basePrice: 1,
                     description: 1,
+                    image: { $ifNull: ["$image", "/service-types/default.png"] },
                     categoryName: { $ifNull: [{ $first: "$category.name" }, ""] },
                     status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
                     createdAt: 1
@@ -158,6 +169,7 @@ export const getSingleServiceType = async (req, res) => {
             estimatedTimeMinutes: doc.estimatedTimeMinutes ?? "",
             basePrice: doc.basePrice ?? "",
             description: doc.description ?? "",
+            image: doc.image,
             status: doc.isActive ? 1 : 0,
             createdAt: doc.createdAt
         });

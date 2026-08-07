@@ -5,6 +5,7 @@ export const franchiseStorage = new Storage({ dir: "franchises", isImage: true, 
 export const appSettingStorage = new Storage({ dir: "application", isImage: true, isDoc: false, fileSize: 5 });
 export const customerStorage = new Storage({ dir: "customers", isImage: true, isDoc: false, fileSize: 2 });
 export const serviceCategoryStorage = new Storage({ dir: "service-categories", isImage: true, isDoc: false, fileSize: 2 });
+export const serviceTypeStorage = new Storage({ dir: "service-types", isImage: true, isDoc: false, fileSize: 2 });
 export const serviceProviderStorage = new Storage({ dir: "service-provider", isImage: true, isDoc: true, fileSize: 5 });
 export const serviceProviderWorkPhotoStorage = new Storage({ dir: "service-provider-work", isImage: true, isDoc: false, fileSize: 2 });
 export const bannerStorage = new Storage({ dir: "banners", isImage: true, isDoc: false, fileSize: 5 });

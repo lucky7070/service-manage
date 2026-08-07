@@ -928,11 +928,29 @@ const admin = [
     req("Delete service category", "DELETE", "/admin/service-categories/:id"),
     req("Get service category", "GET", "/admin/service-categories/:id"),
     req("List service categories", "GET", "/admin/service-categories"),
-    req("Create service type", "POST", "/admin/service-types", {
-        body: { categoryId: OID, name: "Leak repair", status: 1 },
+    req("Create service type (multipart)", "POST", "/admin/service-types", {
+        formdata: [
+            fd.text("categoryId", OID),
+            fd.text("name", "Leak repair"),
+            fd.text("nameHi", ""),
+            fd.text("estimatedTimeMinutes", "60"),
+            fd.text("basePrice", "299"),
+            fd.text("description", "Fix leaking taps and pipes."),
+            fd.text("status", "1"),
+            fd.file("image"),
+        ],
     }),
-    req("Update service type", "PUT", "/admin/service-types/:id", {
-        body: { categoryId: OID, name: "Leak repair", status: 1 },
+    req("Update service type (multipart)", "PUT", "/admin/service-types/:id", {
+        formdata: [
+            fd.text("categoryId", OID),
+            fd.text("name", "Leak repair"),
+            fd.text("nameHi", ""),
+            fd.text("estimatedTimeMinutes", "60"),
+            fd.text("basePrice", "299"),
+            fd.text("description", "Fix leaking taps and pipes."),
+            fd.text("status", "1"),
+            fd.file("image"),
+        ],
     }),
     req("Delete service type", "DELETE", "/admin/service-types/:id"),
     req("Get service type", "GET", "/admin/service-types/:id"),

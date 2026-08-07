@@ -7,13 +7,14 @@ import * as Yup from "yup";
 import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Label, Modal, Select, Option, Textarea } from "@/components/ui";
+import { Badge, Button, Input, InputFile, Label, Modal, Select, Option, Textarea } from "@/components/ui";
+import Image from "@/components/ui/Image";
 import AdminPagination from "@/components/admin/AdminPagination";
-import { getSweetAlertConfig } from "@/helpers/utils";
+import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
@@ -30,6 +31,7 @@ type ServiceTypeRow = {
     estimatedTimeMinutes?: number | null;
     basePrice?: number | null;
     description?: string | null;
+    image?: string | null;
     status: number;
     createdAt?: string;
 };
@@ -43,6 +45,7 @@ type ServiceTypeFormValues = {
     basePrice: number | "";
     description: string;
     status: number;
+    image: string | null;
 };
 
 type ServiceTypeRecord = {
@@ -54,6 +57,18 @@ type ServiceTypeRecord = {
 
 type SortBy = "name" | "categoryName" | "status" | "createdAt" | "estimatedTimeMinutes" | "basePrice";
 type SortOrder = "asc" | "desc";
+
+const emptyForm: ServiceTypeFormValues = {
+    _id: "",
+    categoryId: "",
+    name: "",
+    nameHi: "",
+    estimatedTimeMinutes: "",
+    basePrice: "",
+    description: "",
+    status: 1,
+    image: null,
+};
 
 const validationSchema = Yup.object().shape({
     categoryId: Yup.string().required("Category is required."),
@@ -76,7 +91,8 @@ export default function AdminServiceTypesPage() {
     const [selectedServiceCategory, setSelectedServiceCategory] = useState<{ value: string; label: string } | null>(null);
     const [data, setData] = useState<ServiceTypeRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; categoryId: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", status: "", categoryId: category ?? "" });
-    const [initialValues, setInitialValues] = useState<ServiceTypeFormValues>({ _id: "", categoryId: "", name: "", nameHi: "", estimatedTimeMinutes: "", basePrice: "", description: "", status: 1 });
+    const [initialValues, setInitialValues] = useState<ServiceTypeFormValues>(emptyForm);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     useEffect(() => {
         (async () => {
@@ -108,6 +124,8 @@ export default function AdminServiceTypesPage() {
         return () => { debouncedFetchRef.current.cancel(); };
     }, [param]);
 
+    const resetImage = () => { setImagePreview(null); };
+
     const handleDelete = async (id: string) => {
         const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
         if (isConfirmed) {
@@ -129,26 +147,34 @@ export default function AdminServiceTypesPage() {
     };
 
     const openAdd = () => {
-        setInitialValues({ _id: "", categoryId: "", name: "", nameHi: "", estimatedTimeMinutes: "", basePrice: "", description: "", status: 1 });
+        resetImage();
+        setInitialValues(emptyForm);
         setSelectedServiceCategory(null);
         setOpen("add");
     };
 
     const openEdit = async (id: string) => {
+        resetImage();
         const { data } = await AxiosHelperAdmin.getData(`/service-types/${id}`);
         if (data?.status && data?.data) {
             const r = data.data;
+            const categoryId = String(r.categoryId);
             setInitialValues({
                 _id: r._id,
-                categoryId: String(r.categoryId),
+                categoryId,
                 name: r.name,
                 nameHi: r.nameHi ?? "",
                 estimatedTimeMinutes: r.estimatedTimeMinutes === "" || r.estimatedTimeMinutes == null ? "" : Number(r.estimatedTimeMinutes),
                 basePrice: r.basePrice === "" || r.basePrice == null ? "" : Number(r.basePrice),
                 description: r.description ?? "",
-                status: r.status
+                status: r.status,
+                image: r.image ?? null
             });
-            setSelectedServiceCategory({ value: String(r.categoryId), label: r.categoryName || "" });
+            setImagePreview(resolveFileUrl(r.image) || null);
+            setSelectedServiceCategory({
+                value: categoryId,
+                label: categories.find((c) => c.value === categoryId)?.label || r.categoryName || ""
+            });
             setOpen("edit");
         } else {
             toast.error(data?.message || "Could not load service type.");
@@ -217,6 +243,7 @@ export default function AdminServiceTypesPage() {
                     <table className="min-w-full text-sm">
                         <thead className="bg-[#edf3ff] text-left text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                             <tr>
+                                <th className="px-3 py-2 w-12" />
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("name")} name="Name" active={param.sortBy === "name"} sortOrder={param.sortOrder} />
                                 </th>
@@ -240,35 +267,49 @@ export default function AdminServiceTypesPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {data.record.map((row) => (
-                                <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.categoryName || "—"}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.nameHi || "—"}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.estimatedTimeMinutes != null ? row.estimatedTimeMinutes : "—"}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.basePrice != null ? row.basePrice : "—"}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
-                                        <Badge variant={row.status === 1 ? "success" : "secondary"} size="sm">
-                                            {row.status === 1 ? "Active" : "Inactive"}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "—"}</td>
-                                    <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
-                                        <div className="flex justify-end gap-1.5 sm:gap-2">
-                                            <PermissionBlock permission_id={362}>
-                                                <Button size="sm" variant="secondary" onClick={() => openEdit(row._id)} title="Edit" aria-label="Edit">
-                                                    <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                            </PermissionBlock>
-                                            <PermissionBlock permission_id={363}>
-                                                <Button size="sm" variant="danger" onClick={() => handleDelete(row._id)} title="Delete" aria-label="Delete">
-                                                    <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
-                                                </Button>
-                                            </PermissionBlock>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {data.record.map((row) => {
+                                const thumb = resolveFileUrl(row.image);
+                                return (
+                                    <tr key={row._id} className="border-t border-indigo-100 dark:border-slate-700">
+                                        <td className="px-3 py-2">
+                                            <div className="relative h-9 w-9 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                                {thumb ? (
+                                                    <Image src={thumb} alt="" className="h-full w-full object-cover" />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                        <ImageIcon className="h-4 w-4" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.name}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.categoryName || "—"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.nameHi || "—"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.estimatedTimeMinutes != null ? row.estimatedTimeMinutes : "—"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.basePrice != null ? row.basePrice : "—"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <Badge variant={row.status === 1 ? "success" : "secondary"} size="sm">
+                                                {row.status === 1 ? "Active" : "Inactive"}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "—"}</td>
+                                        <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
+                                            <div className="flex justify-end gap-1.5 sm:gap-2">
+                                                <PermissionBlock permission_id={362}>
+                                                    <Button size="sm" variant="secondary" onClick={() => openEdit(row._id)} title="Edit" aria-label="Edit">
+                                                        <Pencil className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                    </Button>
+                                                </PermissionBlock>
+                                                <PermissionBlock permission_id={363}>
+                                                    <Button size="sm" variant="danger" onClick={() => handleDelete(row._id)} title="Delete" aria-label="Delete">
+                                                        <Trash2 className="h-4 w-4 shrink-0" strokeWidth={2} />
+                                                    </Button>
+                                                </PermissionBlock>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
 
                             <AdminNoTableRecords show={data.record.length === 0} />
                         </tbody>
@@ -279,9 +320,12 @@ export default function AdminServiceTypesPage() {
 
             <Modal
                 show={!!open}
-                onClose={() => setOpen(null)}
+                onClose={() => {
+                    setOpen(null);
+                    resetImage();
+                }}
                 title={open === "add" ? "Create service type" : "Update service type"}
-                subTitle="Link to a category and set name, optional Hindi label, time and price hints."
+                subTitle="Link to a category and set name, optional Hindi label, image, time and price hints."
                 size="lg"
                 scrollable
             >
@@ -292,10 +336,11 @@ export default function AdminServiceTypesPage() {
                         validationSchema={validationSchema}
                         onSubmit={async (values, { setSubmitting, resetForm, setErrors }) => {
                             if (open === "add") {
-                                const { data } = await AxiosHelperAdmin.postData("/service-types", values);
+                                const { data } = await AxiosHelperAdmin.postData("/service-types", values, true);
                                 if (data.status) {
                                     toast.success(data.message);
                                     setOpen(null);
+                                    resetImage();
                                     fetchRows();
                                     resetForm();
                                 } else {
@@ -303,10 +348,11 @@ export default function AdminServiceTypesPage() {
                                     setErrors(data.data);
                                 }
                             } else {
-                                const { data } = await AxiosHelperAdmin.putData(`/service-types/${values._id}`, values);
+                                const { data } = await AxiosHelperAdmin.putData(`/service-types/${values._id}`, values, true);
                                 if (data.status) {
                                     toast.success(data.message);
                                     setOpen(null);
+                                    resetImage();
                                     fetchRows();
                                     resetForm();
                                 } else {
@@ -318,8 +364,34 @@ export default function AdminServiceTypesPage() {
                             setSubmitting(false);
                         }}
                     >
-                        {({ isSubmitting, setFieldValue }) => (
+                        {({ isSubmitting, values, setFieldValue }) => (
                             <Form className="space-y-3">
+                                <div className="space-y-2">
+                                    <Label>Image <span className="font-normal text-slate-500">(optional)</span></Label>
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-indigo-100 bg-slate-100 dark:border-slate-600 dark:bg-slate-800">
+                                            {(imagePreview || resolveFileUrl(values.image)) ? <Image
+                                                src={imagePreview || resolveFileUrl(values.image) || ""}
+                                                alt=""
+                                                className="h-full w-full object-cover"
+                                            /> : <div className="flex h-full w-full items-center justify-center text-slate-400">
+                                                <ImageIcon className="h-8 w-8" />
+                                            </div>}
+                                        </div>
+                                        <InputFile accept="image/*"
+                                            onChange={(e) => {
+                                                const f = e.target.files?.[0] ?? null;
+                                                setFieldValue('image', f);
+                                                if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+                                                if (f) {
+                                                    setImagePreview(URL.createObjectURL(f));
+                                                } else {
+                                                    setImagePreview(resolveFileUrl(values.image));
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="st-category">Category</Label>
                                     <ReactSelect
@@ -385,7 +457,7 @@ export default function AdminServiceTypesPage() {
                                     <ErrorMessage className="text-xs text-rose-600" name="status" component="small" />
                                 </div>
                                 <div className="flex justify-end gap-2">
-                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => setOpen(null)}>
+                                    <Button type="button" variant="ghost" size="md" className="border border-indigo-100 dark:border-indigo-100" onClick={() => { setOpen(null); resetImage(); }}>
                                         Cancel
                                     </Button>
                                     <Button disabled={isSubmitting} type="submit" variant="primary" size="md">

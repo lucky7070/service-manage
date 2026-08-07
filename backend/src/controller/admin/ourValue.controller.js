@@ -6,7 +6,7 @@ export const createOurValue = async (req, res) => {
     try {
         const { title, description, displayOrder = 0, status = 1 } = req.body;
         if (!req.file?.filename) return res.clientError("Icon image is required.", 422, [{ field: "icon", message: "Icon image is required." }]);
-        const icon = `/our-values/${req.file.filename}`;
+        const icon = `/our-values/${req.file.filename}` || '/our-values/default.png';
         const doc = await OurValue.create({
             icon,
             title: String(title).trim(),
@@ -28,7 +28,7 @@ export const updateOurValue = async (req, res) => {
         if (!doc) return res.noRecords();
 
         const { title, description, displayOrder = 0, status = 1 } = req.body;
-        const icon = req.file?.filename ? `/our-values/${req.file.filename}` : doc.icon;
+        const icon = req.file?.filename ? `/our-values/${req.file.filename}` : (doc.icon || '/our-values/default.png');
         await OurValue.updateOne(
             { _id: doc._id },
             {
@@ -71,7 +71,7 @@ export const getOurValues = async (req, res) => {
 
         const pipeline = [
             { $match: filter },
-            { $project: { _id: 1, icon: 1, title: 1, description: 1, displayOrder: 1, status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] }, createdAt: 1 } }
+            { $project: { _id: 1, icon: { $ifNull: ["$icon", "/our-values/default.png"] }, title: 1, description: 1, displayOrder: 1, status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] }, createdAt: 1 } }
         ];
 
         const [results, totalCount] = await Promise.all([
