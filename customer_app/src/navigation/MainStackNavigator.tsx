@@ -3,6 +3,8 @@ import MainLayout from "./MainLayout";
 import BookingDetailScreen from "../screens/BookingDetailScreen";
 import BookingChatScreen from "../screens/BookingChatScreen";
 import BookServiceScreen from "../screens/BookServiceScreen";
+import ServiceCategoriesScreen from "../screens/ServiceCategoriesScreen";
+import ServiceCategoryDetailScreen from "../screens/ServiceCategoryDetailScreen";
 import ProviderSearchScreen from "../screens/ProviderSearchScreen";
 import ProviderDetailScreen from "../screens/ProviderDetailScreen";
 import BookProviderScreen from "../screens/BookProviderScreen";
@@ -17,6 +19,8 @@ export default function MainStackNavigator() {
         <Stack.Navigator screenOptions={{ headerShown: false, animation: "slide_from_right" }}>
             <Stack.Screen name="Main" component={MainLayout} />
             <Stack.Screen name="BookService" component={BookServiceScreen} />
+            <Stack.Screen name="ServiceCategories" component={ServiceCategoriesScreen} />
+            <Stack.Screen name="ServiceCategoryDetail" component={ServiceCategoryDetailScreen} />
             <Stack.Screen name="ProviderSearch" component={ProviderSearchScreen} />
             <Stack.Screen name="ProviderDetail" component={ProviderDetailScreen} />
             <Stack.Screen name="BookProvider" component={BookProviderScreen} />

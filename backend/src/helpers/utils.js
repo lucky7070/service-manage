@@ -1,5 +1,7 @@
 import moment from "moment";
 import mongoose from "mongoose";
+import dns from 'dns';
+import os from 'os';
 
 export const nowPlusMinutes = (minutes) => {
     return moment().add(minutes, "minutes").toDate();
@@ -84,4 +86,17 @@ export const getter = (value) => {
     if (value === null || value === undefined || value === "") return null;
     const n = Number.parseFloat(value);
     return Number.isFinite(n) ? Math.round(n * 100) / 100 : null;
+};
+
+export const getLocalIpAddress = async (family = 'IPv4') => {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+        for (const net of interfaces[name]) {
+            if (net.family === family && !net.internal) {
+                return net.address;
+            }
+        }
+    }
+
+    return '127.0.0.1';
 };

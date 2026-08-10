@@ -35,6 +35,15 @@ export type SlugOption = {
     slug: string;
 };
 
+export type HomeServiceCategory = {
+    _id: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+    image?: string | null;
+    displayOrder?: number;
+};
+
 export type AddressRow = {
     _id: string;
     addressLine1: string;
@@ -296,9 +305,21 @@ export type PublicProviderDetail = {
 export type CategoryServiceType = {
     _id: string;
     name: string;
+    nameHi?: string | null;
     description?: string | null;
     basePrice?: number | null;
     estimatedTimeMinutes?: number | null;
+    image?: string | null;
+};
+
+export type ServiceCategoryDetail = {
+    _id: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+    image?: string | null;
+    displayOrder?: number;
+    serviceTypes?: CategoryServiceType[];
 };
 
 export type FieldErrorRow = { field?: string; message?: string };
@@ -384,6 +405,12 @@ export type AccountMenuItem = {
 export type MainStackParamList = {
     Main: { initialTab?: AccountMenuRoute } | undefined;
     BookService: undefined;
+    ServiceCategories: undefined;
+    ServiceCategoryDetail: {
+        categorySlug: string;
+        categoryName?: string;
+        categoryId?: string;
+    };
     ProviderSearch: {
         citySlug: string;
         cityName: string;
@@ -399,11 +426,12 @@ export type MainStackParamList = {
         providerName?: string;
     };
     ServiceLeadForm: {
-        cityId: string;
-        cityName: string;
+        cityId?: string;
+        cityName?: string;
         categoryId: string;
         categoryName: string;
         categorySlug: string;
+        preselectedServiceTypeIds?: string[];
     };
     BookingDetail: { bookingId: string };
     BookingChat: {

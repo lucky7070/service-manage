@@ -156,6 +156,11 @@ export const getServiceCategoryBySlug = async (req, res) => {
         ).lean();
 
         if (!row) return res.noRecords();
+
+        row.serviceTypes = await ServiceType.find(
+            { categoryId: row._id, deletedAt: null, isActive: true },
+            { name: 1, nameHi: 1, description: 1, estimatedTimeMinutes: 1, basePrice: 1, image: 1 }
+        ).sort({ name: 1 }).lean();
         return res.success(row);
     } catch (error) {
         return res.someThingWentWrong(error);
@@ -453,7 +458,10 @@ export const listServiceTypesByCategorySlug = async (req, res) => {
         const category = await ServiceCategory.findOne({ slug, deletedAt: null, isActive: true }, { _id: 1 }).lean();
         if (!category) return res.noRecords();
 
-        const rows = await ServiceType.find({ categoryId: category._id, deletedAt: null, isActive: true }, { name: 1, nameHi: 1, description: 1, estimatedTimeMinutes: 1, basePrice: 1 }).sort({ name: 1 }).lean();
+        const rows = await ServiceType.find(
+            { categoryId: category._id, deletedAt: null, isActive: true },
+            { name: 1, nameHi: 1, description: 1, estimatedTimeMinutes: 1, basePrice: 1, image: 1 }
+        ).sort({ name: 1 }).lean();
         return res.success(rows);
     } catch (error) {
         return res.someThingWentWrong(error);

@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import {
     ActivityIndicator,
+    Image,
     Pressable,
     RefreshControl,
-    ScrollView,
     StyleSheet,
     Text,
     View,
@@ -11,7 +11,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { fetchDashboard, type DashboardData } from "../api";
+import { fetchDashboard, fetchServiceCategoriesHome, resolveUploadUrl, type DashboardData, type HomeServiceCategory } from "../api";
 import { useAuth } from "../context/AuthContext";
 import BookServiceSearch from "../components/booking/BookServiceSearch";
 import { useMainNavigation } from "../navigation/MainNavContext";
@@ -24,23 +24,6 @@ import StatusBadge from "../components/ui/StatusBadge";
 import { BRAND, chatButtonStyles } from "../config/constant";
 import { colors, radius, shadows, spacing } from "../theme/colors";
 
-type QuickAction = {
-    route: "Bookings" | "ServiceLeads" | "ReferEarn" | "Addresses" | "Ledger";
-    label: string;
-    subtitle: string;
-    icon: keyof typeof Feather.glyphMap;
-    gradient: [string, string];
-    highlight?: boolean;
-};
-
-const quickActions: QuickAction[] = [
-    { route: "Bookings", label: "Bookings", subtitle: "Track jobs", icon: "calendar", gradient: ["#FF8C3A", colors.primary] },
-    { route: "ServiceLeads", label: "Requests", subtitle: "Open leads", icon: "clipboard", gradient: ["#6366F1", "#4F46E5"] },
-    { route: "ReferEarn", label: "Refer & earn", subtitle: "Get rewards", icon: "gift", gradient: ["#F59E0B", "#D97706"], highlight: true },
-    { route: "Addresses", label: "Addresses", subtitle: "Saved places", icon: "map-pin", gradient: ["#10B981", "#059669"] },
-    { route: "Ledger", label: "Wallet", subtitle: "Transactions", icon: "credit-card", gradient: ["#0EA5E9", "#0284C7"] },
-];
-
 function getGreeting() {
     const hour = new Date().getHours();
     if (hour < 12) return "Good morning";
@@ -48,11 +31,16 @@ function getGreeting() {
     return "Good evening";
 }
 
+function shortCategoryName(name: string) {
+    return name.replace(/\s+Services?$/i, "").replace(/\s+Service$/i, "").trim();
+}
+
 export default function DashboardScreen() {
     const { user } = useAuth();
     const { navigate } = useMainNavigation();
     const rootNav = useRootNavigation();
     const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+    const [categories, setCategories] = useState<HomeServiceCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -63,8 +51,9 @@ export default function DashboardScreen() {
         if (isRefresh) setRefreshing(true);
         else setLoading(true);
         try {
-            const response = await fetchDashboard();
-            if (response.status) setDashboard(response.data);
+            const [dashRes, catRes] = await Promise.all([fetchDashboard(), fetchServiceCategoriesHome(9)]);
+            if (dashRes.status) setDashboard(dashRes.data);
+            if (catRes.status && Array.isArray(catRes.data)) setCategories(catRes.data.slice(0, 9));
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -72,6 +61,14 @@ export default function DashboardScreen() {
     }, []);
 
     useFocusEffect(useCallback(() => { void load(); }, [load]));
+
+    const pickCategory = (row: HomeServiceCategory) => {
+        rootNav.navigate("ServiceCategoryDetail", {
+            categorySlug: row.slug,
+            categoryName: row.name,
+            categoryId: row._id,
+        });
+    };
 
     return (
         <Screen safe={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.primary} />}>
@@ -99,23 +96,41 @@ export default function DashboardScreen() {
                 <BookServiceSearch embedded />
             </View>
 
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickScroll}>
-                {quickActions.map((action) => (
-                    <Pressable
-                        key={action.route}
-                        onPress={() => navigate(action.route)}
-                        style={[styles.quickCard, action.highlight && styles.quickCardHighlight, { alignItems: "center" }]}
-                    >
-                        <LinearGradient colors={action.gradient} style={styles.quickIcon}>
-                            <Feather name={action.icon} size={18} color={colors.white} />
-                        </LinearGradient>
-                        <Text style={styles.quickLabel}>{action.label}</Text>
-                        <Text style={styles.quickSub}>
-                            {action.route === "Addresses" && dashboard?.addressCount != null ? `${dashboard.addressCount} saved` : action.subtitle}
-                        </Text>
-                    </Pressable>
-                ))}
-            </ScrollView>
+            <SectionHeader
+                title="Service Categories"
+                subtitle="Tap a category to view services"
+                actionLabel="View All"
+                onAction={() => rootNav.navigate("ServiceCategories")}
+            />
+            {categories.length ? (
+                <View style={styles.categoryGrid}>
+                    {categories.map((row) => {
+                        const imageUri = resolveUploadUrl(row.image);
+                        return (
+                            <Pressable
+                                key={row._id}
+                                onPress={() => pickCategory(row)}
+                                style={styles.categoryCell}
+                            >
+                                <View style={styles.categoryImageWrap}>
+                                    {imageUri ? (
+                                        <Image source={{ uri: imageUri }} style={styles.categoryImage} resizeMode="contain" />
+                                    ) : (
+                                        <Feather name="briefcase" size={22} color={colors.primary} />
+                                    )}
+                                </View>
+                                <Text style={styles.categoryLabel} numberOfLines={2}>
+                                    {shortCategoryName(row.name)}
+                                </Text>
+                            </Pressable>
+                        );
+                    })}
+                </View>
+            ) : loading ? (
+                <View style={styles.categoryLoading}>
+                    <ActivityIndicator color={colors.primary} />
+                </View>
+            ) : null}
 
             {loading ? (
                 <View style={styles.loadingBox}><ActivityIndicator size="large" color={colors.primary} /></View>
@@ -226,96 +241,54 @@ const styles = StyleSheet.create({
     },
     heroMarkText: { color: colors.white, fontWeight: "800", fontSize: 15 },
     heroBrandName: { color: colors.white, fontWeight: "800", fontSize: 16 },
-    heroAvatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: "rgba(255,255,255,0.18)",
-        borderWidth: 2,
-        borderColor: "rgba(255,255,255,0.35)",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    heroAvatarText: { color: colors.white, fontSize: 18, fontWeight: "800" },
     heroGreeting: { color: "rgba(255,255,255,0.88)", fontSize: 14, fontWeight: "600" },
     heroTitle: { color: colors.white, fontSize: 28, fontWeight: "800", lineHeight: 34, marginTop: 4 },
-    walletCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginTop: spacing.lg,
-        backgroundColor: "rgba(255,255,255,0.14)",
-        borderRadius: radius.x2,
-        padding: spacing.md,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.18)",
-    },
-    walletLeft: { flexDirection: "row", alignItems: "center", gap: spacing.md },
     walletLabel: { color: "rgba(255,255,255,0.78)", fontSize: 11, fontWeight: "700", textTransform: "uppercase" },
     walletValue: { color: colors.white, fontSize: 20, fontWeight: "800", marginTop: 2 },
-    walletBtn: { flexDirection: "row", alignItems: "center", gap: 2, paddingHorizontal: 10, paddingVertical: 6 },
-    walletBtnText: { color: colors.white, fontSize: 13, fontWeight: "700" },
     searchOverlap: { marginBottom: spacing.lg, zIndex: 2 },
-    quickScroll: { gap: spacing.sm, paddingBottom: spacing.lg },
-    quickCard: {
-        width: 108,
+    categoryGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: spacing.sm,
+        marginBottom: spacing.xl,
+    },
+    categoryCell: {
+        width: "31.5%",
+        flexGrow: 1,
+        maxWidth: "32.5%",
+        alignItems: "center",
         backgroundColor: colors.card,
         borderRadius: radius.x2,
-        padding: spacing.md,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
         borderWidth: 1,
         borderColor: colors.border,
+        gap: spacing.sm,
         ...shadows.card,
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.04,
     },
-    quickCardHighlight: {
-        borderColor: colors.amberRing,
-        backgroundColor: colors.amberBg,
-    },
-    quickIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: spacing.sm,
-    },
-    quickLabel: { fontSize: 12, fontWeight: "800", color: colors.foreground },
-    quickSub: { fontSize: 10, color: colors.mutedForeground, marginTop: 2, fontWeight: "600" },
-    howCard: { marginBottom: spacing.lg, gap: spacing.md },
-    howTitle: { fontSize: 16, fontWeight: "800", color: colors.foreground },
-    howRow: { flexDirection: "row", justifyContent: "space-between" },
-    howStep: { flex: 1, alignItems: "center", position: "relative", gap: 4 },
-    howIconWrap: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
-        backgroundColor: "rgba(240,116,26,0.1)",
+    categoryImageWrap: {
+        width: 56,
+        height: 56,
+        borderRadius: 16,
+        backgroundColor: colors.muted,
         alignItems: "center",
         justifyContent: "center",
     },
-    howStepTitle: { fontSize: 12, fontWeight: "800", color: colors.foreground },
-    howStepSub: { fontSize: 10, color: colors.mutedForeground, textAlign: "center" },
-    howArrow: { position: "absolute", right: -6, top: 10 },
+    categoryImage: {
+        width: 48,
+        height: 48,
+    },
+    categoryLabel: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: colors.foreground,
+        textAlign: "center",
+        lineHeight: 16,
+        minHeight: 32,
+    },
+    categoryLoading: { paddingVertical: spacing.xl, alignItems: "center", marginBottom: spacing.lg },
     loadingBox: { paddingVertical: 48, alignItems: "center" },
-    statsScroll: { gap: spacing.sm, paddingBottom: spacing.lg },
-    statCard: {
-        width: 132,
-        borderRadius: radius.x2,
-        padding: spacing.md,
-        gap: 6,
-        borderWidth: 1,
-        borderColor: "rgba(232,231,230,0.8)",
-    },
-    statIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 10,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    statValue: { fontSize: 26, fontWeight: "800", lineHeight: 30 },
-    statLabel: { fontSize: 11, fontWeight: "600", color: colors.mutedForeground, lineHeight: 15 },
-    recentCard: { gap: spacing.sm, marginBottom: spacing.lg },
     bookingRow: {
         flexDirection: "row",
         borderWidth: 1,

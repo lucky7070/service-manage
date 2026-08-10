@@ -79,7 +79,7 @@
           }
         },
         {
-          "name": "Service category by slug",
+          "name": "Service category by slug (includes serviceTypes)",
           "request": {
             "method": "GET",
             "header": [

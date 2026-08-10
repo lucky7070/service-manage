@@ -13,7 +13,7 @@ import DetailHeader from "../components/ui/DetailHeader";
 import type { MainStackParamList } from "../api/types";
 import { useRootNavigation } from "../helpers/common";
 import { addressSchema } from "../validation/schemas";
-import { colors, radius } from "../theme/colors";
+import { colors, radius, spacing } from "../theme/colors";
 import { screenStyles } from "../theme/screenStyles";
 
 const locationTypes = ["home", "office", "other"] as const;
@@ -44,33 +44,106 @@ const emptyValues: AddressFormValues = {
     isDefault: false,
 };
 
-async function captureCurrentLocation(
-    setFieldValue: (field: "latitude" | "longitude", value: string) => void,
-    setLocating: (value: boolean) => void,
-) {
-    setLocating(true);
-    try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-            Alert.alert(
-                "Permission needed",
-                "Enable location access in your device settings to pin your service location.",
-            );
-            return;
-        }
-        const position = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-        });
-        void setFieldValue("latitude", String(position.coords.latitude));
-        void setFieldValue("longitude", String(position.coords.longitude));
-    } catch {
-        Alert.alert(
-            "Location unavailable",
-            "Could not read your current location. Move outdoors, enable GPS, and try again.",
-        );
-    } finally {
-        setLocating(false);
+function normalizePlace(value?: string | null) {
+    return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function pickBestOption(rows: SearchOption[], candidates: Array<string | null | undefined>) {
+    const labels = candidates.map(normalizePlace).filter(Boolean);
+    if (!labels.length || !rows.length) return null;
+
+    for (const label of labels) {
+        const exact = rows.find((row) => normalizePlace(row.label) === label);
+        if (exact) return exact;
     }
+    for (const label of labels) {
+        const partial = rows.find((row) => {
+            const option = normalizePlace(row.label);
+            return option.includes(label) || label.includes(option);
+        });
+        if (partial) return partial;
+    }
+    return null;
+}
+
+function buildAddressLines(place: Location.LocationGeocodedAddress) {
+    const streetParts = [place.streetNumber, place.street].map((part) => String(part || "").trim()).filter(Boolean);
+    const line1 = streetParts.join(", ") || place.name || place.district || "";
+    const line2 = [place.district, place.subregion]
+        .map((part) => String(part || "").trim())
+        .filter(Boolean)
+        .filter((part) => normalizePlace(part) !== normalizePlace(line1))
+        .join(", ") || (place.city && normalizePlace(place.city) !== normalizePlace(line1) ? place.city : "");
+
+    return {
+        addressLine1: line1,
+        addressLine2: line2,
+        pincode: place.postalCode ? String(place.postalCode).replace(/\D/g, "").slice(0, 6) : "",
+        region: place.region || "",
+        cityName: place.city || place.subregion || place.district || "",
+    };
+}
+
+type CapturedLocationResult = {
+    values: AddressFormValues;
+    selectedState: SearchOption | null;
+    selectedCity: SearchOption | null;
+};
+
+async function fetchLocationPrefill(): Promise<CapturedLocationResult | null> {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+        Alert.alert("Permission needed", "Enable location access in your device settings to pin your service location.");
+        return null;
+    }
+
+    const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const { latitude, longitude } = position.coords;
+
+    const next: AddressFormValues = {
+        ...emptyValues,
+        latitude: String(latitude),
+        longitude: String(longitude),
+    };
+
+    let selectedState: SearchOption | null = null;
+    let selectedCity: SearchOption | null = null;
+
+    try {
+        const places = await Location.reverseGeocodeAsync({ latitude, longitude });
+        const place = places[0];
+        if (place) {
+            const parsed = buildAddressLines(place);
+            if (parsed.addressLine1) next.addressLine1 = parsed.addressLine1;
+            if (parsed.addressLine2) next.addressLine2 = parsed.addressLine2;
+            if (parsed.pincode) next.pincode = parsed.pincode;
+
+            const stateRows = await fetchStates(parsed.region || "");
+            const stateOptions = stateRows.status && Array.isArray(stateRows.data)
+                ? stateRows.data.map((row) => ({ value: row.value, label: row.label }))
+                : [];
+            selectedState = pickBestOption(stateOptions, [parsed.region, place.region]);
+
+            if (selectedState) {
+                next.state = selectedState.value;
+                const cityRows = await fetchCities(selectedState.value, parsed.cityName || "");
+                const cityOptions = cityRows.status && Array.isArray(cityRows.data)
+                    ? cityRows.data.map((row) => ({ value: row.value, label: row.label }))
+                    : [];
+                selectedCity = pickBestOption(cityOptions, [
+                    parsed.cityName,
+                    place.city,
+                    place.subregion,
+                    place.district,
+                ]);
+                if (selectedCity) next.city = selectedCity.value;
+            }
+        }
+    } catch {
+        // Coordinates still saved; user can fill address fields manually.
+    }
+
+    return { values: next, selectedState, selectedCity };
 }
 
 export default function AddressFormScreen() {
@@ -84,6 +157,8 @@ export default function AddressFormScreen() {
     const [selectedState, setSelectedState] = useState<SearchOption | null>(null);
     const [selectedCity, setSelectedCity] = useState<SearchOption | null>(null);
     const [locating, setLocating] = useState(false);
+    /** Add flow: capture GPS first, then show the details form. Edit skips this. */
+    const [showDetailsForm, setShowDetailsForm] = useState(isEdit);
 
     const loadStates = useCallback(async (query: string) => {
         const response = await fetchStates(query);
@@ -126,8 +201,25 @@ export default function AddressFormScreen() {
                 }
             }
             setLoading(false);
+            setShowDetailsForm(true);
         })();
     }, [addressId, isEdit]);
+
+    const onCaptureLocation = async () => {
+        setLocating(true);
+        try {
+            const result = await fetchLocationPrefill();
+            if (!result) return;
+            setInitialValues(result.values);
+            setSelectedState(result.selectedState);
+            setSelectedCity(result.selectedCity);
+            setShowDetailsForm(true);
+        } catch {
+            Alert.alert("Location unavailable", "Could not read your current location. Move outdoors, enable GPS, and try again.");
+        } finally {
+            setLocating(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -138,9 +230,45 @@ export default function AddressFormScreen() {
         );
     }
 
+    // Add address — step 1: capture job location only
+    if (!isEdit && !showDetailsForm) {
+        return (
+            <View style={screenStyles.stackRoot}>
+                <DetailHeader
+                    title="Add address"
+                    subtitle="First pin where the service happens"
+                    onBack={() => navigation.goBack()}
+                />
+                <ScrollView contentContainerStyle={screenStyles.formContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                    <Card large elevated style={screenStyles.formCard}>
+                        <Text style={styles.stepHint}>
+                            Capture your job location. We will autofill the address details next so you can review and save.
+                        </Text>
+                        <LocationCaptureCard
+                            latitude=""
+                            longitude=""
+                            locating={locating}
+                            onCapture={() => void onCaptureLocation()}
+                        />
+                    </Card>
+                </ScrollView>
+            </View>
+        );
+    }
+
     return (
         <View style={screenStyles.stackRoot}>
-            <DetailHeader title={isEdit ? "Edit address" : "Add address"} subtitle="Coordinates help your provider find the job location." onBack={() => navigation.goBack()} />
+            <DetailHeader
+                title={isEdit ? "Edit address" : "Confirm address"}
+                subtitle={isEdit ? "Update your saved service location." : "Review the autofilled details, then save."}
+                onBack={() => {
+                    if (!isEdit && showDetailsForm) {
+                        setShowDetailsForm(false);
+                        return;
+                    }
+                    navigation.goBack();
+                }}
+            />
             <Formik
                 initialValues={initialValues}
                 enableReinitialize
@@ -174,6 +302,16 @@ export default function AddressFormScreen() {
                 {({ values, errors, touched, submitCount, isSubmitting, setFieldValue, handleSubmit }) => (
                     <ScrollView contentContainerStyle={screenStyles.formContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                         <Card large elevated style={screenStyles.formCard}>
+                            <LocationCaptureCard
+                                latitude={values.latitude}
+                                longitude={values.longitude}
+                                locating={locating}
+                                onCapture={() => void onCaptureLocation()}
+                                error={
+                                    submitCount > 0 && (errors.latitude || errors.longitude) ? errors.latitude || errors.longitude : undefined
+                                }
+                            />
+
                             <FormField icon="map" name="addressLine1" label="Address line 1" required placeholder="House number, street" />
                             <FormField icon="map" name="addressLine2" label="Address line 2" required placeholder="Area, apartment" />
                             <FormField icon="map" name="landmark" label="Landmark" placeholder="Nearby landmark" />
@@ -214,15 +352,6 @@ export default function AddressFormScreen() {
                             </View>
 
                             <FormField icon="navigation" name="pincode" label="Pincode" required keyboardType="number-pad" placeholder="Enter pincode" maxLength={6} />
-                            <LocationCaptureCard
-                                latitude={values.latitude}
-                                longitude={values.longitude}
-                                locating={locating}
-                                onCapture={() => void captureCurrentLocation(setFieldValue, setLocating)}
-                                error={
-                                    submitCount > 0 && (errors.latitude || errors.longitude) ? errors.latitude || errors.longitude : undefined
-                                }
-                            />
 
                             <Text style={styles.groupLabel}>Location type</Text>
                             <View style={styles.typeRow}>
@@ -254,6 +383,12 @@ export default function AddressFormScreen() {
 }
 
 const styles = StyleSheet.create({
+    stepHint: {
+        fontSize: 14,
+        lineHeight: 21,
+        color: colors.mutedForeground,
+        marginBottom: spacing.xs,
+    },
     selectWrap: { zIndex: 1 },
     selectWrapState: { zIndex: 2 },
     groupLabel: { fontSize: 14, fontWeight: "600", color: colors.mutedForeground },

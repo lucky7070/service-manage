@@ -6,12 +6,13 @@ import { colors, radius, spacing } from "../../theme/colors";
 
 type AddressPickerProps = {
     value: string;
-    onChange: (addressId: string) => void;
+    onChange: (addressId: string, address?: AddressRow) => void;
     error?: string;
     onAddAddress?: () => void;
+    onAddressesLoaded?: (rows: AddressRow[]) => void;
 };
 
-export default function AddressPicker({ value, onChange, error, onAddAddress }: AddressPickerProps) {
+export default function AddressPicker({ value, onChange, error, onAddAddress, onAddressesLoaded }: AddressPickerProps) {
     const [rows, setRows] = useState<AddressRow[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -24,11 +25,12 @@ export default function AddressPicker({ value, onChange, error, onAddAddress }: 
                 const response = await fetchAddresses();
                 if (response.status && Array.isArray(response.data)) {
                     setRows(response.data);
+                    onAddressesLoaded?.(response.data);
                     if (!autoSelectedRef.current) {
                         const defaultRow = response.data.find((row) => row.isDefault) || response.data[0];
                         if (defaultRow?._id) {
                             autoSelectedRef.current = true;
-                            onChange(defaultRow._id);
+                            onChange(defaultRow._id, defaultRow);
                         }
                     }
                 }
@@ -61,7 +63,7 @@ export default function AddressPicker({ value, onChange, error, onAddAddress }: 
         {rows.map((row) => {
             const selected = value === row._id;
             return (
-                <Pressable key={row._id} onPress={() => onChange(row._id)} style={[styles.row, selected && styles.rowSelected]}>
+                <Pressable key={row._id} onPress={() => onChange(row._id, row)} style={[styles.row, selected && styles.rowSelected]}>
                     <View style={styles.rowMain}>
                         <Text style={styles.line1}>{row.addressLine1}</Text>
                         <Text style={styles.line2}>

@@ -8,7 +8,7 @@ const ServiceCategory = ({ service }: { service: ServiceCategory }) => {
     const description = (service.description && String(service.description).trim()) || "Professional service by verified experts";
     return (
         <Link key={service._id} href={`/services/${service.slug}`} className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-lg md:p-6">
-            <div className="mb-4 h-14 w-14 overflow-hidden rounded-xl bg-orange-50 shadow-lg">
+            <div className="mb-4 size-14 overflow-hidden">
                 <Image src={resolveFileUrl(service.image) || ""} alt={service.name} className="h-full w-full object-cover" />
             </div>
             <h3 className="mb-2 font-semibold text-gray-900 transition-colors group-hover:text-primary">{service.name}</h3>

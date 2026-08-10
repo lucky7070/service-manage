@@ -45,7 +45,6 @@ export default function BookServiceSearch({ elevated = true, embedded = false }:
             formikRef.current?.setSubmitting(false);
         }, [])
     );
-
     const loadCities = useCallback(async (query: string) => {
         const response = await fetchCitiesWithState(query);
         if (response.status && Array.isArray(response.data)) {

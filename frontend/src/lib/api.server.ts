@@ -27,6 +27,16 @@ export async function getTestimonials(from: "customer" | "provider" | "" = ""): 
     }
 }
 
+export type ServiceTypeByCategory = {
+    _id: string;
+    name: string;
+    nameHi?: string | null;
+    description?: string | null;
+    estimatedTimeMinutes?: number | null;
+    basePrice?: number | null;
+    image?: string | null;
+};
+
 export type ServiceCategory = {
     _id: string;
     name: string;
@@ -34,6 +44,7 @@ export type ServiceCategory = {
     description?: string | null;
     image?: string | null;
     displayOrder?: number;
+    serviceTypes?: ServiceTypeByCategory[];
 };
 
 export async function getServiceCategories(limit = 8): Promise<ServiceCategory[]> {
@@ -93,7 +104,8 @@ export async function getAboutContent(): Promise<{ ourStory: string; values: Our
 export async function getServiceCategoryBySlug(slug: string): Promise<ServiceCategory | null> {
     const { data } = await AxiosHelper.getData(`/service-categories/${slug}`);
     if (data.status && data.data && !Array.isArray(data.data)) {
-        return data.data as ServiceCategory;
+        const row = data.data as ServiceCategory;
+        return { ...row, serviceTypes: Array.isArray(row.serviceTypes) ? row.serviceTypes : [] };
     }
     return null;
 }

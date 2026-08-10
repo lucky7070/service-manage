@@ -222,7 +222,7 @@ const open = [
     req("General settings", "GET", "/general-settings"),
     req("Service categories list", "GET", "/service-categories-list?query=&limit=20"),
     req("Service categories (home)", "GET", "/service-categories-home"),
-    req("Service category by slug", "GET", "/service-categories/plumbing"),
+    req("Service category by slug (includes serviceTypes)", "GET", "/service-categories/plumbing"),
     req("List providers by city + category slug", "GET", "/service-providers/jodhpur/electrician?pageNo=1&limit=12&query=&areaIds=", {
         description: "Path segments are **city slug** and **service category slug** (lowercase). Optional **`areaIds`** (comma-separated Area ObjectIds) filters providers serving those areas; omit to list all in the city.",
     }),
