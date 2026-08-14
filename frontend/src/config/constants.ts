@@ -279,7 +279,7 @@ export const HOME_CTA_BENEFITS = [
     "24/7 Customer Support",
 ] as const;
 
-export const HOME_CTA_SOCIAL_PROOF = `${PLATFORM_MARKETING.happyCustomersFormatted} homeowners trust HomeServe Pro for their home service needs`;
+export const HOME_CTA_SOCIAL_PROOF = `${PLATFORM_MARKETING.happyCustomersFormatted} homeowners trust Serva Work for their home service needs`;
 
 export type HomeHowItWorksStep = {
     icon: LucideIcon;
