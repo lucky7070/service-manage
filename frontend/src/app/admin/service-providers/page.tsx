@@ -9,7 +9,7 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import AdminActionsDropdown from "@/components/admin/AdminActionsDropdown";
-import { CircleCheckBig, CreditCard, ImageIcon, Images, MapPin, Pencil, Plus, Trash2, Wrench} from "lucide-react";
+import { CircleCheckBig, CreditCard, ImageIcon, Images, MapPin, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
@@ -56,6 +56,7 @@ type ServiceProvider = {
     isActive?: boolean;
     createdAt?: string;
     currentSubscription?: string;
+    referredCount: number;
 };
 
 type ServiceProviderRecord = {
@@ -65,10 +66,10 @@ type ServiceProviderRecord = {
     pagination: number[];
 };
 
-type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId";
+type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId" | "referredCount" | "isFeatured" | "isVerified" | "currentSubscription";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", areaIds: [], serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, policeVerification: null, profileStatus: "pending", rejectionReason: "", isFeatured: false };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", areaIds: [], serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, policeVerification: null, profileStatus: "pending", rejectionReason: "", isFeatured: false, referredCount: 0 };
 
 const statusValidationSchema = Yup.object().shape({
     profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
@@ -252,6 +253,7 @@ export default function AdminServiceProvidersPage() {
             panCardDocument: data.panCardDocument || null,
             aadharDocument: data.aadharDocument || null,
             policeVerification: data.policeVerification || null,
+            referredCount: data.referredCount ?? 0,
         });
 
         setCity({ value: String(data.cityId ?? ""), label: String(data.cityName ?? "") });
@@ -366,9 +368,18 @@ export default function AdminServiceProvidersPage() {
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("profileStatus")} name="Profile status" active={param.sortBy === "profileStatus"} sortOrder={param.sortOrder} />
                                 </th>
-                                <th className="px-3 py-2">Current subscription</th>
-                                <th className="px-3 py-2">Featured</th>
-                                <th className="px-3 py-2">Verified</th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("currentSubscription")} name="Current subscription" active={param.sortBy === "currentSubscription"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("referredCount")} name="Referred" active={param.sortBy === "referredCount"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("isFeatured")} name="Featured" active={param.sortBy === "isFeatured"} sortOrder={param.sortOrder} />
+                                </th>
+                                <th className="px-3 py-2">
+                                    <AdminTableHeader onClick={() => onSort("isVerified")} name="Verified" active={param.sortBy === "isVerified"} sortOrder={param.sortOrder} />
+                                </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("createdAt")} name="Created" active={param.sortBy === "createdAt"} sortOrder={param.sortOrder} />
                                 </th>
@@ -419,6 +430,15 @@ export default function AdminServiceProvidersPage() {
                                     </td>
                                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
                                         <p className="">{row.currentSubscription ? <Link className="text-indigo-600 dark:text-indigo-400 font-semibold" href={`/admin/service-providers/${row._id}/subscriptions`} target="_blank">{row.currentSubscription}</Link> : "—"}</p>
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                        {(row.referredCount ?? 0) > 0 ? (
+                                            <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                                {row.referredCount}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-slate-400">—</span>
+                                        )}
                                     </td>
                                     <td className="px-3 py-2">
                                         <Badge variant={row.isFeatured ? "success" : "secondary"} size="sm">
