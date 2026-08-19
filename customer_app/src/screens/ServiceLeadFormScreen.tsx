@@ -1,8 +1,8 @@
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Formik, FormikErrors } from "formik";
 import * as Yup from "yup";
-import { useRoute, type RouteProp } from "@react-navigation/native";
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect, useRoute, type RouteProp } from "@react-navigation/native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createServiceLead, fetchServiceTypesByCategory, type AddressRow } from "../api";
 import AddressPicker from "../components/form/AddressPicker";
 import DateTimeField from "../components/form/DateTimeField";
@@ -40,6 +40,26 @@ export default function ServiceLeadFormScreen() {
     const [loadingMeta, setLoadingMeta] = useState(true);
     const [services, setServices] = useState<Array<{ id: string; name: string; description?: string | null; price?: number | null; estimatedTimeMinutes?: number | null }>>([]);
     const [addresses, setAddresses] = useState<AddressRow[]>([]);
+    const [addressReloadKey, setAddressReloadKey] = useState(0);
+    const returningFromAddressFormRef = useRef(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            if (returningFromAddressFormRef.current) {
+                returningFromAddressFormRef.current = false;
+                setAddressReloadKey((key) => key + 1);
+            }
+        }, [])
+    );
+
+    const openAddAddress = useCallback(() => {
+        returningFromAddressFormRef.current = true;
+        navigation.navigate("AddressForm", {});
+    }, [navigation]);
+
+    const handleAddressesLoaded = useCallback((rows: AddressRow[]) => {
+        setAddresses(rows);
+    }, []);
 
     const initialServiceTypeIds = useMemo(() => preselectedServiceTypeIds.filter(Boolean), [preselectedServiceTypeIds]);
     const selectedServiceLabels = useMemo(() => {
@@ -189,9 +209,10 @@ export default function ServiceLeadFormScreen() {
                                     <AddressPicker
                                         value={values.addressId}
                                         onChange={(addressId) => void setFieldValue("addressId", addressId)}
-                                        onAddressesLoaded={setAddresses}
+                                        onAddressesLoaded={handleAddressesLoaded}
+                                        reloadTrigger={addressReloadKey}
                                         error={touched.addressId && errors.addressId ? errors.addressId : undefined}
-                                        onAddAddress={() => navigation.navigate("AddressForm", {})}
+                                        onAddAddress={openAddAddress}
                                     />
 
                                     <Textarea
