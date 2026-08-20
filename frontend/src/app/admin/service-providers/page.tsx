@@ -9,7 +9,7 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import AdminActionsDropdown from "@/components/admin/AdminActionsDropdown";
-import { CircleCheckBig, CreditCard, ImageIcon, Images, MapPin, Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import { CircleCheckBig, CreditCard, DownloadIcon, ImageIcon, Images, MapPin, Pencil, Plus, QrCode, Trash2, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
@@ -26,6 +26,7 @@ import AxiosHelper from "@/helpers/AxiosHelper";
 import RegistrationDocument from "@/components/admin/RegistrationDocument";
 import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
 import AssignProviderAreasForm from "@/components/admin/AssignProviderAreasForm";
+import axios from "axios";
 
 type ServiceProvider = {
     _id: string;
@@ -48,6 +49,7 @@ type ServiceProvider = {
     isFeatured?: boolean;
 
     cityName?: string;
+    slug?: string;
     areaIds: string[];
     serviceCategoryName?: string;
 
@@ -119,7 +121,7 @@ export default function AdminServiceProvidersPage() {
     const searchParams = useSearchParams();
     const franchiseFromUrl = String(searchParams.get("franchise") || "").trim();
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
-    const [open, setOpen] = useState<null | "add" | "edit" | "status" | "areas">(null);
+    const [open, setOpen] = useState<null | "add" | "edit" | "status" | "areas" | "qr-code">(null);
     const [data, setData] = useState<ServiceProviderRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; franchise: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "", franchise: franchiseFromUrl });
     const [initialValues, setInitialValues] = useState<ServiceProvider>(INITIAL_VALUES);
@@ -276,6 +278,11 @@ export default function AdminServiceProvidersPage() {
         setAreasProvider(row);
         setAreasInitialValues({ _id: String(row._id), areaIds: ids });
         setOpen("areas");
+    };
+
+    const openQrModal = (row: ServiceProvider) => {
+        setInitialValues(row);
+        setOpen("qr-code");
     };
 
     const closeAreasModal = () => {
@@ -460,6 +467,13 @@ export default function AdminServiceProvidersPage() {
                                                     icon: Images,
                                                     href: `/admin/service-providers/${row._id}/images`,
                                                     permissionId: 378,
+                                                },
+                                                {
+                                                    key: "qr-code",
+                                                    label: "QR Code",
+                                                    icon: QrCode,
+                                                    permissionId: 378,
+                                                    onClick: () => openQrModal(row),
                                                 },
                                                 {
                                                     key: "services",
@@ -717,6 +731,57 @@ export default function AdminServiceProvidersPage() {
                     }}
                     initialValues={areasInitialValues}
                 />
+            </Modal>
+
+            <Modal
+                show={open === "qr-code"}
+                onClose={() => setOpen(null)}
+                title="QR Code"
+                subTitle="QR code for the service provider"
+                size="md"
+                scrollable
+            >
+                <div className="space-y-4">
+                    <div className="rounded-lg border border-indigo-100 p-3 text-sm dark:border-slate-700">
+                        <div className="flex items-center justify-end mb-2">
+                            <Button type="button" variant="primary" size="sm" onClick={async () => {
+                                try {
+                                    const url = `https://api.qrserver.com/v1/create-qr-code`;
+                                    const response = await axios.get(url, {
+                                        responseType: "blob",
+                                        params: {
+                                            data: `https://servawork.co.in/book/${initialValues.slug}`,
+                                            size: "1000x1000",
+                                            format: "jpeg",
+                                            ecc: "L",
+                                            qzone: 1,
+                                            margin: 30
+                                        },
+                                    });
+
+                                    const blobUrl = window.URL.createObjectURL(response.data);
+                                    const link = document.createElement("a");
+                                    link.href = blobUrl;
+                                    link.download = `QR-CODE-${initialValues.userId || "USER"}.jpeg`;
+                                    document.body.appendChild(link);
+                                    link.click();
+
+                                    link.remove();
+                                    window.URL.revokeObjectURL(blobUrl);
+                                    toast.success("QR Code downloaded successfully.");
+                                } catch {
+                                    toast.error("QR download failed.");
+                                }
+                            }}> <DownloadIcon className="w-4 h-4" /> Download QR Code</Button>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg">
+                            <Image
+                                className="w-full h-full object-cover aspect-square"
+                                src={`https://api.qrserver.com/v1/create-qr-code?data=https://servawork.co.in/book/${initialValues.slug}&size=1000x1000&qzone=1`}
+                                alt="QR Code" />
+                        </div>
+                    </div>
+                </div>
             </Modal>
 
             <Modal
