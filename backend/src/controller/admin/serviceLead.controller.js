@@ -27,6 +27,7 @@ export const listServiceLeads = async (req, res) => {
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
             { $lookup: { from: "serviceproviders", localField: "assignedProviderId", foreignField: "_id", as: "provider" } },
+            { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceTypes", pipeline: [{ $match: { deletedAt: null, isActive: true } }, { $project: { _id: 1, name: 1, description: 1 } }] } },
             {
                 $project: {
                     leadNumber: 1,
@@ -38,6 +39,7 @@ export const listServiceLeads = async (req, res) => {
                     createdAt: 1,
                     cityId: 1,
                     serviceCategoryId: 1,
+                    serviceTypes: 1,
                     customerName: { $ifNull: [{ $first: "$customer.name" }, ""] },
                     customerMobile: { $ifNull: [{ $first: "$customer.mobile" }, ""] },
                     customerEmail: { $ifNull: [{ $first: "$customer.email" }, ""] },

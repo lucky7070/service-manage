@@ -28,6 +28,7 @@ type LeadRow = {
     cityName: string;
     serviceCategoryName: string;
     status: string;
+    serviceTypes: Array<{ _id: string; name: string; description: string }>;
     scheduledTime?: string;
     issueDescription?: string;
     assignedProviderName?: string;
@@ -183,7 +184,7 @@ export default function AdminServiceLeadsPage() {
                     <Select
                         value={param.status}
                         onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, status: e.target.value }))}
-                        className="max-w-[200px]"
+                        className="max-w-50"
                     >
                         <Option value="">All statuses</Option>
                         {statuses.map((s) => <Option key={s} value={s}>{s}</Option>)}
@@ -282,6 +283,15 @@ export default function AdminServiceLeadsPage() {
                 disableBackdropClose={assigning}
             >
                 <div className="space-y-4">
+                    <div className="">
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Service Types Required</h4>
+                        <ul className="list-disc list-inside text-sm text-slate-500 dark:text-slate-400">
+                            {(assignLead?.serviceTypes ?? []).map((serviceType, i) => (
+                                <li key={serviceType._id}>{i + 1}. {serviceType.name}</li>
+                            ))}
+                        </ul>
+                    </div>
+
                     {loadingProviders ? (
                         <p className="flex items-center gap-2 text-sm text-slate-600">
                             <Loader2 className="h-4 w-4 animate-spin" /> Loading providers…
