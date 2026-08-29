@@ -4,68 +4,78 @@ import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 import moment from "moment";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
+import { applyCreatedAtRange, formatExportDateTime, sendExcelResponse } from "../../helpers/excelExport.js";
+
+const buildServiceLeadListPipeline = (query) => {
+    let { status, sortBy = "createdAt", sortOrder = "desc" } = query;
+    const allowedSort = ["leadNumber", "customerName", "customerMobile", "cityName", "serviceCategoryName", "status", "scheduledTime", "createdAt", "assignedAt"];
+
+    sortBy = allowedSort.includes(String(sortBy)) ? String(sortBy) : "createdAt";
+    sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
+
+    const filter = { deletedAt: null };
+    if (status && ["open", "assigned", "cancelled"].includes(status)) filter.status = status;
+    applyCreatedAtRange(filter, query.dateFrom, query.dateTo);
+
+    const searchText = String(query.query || "").trim();
+    const q = searchText ? escapeRegex(searchText) : "";
+
+    const pipeline = [
+        { $match: filter },
+        { $lookup: { from: "customers", localField: "customerId", foreignField: "_id", as: "customer" } },
+        { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+        { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+        { $lookup: { from: "serviceproviders", localField: "assignedProviderId", foreignField: "_id", as: "provider" } },
+        { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceTypes", pipeline: [{ $match: { deletedAt: null, isActive: true } }, { $project: { _id: 1, name: 1, description: 1 } }] } },
+        {
+            $project: {
+                leadNumber: 1,
+                status: 1,
+                scheduledTime: 1,
+                issueDescription: 1,
+                bookingId: 1,
+                assignedAt: 1,
+                createdAt: 1,
+                cityId: 1,
+                serviceCategoryId: 1,
+                serviceTypes: 1,
+                customerName: { $ifNull: [{ $first: "$customer.name" }, ""] },
+                customerMobile: { $ifNull: [{ $first: "$customer.mobile" }, ""] },
+                customerEmail: { $ifNull: [{ $first: "$customer.email" }, ""] },
+                cityName: { $ifNull: [{ $first: "$city.name" }, ""] },
+                serviceCategoryName: { $ifNull: [{ $first: "$category.name" }, ""] },
+                assignedProviderName: { $ifNull: [{ $first: "$provider.name" }, ""] }
+            }
+        }
+    ];
+
+    if (q) {
+        pipeline.push({
+            $match: {
+                $or: [
+                    { leadNumber: { $regex: q, $options: "i" } },
+                    { issueDescription: { $regex: q, $options: "i" } },
+                    { customerName: { $regex: q, $options: "i" } },
+                    { customerMobile: { $regex: q, $options: "i" } },
+                    { customerEmail: { $regex: q, $options: "i" } },
+                    { cityName: { $regex: q, $options: "i" } },
+                    { serviceCategoryName: { $regex: q, $options: "i" } },
+                    { assignedProviderName: { $regex: q, $options: "i" } }
+                ]
+            }
+        });
+    }
+
+    return { pipeline, sortBy, sortOrder };
+};
 
 export const listServiceLeads = async (req, res) => {
     try {
-        let { limit, pageNo, query, status, sortBy = "createdAt", sortOrder = "desc" } = req.query;
-        const allowedSort = ["leadNumber", "customerName", "customerMobile", "cityName", "serviceCategoryName", "status", "scheduledTime", "createdAt", "assignedAt"];
+        let { limit, pageNo } = req.query;
+        const { pipeline, sortBy, sortOrder } = buildServiceLeadListPipeline(req.query);
 
         limit = limit ? parseInt(limit, 10) : 10;
         pageNo = pageNo ? parseInt(pageNo, 10) : 1;
-        sortBy = allowedSort.includes(String(sortBy)) ? String(sortBy) : "createdAt";
-        sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
-
-        const filter = { deletedAt: null };
-        if (status && ["open", "assigned", "cancelled"].includes(status)) filter.status = status;
-
-        const searchText = String(query || "").trim();
-        const q = searchText ? escapeRegex(searchText) : "";
-
-        const pipeline = [
-            { $match: filter },
-            { $lookup: { from: "customers", localField: "customerId", foreignField: "_id", as: "customer" } },
-            { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
-            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
-            { $lookup: { from: "serviceproviders", localField: "assignedProviderId", foreignField: "_id", as: "provider" } },
-            { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceTypes", pipeline: [{ $match: { deletedAt: null, isActive: true } }, { $project: { _id: 1, name: 1, description: 1 } }] } },
-            {
-                $project: {
-                    leadNumber: 1,
-                    status: 1,
-                    scheduledTime: 1,
-                    issueDescription: 1,
-                    bookingId: 1,
-                    assignedAt: 1,
-                    createdAt: 1,
-                    cityId: 1,
-                    serviceCategoryId: 1,
-                    serviceTypes: 1,
-                    customerName: { $ifNull: [{ $first: "$customer.name" }, ""] },
-                    customerMobile: { $ifNull: [{ $first: "$customer.mobile" }, ""] },
-                    customerEmail: { $ifNull: [{ $first: "$customer.email" }, ""] },
-                    cityName: { $ifNull: [{ $first: "$city.name" }, ""] },
-                    serviceCategoryName: { $ifNull: [{ $first: "$category.name" }, ""] },
-                    assignedProviderName: { $ifNull: [{ $first: "$provider.name" }, ""] }
-                }
-            }
-        ];
-
-        if (q) {
-            pipeline.push({
-                $match: {
-                    $or: [
-                        { leadNumber: { $regex: q, $options: "i" } },
-                        { issueDescription: { $regex: q, $options: "i" } },
-                        { customerName: { $regex: q, $options: "i" } },
-                        { customerMobile: { $regex: q, $options: "i" } },
-                        { customerEmail: { $regex: q, $options: "i" } },
-                        { cityName: { $regex: q, $options: "i" } },
-                        { serviceCategoryName: { $regex: q, $options: "i" } },
-                        { assignedProviderName: { $regex: q, $options: "i" } }
-                    ]
-                }
-            });
-        }
 
         const [record, totalCount] = await Promise.all([
             ServiceLead.aggregate([...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }, { $skip: (pageNo - 1) * limit }, { $limit: limit }]),
@@ -75,6 +85,52 @@ export const listServiceLeads = async (req, res) => {
         const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
         if (record.length === 0) return res.datatableNoRecords();
         return res.pagination(record, total_count, limit, pageNo);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const exportServiceLeads = async (req, res) => {
+    try {
+        const { pipeline, sortBy, sortOrder } = buildServiceLeadListPipeline(req.query);
+        const results = await ServiceLead.aggregate([...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }]);
+
+        const rows = results.map((row) => ({
+            leadNumber: row.leadNumber || "",
+            customerName: row.customerName || "",
+            customerMobile: row.customerMobile || "",
+            customerEmail: row.customerEmail || "",
+            cityName: row.cityName || "",
+            serviceCategoryName: row.serviceCategoryName || "",
+            serviceTypes: Array.isArray(row.serviceTypes) ? row.serviceTypes.map((item) => item.name).filter(Boolean).join(", ") : "",
+            status: row.status || "",
+            scheduledTime: formatExportDateTime(row.scheduledTime),
+            assignedProviderName: row.assignedProviderName || "",
+            assignedAt: formatExportDateTime(row.assignedAt),
+            issueDescription: row.issueDescription || "",
+            createdAt: formatExportDateTime(row.createdAt)
+        }));
+
+        return sendExcelResponse(res, {
+            filename: `booking-leads-${moment().format("YYYY-MM-DD")}.xlsx`,
+            sheetName: "Booking Leads",
+            columns: [
+                { header: "Lead #", key: "leadNumber", width: 16 },
+                { header: "Customer", key: "customerName", width: 22 },
+                { header: "Customer Mobile", key: "customerMobile", width: 14 },
+                { header: "Customer Email", key: "customerEmail", width: 28 },
+                { header: "City", key: "cityName", width: 16 },
+                { header: "Service Category", key: "serviceCategoryName", width: 20 },
+                { header: "Service Types", key: "serviceTypes", width: 28 },
+                { header: "Status", key: "status", width: 12 },
+                { header: "Scheduled Time", key: "scheduledTime", width: 22 },
+                { header: "Assigned Provider", key: "assignedProviderName", width: 22 },
+                { header: "Assigned At", key: "assignedAt", width: 22 },
+                { header: "Issue Description", key: "issueDescription", width: 32 },
+                { header: "Created At", key: "createdAt", width: 22 }
+            ],
+            rows
+        });
     } catch (error) {
         return res.someThingWentWrong(error);
     }

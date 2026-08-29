@@ -3,6 +3,55 @@ import { Customer } from "../../models/index.js";
 import { escapeRegex, ObjectId, toBoolean } from "../../helpers/utils.js";
 import { deleteFile } from "../../libraries/storage.js";
 import { getSettings } from "../../helpers/database.js";
+import { formatExportDate, formatExportDateTime, sendExcelResponse } from "../../helpers/excelExport.js";
+
+const buildCustomerListPipeline = (query) => {
+    let { query: searchQuery, status, sortBy = "createdAt", sortOrder = "desc" } = query;
+    sortBy = ["name", "mobile", "email", "dateOfBirth", "status", "createdAt", "userId", "referredCount"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
+    sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
+
+    const filter = { deletedAt: null };
+    if (searchQuery) {
+        const q = escapeRegex(String(searchQuery));
+        filter.$or = [
+            { name: { $regex: q, $options: "i" } },
+            { mobile: { $regex: q, $options: "i" } },
+            { email: { $regex: q, $options: "i" } },
+            { userId: { $regex: q, $options: "i" } }
+        ];
+    }
+    if (status !== null && status !== undefined && status !== "") {
+        filter.isActive = Number(status) === 1;
+    }
+
+    const pipeline = [
+        { $match: filter },
+        {
+            $lookup: {
+                from: "customers",
+                localField: "_id",
+                foreignField: "referredBy",
+                as: "referredCustomers",
+                pipeline: [{ $match: { deletedAt: null } }, { $count: "n" }]
+            }
+        },
+        {
+            $project: {
+                userId: 1,
+                name: 1,
+                mobile: 1,
+                email: 1,
+                dateOfBirth: 1,
+                image: 1,
+                status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
+                referredCount: { $ifNull: [{ $first: "$referredCustomers.n" }, 0] },
+                createdAt: 1
+            }
+        }
+    ];
+
+    return { pipeline, sortBy, sortOrder };
+};
 
 export const createCustomer = async (req, res) => {
     try {
@@ -124,42 +173,11 @@ export const deleteCustomer = async (req, res) => {
 
 export const getCustomer = async (req, res) => {
     try {
-        let { limit, pageNo, query, status, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+        let { limit, pageNo } = req.query;
+        const { pipeline, sortBy, sortOrder } = buildCustomerListPipeline(req.query);
 
         limit = limit ? parseInt(limit) : 10;
         pageNo = pageNo ? parseInt(pageNo) : 1;
-        sortBy = ["name", "mobile", "email", "dateOfBirth", "status", "createdAt", "userId"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
-        sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
-
-        const filter = { deletedAt: null };
-        if (query) {
-            const q = escapeRegex(String(query));
-            filter.$or = [
-                { name: { $regex: q, $options: "i" } },
-                { mobile: { $regex: q, $options: "i" } },
-                { email: { $regex: q, $options: "i" } },
-                { userId: { $regex: q, $options: "i" } }
-            ];
-        }
-        if (status !== null && status !== undefined && status !== "") {
-            filter.isActive = Number(status) === 1;
-        }
-
-        const pipeline = [
-            { $match: filter },
-            {
-                $project: {
-                    userId: 1,
-                    name: 1,
-                    mobile: 1,
-                    email: 1,
-                    dateOfBirth: 1,
-                    image: 1,
-                    status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
-                    createdAt: 1
-                }
-            }
-        ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];
         const resultsPipeline = [...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }, { $skip: (pageNo - 1) * limit }, { $limit: limit }];
@@ -171,6 +189,42 @@ export const getCustomer = async (req, res) => {
             return res.pagination(results, total_count, limit, pageNo);
         }
         return res.datatableNoRecords();
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const exportCustomers = async (req, res) => {
+    try {
+        const { pipeline, sortBy, sortOrder } = buildCustomerListPipeline(req.query);
+        const results = await Customer.aggregate([...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }]);
+
+        const rows = results.map((row) => ({
+            userId: row.userId || "",
+            name: row.name || "",
+            mobile: row.mobile || "",
+            email: row.email || "",
+            dateOfBirth: formatExportDate(row.dateOfBirth),
+            status: Number(row.status) === 1 ? "Active" : "Inactive",
+            referredCount: row.referredCount ?? 0,
+            createdAt: formatExportDateTime(row.createdAt)
+        }));
+
+        return sendExcelResponse(res, {
+            filename: `customers-${moment().format("YYYY-MM-DD")}.xlsx`,
+            sheetName: "Customers",
+            columns: [
+                { header: "User ID", key: "userId", width: 14 },
+                { header: "Name", key: "name", width: 24 },
+                { header: "Mobile", key: "mobile", width: 14 },
+                { header: "Email", key: "email", width: 28 },
+                { header: "Date of Birth", key: "dateOfBirth", width: 16 },
+                { header: "Status", key: "status", width: 12 },
+                { header: "Referred Count", key: "referredCount", width: 14 },
+                { header: "Created At", key: "createdAt", width: 22 }
+            ],
+            rows
+        });
     } catch (error) {
         return res.someThingWentWrong(error);
     }

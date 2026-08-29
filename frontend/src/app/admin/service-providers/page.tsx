@@ -21,6 +21,7 @@ import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_ERROR_MESSAGE, PHONE_REGEXP, ProfileStatus, SERVICE_PROVIDER_PROFILE_STATUSES } from "@/config";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AdminExportButton from "@/components/admin/AdminExportButton";
 import AsyncSelect from "@/components/ui/AsyncSelect";
 import AxiosHelper from "@/helpers/AxiosHelper";
 import RegistrationDocument from "@/components/admin/RegistrationDocument";
@@ -310,6 +311,7 @@ export default function AdminServiceProvidersPage() {
                 subtitle="Onboard providers with KYC-style fields. Profile status is managed here; verification and live location are system-controlled."
                 action={
                     <div className="flex flex-wrap items-center gap-2 justify-end min-w-80">
+                        <AdminExportButton url="/service-providers/export" params={param} filenamePrefix="service-providers" />
                         <PermissionBlock permission_id={374}>
                             <Link href="/admin/service-providers/deleted">
                                 <Button type="button" variant="secondary" size="md">

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer } from "../../controller/admin/customer.controller.js";
+import { getCustomer, createCustomer, updateCustomer, deleteCustomer, getSingleCustomer, exportCustomers } from "../../controller/admin/customer.controller.js";
 import { createCustomerAddress, deleteCustomerAddress, getCustomerAddresses, updateCustomerAddress } from "../../controller/admin/customerAddress.controller.js";
 import { createCustomerLedgerEntry, getCustomerLedger } from "../../controller/admin/ledger.controller.js";
 import { validator } from "../../libraries/validator.js";
@@ -10,6 +10,7 @@ const router = Router();
 router.post("/customers", customerStorage.single("image"), validator("customer"), createCustomer);
 router.put("/customers/:id", customerStorage.single("image"), validator("customer"), updateCustomer);
 router.delete("/customers/:id", deleteCustomer);
+router.get("/customers/export", exportCustomers);
 router.get("/customers/:id", getSingleCustomer);
 router.get("/customers", getCustomer);
 router.get("/customers/:id/addresses", getCustomerAddresses);

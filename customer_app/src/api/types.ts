@@ -195,6 +195,21 @@ export type ServiceLeadListData = {
     current_page: number;
 };
 
+export type ReferredCustomerRow = {
+    _id: string;
+    userId?: string;
+    name: string;
+    status?: number;
+    createdAt?: string;
+};
+
+export type ReferredCustomerListData = {
+    record: ReferredCustomerRow[];
+    count: number;
+    totalPages: number;
+    current_page: number;
+};
+
 export type CreateServiceLeadPayload = {
     cityId: string;
     serviceCategoryId: string;
@@ -342,6 +357,7 @@ export type AccountMenuRoute =
     | "ServiceLeads"
     | "Ledger"
     | "ReferEarn"
+    | "ReferredCustomers"
     | "Addresses"
     | "Profile"
     | "ContactUs"

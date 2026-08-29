@@ -4,6 +4,76 @@ import { escapeRegex, ObjectId, toBoolean } from "../../helpers/utils.js";
 import { resolveAreaIdsForCity } from "../../helpers/providerAreas.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
+import { formatExportDateTime, sendExcelResponse } from "../../helpers/excelExport.js";
+
+const buildServiceProviderListPipeline = (query) => {
+    let { query: searchQuery, profileStatus, cityId, serviceCategoryId, franchise, franchiseId, deleted, sortBy = "createdAt", sortOrder = "desc" } = query;
+
+    const showDeleted = Number(deleted) === 1 || String(deleted) === "true";
+    const allowedSort = showDeleted ? ["name", "mobile", "email", "userId", "profileStatus", "createdAt", "deletedAt"] : ["name", "mobile", "email", "userId", "profileStatus", "createdAt", "currentSubscription", "referredCount", "isFeatured", "isVerified"];
+    sortBy = allowedSort.includes(String(sortBy)) ? String(sortBy) : (showDeleted ? "deletedAt" : "createdAt");
+    sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
+
+    const filter = showDeleted ? { deletedAt: { $exists: true, $ne: null } } : { deletedAt: null };
+    if (searchQuery) {
+        const q = escapeRegex(String(searchQuery));
+        filter.$or = [
+            { name: { $regex: q, $options: "i" } },
+            { mobile: { $regex: q, $options: "i" } },
+            { email: { $regex: q, $options: "i" } },
+            { userId: { $regex: q, $options: "i" } },
+            { aadharNumber: { $regex: q, $options: "i" } },
+            { panCardNumber: { $regex: q, $options: "i" } }
+        ];
+    }
+
+    if (profileStatus !== null && profileStatus !== undefined && profileStatus !== "") {
+        if (SERVICE_PROVIDER_PROFILE_STATUSES.includes(String(profileStatus))) {
+            filter.profileStatus = String(profileStatus);
+        }
+    }
+
+    if (cityId !== null && cityId !== undefined && cityId !== "") {
+        filter.cityId = ObjectId(cityId);
+    }
+
+    if (serviceCategoryId !== null && serviceCategoryId !== undefined && serviceCategoryId !== "") {
+        filter.serviceCategoryId = ObjectId(serviceCategoryId);
+    }
+
+    const franchiseFilterId = ObjectId(franchise || franchiseId);
+    if (franchiseFilterId) filter.franchiseId = franchiseFilterId;
+
+    const pipeline = [
+        { $match: filter },
+        { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
+        { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
+        { $unwind: { path: "$city", preserveNullAndEmptyArrays: showDeleted } },
+        { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [
+                    { $match: getActiveSubscriptionFilter() },
+                    { $sort: { createdAt: -1 } },
+                    { $limit: 1 },
+                ]
+            }
+        },
+        { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
+        {
+            $lookup: {
+                from: "serviceproviders",
+                localField: "_id",
+                foreignField: "referredBy",
+                as: "referredProviders",
+                pipeline: [{ $match: { deletedAt: null } }, { $count: "n" }]
+            }
+        },
+        { $project: { userId: 1, slug: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, referredCount: { $ifNull: [{ $first: "$referredProviders.n" }, 0] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1, deletedAt: 1 } }
+    ];
+
+    return { pipeline, sortBy, sortOrder };
+};
 
 export const createServiceProvider = async (req, res) => {
     try {
@@ -158,72 +228,11 @@ export const deleteServiceProvider = async (req, res) => {
 
 export const getServiceProvider = async (req, res) => {
     try {
-        let { limit, pageNo, query, profileStatus, cityId, serviceCategoryId, franchise, franchiseId, deleted, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+        let { limit, pageNo } = req.query;
+        const { pipeline, sortBy, sortOrder } = buildServiceProviderListPipeline(req.query);
 
-        const showDeleted = Number(deleted) === 1 || String(deleted) === "true";
         limit = limit ? parseInt(limit, 10) : 10;
         pageNo = pageNo ? parseInt(pageNo, 10) : 1;
-        const allowedSort = showDeleted ? ["name", "mobile", "email", "userId", "profileStatus", "createdAt", "deletedAt"] : ["name", "mobile", "email", "userId", "profileStatus", "createdAt", "currentSubscription", "referredCount", "isFeatured", "isVerified"];
-        sortBy = allowedSort.includes(String(sortBy)) ? String(sortBy) : (showDeleted ? "deletedAt" : "createdAt");
-        sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
-
-        const filter = showDeleted ? { deletedAt: { $exists: true, $ne: null } } : { deletedAt: null };
-        if (query) {
-            const q = escapeRegex(String(query));
-            filter.$or = [
-                { name: { $regex: q, $options: "i" } },
-                { mobile: { $regex: q, $options: "i" } },
-                { email: { $regex: q, $options: "i" } },
-                { userId: { $regex: q, $options: "i" } },
-                { aadharNumber: { $regex: q, $options: "i" } },
-                { panCardNumber: { $regex: q, $options: "i" } }
-            ];
-        }
-
-        if (profileStatus !== null && profileStatus !== undefined && profileStatus !== "") {
-            if (SERVICE_PROVIDER_PROFILE_STATUSES.includes(String(profileStatus))) {
-                filter.profileStatus = String(profileStatus);
-            }
-        }
-
-        if (cityId !== null && cityId !== undefined && cityId !== "") {
-            filter.cityId = ObjectId(cityId);
-        }
-
-        if (serviceCategoryId !== null && serviceCategoryId !== undefined && serviceCategoryId !== "") {
-            filter.serviceCategoryId = ObjectId(serviceCategoryId);
-        }
-
-        const franchiseFilterId = ObjectId(franchise || franchiseId);
-        if (franchiseFilterId) filter.franchiseId = franchiseFilterId;
-
-        const pipeline = [
-            { $match: filter },
-            { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
-            { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
-            { $unwind: { path: "$city", preserveNullAndEmptyArrays: showDeleted } },
-            { $unwind: { path: "$serviceCategory", preserveNullAndEmptyArrays: true } },
-            {
-                $lookup: {
-                    from: "assignedsubscriptions", localField: "_id", foreignField: "providerId", as: "subscription", pipeline: [
-                        { $match: getActiveSubscriptionFilter() },
-                        { $sort: { createdAt: -1 } },
-                        { $limit: 1 },
-                    ]
-                }
-            },
-            { $unwind: { path: "$subscription", preserveNullAndEmptyArrays: true } },
-            {
-                $lookup: {
-                    from: "serviceproviders",
-                    localField: "_id",
-                    foreignField: "referredBy",
-                    as: "referredProviders",
-                    pipeline: [{ $match: { deletedAt: null } }, { $count: "n" }]
-                }
-            },
-            { $project: { userId: 1, slug: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, referredCount: { $ifNull: [{ $first: "$referredProviders.n" }, 0] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1, deletedAt: 1 } }
-        ];
 
         const totalCountPipeline = [...pipeline, { $count: "total_count" }];
         const resultsPipeline = [...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }, { $skip: (pageNo - 1) * limit }, { $limit: limit }];
@@ -235,6 +244,58 @@ export const getServiceProvider = async (req, res) => {
             return res.pagination(results, total_count, limit, pageNo);
         }
         return res.datatableNoRecords();
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const exportServiceProviders = async (req, res) => {
+    try {
+        const { pipeline, sortBy, sortOrder } = buildServiceProviderListPipeline(req.query);
+        const results = await ServiceProvider.aggregate([...pipeline, { $sort: { [sortBy]: sortOrder === "asc" ? 1 : -1 } }]);
+
+        const rows = results.map((row) => ({
+            userId: row.userId || "",
+            name: row.name || "",
+            mobile: row.mobile || "",
+            email: row.email || "",
+            cityName: row.cityName || "",
+            serviceCategoryName: row.serviceCategoryName || "",
+            panCardNumber: row.panCardNumber || "",
+            aadharNumber: row.aadharNumber || "",
+            profileStatus: row.profileStatus || "",
+            isVerified: row.isVerified ? "Yes" : "No",
+            isFeatured: row.isFeatured ? "Yes" : "No",
+            experienceYears: row.experienceYears ?? "",
+            currentSubscription: row.currentSubscription || "",
+            referredCount: row.referredCount ?? 0,
+            registerFrom: row.registerFrom || "",
+            createdAt: formatExportDateTime(row.createdAt)
+        }));
+
+        return sendExcelResponse(res, {
+            filename: `service-providers-${moment().format("YYYY-MM-DD")}.xlsx`,
+            sheetName: "Service Providers",
+            columns: [
+                { header: "User ID", key: "userId", width: 14 },
+                { header: "Name", key: "name", width: 24 },
+                { header: "Mobile", key: "mobile", width: 14 },
+                { header: "Email", key: "email", width: 28 },
+                { header: "City", key: "cityName", width: 16 },
+                { header: "Service Category", key: "serviceCategoryName", width: 20 },
+                { header: "PAN", key: "panCardNumber", width: 16 },
+                { header: "Aadhar", key: "aadharNumber", width: 16 },
+                { header: "Profile Status", key: "profileStatus", width: 14 },
+                { header: "Verified", key: "isVerified", width: 10 },
+                { header: "Featured", key: "isFeatured", width: 10 },
+                { header: "Experience (Years)", key: "experienceYears", width: 16 },
+                { header: "Subscription", key: "currentSubscription", width: 16 },
+                { header: "Referred Count", key: "referredCount", width: 14 },
+                { header: "Registered From", key: "registerFrom", width: 14 },
+                { header: "Created At", key: "createdAt", width: 22 }
+            ],
+            rows
+        });
     } catch (error) {
         return res.someThingWentWrong(error);
     }

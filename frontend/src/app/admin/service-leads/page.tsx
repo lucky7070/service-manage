@@ -9,6 +9,7 @@ import { Ban, Loader2, UserPlus } from "lucide-react";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AdminExportButton from "@/components/admin/AdminExportButton";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminPagination from "@/components/admin/AdminPagination";
 import AdminTableHeader from "@/components/admin/AdminTableHeader";
@@ -16,7 +17,8 @@ import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { getSweetAlertConfig } from "@/helpers/utils";
 import type { SelectOption } from "@/components/ui/AsyncSelect";
 import ReactSelect from "@/components/ui/ReactSelect";
-import { Badge, Button, Input, Label, Modal, Option, Select } from "@/components/ui";
+import { Badge, Button, Label, Modal } from "@/components/ui";
+import RequestFilter from "@/components/admin/RequestFilter";
 
 type LeadRow = {
     _id: string;
@@ -62,7 +64,9 @@ export default function AdminServiceLeadsPage() {
         status: string;
         sortBy: SortBy;
         sortOrder: SortOrder;
-    }>({ limit: 10, pageNo: 1, query: "", status: "", sortBy: "createdAt", sortOrder: "desc" });
+        dateFrom: string;
+        dateTo: string;
+    }>({ limit: 10, pageNo: 1, query: "", status: "", sortBy: "createdAt", sortOrder: "desc", dateFrom: "", dateTo: "" });
 
     const [assignOpen, setAssignOpen] = useState(false);
     const [assignLead, setAssignLead] = useState<LeadRow | null>(null);
@@ -171,25 +175,11 @@ export default function AdminServiceLeadsPage() {
             <AdminPageHeader
                 title="Booking leads"
                 subtitle="Customer requests without a chosen provider. Assign a verified professional to create a booking."
+                action={<AdminExportButton url="/service-leads/export" params={param} filenamePrefix="booking-leads" />}
             />
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
-                <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <Input
-                        value={param.query}
-                        onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        className="max-w-xs"
-                        placeholder="Search lead # or description…"
-                    />
-                    <Select
-                        value={param.status}
-                        onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, status: e.target.value }))}
-                        className="max-w-50"
-                    >
-                        <Option value="">All statuses</Option>
-                        {statuses.map((s) => <Option key={s} value={s}>{s}</Option>)}
-                    </Select>
-                </div>
+                <RequestFilter statuses={statuses} value={param} onUpdate={(next) => setParam((prev) => ({ ...prev, pageNo: 1, ...next }))} />
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">

@@ -6,19 +6,23 @@ import { typography } from "../../theme/colors";
 
 type PageHeroProps = ViewProps & {
     eyebrow?: string;
+    eyebrowRight?: string;
     title: string;
     subtitle?: string;
     footer?: ReactNode;
 };
 
-export default function PageHero({ eyebrow, title, subtitle, footer, style, ...props }: PageHeroProps) {
+export default function PageHero({ eyebrow, eyebrowRight, title, subtitle, footer, style, ...props }: PageHeroProps) {
     return (
         <LinearGradient colors={["#FF8C3A", colors.primary, colors.primaryDark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, style]} {...props}>
             <View style={styles.decorA} />
             <View style={styles.decorB} />
             <View style={styles.decorC} />
             <View style={styles.content}>
-                {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+                {eyebrow ? <View style={styles.eyebrowContainer}>
+                    <Text style={styles.eyebrow}>{eyebrow}</Text>
+                    {eyebrowRight ? <Text style={styles.eyebrowRight}>{eyebrowRight}</Text> : null}
+                </View> : null}
                 <Text style={styles.title}>{title}</Text>
                 {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
                 {footer}
@@ -62,7 +66,9 @@ const styles = StyleSheet.create({
         left: 16,
     },
     content: { gap: 6, zIndex: 1 },
+    eyebrowContainer: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 4 },
     eyebrow: { color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: "600" },
+    eyebrowRight: { color: colors.primary, fontSize: 13, fontWeight: "600", backgroundColor: colors.primaryForeground, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: radius.x2 },
     title: { ...typography.hero, color: colors.white },
     subtitle: { color: "rgba(255,255,255,0.88)", fontSize: 14, lineHeight: 21, maxWidth: "92%" },
 });

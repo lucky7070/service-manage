@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { getBookingDetail, getBookings } from "../../controller/admin/booking.controller.js";
+import { getBookingDetail, getBookings, exportBookings } from "../../controller/admin/booking.controller.js";
 
 const router = Router();
+router.get("/bookings/export", exportBookings);
 router.get("/bookings/:id", getBookingDetail);
 router.get("/bookings", getBookings);
 

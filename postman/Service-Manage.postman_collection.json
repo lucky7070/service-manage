@@ -760,6 +760,21 @@
           }
         },
         {
+          "name": "Referred customers (auth)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{xApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/customer/referred-customers?pageNo=1&limit=10&query=",
+            "description": "Paginated list of customers who registered with the logged-in customer's **`referralCode`** (**`referredBy`**). Search by name or user ID."
+          }
+        },
+        {
           "name": "Addresses (auth)",
           "request": {
             "method": "GET",
@@ -1748,7 +1763,22 @@
                     "type": "text"
                   }
                 ],
-                "url": "{{baseUrl}}/admin/bookings?pageNo=1&limit=10&status=&query="
+                "url": "{{baseUrl}}/admin/bookings?pageNo=1&limit=10&status=&query=&dateFrom=&dateTo="
+              }
+            },
+            {
+              "name": "Export bookings (Excel)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/bookings/export?status=&query=&dateFrom=&dateTo=",
+                "description": "Returns `.xlsx` download. Uses same filters as list (**`status`**, **`query`**, **`dateFrom`**, **`dateTo`** on **`createdAt`**)."
               }
             },
             {
@@ -1781,8 +1811,23 @@
                     "type": "text"
                   }
                 ],
-                "url": "{{baseUrl}}/admin/service-leads?pageNo=1&limit=10&status=&query=&sortBy=createdAt&sortOrder=desc",
-                "description": "**`status`** filter: **`open`** | **`assigned`** | **`cancelled`** (omit for all). Sort fields include **`leadNumber`**, **`customerName`**, **`scheduledTime`**, etc."
+                "url": "{{baseUrl}}/admin/service-leads?pageNo=1&limit=10&status=&query=&sortBy=createdAt&sortOrder=desc&dateFrom=&dateTo=",
+                "description": "**`status`** filter: **`open`** | **`assigned`** | **`cancelled`** (omit for all). Sort fields include **`leadNumber`**, **`customerName`**, **`scheduledTime`**, etc. **`dateFrom`** / **`dateTo`** filter by **`createdAt`**."
+              }
+            },
+            {
+              "name": "Export booking leads (Excel)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-leads/export?status=&query=&sortBy=createdAt&sortOrder=desc&dateFrom=&dateTo=",
+                "description": "Returns `.xlsx` download. Uses same filters as list."
               }
             },
             {
@@ -2305,6 +2350,21 @@
                   }
                 ],
                 "url": "{{baseUrl}}/admin/franchises?pageNo=1&limit=10"
+              }
+            },
+            {
+              "name": "Export franchises (Excel)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/franchises/export?query=&status=&sortBy=createdAt&sortOrder=desc",
+                "description": "Returns `.xlsx` download. Uses same filters as list."
               }
             },
             {
@@ -2985,6 +3045,21 @@
               }
             },
             {
+              "name": "Export customers (Excel)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/customers/export?query=&status=&sortBy=createdAt&sortOrder=desc",
+                "description": "Returns `.xlsx` download. Uses same filters as list."
+              }
+            },
+            {
               "name": "Customer addresses (admin)",
               "request": {
                 "method": "GET",
@@ -3396,6 +3471,21 @@
                   }
                 ],
                 "url": "{{baseUrl}}/admin/service-providers"
+              }
+            },
+            {
+              "name": "Export service providers (Excel)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/service-providers/export?query=&profileStatus=&sortBy=createdAt&sortOrder=desc",
+                "description": "Returns `.xlsx` download. Uses same filters as list."
               }
             },
             {

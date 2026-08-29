@@ -365,6 +365,9 @@ const customer = [
             "Only when booking status is **`completed`**. `quickTags` = array of PredefinedRatingTag ids from **`GET /feedback-rating-tags?tagFor=provider`**. One submission per booking.",
     }),
     req("Ledger (auth)", "GET", "/customer/ledger?pageNo=1&limit=10&paymentType=&query="),
+    req("Referred customers (auth)", "GET", "/customer/referred-customers?pageNo=1&limit=10&query=", {
+        description: "Paginated list of customers who registered with the logged-in customer's **`referralCode`** (**`referredBy`**). Search by name or user ID.",
+    }),
     req("Addresses (auth)", "GET", "/customer/addresses"),
     req("Create address (auth)", "POST", "/customer/addresses", {
         body: {
@@ -630,11 +633,17 @@ const franchise = [
 
 const admin = [
     req("Dashboard stats", "GET", "/admin/dashboard-stats"),
-    req("Bookings list", "GET", "/admin/bookings?pageNo=1&limit=10&status=&query="),
+    req("Bookings list", "GET", "/admin/bookings?pageNo=1&limit=10&status=&query=&dateFrom=&dateTo="),
+    req("Export bookings (Excel)", "GET", "/admin/bookings/export?status=&query=&dateFrom=&dateTo=", {
+        description: "Returns `.xlsx` download. Uses same filters as list (**`status`**, **`query`**, **`dateFrom`**, **`dateTo`** on **`createdAt`**).",
+    }),
     req("Booking detail", "GET", `/admin/bookings/${OID}`),
-    req("Service leads list", "GET", "/admin/service-leads?pageNo=1&limit=10&status=&query=&sortBy=createdAt&sortOrder=desc", {
+    req("Service leads list", "GET", "/admin/service-leads?pageNo=1&limit=10&status=&query=&sortBy=createdAt&sortOrder=desc&dateFrom=&dateTo=", {
         description:
-            "**`status`** filter: **`open`** | **`assigned`** | **`cancelled`** (omit for all). Sort fields include **`leadNumber`**, **`customerName`**, **`scheduledTime`**, etc.",
+            "**`status`** filter: **`open`** | **`assigned`** | **`cancelled`** (omit for all). Sort fields include **`leadNumber`**, **`customerName`**, **`scheduledTime`**, etc. **`dateFrom`** / **`dateTo`** filter by **`createdAt`**.",
+    }),
+    req("Export booking leads (Excel)", "GET", "/admin/service-leads/export?status=&query=&sortBy=createdAt&sortOrder=desc&dateFrom=&dateTo=", {
+        description: "Returns `.xlsx` download. Uses same filters as list.",
     }),
     req("Service lead detail", "GET", `/admin/service-leads/${OID}`, {
         description:
@@ -703,6 +712,9 @@ const admin = [
     req("Delete admin", "DELETE", "/admin/admins/:id"),
     req("Get admin", "GET", "/admin/admins/:id"),
     req("List franchises", "GET", "/admin/franchises?pageNo=1&limit=10"),
+    req("Export franchises (Excel)", "GET", "/admin/franchises/export?query=&status=&sortBy=createdAt&sortOrder=desc", {
+        description: "Returns `.xlsx` download. Uses same filters as list.",
+    }),
     req("Create franchise (multipart)", "POST", "/admin/franchises", {
         formdata: [
             fd.text("name", "City Franchise"),
@@ -770,6 +782,9 @@ const admin = [
     req("Delete customer", "DELETE", "/admin/customers/:id"),
     req("Get customer", "GET", "/admin/customers/:id"),
     req("List customers", "GET", "/admin/customers"),
+    req("Export customers (Excel)", "GET", "/admin/customers/export?query=&status=&sortBy=createdAt&sortOrder=desc", {
+        description: "Returns `.xlsx` download. Uses same filters as list.",
+    }),
     req("Customer addresses (admin)", "GET", `/admin/customers/${OID}/addresses`),
     req("Create customer address (admin)", "POST", `/admin/customers/${OID}/addresses`, {
         body: {
@@ -850,6 +865,9 @@ const admin = [
     req("Delete service provider", "DELETE", "/admin/service-providers/:id"),
     req("Get service provider", "GET", "/admin/service-providers/:id"),
     req("List service providers", "GET", "/admin/service-providers"),
+    req("Export service providers (Excel)", "GET", "/admin/service-providers/export?query=&profileStatus=&sortBy=createdAt&sortOrder=desc", {
+        description: "Returns `.xlsx` download. Uses same filters as list.",
+    }),
     req("Provider photos", "GET", "/admin/service-providers/:id/photos"),
     req("Upload provider photos (multipart)", "POST", "/admin/service-providers/:id/photos", {
         formdata: [fd.file("photos")],

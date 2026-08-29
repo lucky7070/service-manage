@@ -20,6 +20,7 @@ import AdminTableHeader from "@/components/admin/AdminTableHeader";
 import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AdminExportButton from "@/components/admin/AdminExportButton";
 
 type Customer = {
     _id: string;
@@ -30,6 +31,7 @@ type Customer = {
     dateOfBirth: string;
     image?: string | null;
     status: number;
+    referredCount?: number;
     signupReward?: boolean;
     createdAt?: string;
 };
@@ -41,7 +43,7 @@ type CustomerRecord = {
     pagination: number[];
 };
 
-type SortBy = "userId" | "name" | "mobile" | "email" | "dateOfBirth" | "status" | "createdAt";
+type SortBy = "userId" | "name" | "mobile" | "email" | "dateOfBirth" | "status" | "createdAt" | "referredCount";
 type SortOrder = "asc" | "desc";
 
 const validationSchema = Yup.object().shape({
@@ -155,12 +157,15 @@ export default function AdminCustomersPage() {
                 title="Customers"
                 subtitle="Manage customer records: name, contact, date of birth, and profile image."
                 action={
-                    <PermissionBlock permission_id={331}>
-                        <Button type="button" variant="primary" size="md" onClick={openAdd}>
-                            <Plus className="h-3.5 w-3.5" />
-                            Create Customer
-                        </Button>
-                    </PermissionBlock>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <AdminExportButton url="/customers/export" params={param} filenamePrefix="customers" />
+                        <PermissionBlock permission_id={331}>
+                            <Button type="button" variant="primary" size="md" onClick={openAdd}>
+                                <Plus className="h-3.5 w-3.5" />
+                                Create Customer
+                            </Button>
+                        </PermissionBlock>
+                    </div>
                 }
             />
 
@@ -212,6 +217,9 @@ export default function AdminCustomersPage() {
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("status")} name="Status" active={param.sortBy === "status"} sortOrder={param.sortOrder} />
                                 </th>
+                                <th className="px-3 py-2 text-center">
+                                    <AdminTableHeader onClick={() => onSort("referredCount")} name="Referred" active={param.sortBy === "referredCount"} sortOrder={param.sortOrder} />
+                                </th>
                                 <th className="px-3 py-2">
                                     <AdminTableHeader onClick={() => onSort("createdAt")} name="Created" active={param.sortBy === "createdAt"} sortOrder={param.sortOrder} />
                                 </th>
@@ -245,6 +253,15 @@ export default function AdminCustomersPage() {
                                             <Badge variant={row.status === 1 ? "success" : "secondary"} size="sm">
                                                 {row.status === 1 ? "Active" : "Inactive"}
                                             </Badge>
+                                        </td>
+                                        <td className="px-3 py-2 text-center">
+                                            {(row.referredCount ?? 0) > 0 ? (
+                                                <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                                    {row.referredCount}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">—</span>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2 text-slate-700 dark:text-slate-200">
                                             {row.createdAt ? moment(row.createdAt).format("DD-MM-YYYY") : "—"}

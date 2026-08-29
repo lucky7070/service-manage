@@ -10,6 +10,7 @@ import BookingsScreen from "../screens/BookingsScreen";
 import ServiceLeadsScreen from "../screens/ServiceLeadsScreen";
 import LedgerScreen from "../screens/LedgerScreen";
 import ReferEarnScreen from "../screens/ReferEarnScreen";
+import ReferredCustomersScreen from "../screens/ReferredCustomersScreen";
 import AddressesScreen from "../screens/AddressesScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ContactUsScreen from "../screens/ContactUsScreen";
@@ -25,6 +26,10 @@ import { useRoute, type RouteProp } from "@react-navigation/native";
 import type { MainStackParamList } from "../api/types";
 import { MainNavContext, type MainNavContextValue } from "./MainNavContext";
 
+const routeTitles: Partial<Record<AccountMenuRoute, string>> = {
+    ReferredCustomers: "Referred customers",
+};
+
 const screenComponents: Record<AccountMenuRoute, ComponentType> = {
     Dashboard: DashboardScreen,
     Notifications: NotificationsScreen,
@@ -32,6 +37,7 @@ const screenComponents: Record<AccountMenuRoute, ComponentType> = {
     ServiceLeads: ServiceLeadsScreen,
     Ledger: LedgerScreen,
     ReferEarn: ReferEarnScreen,
+    ReferredCustomers: ReferredCustomersScreen,
     Addresses: AddressesScreen,
     Profile: ProfileScreen,
     ContactUs: ContactUsScreen,
@@ -61,7 +67,8 @@ export default function MainLayout() {
         void refreshUnreadCount();
     }, [activeRoute, refreshUnreadCount]);
 
-    const activeItem = allMenuItems.find((item) => item.route === activeRoute) ?? allMenuItems[0];
+    const activeItem = allMenuItems.find((item) => item.route === activeRoute);
+    const headerTitle = activeItem?.label ?? routeTitles[activeRoute] ?? "Account";
     const ActiveScreen = screenComponents[activeRoute];
 
     const navValue = useMemo<MainNavContextValue>(() => ({
@@ -95,7 +102,7 @@ export default function MainLayout() {
                     </Pressable>
                     <View style={styles.headerCenter}>
                         <Text style={styles.headerEyebrow}>{BRAND.name}</Text>
-                        <Text style={styles.headerTitle}>{activeItem.label}</Text>
+                        <Text style={styles.headerTitle}>{headerTitle}</Text>
                     </View>
                     <Pressable
                         onPress={() => setActiveRoute("Notifications")}

@@ -7,10 +7,12 @@ import moment from "moment";
 import { Eye } from "lucide-react";
 
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AdminExportButton from "@/components/admin/AdminExportButton";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminPagination from "@/components/admin/AdminPagination";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
-import { Badge, Button, Input, Option, Select, statusToBadgeVariant } from "@/components/ui";
+import { Badge, Button, statusToBadgeVariant } from "@/components/ui";
+import RequestFilter from "@/components/admin/RequestFilter";
 
 type BookingRow = {
     _id: string;
@@ -39,7 +41,14 @@ const statuses = ["price_pending", "confirmed", "in_progress", "completed", "can
 export default function AdminBookingsPage() {
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [data, setData] = useState<BookingRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; status: string }>({ limit: 10, pageNo: 1, query: "", status: "" });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; status: string; dateFrom: string; dateTo: string }>({
+        limit: 10,
+        pageNo: 1,
+        query: "",
+        status: "",
+        dateFrom: "",
+        dateTo: ""
+    });
 
     const fetchBookings = useCallback(async () => {
         const { data } = await AxiosHelperAdmin.getData("/bookings", param);
@@ -62,25 +71,14 @@ export default function AdminBookingsPage() {
 
     return (
         <section className="space-y-4">
-            <AdminPageHeader title="Bookings" subtitle="View service bookings, customer/provider details, prices, schedule, and chat history." />
+            <AdminPageHeader
+                title="Bookings"
+                subtitle="View service bookings, customer/provider details, prices, schedule, and chat history."
+                action={<AdminExportButton url="/bookings/export" params={param} filenamePrefix="bookings" />}
+            />
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">
-                <div className="mb-3 flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
-                    <Input
-                        value={param.query}
-                        onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, query: e.target.value }))}
-                        className="max-w-xs"
-                        placeholder="Search booking, customer, provider..."
-                    />
-                    <Select
-                        value={param.status}
-                        onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, status: e.target.value }))}
-                        className="max-w-[220px]"
-                    >
-                        <Option value="">All statuses</Option>
-                        {statuses.map((status) => <Option key={status} value={status}>{status.replaceAll("_", " ")}</Option>)}
-                    </Select>
-                </div>
+                <RequestFilter statuses={statuses} value={param} onUpdate={(next) => setParam((prev) => ({ ...prev, pageNo: 1, ...next }))} />
 
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">

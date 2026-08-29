@@ -10,6 +10,7 @@ import IconBox from "../components/ui/IconBox";
 import PageHero from "../components/ui/PageHero";
 import Screen from "../components/ui/Screen";
 import env from "../config/env";
+import { useMainNavigation } from "../navigation/MainNavContext";
 import { colors, radius, spacing } from "../theme/colors";
 
 const steps = [
@@ -20,6 +21,7 @@ const steps = [
 
 export default function ReferEarnScreen() {
     const { user } = useAuth();
+    const nav = useMainNavigation();
 
     const shareLink = useMemo(() => {
         if (!user.referralCode) return "";
@@ -90,6 +92,17 @@ export default function ReferEarnScreen() {
                 />
             </Card>
 
+            <Card elevated style={styles.referredCard}>
+                <View style={styles.referredTop}>
+                    <IconBox name="users" tone="primary" />
+                    <View style={styles.referredCopy}>
+                        <Text style={styles.referredTitle}>Referred customers</Text>
+                        <Text style={styles.referredSub}>See who joined using your referral code.</Text>
+                    </View>
+                </View>
+                <Button label="View referred customers" variant="secondary" fullWidth onPress={() => nav.navigate("ReferredCustomers")} />
+            </Card>
+
             <View style={styles.steps}>
                 {steps.map((step, index) => (
                     <Card key={step.title} elevated style={styles.stepCard}>
@@ -142,6 +155,11 @@ const styles = StyleSheet.create({
         marginVertical: spacing.sm,
     },
     linkText: { fontSize: 12, color: colors.foreground, fontFamily: "monospace" },
+    referredCard: { marginBottom: spacing.lg, gap: spacing.md },
+    referredTop: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+    referredCopy: { flex: 1, gap: 4 },
+    referredTitle: { fontSize: 16, fontWeight: "700", color: colors.foreground },
+    referredSub: { fontSize: 13, color: colors.mutedForeground, lineHeight: 20 },
     steps: { gap: spacing.md, marginBottom: spacing.lg },
     stepCard: { gap: spacing.sm },
     stepTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

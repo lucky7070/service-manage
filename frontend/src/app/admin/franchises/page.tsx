@@ -20,6 +20,7 @@ import PermissionBlock from "@/components/admin/PermissionBlock";
 import { PHONE_ERROR_MESSAGE, PHONE_REGEXP } from "@/config";
 import Image from "@/components/ui/Image";
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
+import AdminExportButton from "@/components/admin/AdminExportButton";
 
 type FranchiseRecord = {
     _id: string;
@@ -125,21 +126,24 @@ export default function FranchisesPage() {
                 title="Franchises"
                 subtitle="Create and manage franchise accounts."
                 action={
-                    <PermissionBlock permission_id={461}>
-                        <Button
-                            type="button"
-                            variant="primary"
-                            size="md"
-                            onClick={() => {
-                                setImagePreview(null);
-                                setInitialValues({ _id: "", name: "", mobile: "", email: "", status: 1, createdAt: "", password: "", image: null });
-                                setOpen("add");
-                            }}
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            Create Franchise
-                        </Button>
-                    </PermissionBlock>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <AdminExportButton url="/franchises/export" params={param} filenamePrefix="franchises" />
+                        <PermissionBlock permission_id={461}>
+                            <Button
+                                type="button"
+                                variant="primary"
+                                size="md"
+                                onClick={() => {
+                                    setImagePreview(null);
+                                    setInitialValues({ _id: "", name: "", mobile: "", email: "", status: 1, createdAt: "", password: "", image: null });
+                                    setOpen("add");
+                                }}
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                                Create Franchise
+                            </Button>
+                        </PermissionBlock>
+                    </div>
                 }
             />
 

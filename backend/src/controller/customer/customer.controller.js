@@ -1,5 +1,5 @@
 import moment from "moment";
-import { Address, Booking, ChatMessage, City, AssignedSubscription, Ledger, Notification, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../../models/index.js";
+import { Address, Booking, ChatMessage, City, Customer, AssignedSubscription, Ledger, Notification, OtpVerification, ProviderService, Rating, ServiceCategory, ServiceLead, ServiceProvider, ServiceType, State } from "../../models/index.js";
 import { bookingChatClosedMessage, isBookingChatOpen, parseBookingChatPayload } from "../../helpers/bookingChat.js";
 import { ObjectId, escapeRegex, now, optionalNumber, toBoolean } from "../../helpers/utils.js";
 import { incrementProviderRatingTotals, resolveQuickTagIds } from "../../helpers/bookingRating.js";
@@ -505,6 +505,47 @@ export const listCustomerLedger = async (req, res) => {
         ]);
 
         const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
+        return res.pagination(record, total_count, limit, pageNo);
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const listReferredCustomers = async (req, res) => {
+    try {
+        const referrerId = req.customer._id;
+        const limit = Number.isFinite(Number(req.query.limit)) ? Math.min(Math.max(Number(req.query.limit), 1), 50) : 20;
+        const pageNo = Number.isFinite(Number(req.query.pageNo)) ? Math.max(Number(req.query.pageNo), 1) : 1;
+        const query = String(req.query.query || "").trim();
+
+        const filter = { referredBy: referrerId, deletedAt: null };
+        if (query) {
+            const q = escapeRegex(query);
+            filter.$or = [
+                { name: { $regex: q, $options: "i" } },
+                { userId: { $regex: q, $options: "i" } }
+            ];
+        }
+
+        const pipeline = [
+            { $match: filter },
+            {
+                $project: {
+                    userId: 1,
+                    name: 1,
+                    createdAt: 1,
+                    status: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] }
+                }
+            }
+        ];
+
+        const [record, totalCount] = await Promise.all([
+            Customer.aggregate([...pipeline, { $sort: { createdAt: -1 } }, { $skip: (pageNo - 1) * limit }, { $limit: limit }]),
+            Customer.aggregate([...pipeline, { $count: "total_count" }])
+        ]);
+
+        const total_count = totalCount.length > 0 ? totalCount[0].total_count : 0;
+        if (record.length === 0) return res.datatableNoRecords();
         return res.pagination(record, total_count, limit, pageNo);
     } catch (error) {
         return res.someThingWentWrong(error);

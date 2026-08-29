@@ -27,6 +27,7 @@ export const accountMenuItems: AccountMenuItem[] = [
     { route: "ServiceLeads", label: "Booking requests", icon: "clipboard" },
     { route: "Ledger", label: "Ledger", icon: "credit-card" },
     { route: "ReferEarn", label: "Refer and Earn", icon: "gift", highlight: true },
+    { route: "ReferredCustomers", label: "Referred customers", icon: "users" },
     { route: "Addresses", label: "Addresses", icon: "map-pin" },
     { route: "Profile", label: "Profile", icon: "user" },
 ];
