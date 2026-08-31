@@ -23,4 +23,6 @@ export const config = {
     enableGoogleDns: String(process.env.ENABLE_GOOGLE_DNS || "false").toLowerCase() === "true",
     taxPercentage: Number(process.env.TAX_PERCENTAGE || 18),
     autopayFreeTrialEnabled: String(process.env.AUTOPAY_FREE_TRIAL_ENABLED || "false").toLowerCase() === "true",
+    defaultCustomerMobile: String("9216013751") || null,
+    defaultServiceProviderMobile: String("9216013752") || null,
 };

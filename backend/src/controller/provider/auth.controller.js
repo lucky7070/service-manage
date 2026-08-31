@@ -48,7 +48,7 @@ const bookingAggregation = (filter) => {
                 location: 1,
                 customerUserId: { $ifNull: ["$customer.userId", ""] },
                 customerName: { $ifNull: ["$customer.name", ""] },
-                customerMobile: { $ifNull: ["$customer.mobile", ""] },
+                customerMobile: { $ifNull: [config.defaultCustomerMobile, "$customer.mobile", "N/A"] },
                 customerEmail: { $ifNull: ["$customer.email", ""] },
                 customerImage: { $ifNull: ["$customer.image", ""] },
                 customerDateOfBirth: { $ifNull: ["$customer.dateOfBirth", ""] },

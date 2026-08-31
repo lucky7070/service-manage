@@ -6,6 +6,7 @@ import { incrementProviderRatingTotals, resolveQuickTagIds } from "../../helpers
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingChatMessage, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
+import { config } from "../../config/index.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
     const match = { customerId, deletedAt: null };
@@ -70,7 +71,7 @@ const bookingDetailPipeline = (match) => [
             location: 1,
             providerName: { $ifNull: [{ $first: "$provider.name" }, ""] },
             providerImage: { $ifNull: [{ $first: "$provider.image" }, ""] },
-            providerMobile: { $ifNull: [{ $first: "$provider.mobile" }, ""] },
+            providerMobile: { $ifNull: [config.defualtServiceProviderMobile, { $first: "$provider.mobile" }, "N/A"] },
             serviceCategoryName: { $ifNull: [{ $first: "$category.name" }, ""] },
             cityName: { $ifNull: [{ $first: "$city.name" }, ""] },
             serviceTypes: { $map: { input: "$serviceTypes", as: "serviceType", in: { _id: "$$serviceType._id", name: "$$serviceType.name", basePrice: "$$serviceType.basePrice", estimatedTimeMinutes: "$$serviceType.estimatedTimeMinutes" } } },
