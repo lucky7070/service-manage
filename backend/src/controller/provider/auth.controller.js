@@ -73,6 +73,7 @@ const getProfile = async (user) => {
         { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
         { $lookup: { from: "areas", localField: "areaIds", foreignField: "_id", as: "areas" } },
         { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "category" } },
+        { $lookup: { from: "servicecategories", localField: "serviceCategoryIds", foreignField: "_id", as: "assignedCategories" } },
         { $unwind: "$city" },
         { $unwind: "$category" },
         {
@@ -105,6 +106,32 @@ const getProfile = async (user) => {
                     }
                 },
                 serviceCategoryId: 1,
+                serviceCategoryIds: {
+                    $map: {
+                        input: {
+                            $cond: [
+                                { $gt: [{ $size: { $ifNull: ["$serviceCategoryIds", []] } }, 0] },
+                                { $ifNull: ["$serviceCategoryIds", []] },
+                                [{ $ifNull: ["$serviceCategoryId", null] }]
+                            ]
+                        },
+                        as: "categoryId",
+                        in: { $toString: "$$categoryId" }
+                    }
+                },
+                serviceCategories: {
+                    $map: {
+                        input: {
+                            $cond: [
+                                { $gt: [{ $size: { $ifNull: ["$assignedCategories", []] } }, 0] },
+                                { $ifNull: ["$assignedCategories", []] },
+                                [{ $ifNull: ["$category", {}] }]
+                            ]
+                        },
+                        as: "category",
+                        in: { _id: "$$category._id", name: "$$category.name" }
+                    }
+                },
                 cityName: { $ifNull: ["$city.name", "N/A"] },
                 serviceCategoryName: { $ifNull: ["$category.name", "N/A"] },
                 panCardNumber: 1,
@@ -267,12 +294,15 @@ export const register = async (req, res) => {
         const policeVerificationFile = files?.policeVerification?.[0]?.filename;
         const policeVerification = policeVerificationFile ? `/service-provider/${policeVerificationFile}` : null;
 
+        const categoryObjectId = ObjectId(serviceCategoryId);
+
         await ServiceProvider.create({
             name: String(name).trim(),
             mobile: String(mobile).trim(),
             email: String(email).trim().toLowerCase(),
             cityId,
-            serviceCategoryId,
+            serviceCategoryId: categoryObjectId,
+            serviceCategoryIds: [categoryObjectId],
             image,
             panCardNumber: String(panCardNumber).trim().toUpperCase(),
             aadharNumber: String(aadharNumber).trim(),

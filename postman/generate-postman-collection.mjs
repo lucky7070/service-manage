@@ -56,7 +56,7 @@ const COLLECTION_DESCRIPTION = [
     "4. **On site:** `POST .../start` (when status `confirmed` and price agreed).",
     "5. **Finish:** `POST .../complete/send-otp` → `POST .../complete` with body `{ otp }`.",
     "6. **Self-service catalogue:** **`GET /service-provider/services`**, **`GET /service-provider/service-types`** (query **`query`**, **`limit`**), **`POST /PUT /DELETE /service-provider/services/...`** for your **`ProviderService`** pricing.",
-    "7. **Service areas:** **`GET /service-provider/areas`** (areas for your city) → **`PUT /service-provider/profile/areas`** with **`areaIds`** array. Profile **`GET /service-provider/profile`** returns **`areaIds`** + **`areas`**.",
+    "7. **Service areas:** **`GET /service-provider/areas`** (areas for your city) → **`PUT /service-provider/profile/areas`** with **`areaIds`** array. Profile **`GET /service-provider/profile`** returns **`areaIds`** + **`areas`**, and additively **`serviceCategoryIds`** + **`serviceCategories`** when admin assigned multiple categories.",
     "8. **Subscription purchase history:** **`GET /subscriptions-list`** (public plans) → **`GET /service-provider/subscriptions`** (your plan history) → **`POST /service-provider/subscriptions/purchase`** → Razorpay checkout → **`POST /service-provider/subscriptions/purchase/payment`** with checkout **`razorpay_order_id`**, **`razorpay_payment_id`**, **`razorpay_signature`**. Razorpay **`POST /webhooks/razorpay`** also updates payment status server-side.",
     "9. **Feedback:** `GET /feedback-rating-tags?tagFor=customer` then `POST .../feedback` when **`completed`**.",
     "10. **Sockets:** join with `role: \"provider\"`.",
@@ -450,7 +450,7 @@ const serviceProvider = [
         "GET",
         "/service-provider/service-types?limit=20&query=",
         {
-            description: "Active types for your **`serviceCategoryId`**. **`query`** optional name filter. Use ids in **`POST /service-provider/services`**.",
+            description: "Active types for your primary **`serviceCategoryId`**. Optional **`categoryId`** when admin assigned multiple categories. **`query`** optional name filter. Use ids in **`POST /service-provider/services`**.",
         }
     ),
     req("Add my service price (auth)", "POST", "/service-provider/services", {
@@ -606,6 +606,10 @@ const franchise = [
     req("Assign franchise provider areas", "PUT", `/franchise/service-providers/${OID}/areas`, {
         body: { areaIds: [OID] },
         description: "Separate from provider create/update. Areas must belong to the provider's **`cityId`**.",
+    }),
+    req("Assign franchise provider categories", "PUT", `/franchise/service-providers/${OID}/categories`, {
+        body: { serviceCategoryIds: [OID] },
+        description: "Replace assigned **`serviceCategoryIds`**. Primary **`serviceCategoryId`** must remain in the array.",
     }),
     req("Delete franchise service provider", "DELETE", `/franchise/service-providers/${OID}`),
     req("Franchise service provider detail", "GET", `/franchise/service-providers/${OID}`),
@@ -858,6 +862,10 @@ const admin = [
     req("Assign provider areas", "PUT", "/admin/service-providers/:id/areas", {
         body: { areaIds: [OID] },
         description: "Separate from provider create/update. Areas must belong to the provider's **`cityId`**. Empty array clears areas.",
+    }),
+    req("Assign provider categories", "PUT", "/admin/service-providers/:id/categories", {
+        body: { serviceCategoryIds: [OID] },
+        description: "Admin/franchise only. Replace assigned **`serviceCategoryIds`**. Primary **`serviceCategoryId`** must remain in the array. Self-registration still sets a single primary category.",
     }),
     req("Update service provider status", "PUT", "/admin/service-providers/:id/status", {
         body: { profileStatus: "approved", isVerified: 1 },

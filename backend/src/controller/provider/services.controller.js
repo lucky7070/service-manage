@@ -1,5 +1,6 @@
 import { ProviderService } from "../../models/index.js";
 import { ObjectId } from "../../helpers/utils.js";
+import { getProviderCategoryIds } from "../../helpers/providerCategories.js";
 import { aggregateProviderServices, listActiveServiceTypesForCategory, loadServiceTypeForProviderCategory, parseProviderServicePrice } from "../../helpers/providerServiceOps.js";
 
 const providerSummary = (sp) => ({
@@ -10,10 +11,12 @@ const providerSummary = (sp) => ({
     serviceCategoryId: sp.serviceCategoryId
 });
 
+const hasAssignedCategory = (sp) => getProviderCategoryIds(sp).length > 0;
+
 export const listMyProviderServices = async (req, res) => {
     try {
         const sp = req.serviceProvider;
-        if (!sp.serviceCategoryId) {
+        if (!hasAssignedCategory(sp)) {
             return res.clientError("Service category is not set on your profile. Contact support.", 422);
         }
 
@@ -27,12 +30,18 @@ export const listMyProviderServices = async (req, res) => {
 export const listMyServiceTypeOptions = async (req, res) => {
     try {
         const sp = req.serviceProvider;
-        if (!sp.serviceCategoryId) {
+        const assignedCategoryIds = getProviderCategoryIds(sp);
+        if (!assignedCategoryIds.length) {
             return res.clientError("Service category is not set on your profile. Contact support.", 422);
         }
 
+        const requestedCategoryId = ObjectId(req.query.categoryId) || sp.serviceCategoryId || assignedCategoryIds[0];
+        if (!requestedCategoryId || !assignedCategoryIds.some((id) => String(id) === String(requestedCategoryId))) {
+            return res.clientError("Invalid service category for your profile.", 422, [{ field: "categoryId", message: "Invalid service category for your profile." }]);
+        }
+
         const limit = Number(req.query.limit);
-        const record = await listActiveServiceTypesForCategory(sp.serviceCategoryId, {
+        const record = await listActiveServiceTypesForCategory(requestedCategoryId, {
             query: req.query.query,
             limit
         });
@@ -46,11 +55,12 @@ export const listMyServiceTypeOptions = async (req, res) => {
 export const createMyProviderService = async (req, res) => {
     try {
         const sp = req.serviceProvider;
-        if (!sp.serviceCategoryId) {
+        const assignedCategoryIds = getProviderCategoryIds(sp);
+        if (!assignedCategoryIds.length) {
             return res.clientError("Service category is not set on your profile. Contact support.", 422);
         }
 
-        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, sp.serviceCategoryId);
+        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, assignedCategoryIds);
         if (typeCheck.error) {
             const e = typeCheck.error;
             return res.clientError(e.message, e.status, e.field ? [{ field: e.field, message: e.message }] : []);
@@ -86,14 +96,15 @@ export const createMyProviderService = async (req, res) => {
 export const updateMyProviderService = async (req, res) => {
     try {
         const sp = req.serviceProvider;
-        if (!sp.serviceCategoryId) {
+        const assignedCategoryIds = getProviderCategoryIds(sp);
+        if (!assignedCategoryIds.length) {
             return res.clientError("Service category is not set on your profile. Contact support.", 422);
         }
 
         const doc = await ProviderService.findOne({ _id: ObjectId(req.params.serviceId), providerId: sp._id });
         if (!doc) return res.noRecords();
 
-        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, sp.serviceCategoryId);
+        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, assignedCategoryIds);
         if (typeCheck.error) {
             const e = typeCheck.error;
             return res.clientError(e.message, e.status, e.field ? [{ field: e.field, message: e.message }] : []);

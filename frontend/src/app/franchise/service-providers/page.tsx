@@ -8,7 +8,7 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import { useSearchParams } from "next/navigation";
-import { CreditCard, ImageIcon, Images, Pencil, Plus, Trash2, Wrench } from "lucide-react";
+import { CreditCard, ImageIcon, Images, Layers, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import Link from "next/link";
 
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
@@ -24,6 +24,7 @@ import { getSweetAlertConfig, resolveFileUrl } from "@/helpers/utils";
 import Image from "@/components/ui/Image";
 import { PERSON_NAME_ERROR_MESSAGE, PERSON_NAME_REGEXP, PHONE_ERROR_MESSAGE, PHONE_REGEXP, SERVICE_PROVIDER_PROFILE_STATUSES } from "@/config";
 import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
+import AssignProviderCategoriesForm from "@/components/admin/AssignProviderCategoriesForm";
 
 type ProviderRecord = {
     _id: string;
@@ -33,6 +34,8 @@ type ProviderRecord = {
     email?: string | null;
     cityId?: string;
     serviceCategoryId?: string;
+    serviceCategoryIds?: string[];
+    serviceCategoryNames?: string[];
     panCardNumber?: string;
     aadharNumber?: string;
     image?: File | string | null;
@@ -102,7 +105,7 @@ const validationSchema = Yup.object().shape({
 export default function FranchiseServiceProvidersPage() {
     const searchParams = useSearchParams();
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
-    const [open, setOpen] = useState<null | "add" | "edit">(null);
+    const [open, setOpen] = useState<null | "add" | "edit" | "categories">(null);
     const [data, setData] = useState<ProviderResponse>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{
         limit: number;
@@ -123,6 +126,9 @@ export default function FranchiseServiceProvidersPage() {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [city, setCity] = useState<{ value: string; label: string } | null>(null);
     const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
+    const [categoriesInitialValues, setCategoriesInitialValues] = useState<{ _id: string; serviceCategoryIds: string[] }>({ _id: "", serviceCategoryIds: [] });
+    const [categoriesProvider, setCategoriesProvider] = useState<ProviderRecord | null>(null);
+    const [categorySearchQuery, setCategorySearchQuery] = useState("");
 
     const loadCityOptions = async (inputValue: string) => {
         const { data } = await AxiosHelper.getData("/cities-with-state", { query: inputValue, limit: 20 });
@@ -207,6 +213,30 @@ export default function FranchiseServiceProvidersPage() {
         setServiceCategory({ value: String(row.serviceCategoryId ?? ""), label: String(row.serviceCategoryName ?? "") });
         setImagePreview(typeof row.image === "string" ? resolveFileUrl(row.image) : null);
         setOpen("edit");
+    };
+
+    const openCategoriesModal = async (row: ProviderRecord) => {
+        if (!row.serviceCategoryId) {
+            toast.error("Set provider primary service category before assigning additional categories.");
+            return;
+        }
+
+        const { data } = await AxiosHelperFranchise.getData(`/service-providers/${row._id}`);
+        const detail = data.status ? data.data : row;
+        const ids = Array.isArray(detail?.serviceCategoryIds) && detail.serviceCategoryIds.length
+            ? detail.serviceCategoryIds.map(String)
+            : [String(row.serviceCategoryId)];
+
+        setCategorySearchQuery("");
+        setCategoriesProvider({ ...row, serviceCategoryIds: ids });
+        setCategoriesInitialValues({ _id: String(row._id), serviceCategoryIds: ids });
+        setOpen("categories");
+    };
+
+    const closeCategoriesModal = () => {
+        setOpen(null);
+        setCategoriesProvider(null);
+        setCategorySearchQuery("");
     };
 
     return (
@@ -349,6 +379,12 @@ export default function FranchiseServiceProvidersPage() {
                                                         label: "Subscriptions",
                                                         icon: CreditCard,
                                                         href: `/franchise/service-providers/${row._id}/subscriptions`,
+                                                    },
+                                                    {
+                                                        key: "categories",
+                                                        label: "Assign Categories",
+                                                        icon: Layers,
+                                                        onClick: () => void openCategoriesModal(row),
                                                     },
                                                     {
                                                         key: "edit",
@@ -540,6 +576,32 @@ export default function FranchiseServiceProvidersPage() {
                         </Form>
                     )}
                 </Formik>
+            </Modal>
+
+            <Modal
+                show={open === "categories"}
+                onClose={closeCategoriesModal}
+                title="Assign service categories"
+                subTitle={categoriesProvider ? `${categoriesProvider.name} · Primary: ${categoriesProvider.serviceCategoryName || "Category"}` : "Select all categories this provider can serve."}
+                size="lg"
+                scrollable
+            >
+                <AssignProviderCategoriesForm
+                    searchQuery={categorySearchQuery}
+                    onSearchChange={setCategorySearchQuery}
+                    onCancel={closeCategoriesModal}
+                    onSaved={() => {
+                        closeCategoriesModal();
+                        void fetchProviders();
+                    }}
+                    initialValues={categoriesInitialValues}
+                    primaryCategoryId={String(categoriesProvider?.serviceCategoryId || "")}
+                    primaryCategoryName={categoriesProvider?.serviceCategoryName}
+                    putCategories={async (providerId, serviceCategoryIds) => {
+                        const { data } = await AxiosHelperFranchise.putData(`/service-providers/${providerId}/categories`, { serviceCategoryIds });
+                        return data;
+                    }}
+                />
             </Modal>
         </section>
     );

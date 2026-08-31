@@ -3,6 +3,7 @@ import { OurMilestone, OurValue, State, City, Area, Enquiry, ServiceCategory, Se
 import { escapeRegex, ObjectId } from "../helpers/utils.js";
 import { PROVIDER_FILTER, getProviderPipeline } from "../helpers/subscriptionAssignment.js";
 import { parseIdList } from "../helpers/providerAreas.js";
+import { getProviderCategoryIds, providerCategoryMatchFilter, providerServiceTypeCategoryMatch } from "../helpers/providerCategories.js";
 
 export const listStates = async (req, res) => {
     try {
@@ -227,7 +228,7 @@ export const listServiceProviders = async (req, res) => {
 
         if (!city || !serviceCategory) return res.datatableNoRecords({ city, serviceCategory });
 
-        const filter = { ...PROVIDER_FILTER, cityId: city._id, serviceCategoryId: serviceCategory._id };
+        const filter = { ...PROVIDER_FILTER, cityId: city._id, ...providerCategoryMatchFilter(serviceCategory._id) };
         if (query) filter.name = { $regex: escapeRegex(String(query)), $options: "i" };
 
         const areaObjectIds = parseIdList(req.query.areaIds).map(ObjectId).filter(Boolean);
@@ -287,6 +288,7 @@ export const getPublicServiceProvider = async (req, res) => {
             { $lookup: { from: "cities", localField: "cityId", foreignField: "_id", as: "city" } },
             { $unwind: { path: "$city" } },
             { $lookup: { from: "servicecategories", localField: "serviceCategoryId", foreignField: "_id", as: "serviceCategory" } },
+            { $lookup: { from: "servicecategories", localField: "serviceCategoryIds", foreignField: "_id", as: "assignedCategories" } },
             { $unwind: { path: "$serviceCategory" } },
             ...getProviderPipeline(),
             {
@@ -321,6 +323,20 @@ export const getPublicServiceProvider = async (req, res) => {
                     serviceCategoryId: "$serviceCategory._id",
                     serviceCategoryName: "$serviceCategory.name",
                     serviceCategorySlug: "$serviceCategory.slug",
+                    serviceCategoryIds: {
+                        $map: {
+                            input: { $ifNull: ["$serviceCategoryIds", []] },
+                            as: "categoryId",
+                            in: { $toString: "$$categoryId" }
+                        }
+                    },
+                    serviceCategories: {
+                        $map: {
+                            input: "$assignedCategories",
+                            as: "category",
+                            in: { _id: "$$category._id", name: "$$category.name", slug: "$$category.slug" }
+                        }
+                    },
                     isPanCardVerified: { $cond: [{ $eq: ["$panCardNumber", null] }, false, true] },
                     isAadharVerified: { $cond: [{ $eq: ["$aadharNumber", null] }, false, true] },
                     isPoliceVerificationVerified: { $cond: [{ $eq: ["$policeVerification", null] }, false, true] },
@@ -331,11 +347,16 @@ export const getPublicServiceProvider = async (req, res) => {
 
         if (!doc) return res.noRecords();
 
+        const providerCategoryIds = getProviderCategoryIds({
+            serviceCategoryId: doc.serviceCategoryId,
+            serviceCategoryIds: (doc.serviceCategoryIds || []).map((id) => ObjectId(id)).filter(Boolean)
+        });
+
         doc.providerServices = await ProviderService.aggregate([
             { $match: { providerId: doc._id, isActive: true } },
             { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceType" } },
             { $unwind: "$serviceType" },
-            { $match: { "serviceType.deletedAt": null, "serviceType.isActive": true, "serviceType.categoryId": doc.serviceCategoryId } },
+            { $match: { "serviceType.deletedAt": null, "serviceType.isActive": true, ...providerServiceTypeCategoryMatch(providerCategoryIds) } },
             {
                 $project: {
                     _id: 1,
@@ -350,6 +371,13 @@ export const getPublicServiceProvider = async (req, res) => {
             },
             { $sort: { name: 1 } }
         ]);
+
+        if (!doc.serviceCategoryIds?.length && doc.serviceCategoryId) {
+            doc.serviceCategoryIds = [String(doc.serviceCategoryId)];
+        }
+        if (!doc.serviceCategories?.length && doc.serviceCategoryId && doc.serviceCategoryName) {
+            doc.serviceCategories = [{ _id: doc.serviceCategoryId, name: doc.serviceCategoryName, slug: doc.serviceCategorySlug }];
+        }
 
         return res.success(doc);
     } catch (error) {

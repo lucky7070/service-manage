@@ -9,7 +9,7 @@ import moment from "moment";
 import Swal from "sweetalert2/dist/sweetalert2.js";
 import { toast } from "react-toastify";
 import AdminActionsDropdown from "@/components/admin/AdminActionsDropdown";
-import { CircleCheckBig, CreditCard, DownloadIcon, ImageIcon, Images, MapPin, Pencil, Plus, QrCode, Trash2, Wrench } from "lucide-react";
+import { CircleCheckBig, CreditCard, DownloadIcon, ImageIcon, Images, Layers, MapPin, Pencil, Plus, QrCode, Trash2, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
@@ -27,6 +27,7 @@ import AxiosHelper from "@/helpers/AxiosHelper";
 import RegistrationDocument from "@/components/admin/RegistrationDocument";
 import { checkDocSize, checkDocType, checkImageType } from "@/helpers/validator";
 import AssignProviderAreasForm from "@/components/admin/AssignProviderAreasForm";
+import AssignProviderCategoriesForm from "@/components/admin/AssignProviderCategoriesForm";
 import axios from "axios";
 
 type ServiceProvider = {
@@ -52,6 +53,8 @@ type ServiceProvider = {
     cityName?: string;
     slug?: string;
     areaIds: string[];
+    serviceCategoryIds?: string[];
+    serviceCategoryNames?: string[];
     serviceCategoryName?: string;
 
     userId?: string;
@@ -122,11 +125,14 @@ export default function AdminServiceProvidersPage() {
     const searchParams = useSearchParams();
     const franchiseFromUrl = String(searchParams.get("franchise") || "").trim();
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
-    const [open, setOpen] = useState<null | "add" | "edit" | "status" | "areas" | "qr-code">(null);
+    const [open, setOpen] = useState<null | "add" | "edit" | "status" | "areas" | "categories" | "qr-code">(null);
     const [data, setData] = useState<ServiceProviderRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
     const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; franchise: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "", franchise: franchiseFromUrl });
     const [initialValues, setInitialValues] = useState<ServiceProvider>(INITIAL_VALUES);
     const [areasInitialValues, setAreasInitialValues] = useState<{ _id: string; areaIds: string[] }>({ _id: "", areaIds: [] });
+    const [categoriesInitialValues, setCategoriesInitialValues] = useState<{ _id: string; serviceCategoryIds: string[] }>({ _id: "", serviceCategoryIds: [] });
+    const [categoriesProvider, setCategoriesProvider] = useState<ServiceProvider | null>(null);
+    const [categorySearchQuery, setCategorySearchQuery] = useState("");
     const [areasProvider, setAreasProvider] = useState<ServiceProvider | null>(null);
     const [areaSearchQuery, setAreaSearchQuery] = useState("");
     const [areasLoading, setAreasLoading] = useState(false);
@@ -291,6 +297,30 @@ export default function AdminServiceProvidersPage() {
         setAreasProvider(null);
         setAreaSearchQuery("");
         debouncedAreaSearchRef.current.cancel();
+    };
+
+    const openCategoriesModal = async (row: ServiceProvider) => {
+        if (!row.serviceCategoryId) {
+            toast.error("Set provider primary service category before assigning additional categories.");
+            return;
+        }
+
+        const { data } = await AxiosHelperAdmin.getData(`/service-providers/${row._id}`);
+        const detail = data.status ? data.data : row;
+        const ids = Array.isArray(detail?.serviceCategoryIds) && detail.serviceCategoryIds.length
+            ? detail.serviceCategoryIds.map(String)
+            : [String(row.serviceCategoryId)];
+
+        setCategorySearchQuery("");
+        setCategoriesProvider({ ...row, serviceCategoryIds: ids, serviceCategoryNames: detail?.serviceCategoryNames });
+        setCategoriesInitialValues({ _id: String(row._id), serviceCategoryIds: ids });
+        setOpen("categories");
+    };
+
+    const closeCategoriesModal = () => {
+        setOpen(null);
+        setCategoriesProvider(null);
+        setCategorySearchQuery("");
     };
 
     const openStatusModal = (row: ServiceProvider) => {
@@ -497,6 +527,13 @@ export default function AdminServiceProvidersPage() {
                                                     icon: MapPin,
                                                     permissionId: 372,
                                                     onClick: () => openAreasModal(row),
+                                                },
+                                                {
+                                                    key: "categories",
+                                                    label: "Assign Categories",
+                                                    icon: Layers,
+                                                    permissionId: 372,
+                                                    onClick: () => void openCategoriesModal(row),
                                                 },
                                                 {
                                                     key: "status",
@@ -732,6 +769,32 @@ export default function AdminServiceProvidersPage() {
                         fetchRows();
                     }}
                     initialValues={areasInitialValues}
+                />
+            </Modal>
+
+            <Modal
+                show={open === "categories"}
+                onClose={closeCategoriesModal}
+                title="Assign service categories"
+                subTitle={categoriesProvider ? `${categoriesProvider.name} · Primary: ${categoriesProvider.serviceCategoryName || "Category"}` : "Select all categories this provider can serve."}
+                size="lg"
+                scrollable
+            >
+                <AssignProviderCategoriesForm
+                    searchQuery={categorySearchQuery}
+                    onSearchChange={setCategorySearchQuery}
+                    onCancel={closeCategoriesModal}
+                    onSaved={() => {
+                        closeCategoriesModal();
+                        fetchRows();
+                    }}
+                    initialValues={categoriesInitialValues}
+                    primaryCategoryId={String(categoriesProvider?.serviceCategoryId || "")}
+                    primaryCategoryName={categoriesProvider?.serviceCategoryName}
+                    putCategories={async (providerId, serviceCategoryIds) => {
+                        const { data } = await AxiosHelperAdmin.putData(`/service-providers/${providerId}/categories`, { serviceCategoryIds });
+                        return data;
+                    }}
                 />
             </Modal>
 

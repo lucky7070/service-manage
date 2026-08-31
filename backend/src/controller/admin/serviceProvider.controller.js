@@ -2,6 +2,7 @@ import moment from "moment";
 import { City, ServiceProvider, ServiceCategory, ServiceProviderPhoto } from "../../models/index.js";
 import { escapeRegex, ObjectId, toBoolean } from "../../helpers/utils.js";
 import { resolveAreaIdsForCity } from "../../helpers/providerAreas.js";
+import { applyProviderCategoryFilter, getProviderCategoryIds, resolveServiceCategoryIds, syncPrimaryCategoryInList } from "../../helpers/providerCategories.js";
 import { SERVICE_PROVIDER_PROFILE_STATUSES } from "../../config/constants.js";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
 import { formatExportDateTime, sendExcelResponse } from "../../helpers/excelExport.js";
@@ -38,7 +39,7 @@ const buildServiceProviderListPipeline = (query) => {
     }
 
     if (serviceCategoryId !== null && serviceCategoryId !== undefined && serviceCategoryId !== "") {
-        filter.serviceCategoryId = ObjectId(serviceCategoryId);
+        applyProviderCategoryFilter(filter, ObjectId(serviceCategoryId));
     }
 
     const franchiseFilterId = ObjectId(franchise || franchiseId);
@@ -69,7 +70,7 @@ const buildServiceProviderListPipeline = (query) => {
                 pipeline: [{ $match: { deletedAt: null } }, { $count: "n" }]
             }
         },
-        { $project: { userId: 1, slug: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, referredCount: { $ifNull: [{ $first: "$referredProviders.n" }, 0] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1, deletedAt: 1 } }
+        { $project: { userId: 1, slug: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, referredCount: { $ifNull: [{ $first: "$referredProviders.n" }, 0] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, serviceCategoryIds: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1, deletedAt: 1 } }
     ];
 
     return { pipeline, sortBy, sortOrder };
@@ -103,9 +104,10 @@ export const createServiceProvider = async (req, res) => {
         if (files?.aadharDocument?.[0]?.filename) aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
         if (files?.policeVerification?.[0]?.filename) policeVerification = `/service-provider/${files?.policeVerification?.[0]?.filename}`;
 
+        const categoryObjectId = ObjectId(serviceCategoryId);
         const record = await ServiceProvider.create({
             name: name.trim(),
-            mobile, email, panCardNumber, cityId, serviceCategoryId, aadharNumber, image, panCardDocument, aadharDocument, policeVerification,
+            mobile, email, panCardNumber, cityId, serviceCategoryId: categoryObjectId, serviceCategoryIds: [categoryObjectId], aadharNumber, image, panCardDocument, aadharDocument, policeVerification,
             experienceYears: experienceYears ?? 0,
             experienceDescription: experienceDescription?.trim() || null,
             registerFrom: "admin",
@@ -155,15 +157,39 @@ export const updateServiceProvider = async (req, res) => {
         if (files?.aadharDocument?.[0]?.filename) aadharDocument = `/service-provider/${files?.aadharDocument?.[0]?.filename}`;
         if (files?.policeVerification?.[0]?.filename) policeVerification = `/service-provider/${files?.policeVerification?.[0]?.filename}`;
 
+        const categoryObjectId = ObjectId(serviceCategoryId);
+        const serviceCategoryIds = syncPrimaryCategoryInList(categoryObjectId, getProviderCategoryIds(record));
+
         await ServiceProvider.updateOne(
             { _id: record._id },
-            { name: name.trim(), cityId, serviceCategoryId, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, policeVerification, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, isFeatured: toBoolean(req.body.isFeatured) }
+            { name: name.trim(), cityId, serviceCategoryId: categoryObjectId, serviceCategoryIds, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, policeVerification, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, isFeatured: toBoolean(req.body.isFeatured) }
         );
         return res.successUpdate(record);
     } catch (error) {
         if (error.code === 11000) {
             return res.clientError("Duplicate mobile, email, PAN, or Aadhar.", 409);
         }
+        return res.someThingWentWrong(error);
+    }
+};
+
+export const updateServiceProviderCategories = async (req, res) => {
+    try {
+        const record = await ServiceProvider.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
+        if (!record) return res.noRecords();
+        if (!record.serviceCategoryId) {
+            return res.clientError("Provider primary service category is not set.", 422, [{ field: "serviceCategoryId", message: "Set a primary category before assigning additional categories." }]);
+        }
+
+        const serviceCategoryIds = await resolveServiceCategoryIds(req.body.serviceCategoryIds);
+        const primaryId = ObjectId(record.serviceCategoryId);
+        if (!serviceCategoryIds.some((id) => String(id) === String(primaryId))) {
+            return res.clientError("Primary service category must remain assigned.", 422, [{ field: "serviceCategoryIds", message: "Primary service category cannot be removed here. Change the primary category in provider edit first." }]);
+        }
+
+        await ServiceProvider.updateOne({ _id: record._id }, { serviceCategoryIds });
+        return res.successUpdate(undefined, "Service categories updated.");
+    } catch (error) {
         return res.someThingWentWrong(error);
     }
 };
@@ -307,6 +333,9 @@ export const getSingleServiceProvider = async (req, res) => {
         if (!doc) return res.noRecords();
 
         doc.photos = await ServiceProviderPhoto.find({ providerId: doc._id }, '_id photoUrl displayOrder').sort({ displayOrder: 1 }).lean();
+        const categoryRows = await ServiceCategory.find({ _id: { $in: getProviderCategoryIds(doc) } }, { name: 1 }).lean();
+        const categoryNameById = new Map(categoryRows.map((row) => [String(row._id), row.name]));
+
         return res.success({
             _id: doc._id,
             userId: doc.userId,
@@ -316,6 +345,8 @@ export const getSingleServiceProvider = async (req, res) => {
             cityId: doc.cityId,
             areaIds: Array.isArray(doc.areaIds) ? doc.areaIds : [],
             serviceCategoryId: doc.serviceCategoryId,
+            serviceCategoryIds: getProviderCategoryIds(doc).map(String),
+            serviceCategoryNames: getProviderCategoryIds(doc).map((id) => categoryNameById.get(String(id)) || "").filter(Boolean),
             panCardNumber: doc.panCardNumber ?? "",
             aadharNumber: doc.aadharNumber ?? "",
             image: doc.image,

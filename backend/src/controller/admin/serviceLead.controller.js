@@ -4,6 +4,7 @@ import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 import moment from "moment";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
+import { getProviderCategoryIds, providerCategoryMatchFilter, providerServiceTypeCategoryMatch } from "../../helpers/providerCategories.js";
 import { applyCreatedAtRange, formatExportDateTime, sendExcelResponse } from "../../helpers/excelExport.js";
 
 const buildServiceLeadListPipeline = (query) => {
@@ -190,7 +191,7 @@ export const assignServiceLead = async (req, res) => {
             profileStatus: "approved",
             isVerified: true,
             cityId: lead.cityId,
-            serviceCategoryId: lead.serviceCategoryId
+            ...providerCategoryMatchFilter(lead.serviceCategoryId)
         });
         if (!provider) return res.clientError("Provider not found or does not match this lead's city and service category.", 422, [{ field: "providerId", message: "Invalid provider for this lead." }]);
 
@@ -199,11 +200,13 @@ export const assignServiceLead = async (req, res) => {
 
         const selectedServiceTypeIds = lead.serviceTypeId.map((x) => x);
 
+        const providerCategoryIds = getProviderCategoryIds(provider);
+
         const providerServices = await ProviderService.aggregate([
             { $match: { providerId: provider._id, serviceTypeId: { $in: selectedServiceTypeIds }, isActive: true } },
             { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceType" } },
             { $unwind: "$serviceType" },
-            { $match: { "serviceType.deletedAt": null, "serviceType.isActive": true, "serviceType.categoryId": provider.serviceCategoryId } },
+            { $match: { "serviceType.deletedAt": null, "serviceType.isActive": true, ...providerServiceTypeCategoryMatch(providerCategoryIds) } },
             { $project: { serviceTypeId: 1 } }
         ]);
 
@@ -223,7 +226,7 @@ export const assignServiceLead = async (req, res) => {
         const booking = await Booking.create({
             customerId,
             providerId: provider._id,
-            serviceCategoryId: provider.serviceCategoryId,
+            serviceCategoryId: lead.serviceCategoryId,
             serviceTypeId: selectedServiceTypeIds,
             cityId: provider.cityId,
             status: "price_pending",

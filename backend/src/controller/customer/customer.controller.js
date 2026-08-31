@@ -6,6 +6,7 @@ import { incrementProviderRatingTotals, resolveQuickTagIds } from "../../helpers
 import { bookingStatusMail } from "../../libraries/mail.js";
 import { notifyBookingChatMessage, notifyBookingStatusChange } from "../../helpers/bookingNotifications.js";
 import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignment.js";
+import { getProviderCategoryIds, providerCategoryMatchFilter, providerServiceTypeCategoryMatch } from "../../helpers/providerCategories.js";
 import { config } from "../../config/index.js";
 
 const bookingListPipeline = ({ customerId, status = "", limit = 5, pageNo = 1 }) => {
@@ -253,15 +254,24 @@ export const createCustomerBooking = async (req, res) => {
         const selectedServiceTypeIds = [...new Set((req.body.serviceTypeId || []).map((value) => String(value)))].map((value) => ObjectId(value)).filter(Boolean);
         if (!selectedServiceTypeIds.length) return res.clientError("At least one service type is required.", 422, [{ field: "serviceTypeId", message: "At least one service type is required." }]);
 
+        const providerCategoryIds = getProviderCategoryIds(provider);
+
         const providerServices = await ProviderService.aggregate([
             { $match: { providerId: provider._id, serviceTypeId: { $in: selectedServiceTypeIds }, isActive: true } },
             { $lookup: { from: "servicetypes", localField: "serviceTypeId", foreignField: "_id", as: "serviceType" } },
             { $unwind: "$serviceType" },
-            { $match: { "serviceType.deletedAt": null, "serviceType.isActive": true, "serviceType.categoryId": provider.serviceCategoryId } },
-            { $project: { serviceTypeId: 1 } }
+            { $match: { "serviceType.deletedAt": null, "serviceType.isActive": true, ...providerServiceTypeCategoryMatch(providerCategoryIds) } },
+            { $project: { serviceTypeId: 1, categoryId: "$serviceType.categoryId" } }
         ]);
 
         if (providerServices.length !== selectedServiceTypeIds.length) return res.clientError("One or more selected services are not available for this provider.", 422, [{ field: "serviceTypeId", message: "One or more selected services are not available for this provider." }]);
+
+        const bookingCategoryIds = [...new Set(providerServices.map((row) => String(row.categoryId)).filter(Boolean))];
+        if (bookingCategoryIds.length !== 1) {
+            return res.clientError("Selected services must belong to the same category.", 422, [{ field: "serviceTypeId", message: "Selected services must belong to the same category." }]);
+        }
+
+        const bookingServiceCategoryId = ObjectId(bookingCategoryIds[0]);
 
         const address = await Address.findOne({ _id: ObjectId(req.body.addressId), customerId, deletedAt: null }).populate("city", "name").populate("state", "name");
         if (!address) return res.noRecords(false, "Address not found.");
@@ -274,7 +284,7 @@ export const createCustomerBooking = async (req, res) => {
         const booking = await Booking.create({
             customerId,
             providerId: provider._id,
-            serviceCategoryId: provider.serviceCategoryId,
+            serviceCategoryId: bookingServiceCategoryId,
             serviceTypeId: selectedServiceTypeIds,
             cityId: provider.cityId,
             status: "price_pending",

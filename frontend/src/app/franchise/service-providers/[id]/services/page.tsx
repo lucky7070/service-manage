@@ -37,7 +37,9 @@ export default function FranchiseProviderServicesPage() {
     const { id } = useParams();
     const router = useRouter();
     const [providerName, setProviderName] = useState("");
-    const [providerCategoryId, setProviderCategoryId] = useState("");
+    const [providerCategoryIds, setProviderCategoryIds] = useState<string[]>([]);
+    const [providerCategoryOptions, setProviderCategoryOptions] = useState<{ value: string; label: string }[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState("");
     const [rows, setRows] = useState<ProviderServiceRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState<null | "add" | "edit">(null);
@@ -47,10 +49,20 @@ export default function FranchiseProviderServicesPage() {
     const getData = useCallback(async (isLoading = true) => {
         if (!id) return;
         setLoading(isLoading);
-        const { data } = await AxiosHelperFranchise.getData(`/service-providers/${id}/services`);
+        const [{ data }, { data: providerData }] = await Promise.all([
+            AxiosHelperFranchise.getData(`/service-providers/${id}/services`),
+            AxiosHelperFranchise.getData(`/service-providers/${id}`)
+        ]);
         if (data.status && data.data?.provider && data.data.record) {
             setProviderName(String(data.data.provider.name || ""));
-            setProviderCategoryId(String(data.data.provider.serviceCategoryId || ""));
+            const detail = providerData.status ? providerData.data : null;
+            const ids = Array.isArray(detail?.serviceCategoryIds) && detail.serviceCategoryIds.length
+                ? detail.serviceCategoryIds.map(String)
+                : [String(data.data.provider.serviceCategoryId || detail?.serviceCategoryId || "")].filter(Boolean);
+            const names = Array.isArray(detail?.serviceCategoryNames) ? detail.serviceCategoryNames : [];
+            setProviderCategoryIds(ids);
+            setProviderCategoryOptions(ids.map((value: string, index: number) => ({ value, label: names[index] || `Category ${index + 1}` })));
+            setSelectedCategoryId((current) => current && ids.includes(current) ? current : String(detail?.serviceCategoryId || ids[0] || ""));
             setRows(Array.isArray(data.data.record) ? data.data.record : []);
             setLoading(false);
         } else {
@@ -63,8 +75,8 @@ export default function FranchiseProviderServicesPage() {
     useEffect(() => { (() => { void getData(); })() }, [getData]);
 
     const loadServiceTypeOptions = useCallback(async (inputValue: string): Promise<ServiceTypeOption[]> => {
-        if (!providerCategoryId) return [];
-        const { data } = await AxiosHelperFranchise.getData("/service-types", { categoryId: providerCategoryId, query: inputValue || "", limit: 20 });
+        if (!selectedCategoryId) return [];
+        const { data } = await AxiosHelperFranchise.getData("/service-types", { categoryId: selectedCategoryId, query: inputValue || "", limit: 20 });
         if (data.status && Array.isArray(data.data)) {
             return data.data.map((row: { _id: string; name: string; basePrice?: number | null }) => ({
                 value: row._id,
@@ -73,7 +85,7 @@ export default function FranchiseProviderServicesPage() {
             }));
         }
         return [];
-    }, [providerCategoryId]);
+    }, [selectedCategoryId]);
 
     const openAdd = () => {
         setInitialValues({ _id: "", serviceTypeId: "", price: "", status: 1 });
@@ -190,6 +202,24 @@ export default function FranchiseProviderServicesPage() {
                 >
                     {({ values, setFieldValue, isSubmitting }) => (
                         <Form className="space-y-4">
+                            {providerCategoryIds.length > 1 ? (
+                                <div className="space-y-2">
+                                    <Label htmlFor="franchise-provider-service-category">Service Category</Label>
+                                    <Select
+                                        id="franchise-provider-service-category"
+                                        value={selectedCategoryId}
+                                        onChange={(e) => {
+                                            setSelectedCategoryId(e.target.value);
+                                            setServiceType(null);
+                                            setFieldValue("serviceTypeId", "");
+                                        }}
+                                    >
+                                        {providerCategoryOptions.map((option) => (
+                                            <Option key={option.value} value={option.value}>{option.label}</Option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            ) : null}
                             <div className="space-y-2">
                                 <Label htmlFor="franchise-provider-service-type">Service Type</Label>
                                 <AsyncSelect
@@ -203,7 +233,7 @@ export default function FranchiseProviderServicesPage() {
                                         if (!values.price && next?.basePrice != null) setFieldValue("price", String(next.basePrice));
                                     }}
                                     placeholder="Search service type..."
-                                    isDisabled={!providerCategoryId}
+                                    isDisabled={!selectedCategoryId}
                                 />
                                 <ErrorMessage className="text-xs text-rose-600" name="serviceTypeId" component="small" />
                             </div>

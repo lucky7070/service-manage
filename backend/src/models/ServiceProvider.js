@@ -14,6 +14,7 @@ const Schema = new mongoose.Schema(
         cityId: { type: mongoose.Schema.Types.ObjectId, ref: "City", default: null, index: true },
         areaIds: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Area" }], default: [], index: true },
         serviceCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "ServiceCategory", default: null, index: true },
+        serviceCategoryIds: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: "ServiceCategory" }], default: [], index: true },
         franchiseId: { type: mongoose.Schema.Types.ObjectId, ref: "Franchise", default: null, index: true },
         panCardNumber: { type: String, sparse: true, default: null },
         aadharNumber: { type: String, sparse: true, default: null },

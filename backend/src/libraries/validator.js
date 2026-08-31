@@ -160,6 +160,19 @@ const price = check("price", "Price is required.").exists().notEmpty().isFloat({
 const providerId = check("providerId", "Provider is required.").exists().notEmpty().isMongoId().withMessage('Invalid provider ID.');
 const serviceTypeIds = check("serviceTypeId", "At least one service type is required.").exists().isArray({ min: 1 }).withMessage('At least one service type is required.');
 const serviceTypeIdItems = check("serviceTypeId.*", "Invalid service type.").isMongoId().withMessage('Invalid service type ID.');
+const serviceCategoryIdsRequired = check("serviceCategoryIds", "serviceCategoryIds is required.").exists().customSanitizer((value) => {
+    if (value == null) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) return parsed;
+        } catch { /* fall through */ }
+        return value.includes(",") ? value.split(",").map((s) => s.trim()).filter(Boolean) : (value.trim() ? [value] : []);
+    }
+    return [value];
+}).isArray({ min: 1 }).withMessage("At least one service category is required.");
+const serviceCategoryIdItems = check("serviceCategoryIds.*").optional().isMongoId().withMessage("Invalid service category ID.");
 const areaIdsRequired = check("areaIds", "areaIds is required.").exists().customSanitizer((value) => {
     if (value == null) return [];
     if (Array.isArray(value)) return value;
@@ -291,6 +304,9 @@ export const validator = (method) => {
             break;
         case "admin-service-provider-areas-update":
             output = [id, areaIdsRequired, areaIdItems];
+            break;
+        case "admin-service-provider-categories-update":
+            output = [id, serviceCategoryIdsRequired, serviceCategoryIdItems];
             break;
         case "service-provider-status":
             output = [id, profileStatus, isVerified, rejectionReason];

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderAreas, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider, exportServiceProviders } from "../../controller/admin/serviceProvider.controller.js";
+import { getServiceProvider, createServiceProvider, updateServiceProvider, updateServiceProviderAreas, updateServiceProviderCategories, updateServiceProviderStatus, deleteServiceProvider, getSingleServiceProvider, exportServiceProviders } from "../../controller/admin/serviceProvider.controller.js";
 import { getServiceProviderPhotos, uploadServiceProviderPhotos, deleteServiceProviderPhoto, reorderServiceProviderPhotos } from "../../controller/admin/serviceProviderPhoto.controller.js";
 import { createProviderService, deleteProviderService, getProviderServices, updateProviderService } from "../../controller/admin/providerService.controller.js";
 import { assignSubscriptionToProvider, getProviderAssignedSubscriptions } from "../../controller/admin/assignedSubscription.controller.js";
@@ -22,6 +22,7 @@ router.put(
 );
 router.put("/service-providers/:id/status", validator("service-provider-status"), updateServiceProviderStatus);
 router.put("/service-providers/:id/areas", validator("admin-service-provider-areas-update"), updateServiceProviderAreas);
+router.put("/service-providers/:id/categories", validator("admin-service-provider-categories-update"), updateServiceProviderCategories);
 router.delete("/service-providers/:id", deleteServiceProvider);
 router.get("/service-providers/export", exportServiceProviders);
 router.get("/service-providers/:id", getSingleServiceProvider);

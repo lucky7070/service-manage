@@ -28,14 +28,15 @@ export const providerServicesAggregation = (providerId) => [
     { $sort: { categoryName: 1, serviceTypeName: 1 } }
 ];
 
-export async function loadServiceTypeForProviderCategory(serviceTypeId, serviceCategoryId) {
+export async function loadServiceTypeForProviderCategory(serviceTypeId, serviceCategoryIdOrIds) {
     const typeId = ObjectId(serviceTypeId);
     if (!typeId) return { error: { status: 422, message: "Service type is required.", field: "serviceTypeId" } };
 
     const serviceType = await ServiceType.findOne({ _id: typeId, deletedAt: null, isActive: true }).lean();
     if (!serviceType) return { error: { status: 404, message: "Service type not found." } };
 
-    if (!serviceCategoryId || String(serviceType.categoryId) !== String(serviceCategoryId)) {
+    const allowedCategoryIds = (Array.isArray(serviceCategoryIdOrIds) ? serviceCategoryIdOrIds : [serviceCategoryIdOrIds]).map(ObjectId).filter(Boolean).map(String);
+    if (allowedCategoryIds.length === 0 || !allowedCategoryIds.includes(String(serviceType.categoryId))) {
         return { error: { status: 422, message: "Service type must belong to your service category.", field: "serviceTypeId" } };
     }
 

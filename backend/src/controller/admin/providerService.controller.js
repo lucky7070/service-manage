@@ -1,8 +1,9 @@
 import { ProviderService, ServiceProvider } from "../../models/index.js";
 import { ObjectId } from "../../helpers/utils.js";
+import { getProviderCategoryIds } from "../../helpers/providerCategories.js";
 import { aggregateProviderServices, loadServiceTypeForProviderCategory, parseProviderServicePrice } from "../../helpers/providerServiceOps.js";
 
-const getProvider = async (id) => ServiceProvider.findOne({ _id: ObjectId(id), deletedAt: null }, "_id name mobile email cityId serviceCategoryId").lean();
+const getProvider = async (id) => ServiceProvider.findOne({ _id: ObjectId(id), deletedAt: null }, "_id name mobile email cityId serviceCategoryId serviceCategoryIds").lean();
 
 export const getProviderServices = async (req, res) => {
     try {
@@ -21,7 +22,7 @@ export const createProviderService = async (req, res) => {
         const provider = await getProvider(req.params.id);
         if (!provider) return res.noRecords();
 
-        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, provider.serviceCategoryId);
+        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, getProviderCategoryIds(provider));
         if (typeCheck.error) {
             const e = typeCheck.error;
             return res.clientError(e.message, e.status, e.field ? [{ field: e.field, message: e.message }] : []);
@@ -56,7 +57,7 @@ export const updateProviderService = async (req, res) => {
         const doc = await ProviderService.findOne({ _id: ObjectId(req.params.serviceId), providerId: provider._id });
         if (!doc) return res.noRecords();
 
-        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, provider.serviceCategoryId);
+        const typeCheck = await loadServiceTypeForProviderCategory(req.body.serviceTypeId, getProviderCategoryIds(provider));
         if (typeCheck.error) {
             const e = typeCheck.error;
             return res.clientError(e.message, e.status, e.field ? [{ field: e.field, message: e.message }] : []);

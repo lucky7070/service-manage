@@ -41,7 +41,9 @@ export default function ServiceProviderServicesPage() {
     const router = useRouter();
 
     const [providerName, setProviderName] = useState("");
-    const [providerCategoryId, setProviderCategoryId] = useState("");
+    const [providerCategoryIds, setProviderCategoryIds] = useState<string[]>([]);
+    const [providerCategoryOptions, setProviderCategoryOptions] = useState<{ value: string; label: string }[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState("");
     const [rows, setRows] = useState<ProviderServiceRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState<null | "add" | "edit">(null);
@@ -52,10 +54,18 @@ export default function ServiceProviderServicesPage() {
         if (!id) return;
 
         setLoading(isLoading);
-        const { data } = await AxiosHelperAdmin.getData(`/service-providers/${id}/services`);
+        const [{ data }, { data: providerData }] = await Promise.all([
+            AxiosHelperAdmin.getData(`/service-providers/${id}/services`),
+            AxiosHelperAdmin.getData(`/service-providers/${id}`)
+        ]);
         if (data.status && data.data && data.data.provider && data.data.record) {
             setProviderName(String(data.data.provider.name || ""));
-            setProviderCategoryId(String(data.data.provider.serviceCategoryId || ""));
+            const detail = providerData.status ? providerData.data : null;
+            const ids = Array.isArray(detail?.serviceCategoryIds) && detail.serviceCategoryIds.length ? detail.serviceCategoryIds.map(String) : [String(data.data.provider.serviceCategoryId || detail?.serviceCategoryId || "")].filter(Boolean);
+            const names = Array.isArray(detail?.serviceCategoryNames) ? detail.serviceCategoryNames : [];
+            setProviderCategoryIds(ids);
+            setProviderCategoryOptions(ids.map((value: string, index: number) => ({ value, label: names[index] || `Category ${index + 1}` })));
+            setSelectedCategoryId((current) => current && ids.includes(current) ? current : String(detail?.serviceCategoryId || ids[0] || ""));
             setRows(Array.isArray(data.data.record) ? data.data.record : []);
             setLoading(false);
         } else {
@@ -74,9 +84,9 @@ export default function ServiceProviderServicesPage() {
     }, [getData]);
 
     const loadServiceTypeOptions = useCallback(async (inputValue: string): Promise<ServiceTypeOption[]> => {
-        if (!providerCategoryId) return [];
+        if (!selectedCategoryId) return [];
 
-        const { data } = await AxiosHelperAdmin.getData("/service-types", { limit: 20, pageNo: 1, status: 1, categoryId: providerCategoryId, query: inputValue || "", sortBy: "name", sortOrder: "asc" });
+        const { data } = await AxiosHelperAdmin.getData("/service-types", { limit: 20, pageNo: 1, status: 1, categoryId: selectedCategoryId, query: inputValue || "", sortBy: "name", sortOrder: "asc" });
         if (data.status && Array.isArray(data?.data?.record)) {
             return data.data.record.map((row: { _id: string; name: string; basePrice?: number | null }) => ({
                 value: row._id,
@@ -86,7 +96,7 @@ export default function ServiceProviderServicesPage() {
         }
 
         return [];
-    }, [providerCategoryId]);
+    }, [selectedCategoryId]);
 
     const openAdd = () => {
         setInitialValues({ _id: "", serviceTypeId: "", price: "", status: 1 });
@@ -204,6 +214,24 @@ export default function ServiceProviderServicesPage() {
                 }}>
                     {({ values, setFieldValue, isSubmitting }) => (
                         <Form className="space-y-4">
+                            {providerCategoryIds.length > 1 ? (
+                                <div className="space-y-2">
+                                    <Label htmlFor="provider-service-category">Service Category</Label>
+                                    <Select
+                                        id="provider-service-category"
+                                        value={selectedCategoryId}
+                                        onChange={(e) => {
+                                            setSelectedCategoryId(e.target.value);
+                                            setServiceType(null);
+                                            setFieldValue("serviceTypeId", "");
+                                        }}
+                                    >
+                                        {providerCategoryOptions.map((option) => (
+                                            <Option key={option.value} value={option.value}>{option.label}</Option>
+                                        ))}
+                                    </Select>
+                                </div>
+                            ) : null}
                             <div className="space-y-2">
                                 <Label htmlFor="provider-service-type">Service Type</Label>
                                 <AsyncSelect
@@ -219,7 +247,7 @@ export default function ServiceProviderServicesPage() {
                                         }
                                     }}
                                     placeholder="Search service type..."
-                                    isDisabled={!providerCategoryId}
+                                    isDisabled={!selectedCategoryId}
                                 />
                                 <ErrorMessage className="text-xs text-rose-600" name="serviceTypeId" component="small" />
                             </div>
