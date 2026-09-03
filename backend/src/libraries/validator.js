@@ -38,6 +38,8 @@ const experienceYears = check("experienceYears").optional().custom((value) => {
 });
 
 const experienceDescription = check("experienceDescription").optional({ values: "falsy" }).isLength({ max: 5000 }).withMessage('Experience description must be between 0 to 5000 characters long.').trim();
+const providerAddressRequired = check("address", "Address is required.").trim().notEmpty().isLength({ min: 5, max: 500 }).withMessage("Address must be between 5 to 500 characters long.");
+const providerAddressOptional = check("address").optional({ values: "falsy" }).trim().isLength({ min: 5, max: 500 }).withMessage("Address must be between 5 to 500 characters long.");
 const profileStatus = check("profileStatus", "Profile status is required.").exists().notEmpty().isIn(SERVICE_PROVIDER_PROFILE_STATUSES);
 const rejectionReason = check("rejectionReason").optional({ values: "falsy" }).trim().isLength({ max: 2000 }).custom((value, { req }) => {
     const status = String(req.body.profileStatus);
@@ -333,7 +335,7 @@ export const validator = (method) => {
             output = [name, status, slug, nameHiCategory, descriptionOptional, displayOrder];
             break;
         case "service-provider":
-            output = [personName, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, image, panCardDocument, aadharDocument];
+            output = [personName, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, providerAddressRequired, image, panCardDocument, aadharDocument];
             break;
         case "service-provider-areas-update":
             output = [areaIdsRequired, areaIdItems];
@@ -412,7 +414,7 @@ export const validator = (method) => {
             output = [pageSlug, pageTitle, pageTitleHi, metaDescription, metaKeywords, content, contentHi, viewCount];
             break;
         case "service-provider-register":
-            output = [personName, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, otp, image, panCardDocument, aadharDocument, referralCodeOptional, fcmTokenOptional, deviceIdOptional];
+            output = [personName, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription, providerAddressOptional, otp, image, panCardDocument, aadharDocument, referralCodeOptional, fcmTokenOptional, deviceIdOptional];
             break;
         case "service-provider-login":
             output = [mobile, otp, fcmTokenOptional, deviceIdOptional];

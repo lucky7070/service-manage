@@ -39,6 +39,7 @@ type ServiceProvider = {
     serviceCategoryId: string;
     panCardNumber: string;
     aadharNumber: string;
+    address: string;
     image: File | string | null;
     panCardDocument: File | string | null;
     aadharDocument: File | string | null;
@@ -75,7 +76,7 @@ type ServiceProviderRecord = {
 type SortBy = "name" | "mobile" | "email" | "userId" | "profileStatus" | "createdAt" | "cityId" | "serviceCategoryId" | "referredCount" | "isFeatured" | "isVerified" | "currentSubscription";
 type SortOrder = "asc" | "desc";
 
-const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", areaIds: [], serviceCategoryId: "", panCardNumber: "", aadharNumber: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, policeVerification: null, profileStatus: "pending", rejectionReason: "", isFeatured: false, referredCount: 0 };
+const INITIAL_VALUES: ServiceProvider = { _id: "", name: "", mobile: "", email: "", cityId: "", areaIds: [], serviceCategoryId: "", panCardNumber: "", aadharNumber: "", address: "", experienceYears: "", experienceDescription: "", image: null, panCardDocument: null, aadharDocument: null, policeVerification: null, profileStatus: "pending", rejectionReason: "", isFeatured: false, referredCount: 0 };
 
 const statusValidationSchema = Yup.object().shape({
     profileStatus: Yup.string().oneOf(SERVICE_PROVIDER_PROFILE_STATUSES).required("Profile status is required."),
@@ -110,6 +111,7 @@ const validationSchema = Yup.object().shape({
     email: Yup.string().email("Invalid email.").required("Email is required."),
     panCardNumber: Yup.string().matches(/^[A-Za-z]{5}[0-9]{4}[A-Za-z]{1}$/, "PAN format: ABCDE1234F").required("PAN is required."),
     aadharNumber: Yup.string().matches(/^[0-9]{12}$/, "Aadhar must be 12 digits.").required("Aadhar is required."),
+    address: Yup.string().trim().min(5, "Address is too short.").max(500, "Address is too long.").required("Address is required."),
     experienceYears: Yup.number().typeError("Experience years must be numeric.").min(0, "Experience must be 0 or more.").max(80, "Experience cannot exceed 80 years.").required("Experience years is required."),
     cityId: Yup.string().required("City is required."),
     serviceCategoryId: Yup.string().required("Service category is required."),
@@ -262,6 +264,7 @@ export default function AdminServiceProvidersPage() {
             serviceCategoryId: String(data.serviceCategoryId ?? ""),
             panCardNumber: String(data.panCardNumber ?? ""),
             aadharNumber: String(data.aadharNumber ?? ""),
+            address: String(data.address ?? ""),
             experienceYears: data.experienceYears ?? 0,
             experienceDescription: String(data.experienceDescription ?? ""),
             profileStatus: data.profileStatus || "pending",
@@ -717,6 +720,11 @@ export default function AdminServiceProvidersPage() {
                                         <ErrorMessage className="text-xs text-rose-600" name="aadharNumber" component="small" />
                                     </div>
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="sp-address">Address <span className="text-red-500">*</span></Label>
+                                    <Field as={Textarea} id="sp-address" name="address" rows={2} placeholder="House / street / area / city" />
+                                    <ErrorMessage className="text-xs text-rose-600" name="address" component="small" />
+                                </div>
                                 <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label>PAN document</Label>
@@ -876,6 +884,7 @@ export default function AdminServiceProvidersPage() {
                         <p><span className="font-semibold">Service category :</span> {initialValues.serviceCategoryName || "—"}</p>
                         <p><span className="font-semibold">PAN :</span> {initialValues.panCardNumber || "—"}</p>
                         <p><span className="font-semibold">Aadhar :</span> {initialValues.aadharNumber || "—"}</p>
+                        <p className="sm:col-span-2"><span className="font-semibold">Address :</span> {initialValues.address || "—"}</p>
                         <p><span className="font-semibold">Experience :</span> {initialValues.experienceYears !== "" && initialValues.experienceYears != null ? `${initialValues.experienceYears} years` : "—"}</p>
                         <p><span className="font-semibold">Submitted :</span> {initialValues.createdAt ? moment(initialValues.createdAt).format("DD-MM-YYYY HH:mm") : "—"}</p>
                         {initialValues.experienceDescription ? (

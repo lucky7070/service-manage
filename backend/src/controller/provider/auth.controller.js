@@ -136,6 +136,7 @@ const getProfile = async (user) => {
                 serviceCategoryName: { $ifNull: ["$category.name", "N/A"] },
                 panCardNumber: 1,
                 aadharNumber: 1,
+                address: 1,
                 panCardDocument: 1,
                 aadharDocument: 1,
                 policeVerification: 1,
@@ -219,7 +220,7 @@ export const login = async (req, res) => {
 
 export const register = async (req, res) => {
     try {
-        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "", otp, referralCode = "" } = req.body;
+        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "", otp, referralCode = "", address = "" } = req.body;
 
         const verify = await OtpVerification.findOne({
             phoneNumber: String(mobile).trim(),
@@ -309,6 +310,7 @@ export const register = async (req, res) => {
             panCardDocument,
             aadharDocument,
             policeVerification,
+            address: String(address || "").trim() || null,
             experienceYears: Number(experienceYears ?? 0),
             experienceDescription: String(experienceDescription).trim() || null,
             referredBy,

@@ -59,6 +59,7 @@ const ProRegistrationForm = () => {
             aadharNumber: Yup.string().trim().matches(/^[0-9]{12}$/, "Aadhar must be exactly 12 digits.").required("Aadhar number is required."),
             experienceYears: Yup.number().typeError("Experience years must be numeric.").min(0, "Experience must be 0 or more.").max(80, "Experience cannot exceed 80 years.").required("Experience years is required."),
             experienceDescription: Yup.string().trim().max(5000, "Description is too long."),
+            address: Yup.string().trim().min(5, "Address must be at least 5 characters.").max(500, "Address is too long.").required("Address is required."),
             referralCode: Yup.string().trim().max(20, "Referral code is too long."),
             image: Yup.mixed().required("Profile image is required.").test("file-type", "Profile image must be JPEG, PNG, WebP, or GIF.", checkImageType).test("file-size", "Profile image must be less than 5MB.", checkDocSize),
             panCardDocument: Yup.mixed().required("PAN card document is required.").test("file-type", "PAN card document must be JPEG, PNG, WebP, or GIF, or PDF.", checkDocType).test("file-size", "PAN card document must be less than 5MB.", checkDocSize),
@@ -98,6 +99,7 @@ const ProRegistrationForm = () => {
                 aadharNumber: "",
                 experienceYears: "",
                 experienceDescription: "",
+                address: "",
                 referralCode,
                 image: null,
                 panCardDocument: null,
@@ -197,6 +199,11 @@ const ProRegistrationForm = () => {
                             <Label required>Years of Experience</Label>
                             <Field as={Input} name="experienceYears" type="number" min={0} max={80} placeholder="3" disabled={locked} />
                             <ErrorMessage name="experienceYears" component="small" className="mt-1 block text-xs text-rose-600" />
+                        </div>
+                        <div className="col-span-1 sm:col-span-2">
+                            <Label required>Address</Label>
+                            <Field as={Textarea} name="address" rows={3} placeholder="House / street / area / city / pincode" maxLength={500} disabled={locked} />
+                            <ErrorMessage name="address" component="small" className="mt-1 block text-xs text-rose-600" />
                         </div>
                         <div className="col-span-1 sm:col-span-2">
                             <Label>Experience Description</Label>

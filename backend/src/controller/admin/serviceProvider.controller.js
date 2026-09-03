@@ -73,7 +73,7 @@ const buildServiceProviderListPipeline = (query) => {
                 pipeline: [{ $match: { deletedAt: null } }, { $count: "n" }]
             }
         },
-        { $project: { userId: 1, slug: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, referredCount: { $ifNull: [{ $first: "$referredProviders.n" }, 0] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, serviceCategoryIds: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1, deletedAt: 1 } }
+        { $project: { userId: 1, slug: 1, currentSubscription: { $ifNull: ["$subscription.voucherNo", null] }, referredCount: { $ifNull: [{ $first: "$referredProviders.n" }, 0] }, name: 1, mobile: 1, email: 1, panCardNumber: 1, aadharNumber: 1, address: 1, cityId: 1, areaIds: 1, serviceCategoryId: 1, serviceCategoryIds: 1, stateId: "$city.stateId", countryId: "$city.countryId", cityName: "$city.name", serviceCategoryName: "$serviceCategory.name", profileStatus: 1, rejectionReason: 1, registerFrom: 1, isVerified: 1, isActive: 1, isFeatured: 1, experienceYears: 1, experienceDescription: 1, image: 1, panCardDocument: 1, aadharDocument: 1, policeVerification: 1, totalCompletedServices: 1, totalRating: 1, ratingCount: 1, createdAt: 1, deletedAt: 1 } }
     ];
 
     return { pipeline, sortBy, sortOrder };
@@ -81,7 +81,7 @@ const buildServiceProviderListPipeline = (query) => {
 
 export const createServiceProvider = async (req, res) => {
     try {
-        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
+        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "", address = "" } = req.body;
 
         const checkExist = await ServiceProvider.findOne({ deletedAt: null, $or: [{ mobile }, { email }, { panCardNumber }, { aadharNumber }] });
         if (checkExist) {
@@ -111,6 +111,7 @@ export const createServiceProvider = async (req, res) => {
         const record = await ServiceProvider.create({
             name: name.trim(),
             mobile, email, panCardNumber, cityId, serviceCategoryId: categoryObjectId, serviceCategoryIds: [categoryObjectId], aadharNumber, image, panCardDocument, aadharDocument, policeVerification,
+            address: String(address || "").trim() || null,
             experienceYears: experienceYears ?? 0,
             experienceDescription: experienceDescription?.trim() || null,
             registerFrom: "admin",
@@ -133,7 +134,7 @@ export const updateServiceProvider = async (req, res) => {
         const record = await ServiceProvider.findOne({ _id: ObjectId(req.params.id), deletedAt: null });
         if (!record) return res.noRecords();
 
-        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "" } = req.body;
+        const { name, mobile, email, cityId, serviceCategoryId, panCardNumber, aadharNumber, experienceYears, experienceDescription = "", address = "" } = req.body;
 
         const checkExist = await ServiceProvider.findOne({ _id: { $ne: record._id }, deletedAt: null, $or: [{ mobile }, { email }, { panCardNumber }, { aadharNumber }] });
         if (checkExist) {
@@ -165,7 +166,7 @@ export const updateServiceProvider = async (req, res) => {
 
         await ServiceProvider.updateOne(
             { _id: record._id },
-            { name: name.trim(), cityId, serviceCategoryId: categoryObjectId, serviceCategoryIds, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, policeVerification, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, isFeatured: toBoolean(req.body.isFeatured) }
+            { name: name.trim(), cityId, serviceCategoryId: categoryObjectId, serviceCategoryIds, mobile, email, panCardNumber, aadharNumber, image, panCardDocument, aadharDocument, policeVerification, address: String(address || "").trim() || null, experienceYears: experienceYears ?? 0, experienceDescription: experienceDescription?.trim() || null, isFeatured: toBoolean(req.body.isFeatured) }
         );
         return res.successUpdate(record);
     } catch (error) {
@@ -352,6 +353,7 @@ export const getSingleServiceProvider = async (req, res) => {
             serviceCategoryNames: getProviderCategoryIds(doc).map((id) => categoryNameById.get(String(id)) || "").filter(Boolean),
             panCardNumber: doc.panCardNumber ?? "",
             aadharNumber: doc.aadharNumber ?? "",
+            address: doc.address ?? "",
             image: doc.image,
             panCardDocument: doc.panCardDocument,
             aadharDocument: doc.aadharDocument,
