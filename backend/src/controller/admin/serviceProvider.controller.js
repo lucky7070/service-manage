@@ -8,7 +8,7 @@ import { getActiveSubscriptionFilter } from "../../helpers/subscriptionAssignmen
 import { formatExportDateTime, sendExcelResponse } from "../../helpers/excelExport.js";
 
 const buildServiceProviderListPipeline = (query) => {
-    let { query: searchQuery, profileStatus, cityId, serviceCategoryId, franchise, franchiseId, deleted, sortBy = "createdAt", sortOrder = "desc" } = query;
+    let { query: searchQuery, profileStatus, cityId, serviceCategoryId, franchise, franchiseId, referredBy, deleted, sortBy = "createdAt", sortOrder = "desc" } = query;
 
     const showDeleted = Number(deleted) === 1 || String(deleted) === "true";
     const allowedSort = showDeleted ? ["name", "mobile", "email", "userId", "profileStatus", "createdAt", "deletedAt"] : ["name", "mobile", "email", "userId", "profileStatus", "createdAt", "currentSubscription", "referredCount", "isFeatured", "isVerified"];
@@ -44,6 +44,9 @@ const buildServiceProviderListPipeline = (query) => {
 
     const franchiseFilterId = ObjectId(franchise || franchiseId);
     if (franchiseFilterId) filter.franchiseId = franchiseFilterId;
+
+    const referredById = ObjectId(referredBy);
+    if (referredById) filter.referredBy = referredById;
 
     const pipeline = [
         { $match: filter },

@@ -48,7 +48,15 @@ export const sendPushNotification = async ({ tokens, title, body, data = {} }) =
         notification: { title: String(title || ""), body: String(body || "") },
         data: stringData,
         android: { priority: "high" },
-        apns: { payload: { aps: { sound: "default" } } }
+        apns: {
+            headers: { "apns-priority": "10" },
+            payload: {
+                aps: {
+                    sound: "default",
+                    "content-available": 1,
+                },
+            },
+        },
     });
 
     const invalidTokens = [];

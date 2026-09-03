@@ -124,10 +124,11 @@ export default function AdminServiceProvidersPage() {
 
     const searchParams = useSearchParams();
     const franchiseFromUrl = String(searchParams.get("franchise") || "").trim();
+    const referredByFromUrl = String(searchParams.get("referredBy") || "").trim();
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit" | "status" | "areas" | "categories" | "qr-code">(null);
     const [data, setData] = useState<ServiceProviderRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; franchise: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "", franchise: franchiseFromUrl });
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; profileStatus: "" | ProfileStatus; franchise: string; referredBy: string; }>({ limit: 10, pageNo: 1, query: "", sortBy: "createdAt", sortOrder: "desc", profileStatus: "", franchise: franchiseFromUrl, referredBy: referredByFromUrl });
     const [initialValues, setInitialValues] = useState<ServiceProvider>(INITIAL_VALUES);
     const [areasInitialValues, setAreasInitialValues] = useState<{ _id: string; areaIds: string[] }>({ _id: "", areaIds: [] });
     const [categoriesInitialValues, setCategoriesInitialValues] = useState<{ _id: string; serviceCategoryIds: string[] }>({ _id: "", serviceCategoryIds: [] });
@@ -137,7 +138,7 @@ export default function AdminServiceProvidersPage() {
     const [areaSearchQuery, setAreaSearchQuery] = useState("");
     const [areasLoading, setAreasLoading] = useState(false);
     const [areasTotalCount, setAreasTotalCount] = useState(0);
-    const debouncedAreaSearchRef = useRef(debounce((_cityId: string, _query: string) => { }, 350));
+    const debouncedAreaSearchRef = useRef(debounce((_cityId: string, _query: string) => { void _cityId; void _query; }, 350));
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [city, setCity] = useState<{ value: string; label: string } | null>(null);
     const [serviceCategory, setServiceCategory] = useState<{ value: string; label: string } | null>(null);
@@ -221,6 +222,13 @@ export default function AdminServiceProvidersPage() {
         debouncedFetchRef.current();
         return () => { debouncedFetchRef.current.cancel(); };
     }, [param]);
+
+    useEffect(() => {
+        setParam((prev) => {
+            if (prev.referredBy === referredByFromUrl) return prev;
+            return { ...prev, pageNo: 1, referredBy: referredByFromUrl };
+        });
+    }, [referredByFromUrl]);
 
     const handleDelete = async (id: string) => {
         const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
@@ -375,7 +383,7 @@ export default function AdminServiceProvidersPage() {
                         placeholder="Search name, mobile, email, user ID, PAN..."
                     />
                     <div className="flex flex-wrap items-center gap-2 justify-end min-w-80">
-                        {param.franchise ? <Link href="/admin/service-providers" className="gap-1"><Button variant="secondary" size="sm">All</Button></Link> : null}
+                        {(param.franchise || param.referredBy) ? <Link href="/admin/service-providers" className="gap-1"><Button variant="secondary" size="sm">All</Button></Link> : null}
                         <Select
                             value={param.profileStatus}
                             onChange={(e) => setParam((prev) => ({ ...prev, pageNo: 1, profileStatus: e.target.value === "" ? "" : (e.target.value as ProfileStatus) }))}
@@ -472,9 +480,9 @@ export default function AdminServiceProvidersPage() {
                                     </td>
                                     <td className="px-3 py-2 text-center">
                                         {(row.referredCount ?? 0) > 0 ? (
-                                            <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                            <Link href={`/admin/service-providers?referredBy=${row._id}`} className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700 hover:underline dark:bg-indigo-900 dark:text-indigo-300" title="View referred service providers">
                                                 {row.referredCount}
-                                            </span>
+                                            </Link>
                                         ) : (
                                             <span className="text-xs text-slate-400">—</span>
                                         )}

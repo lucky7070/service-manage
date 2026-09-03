@@ -1,4 +1,4 @@
-import { Building2, CalendarCheck, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPin, MapPinned, MailQuestionMark, Receipt, Settings, Shield, Store, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
+import { Building2, CalendarCheck, CalendarPlus, ClipboardList, CircleHelp, CreditCard, FileText, Globe, HardHat, Heart, History, ImageIcon, LayoutDashboard, Layers, Map, MapPin, MapPinned, MailQuestionMark, Receipt, Settings, Shield, Store, Tags, UserCog, UserCircle, Users, Wrench, Quote } from "lucide-react";
 
 export type SidebarItem = {
     href: string;
@@ -134,6 +134,7 @@ export const PERMISSIONS = [
         permissions: [
             { id: 345, label: "View Bookings" },
             { id: 346, label: "Booking leads (assign provider)" },
+            { id: 347, label: "Create Booking" },
         ]
     },
     {
@@ -273,6 +274,7 @@ export const MENU: Array<SidebarItem | SidebarGroup> = [
     { href: "/admin/enquiries", label: "Enquiries", icon: MailQuestionMark, permission_id: 401 },
     { href: "/admin/purchased-plan", label: "Purchased plans", icon: Receipt, permission_id: 458 },
     { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck, permission_id: 345 },
+    { href: "/admin/bookings/create", label: "Create booking", icon: CalendarPlus, permission_id: 347 },
     { href: "/admin/service-leads", label: "Booking leads", icon: ClipboardList, permission_id: 346 },
     {
         label: "Master",
@@ -405,6 +407,11 @@ export const ADMIN_ROUTE_PERMISSIONS: RoutePermissionRule[] = [
         path: "/admin/service-leads",
         permission_id: 346,
         items: [{ label: "Booking leads" }]
+    },
+    {
+        path: "/admin/bookings/create",
+        permission_id: 347,
+        items: [{ label: "Bookings", href: "/admin/bookings" }, { label: "Create booking" }]
     },
     {
         path: "/admin/bookings/:slug",

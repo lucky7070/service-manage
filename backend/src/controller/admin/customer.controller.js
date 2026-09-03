@@ -6,7 +6,7 @@ import { getSettings } from "../../helpers/database.js";
 import { formatExportDate, formatExportDateTime, sendExcelResponse } from "../../helpers/excelExport.js";
 
 const buildCustomerListPipeline = (query) => {
-    let { query: searchQuery, status, sortBy = "createdAt", sortOrder = "desc" } = query;
+    let { query: searchQuery, status, referredBy, sortBy = "createdAt", sortOrder = "desc" } = query;
     sortBy = ["name", "mobile", "email", "dateOfBirth", "status", "createdAt", "userId", "referredCount"].includes(String(sortBy)) ? String(sortBy) : "createdAt";
     sortOrder = ["asc", "desc"].includes(String(sortOrder).toLowerCase()) ? String(sortOrder).toLowerCase() : "desc";
 
@@ -23,6 +23,9 @@ const buildCustomerListPipeline = (query) => {
     if (status !== null && status !== undefined && status !== "") {
         filter.isActive = Number(status) === 1;
     }
+
+    const referredById = ObjectId(referredBy);
+    if (referredById) filter.referredBy = referredById;
 
     const pipeline = [
         { $match: filter },

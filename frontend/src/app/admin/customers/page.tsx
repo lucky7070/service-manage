@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Image from "@/components/ui/Image";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { debounce } from "lodash";
@@ -60,16 +61,19 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function AdminCustomersPage() {
+    const searchParams = useSearchParams();
+    const referredByFromUrl = String(searchParams.get("referredBy") || "").trim();
     const debouncedFetchRef = useRef(debounce(() => { }, 0));
     const [open, setOpen] = useState<null | "add" | "edit">(null);
     const [data, setData] = useState<CustomerRecord>({ count: 0, record: [], totalPages: 0, pagination: [] });
-    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1 }>({
+    const [param, setParam] = useState<{ limit: number; pageNo: number; query: string; sortBy: SortBy; sortOrder: SortOrder; status: "" | 0 | 1; referredBy: string }>({
         limit: 10,
         pageNo: 1,
         query: "",
         sortBy: "createdAt",
         sortOrder: "desc",
-        status: ""
+        status: "",
+        referredBy: referredByFromUrl
     });
     const [initialValues, setInitialValues] = useState<Customer>({
         _id: "",
@@ -102,6 +106,15 @@ export default function AdminCustomersPage() {
         debouncedFetchRef.current();
         return () => { debouncedFetchRef.current.cancel(); };
     }, [param]);
+
+    useEffect(() => {
+        (() => {
+            setParam((prev) => {
+                if (prev.referredBy === referredByFromUrl) return prev;
+                return { ...prev, pageNo: 1, referredBy: referredByFromUrl };
+            });
+        })()
+    }, [referredByFromUrl]);
 
     const handleDelete = async (id: string) => {
         const { isConfirmed } = await Swal.fire(getSweetAlertConfig({}));
@@ -178,6 +191,7 @@ export default function AdminCustomersPage() {
                         placeholder="Search name, mobile, email, user ID..."
                     />
                     <div className="flex flex-wrap items-center gap-2 justify-end min-w-80 ">
+                        {param.referredBy ? <Link href="/admin/customers" className="gap-1"><Button variant="secondary" size="sm">All</Button></Link> : null}
                         <Select
                             value={param.status}
                             onChange={(e) => {
@@ -256,9 +270,9 @@ export default function AdminCustomersPage() {
                                         </td>
                                         <td className="px-3 py-2 text-center">
                                             {(row.referredCount ?? 0) > 0 ? (
-                                                <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                                                <Link href={`/admin/customers?referredBy=${row._id}`} className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700 hover:underline dark:bg-indigo-900 dark:text-indigo-300" title="View referred customers">
                                                     {row.referredCount}
-                                                </span>
+                                                </Link>
                                             ) : (
                                                 <span className="text-xs text-slate-400">—</span>
                                             )}

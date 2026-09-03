@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { sendOtp, register, profile, updateProfile, updateCustomerProfileImage, logout, deleteCustomerAccount } from "../controller/customer/auth.controller.js";
+import { sendOtp, register, profile, updateProfile, updatePushToken, updateCustomerProfileImage, logout, deleteCustomerAccount } from "../controller/customer/auth.controller.js";
 import { acceptCustomerBookingQuote, cancelCustomerBooking, completeCustomerBooking, createCustomerAddress, createCustomerBooking, createCustomerServiceLead, getCustomerBooking, updateCustomerAddress, deleteCustomerAddress, getCustomerDashboard, getCustomerNotificationUnreadCount, listCustomerAddresses, listCustomerBookingMessages, listCustomerBookings, listCustomerLedger, listCustomerNotifications, listCustomerServiceLeads, listReferredCustomers, markAllCustomerNotificationsRead, markCustomerNotificationRead, sendCustomerBookingMessage, submitCustomerBookingFeedback } from "../controller/customer/customer.controller.js";
 import { requireCustomerAuth } from "../middlewares/customerAuth.js";
 import { otpRateLimiter } from "../middlewares/otpRateLimiter.js";
@@ -14,6 +14,7 @@ router.post("/register", register);
 router.use(requireCustomerAuth);
 router.get("/profile", profile);
 router.put("/profile", validator("customer-profile-update"), updateProfile);
+router.put("/push-token", validator("customer-push-token"), updatePushToken);
 router.put("/profile/image", customerStorage.single("image"), validator("customer-profile-image"), updateCustomerProfileImage);
 router.delete("/profile", deleteCustomerAccount);
 router.get("/dashboard", getCustomerDashboard);

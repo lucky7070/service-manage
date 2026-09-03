@@ -45,7 +45,7 @@ export default function AddressLocationMap({ latitude, longitude, onChange }: Ad
     const center = useMemo<[number, number]>(() => hasPosition ? [latitude, longitude] : defaultCenter, [hasPosition, latitude, longitude]);
 
     return (
-        <MapContainer center={center} zoom={hasPosition ? 14 : 5} className="h-72 w-full rounded-xl border border-indigo-100 dark:border-slate-700" scrollWheelZoom>
+        <MapContainer center={center} zoom={hasPosition ? 14 : 5} className="relative z-0 h-72 w-full rounded-xl border border-indigo-100 dark:border-slate-700 [isolation:isolate]" scrollWheelZoom>
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"

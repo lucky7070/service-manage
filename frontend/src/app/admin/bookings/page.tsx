@@ -4,12 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { debounce } from "lodash";
 import moment from "moment";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 
 import AdminNoTableRecords from "@/components/admin/AdminNoTableRecords";
 import AdminExportButton from "@/components/admin/AdminExportButton";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import AdminPagination from "@/components/admin/AdminPagination";
+import PermissionBlock from "@/components/admin/PermissionBlock";
 import AxiosHelperAdmin from "@/helpers/AxiosHelperAdmin";
 import { Badge, Button, statusToBadgeVariant } from "@/components/ui";
 import RequestFilter from "@/components/admin/RequestFilter";
@@ -74,7 +75,19 @@ export default function AdminBookingsPage() {
             <AdminPageHeader
                 title="Bookings"
                 subtitle="View service bookings, customer/provider details, prices, schedule, and chat history."
-                action={<AdminExportButton url="/bookings/export" params={param} filenamePrefix="bookings" />}
+                action={
+                    <div className="flex flex-wrap items-center gap-2">
+                        <AdminExportButton url="/bookings/export" params={param} filenamePrefix="bookings" />
+                        <PermissionBlock permission_id={347}>
+                            <Link href="/admin/bookings/create">
+                                <Button type="button" variant="primary" size="md">
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Create booking
+                                </Button>
+                            </Link>
+                        </PermissionBlock>
+                    </div>
+                }
             />
 
             <div className="rounded-2xl border border-indigo-100 bg-white p-4 dark:border-indigo-100 dark:bg-slate-900">

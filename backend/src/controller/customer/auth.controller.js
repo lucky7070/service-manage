@@ -119,6 +119,20 @@ export const profile = async (req, res) => {
     }
 };
 
+export const updatePushToken = async (req, res) => {
+    try {
+        const fields = pickPushFields(req.body);
+        if (!fields.fcmToken) {
+            return res.clientError("FCM token is required.", 422, [{ field: "fcmToken", message: "Required" }]);
+        }
+
+        await req.customer.updateOne(fields);
+        return res.successUpdate({ updated: true }, "Push token updated.");
+    } catch (error) {
+        return res.someThingWentWrong(error);
+    }
+};
+
 export const updateProfile = async (req, res) => {
     try {
         const { name, email = "", dateOfBirth = "", preferredLanguage = "en" } = req.body;

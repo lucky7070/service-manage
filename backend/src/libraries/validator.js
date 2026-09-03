@@ -18,6 +18,8 @@ const slug = check("slug", "Slug: use lowercase letters, numbers, hyphens, and u
 const message = check("message", "Message must be 10–5000 characters.").trim().notEmpty().isLength({ min: 10, max: 5000 }).withMessage('Message must be between 10 to 5000 characters long.');
 
 const dateOfBirth = check("dateOfBirth", "Date of birth must be YYYY-MM-DD.").exists().notEmpty().matches(/^\d{4}-\d{2}-\d{2}$/);
+const emailOptional = check("email").optional({ values: "falsy" }).trim().isEmail().withMessage("Invalid email.").isLength({ min: 2, max: 100 }).withMessage("Email must be between 2 to 100 characters long.").normalizeEmail({ gmail_remove_dots: false }).toLowerCase();
+const dateOfBirthOptional = check("dateOfBirth").optional({ values: "falsy" }).matches(/^\d{4}-\d{2}-\d{2}$/).withMessage("Date of birth must be YYYY-MM-DD.");
 
 const tagFor = check("tagFor", "Tag for is required.").exists().notEmpty().isIn(["customer", "provider"]).withMessage('Tag for must be customer or provider.');
 const tagName = check("tagName", "Tag name is required.").exists().notEmpty().isLength({ min: 1, max: 100 }).withMessage('Tag name must be between 1 to 100 characters long.').trim();
@@ -137,6 +139,13 @@ const deviceIdOptional = check("deviceId").optional({ values: "falsy" }).trim().
 const referralCodeOptional = check("referralCode").optional({ values: "falsy" }).trim().isLength({ min: 2, max: 20 }).withMessage("Referral code must be between 2 to 20 characters long.");
 
 const addressId = param("addressId", "Invalid address ID.").exists().notEmpty().isMongoId();
+const bookingExistingAddressId = check("addressId").optional({ values: "falsy" }).isMongoId().withMessage("Invalid address ID.");
+const isNewBookingAddress = (_value, { req }) => !String(req.body.addressId || "").trim();
+const addressLine1ForBooking = check("addressLine1", "Address line 1 is required.").if(isNewBookingAddress).trim().notEmpty().isLength({ min: 2, max: 100 }).withMessage("Address line 1 must be between 2 to 100 characters long.");
+const addressLine2ForBooking = check("addressLine2", "Address line 2 is required.").if(isNewBookingAddress).trim().notEmpty().isLength({ min: 2, max: 100 }).withMessage("Address line 2 must be between 2 to 100 characters long.");
+const addressStateForBooking = check("state", "State is required.").if(isNewBookingAddress).trim().notEmpty().isMongoId().withMessage("Invalid state ID.");
+const addressCityForBooking = check("city", "City is required.").if(isNewBookingAddress).trim().notEmpty().isMongoId().withMessage("Invalid city ID.");
+const pincodeForBooking = check("pincode", "Pincode must be 6 digits.").if(isNewBookingAddress).trim().notEmpty().matches(/^\d{6}$/).withMessage("Pincode must be exactly 6 digits.");
 const addressLine1 = check("addressLine1", "Address line 1 is required.").trim().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Address line 1 must be between 2 to 100 characters long.');
 const addressLine2 = check("addressLine2", "Address line 2 is required.").trim().notEmpty().isLength({ min: 2, max: 100 }).withMessage('Address line 2 must be between 2 to 100 characters long.');
 const landmark = check("landmark").optional({ values: "falsy" }).trim().isLength({ max: 200 }).withMessage('Landmark must be between 0 to 200 characters long.');
@@ -239,6 +248,9 @@ export const validator = (method) => {
         case "customer-profile-update":
             output = [personName, email, dateOfBirth, preferredLanguage];
             break;
+        case "customer-push-token":
+            output = [fcmTokenOptional, deviceIdOptional];
+            break;
         case "customer-profile-image":
             output = [imageRequired];
             break;
@@ -265,6 +277,30 @@ export const validator = (method) => {
             break;
         case "admin-service-lead-assign":
             output = [id, providerId];
+            break;
+        case "admin-booking-create-with-customer":
+            output = [
+                personName,
+                mobile,
+                emailOptional,
+                dateOfBirthOptional,
+                bookingExistingAddressId,
+                addressLine1ForBooking,
+                addressLine2ForBooking,
+                landmark,
+                addressStateForBooking,
+                addressCityForBooking,
+                pincodeForBooking,
+                latitude,
+                longitude,
+                locationType,
+                isDefault,
+                providerId,
+                serviceTypeIds,
+                serviceTypeIdItems,
+                scheduledTime,
+                issueDescription
+            ];
             break;
         case "admin-service-lead-id":
             output = [id];
