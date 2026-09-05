@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { fetchProfile, logout as logoutApi, register as registerApi } from "../api";
+import { fetchProfile, logout as logoutApi, register as registerApi, updatePushToken } from "../api";
 import { getPushCredentials } from "../notifications/push";
 import { clearToken, getToken, setToken } from "../storage/token";
 import type { CustomerProfile } from "../api/types";
@@ -14,6 +14,12 @@ type AuthContextValue = {
 
 const DEFAULT_USER: CustomerProfile = { _id: "", userId: "", name: "", mobile: "", email: "", image: "", balance: 0, referralCode: "", dateOfBirth: "", preferredLanguage: "en", token: "", };
 const AuthContext = createContext<AuthContextValue>({ user: DEFAULT_USER, bootstrapping: true, signInWithOtp: async () => null, signOut: async () => { }, refreshProfile: async () => { } });
+
+async function syncPushTokenToServer() {
+    const push = await getPushCredentials();
+    if (!push?.fcmToken) return;
+    await updatePushToken(push);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<CustomerProfile>(DEFAULT_USER);
@@ -33,7 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         (async () => {
             const token = await getToken();
-            if (token) await refreshProfile();
+            if (token) {
+                await refreshProfile();
+                void syncPushTokenToServer();
+            }
             setBootstrapping(false);
         })();
     }, [refreshProfile]);
@@ -48,6 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await setToken(response.data.token);
         const { token: _token, ...profile } = response.data;
         setUser(profile);
+
+        // iOS APNs/FCM token can arrive slightly after login permission flow.
+        if (!push?.fcmToken) {
+            void (async () => {
+                await new Promise((r) => setTimeout(r, 1500));
+                await syncPushTokenToServer();
+            })();
+        }
+
         return null;
     }, []);
 

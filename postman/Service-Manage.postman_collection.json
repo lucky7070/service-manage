@@ -1002,6 +1002,12 @@
                   "enabled": true
                 },
                 {
+                  "key": "address",
+                  "value": "12 MG Road, Indore, Madhya Pradesh 452001",
+                  "type": "text",
+                  "enabled": true
+                },
+                {
                   "key": "referralCode",
                   "value": "SP000001",
                   "type": "text",
@@ -1030,7 +1036,7 @@
                 }
               ]
             },
-            "description": "Replace cityId, serviceCategoryId, and otp with real values. Optional **`referralCode`** is the referrer provider **`userId`**. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
+            "description": "Replace cityId, serviceCategoryId, and otp with real values. Optional **`address`** (older apps may omit it). Optional **`referralCode`** is the referrer provider **`userId`**. Attach files for image, panCardDocument (PDF), aadharDocument (PDF)."
           }
         },
         {
@@ -1779,6 +1785,49 @@
                 ],
                 "url": "{{baseUrl}}/admin/bookings/export?status=&query=&dateFrom=&dateTo=",
                 "description": "Returns `.xlsx` download. Uses same filters as list (**`status`**, **`query`**, **`dateFrom`**, **`dateTo`** on **`createdAt`**)."
+              }
+            },
+            {
+              "name": "Lookup customer by mobile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/bookings/lookup-customer?mobile=9876543210",
+                "description": "Returns **`exists`**, **`customer`** profile (if found), and saved **`addresses`**. Used by admin create-booking form."
+              }
+            },
+            {
+              "name": "Create booking with customer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "x-api-key",
+                    "value": "{{xApiKey}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/admin/bookings/create-with-customer",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Walk-in Customer\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"customer@example.com\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"addressLine1\": \"House 10\",\n  \"addressLine2\": \"Main Road\",\n  \"landmark\": \"Near Market\",\n  \"state\": \"507f1f77bcf86cd799439011\",\n  \"city\": \"507f1f77bcf86cd799439011\",\n  \"pincode\": \"110001\",\n  \"latitude\": 28.6139,\n  \"longitude\": 77.209,\n  \"locationType\": \"home\",\n  \"isDefault\": 1,\n  \"providerId\": \"507f1f77bcf86cd799439011\",\n  \"serviceTypeId\": [\n    \"507f1f77bcf86cd799439011\"\n  ],\n  \"scheduledTime\": \"2026-12-15T10:30:00.000Z\",\n  \"issueDescription\": \"Created by admin on behalf of customer.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Creates (or reuses) customer by **mobile**, then booking (**`price_pending`**). Pass either **`addressId`** (existing customer address) **or** full address fields to create a new one. Optional **email** / **dateOfBirth**. Same provider/service rules as customer self-booking."
               }
             },
             {
@@ -3041,7 +3090,8 @@
                     "type": "text"
                   }
                 ],
-                "url": "{{baseUrl}}/admin/customers"
+                "url": "{{baseUrl}}/admin/customers?pageNo=1&limit=10&query=&status=&referredBy=&sortBy=createdAt&sortOrder=desc",
+                "description": "Paginated customers. Optional **referredBy** (customer ObjectId) filters to users referred by that customer."
               }
             },
             {
@@ -3055,8 +3105,8 @@
                     "type": "text"
                   }
                 ],
-                "url": "{{baseUrl}}/admin/customers/export?query=&status=&sortBy=createdAt&sortOrder=desc",
-                "description": "Returns `.xlsx` download. Uses same filters as list."
+                "url": "{{baseUrl}}/admin/customers/export?query=&status=&referredBy=&sortBy=createdAt&sortOrder=desc",
+                "description": "Returns `.xlsx` download. Uses same filters as list (including **referredBy**)."
               }
             },
             {
@@ -3257,6 +3307,12 @@
                       "enabled": true
                     },
                     {
+                      "key": "address",
+                      "value": "12 MG Road, Indore, Madhya Pradesh 452001",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
                       "key": "isFeatured",
                       "value": "0",
                       "type": "text",
@@ -3279,7 +3335,7 @@
                     }
                   ]
                 },
-                "description": "**`cityId`**, **`serviceCategoryId`** required. **`isFeatured`** `1` / `true` / `on` to show on homepage (**`GET /featured-service-providers`**). Assign areas separately via **`PUT /admin/service-providers/:id/areas`**."
+                "description": "**`cityId`**, **`serviceCategoryId`**, **`address`** required. **`isFeatured`** `1` / `true` / `on` to show on homepage (**`GET /featured-service-providers`**). Assign areas separately via **`PUT /admin/service-providers/:id/areas`**."
               }
             },
             {
@@ -3348,6 +3404,12 @@
                     {
                       "key": "experienceDescription",
                       "value": "Experienced technician.",
+                      "type": "text",
+                      "enabled": true
+                    },
+                    {
+                      "key": "address",
+                      "value": "12 MG Road, Indore, Madhya Pradesh 452001",
                       "type": "text",
                       "enabled": true
                     },
@@ -3498,7 +3560,8 @@
                     "type": "text"
                   }
                 ],
-                "url": "{{baseUrl}}/admin/service-providers"
+                "url": "{{baseUrl}}/admin/service-providers?pageNo=1&limit=10&query=&profileStatus=&franchise=&referredBy=&sortBy=createdAt&sortOrder=desc",
+                "description": "Paginated providers. Optional **franchise** (franchise ObjectId) or **referredBy** (provider ObjectId) filters referred lists."
               }
             },
             {
@@ -3512,8 +3575,8 @@
                     "type": "text"
                   }
                 ],
-                "url": "{{baseUrl}}/admin/service-providers/export?query=&profileStatus=&sortBy=createdAt&sortOrder=desc",
-                "description": "Returns `.xlsx` download. Uses same filters as list."
+                "url": "{{baseUrl}}/admin/service-providers/export?query=&profileStatus=&franchise=&referredBy=&sortBy=createdAt&sortOrder=desc",
+                "description": "Returns `.xlsx` download. Uses same filters as list (including **franchise** and **referredBy**)."
               }
             },
             {

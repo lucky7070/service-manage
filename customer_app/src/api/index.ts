@@ -40,6 +40,11 @@ export async function updateProfile(payload: {
     return data as ApiResponse<CustomerProfile>;
 }
 
+export async function updatePushToken(payload: { fcmToken: string; deviceId?: string }) {
+    const { data } = await AxiosHelper.putData("/customer/push-token", payload);
+    return data as ApiResponse<{ updated: boolean }>;
+}
+
 export async function uploadProfileImage(imageUri: string) {
     const formData = new FormData();
     formData.append("image", {

@@ -36,24 +36,38 @@ export const sendPushNotification = async ({ tokens, title, body, data = {} }) =
     const msg = initFirebase();
     const uniqueTokens = [...new Set((tokens || []).map((t) => String(t).trim()).filter(Boolean))];
     if (!msg || uniqueTokens.length === 0) {
-        return { sent: 0, failed: 0, skipped: true };
+        return { sent: 0, failed: 0, skipped: true, errors: [], invalidTokens: [] };
     }
 
+    const safeTitle = String(title || "").trim() || "Notification";
+    const safeBody = String(body || "").trim() || " ";
     const stringData = Object.fromEntries(
         Object.entries(data || {}).map(([key, value]) => [key, value == null ? "" : String(value)])
     );
 
     const response = await msg.sendEachForMulticast({
         tokens: uniqueTokens,
-        notification: { title: String(title || ""), body: String(body || "") },
+        notification: { title: safeTitle, body: safeBody },
         data: stringData,
-        android: { priority: "high" },
+        android: {
+            priority: "high",
+            notification: {
+                sound: "default",
+                channelId: "default",
+            },
+        },
         apns: {
-            headers: { "apns-priority": "10" },
+            headers: {
+                "apns-priority": "10",
+                "apns-push-type": "alert",
+            },
             payload: {
                 aps: {
+                    alert: {
+                        title: safeTitle,
+                        body: safeBody,
+                    },
                     sound: "default",
-                    "content-available": 1,
                 },
             },
         },
@@ -65,7 +79,7 @@ export const sendPushNotification = async ({ tokens, title, body, data = {} }) =
         "messaging/registration-token-not-registered",
         "messaging/invalid-registration-token",
         "messaging/mismatched-credential",
-        "messaging/invalid-argument"
+        "messaging/invalid-argument",
     ]);
 
     response.responses.forEach((item, index) => {
@@ -73,10 +87,9 @@ export const sendPushNotification = async ({ tokens, title, body, data = {} }) =
             const code = item.error?.code || "unknown";
             const message = item.error?.message || "Unknown error";
             errors.push({ code, message });
+            logger.warn(`FCM delivery failed [${code}]: ${message}`);
             if (discardTokenCodes.has(code)) {
                 invalidTokens.push(uniqueTokens[index]);
-            } else {
-                logger.warn(`FCM delivery failed [${code}]: ${message}`);
             }
         }
     });
@@ -86,6 +99,6 @@ export const sendPushNotification = async ({ tokens, title, body, data = {} }) =
         failed: response.failureCount,
         invalidTokens,
         errors,
-        skipped: false
+        skipped: false,
     };
 };

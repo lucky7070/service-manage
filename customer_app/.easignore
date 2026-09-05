@@ -28,9 +28,7 @@ ios/
 # Secrets & local env (use EAS env vars / file secrets instead)
 .env
 .env.development
-.env.production
 .env*.local
-google-services.json
 *.jks
 *.p8
 *.p12

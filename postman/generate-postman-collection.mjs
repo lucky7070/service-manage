@@ -421,13 +421,14 @@ const serviceProvider = [
             fd.text("aadharNumber", "123456789012"),
             fd.text("experienceYears", "3"),
             fd.text("experienceDescription", "Field service experience."),
+            fd.text("address", "12 MG Road, Indore, Madhya Pradesh 452001"),
             fd.text("referralCode", "SP000001"),
             fd.text("otp", "123456"),
             fd.file("image"),
             fd.file("panCardDocument"),
             fd.file("aadharDocument"),
         ],
-        description: "Replace cityId, serviceCategoryId, and otp with real values. Optional **`referralCode`** is the referrer provider **`userId`**. Attach files for image, panCardDocument (PDF), aadharDocument (PDF).",
+        description: "Replace cityId, serviceCategoryId, and otp with real values. Optional **`address`** (older apps may omit it). Optional **`referralCode`** is the referrer provider **`userId`**. Attach files for image, panCardDocument (PDF), aadharDocument (PDF).",
     }),
     req("Profile (auth)", "GET", "/service-provider/profile"),
     req("List my city areas (auth)", "GET", "/service-provider/areas?query=&limit=50", {
@@ -641,6 +642,33 @@ const admin = [
     req("Export bookings (Excel)", "GET", "/admin/bookings/export?status=&query=&dateFrom=&dateTo=", {
         description: "Returns `.xlsx` download. Uses same filters as list (**`status`**, **`query`**, **`dateFrom`**, **`dateTo`** on **`createdAt`**).",
     }),
+    req("Lookup customer by mobile", "GET", "/admin/bookings/lookup-customer?mobile=9876543210", {
+        description: "Returns **`exists`**, **`customer`** profile (if found), and saved **`addresses`**. Used by admin create-booking form.",
+    }),
+    req("Create booking with customer", "POST", "/admin/bookings/create-with-customer", {
+        body: {
+            name: "Walk-in Customer",
+            mobile: "9876543210",
+            email: "customer@example.com",
+            dateOfBirth: "1990-01-15",
+            addressLine1: "House 10",
+            addressLine2: "Main Road",
+            landmark: "Near Market",
+            state: OID,
+            city: OID,
+            pincode: "110001",
+            latitude: 28.6139,
+            longitude: 77.209,
+            locationType: "home",
+            isDefault: 1,
+            providerId: OID,
+            serviceTypeId: [OID],
+            scheduledTime: "2026-12-15T10:30:00.000Z",
+            issueDescription: "Created by admin on behalf of customer.",
+        },
+        description:
+            "Creates (or reuses) customer by **mobile**, then booking (**`price_pending`**). Pass either **`addressId`** (existing customer address) **or** full address fields to create a new one. Optional **email** / **dateOfBirth**. Same provider/service rules as customer self-booking.",
+    }),
     req("Booking detail", "GET", `/admin/bookings/${OID}`),
     req("Service leads list", "GET", "/admin/service-leads?pageNo=1&limit=10&status=&query=&sortBy=createdAt&sortOrder=desc&dateFrom=&dateTo=", {
         description:
@@ -785,9 +813,11 @@ const admin = [
     }),
     req("Delete customer", "DELETE", "/admin/customers/:id"),
     req("Get customer", "GET", "/admin/customers/:id"),
-    req("List customers", "GET", "/admin/customers"),
-    req("Export customers (Excel)", "GET", "/admin/customers/export?query=&status=&sortBy=createdAt&sortOrder=desc", {
-        description: "Returns `.xlsx` download. Uses same filters as list.",
+    req("List customers", "GET", `/admin/customers?pageNo=1&limit=10&query=&status=&referredBy=&sortBy=createdAt&sortOrder=desc`, {
+        description: "Paginated customers. Optional **referredBy** (customer ObjectId) filters to users referred by that customer.",
+    }),
+    req("Export customers (Excel)", "GET", `/admin/customers/export?query=&status=&referredBy=&sortBy=createdAt&sortOrder=desc`, {
+        description: "Returns `.xlsx` download. Uses same filters as list (including **referredBy**).",
     }),
     req("Customer addresses (admin)", "GET", `/admin/customers/${OID}/addresses`),
     req("Create customer address (admin)", "POST", `/admin/customers/${OID}/addresses`, {
@@ -834,13 +864,14 @@ const admin = [
             fd.text("aadharNumber", "123456789012"),
             fd.text("experienceYears", "2"),
             fd.text("experienceDescription", "Experienced technician."),
+            fd.text("address", "12 MG Road, Indore, Madhya Pradesh 452001"),
             fd.text("isFeatured", "0"),
             fd.file("image"),
             fd.file("panCardDocument"),
             fd.file("aadharDocument"),
         ],
         description:
-            "**`cityId`**, **`serviceCategoryId`** required. **`isFeatured`** `1` / `true` / `on` to show on homepage (**`GET /featured-service-providers`**). Assign areas separately via **`PUT /admin/service-providers/:id/areas`**.",
+            "**`cityId`**, **`serviceCategoryId`**, **`address`** required. **`isFeatured`** `1` / `true` / `on` to show on homepage (**`GET /featured-service-providers`**). Assign areas separately via **`PUT /admin/service-providers/:id/areas`**.",
     }),
     req("Update service provider (multipart)", "PUT", "/admin/service-providers/:id", {
         formdata: [
@@ -853,6 +884,7 @@ const admin = [
             fd.text("aadharNumber", "123456789012"),
             fd.text("experienceYears", "2"),
             fd.text("experienceDescription", "Experienced technician."),
+            fd.text("address", "12 MG Road, Indore, Madhya Pradesh 452001"),
             fd.text("isFeatured", "0"),
             fd.file("image"),
             fd.file("panCardDocument"),
@@ -872,9 +904,11 @@ const admin = [
     }),
     req("Delete service provider", "DELETE", "/admin/service-providers/:id"),
     req("Get service provider", "GET", "/admin/service-providers/:id"),
-    req("List service providers", "GET", "/admin/service-providers"),
-    req("Export service providers (Excel)", "GET", "/admin/service-providers/export?query=&profileStatus=&sortBy=createdAt&sortOrder=desc", {
-        description: "Returns `.xlsx` download. Uses same filters as list.",
+    req("List service providers", "GET", "/admin/service-providers?pageNo=1&limit=10&query=&profileStatus=&franchise=&referredBy=&sortBy=createdAt&sortOrder=desc", {
+        description: "Paginated providers. Optional **franchise** (franchise ObjectId) or **referredBy** (provider ObjectId) filters referred lists.",
+    }),
+    req("Export service providers (Excel)", "GET", "/admin/service-providers/export?query=&profileStatus=&franchise=&referredBy=&sortBy=createdAt&sortOrder=desc", {
+        description: "Returns `.xlsx` download. Uses same filters as list (including **franchise** and **referredBy**).",
     }),
     req("Provider photos", "GET", "/admin/service-providers/:id/photos"),
     req("Upload provider photos (multipart)", "POST", "/admin/service-providers/:id/photos", {

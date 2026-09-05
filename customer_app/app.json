@@ -1,63 +1,79 @@
 {
-    "expo": {
-        "name": "Serva Services",
-        "slug": "serva-services",
-        "version": "1.0.4",
-        "orientation": "portrait",
-        "icon": "./assets/icon.png",
-        "userInterfaceStyle": "light",
-        "newArchEnabled": true,
-        "splash": {
-            "image": "./assets/splash-icon.png",
-            "resizeMode": "contain",
-            "backgroundColor": "#ffffff"
-        },
-        "ios": {
-            "bundleIdentifier": "com.serva.services",
-            "buildNumber": "3",
-            "supportsTablet": true,
-            "infoPlist": {
-                "UIBackgroundModes": ["remote-notification"]
-            }
-        },
-        "android": {
-            "package": "com.serva.services",
-            "versionCode": 5,
-            "adaptiveIcon": {
-                "foregroundImage": "./assets/adaptive-icon.png",
-                "backgroundColor": "#ffffff"
-            },
-            "usesCleartextTraffic": true,
-            "edgeToEdgeEnabled": true,
-            "softwareKeyboardLayoutMode": "resize",
-            "predictiveBackGestureEnabled": false
-        },
-        "web": {
-            "favicon": "./assets/favicon.png"
-        },
-        "plugins": [
-            "expo-secure-store",
-            "expo-font",
-            "@react-native-community/datetimepicker",
-            [
-                "expo-image-picker",
-                {
-                    "photosPermission": "Allow access to your photos to share images in booking chat.",
-                    "cameraPermission": "Allow camera access to take photos for booking chat."
-                }
-            ],
-            [
-                "expo-notifications",
-                {
-                    "color": "#4f46e5"
-                }
-            ],
-            [
-                "expo-location",
-                {
-                    "locationWhenInUsePermission": "Allow Serva Services to use your location to fill in address coordinates."
-                }
-            ]
+  "expo": {
+    "name": "Serva Services",
+    "slug": "serva-services",
+    "version": "1.0.5",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "bundleIdentifier": "com.serva.services",
+      "buildNumber": "5",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "remote-notification"
         ]
-    }
+      },
+      "entitlements": {
+        "aps-environment": "production"
+      }
+    },
+    "android": {
+      "package": "com.serva.services",
+      "versionCode": 5,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "usesCleartextTraffic": true,
+      "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow access to your photos to share images in booking chat.",
+          "cameraPermission": "Allow camera access to take photos for booking chat."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4f46e5"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Serva Services to use your location to fill in address coordinates."
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "dynamic"
+          }
+        }
+      ]
+    ]
+  }
 }
